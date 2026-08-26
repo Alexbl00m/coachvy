@@ -45,8 +45,8 @@ const allSections: NavSection[] = [
     title: "Verktyg",
     items: [
       {
-        label: "VLamax-kalkyl",
-        href: routes.vlamax,
+        label: "Kalkyler",
+        href: routes.calculators,
         icon: Gauge,
         audience: "coach",
       },
