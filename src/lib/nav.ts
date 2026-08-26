@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardList,
   FlaskConical,
+  Gauge,
   MessagesSquare,
   Settings,
   ShieldCheck,
@@ -43,6 +44,12 @@ const allSections: NavSection[] = [
   {
     title: "Verktyg",
     items: [
+      {
+        label: "VLamax-kalkyl",
+        href: routes.vlamax,
+        icon: Gauge,
+        audience: "coach",
+      },
       { label: "AI Coach Assistant", href: routes.aiCoach, icon: Bot },
       { label: "Community", href: routes.community, icon: MessagesSquare },
     ],
