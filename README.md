@@ -18,6 +18,8 @@ Byggt hittills:
 - **Fas 3** – den publika sajten inflyttad från `lindblom-performance-hub`,
   appen flyttad till `/app`, kontaktformuläret kopplat till databasen.
 - **Fas 4** – VLamax-kalkylen portad från `vlamax_calc_app` (Streamlit/Python).
+- **Fas 5** – critical power, critical speed och den metabola profilen portade
+  från `metabolic-insights-dashboard`.
 
 Planer, Kalender, AI Coach Assistant och Community är fortfarande tomma
 platshållare och byggs modul för modul.
@@ -156,6 +158,39 @@ src/
 `proxy.ts`. Skyddet är strukturellt: allt under `/app` kräver session, resten är
 öppet. En ny publik sida kan alltså inte råka bli inloggningsskyddad för att
 någon glömde lägga till den i en lista.
+
+## Kalkyler
+
+`/app/kalkyler` samlar fyra räknare. Beräkningarna ligger som rena funktioner i
+`src/lib/calculators/` och är därför testbara utan gränssnitt.
+
+| Kalkyl | Modell | In |
+|---|---|---|
+| Critical power | W = CP·t + W' (Monod & Scherrer) | Testlängd och medeleffekt |
+| Critical speed | D = CS·t + D' | Tid och distans, löpning eller simning |
+| Metabol profil | Mader & Heck (1986) | VO2max, VLamax, effekt vid VO2max |
+| VLamax | Regression mot INSCYD-mätningar | Kroppssammansättning och sprinteffekt |
+
+### Vad som ändrades i portningen
+
+Originalen räknade rätt i huvudsak, men fyra saker rättades:
+
+- **Påhittade anpassningsmått.** Två testpunkter definierar en linje exakt.
+  Originalet rapporterade ändå "99 %" för critical power och "0,97" för
+  critical speed. Nu står det att måttet inte går att beräkna, och att ett
+  tredje test krävs för det.
+- **VO2max ur critical speed** räknades som `m/s · 3,5 · kroppsvikt`, vilket är
+  dimensionellt fel och gav storleksordningen 1000 ml/kg/min. Nu används ACSM:s
+  löpekvation (≈ 3,5 ml/kg/min per km/h).
+- **VO2max ur critical power** räknades som `0,2 · W/kg + 45`, som i praktiken
+  ger ~46 för varje tänkbar atlet. Ersatt med ACSM:s cykelekvation.
+- **Tre loppprognoser blev en.** Originalet visade "perfekt", "normal" och "tuff"
+  fart, men skillnaden satt bara på D'-termen — några sekunder även på maraton.
+  Tre nästan identiska kolumner antyder en precision modellen inte har.
+
+Dessutom: fettoxidationen i den metabola modellen använde absolutbeloppet av
+nettolaktatet, vilket fick fettförbränningen att *stiga* igen ovanför tröskeln.
+Den klamras nu till noll där.
 
 ## VLamax-kalkylen
 
