@@ -22,12 +22,44 @@ export type Coach = {
   updated_at: string;
 };
 
+/**
+ * An adept is owned by a coach and exists whether or not the person has signed
+ * up: `profile_id` stays null until an account is linked to the row.
+ */
 export type Adept = {
   id: string;
   coach_id: string | null;
+  profile_id: string | null;
+  full_name: string;
+  email: string | null;
   sport: string | null;
   goal: string | null;
   current_level: string | null;
+  last_active_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** `coach_id === null` marks one of the built-in test types shared by everyone. */
+export type TestType = {
+  id: string;
+  coach_id: string | null;
+  label: string;
+  default_unit: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TestResult = {
+  id: string;
+  adept_id: string;
+  test_type_id: string;
+  value: number;
+  unit: string;
+  tested_on: string;
+  comment: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -52,8 +84,24 @@ export type Database = {
       };
       adepts: {
         Row: Adept;
-        Insert: Pick<Adept, "id"> & Partial<Adept>;
+        Insert: Pick<Adept, "full_name"> & Partial<Adept>;
         Update: Partial<Adept>;
+        Relationships: [];
+      };
+      test_types: {
+        Row: TestType;
+        Insert: Pick<TestType, "label" | "default_unit"> & Partial<TestType>;
+        Update: Partial<TestType>;
+        Relationships: [];
+      };
+      test_results: {
+        Row: TestResult;
+        Insert: Pick<
+          TestResult,
+          "adept_id" | "test_type_id" | "value" | "unit"
+        > &
+          Partial<TestResult>;
+        Update: Partial<TestResult>;
         Relationships: [];
       };
     };

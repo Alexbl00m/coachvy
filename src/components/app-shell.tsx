@@ -11,10 +11,12 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
+import type { AccountRole } from "@/lib/types/database";
 
 export type AppShellUser = {
   name: string;
   email: string;
+  role: AccountRole | null;
   roleLabel: string;
 };
 
@@ -117,7 +119,7 @@ export function AppShell({
 
       <div className="flex flex-1">
         <aside className="sticky top-15 hidden h-[calc(100vh-3.75rem)] w-64 shrink-0 border-r border-ink-800 lg:block">
-          <AppSidebar />
+          <AppSidebar role={user.role} />
         </aside>
 
         {mobileNavOpen && (
@@ -130,7 +132,7 @@ export function AppShell({
             />
             <aside className="relative h-full w-64 border-r border-ink-800 bg-ink-900">
               {/* Closing on navigation keeps the drawer off the next page. */}
-              <AppSidebar onNavigate={() => setMobileNavOpen(false)} />
+              <AppSidebar role={user.role} onNavigate={() => setMobileNavOpen(false)} />
             </aside>
           </div>
         )}

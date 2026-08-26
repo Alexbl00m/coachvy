@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
-import { getSessionUser, listMyAdepts } from "@/lib/auth/session";
+import { listAdepts } from "@/lib/adepts/queries";
+import { getSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -24,7 +25,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 export default async function OversiktPage() {
   const user = await getSessionUser();
   const isCoach = user?.profile?.role === "coach";
-  const adepts = isCoach ? await listMyAdepts() : [];
+  const adepts = isCoach ? await listAdepts() : [];
 
   const firstName = user?.profile?.full_name?.split(" ")[0];
 

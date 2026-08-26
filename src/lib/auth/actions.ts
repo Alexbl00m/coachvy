@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { routes } from "@/lib/routes";
+import { touchAdeptActivity } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { AccountRole } from "@/lib/types/database";
@@ -70,11 +71,18 @@ export async function signIn(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
     return { error: "Fel e-post eller lösenord.", values: { email } };
   }
+
+  // "Senast aktiv" on the coach's roster is driven by sign-ins. A no-op for
+  // coaches, since only adept rows carry the column.
+  if (data.user) await touchAdeptActivity(data.user.id);
 
   revalidatePath("/", "layout");
   redirect(safeNext(text(formData, "next")) ?? routes.dashboard);

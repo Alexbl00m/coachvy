@@ -66,17 +66,22 @@ export async function requireSessionUser(): Promise<SessionUser> {
 }
 
 /**
- * Adepts linked to the signed-in coach. Row Level Security scopes this to the
- * coach's own adepts, so no extra filter is needed here.
+ * The signed-in user, guaranteed to be a coach. Adept accounts are sent to
+ * their own overview rather than shown a coach-only page.
  */
-export async function listMyAdepts(): Promise<Adept[]> {
-  if (!isSupabaseConfigured()) return [];
+export async function requireCoach(): Promise<SessionUser> {
+  const user = await requireSessionUser();
+  if (user.profile?.role !== "coach") redirect(routes.dashboard);
+  return user;
+}
+
+/** Marks an adept account as active. Called once per sign-in. */
+export async function touchAdeptActivity(profileId: string): Promise<void> {
+  if (!isSupabaseConfigured()) return;
 
   const supabase = await createClient();
-  const { data } = await supabase
+  await supabase
     .from("adepts")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  return data ?? [];
+    .update({ last_active_at: new Date().toISOString() })
+    .eq("profile_id", profileId);
 }

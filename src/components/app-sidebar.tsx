@@ -4,14 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/cn";
-import { navSections } from "@/lib/nav";
+import { getNavSections } from "@/lib/nav";
+import type { AccountRole } from "@/lib/types/database";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar({ onNavigate }: { onNavigate?: () => void } = {}) {
+export function AppSidebar({
+  role,
+  onNavigate,
+}: {
+  role: AccountRole | null;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const navSections = getNavSections(role);
 
   return (
     <nav
