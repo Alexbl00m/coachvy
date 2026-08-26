@@ -17,6 +17,7 @@ Byggt hittills:
 - **Fas 2** – Adepter och Testmodulen, med riktig CRUD mot Supabase.
 - **Fas 3** – den publika sajten inflyttad från `lindblom-performance-hub`,
   appen flyttad till `/app`, kontaktformuläret kopplat till databasen.
+- **Fas 4** – VLamax-kalkylen portad från `vlamax_calc_app` (Streamlit/Python).
 
 Planer, Kalender, AI Coach Assistant och Community är fortfarande tomma
 platshållare och byggs modul för modul.
@@ -156,6 +157,30 @@ src/
 öppet. En ny publik sida kan alltså inte råka bli inloggningsskyddad för att
 någon glömde lägga till den i en lista.
 
+## VLamax-kalkylen
+
+`/app/vlamax` skattar VLamax från ett sprinttest. Modellen är samma minsta-
+kvadratanpassning som Streamlit-appen körde med scikit-learn, portad till
+TypeScript i `src/lib/vlamax/model.ts`: fettfri massa, sprintlängd, snitteffekt,
+toppeffekt och kön in — VLamax ut.
+
+Referensdatan flyttade från en CSV till tabellen `vlamax_samples`. Inbyggda
+rader (`coach_id is null`) är de 13 INSCYD-mätningarna; en coach kan lägga till
+egna, och modellen tränas om vid nästa sidladdning.
+
+Två saker som inte fanns i originalet:
+
+- **Felmarginalen visas.** Leave-one-out-korsvalidering ger RMSE ≈ 0,031
+  mmol/l/s på de 13 raderna. Att bara gissa medelvärdet ger 0,098, så modellen
+  gör verklig nytta — men siffran är en skattning, inte en mätning, och
+  gränssnittet säger det.
+- **Extrapolation flaggas.** En linjär modell räknar villigt vidare utanför
+  datan den sett. Ligger något indatavärde utanför referensdatans spann visas en
+  varning och möjligheten att spara resultatet försvinner.
+
+Kön är en variabel som vilar på två kvinnor i datan. Det står i gränssnittet,
+och det är den enskilt viktigaste luckan att fylla.
+
 ## Grafen
 
 Testkurvan visar **en testtyp i taget**, valbar med knapparna ovanför
@@ -182,3 +207,5 @@ Kända luckor:
   automatiskt när en adept registrerar sig med samma adress.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.
 - Testresultat kan skapas och tas bort, men inte redigeras.
+- VLamax-modellens könsvariabel bygger på två kvinnor — opålitlig för kvinnor
+  tills fler mätningar lagts till.

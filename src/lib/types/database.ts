@@ -64,6 +64,27 @@ export type TestResult = {
   updated_at: string;
 };
 
+/**
+ * Referensrad för VLamax-prediktionen: en atlet där VLamax faktiskt mätts.
+ * `coach_id === null` markerar den inbyggda datan som alla coacher tränar på.
+ */
+export type VlamaxSample = {
+  id: string;
+  coach_id: string | null;
+  label: string;
+  sex: "man" | "kvinna";
+  weight_kg: number;
+  body_fat_pct: number;
+  height_cm: number | null;
+  age: number | null;
+  sprint_seconds: number;
+  watt_avg: number;
+  watt_peak: number;
+  vlamax: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LeadStatus = "ny" | "kontaktad" | "avslutad";
 
 /** Contact request from the public site. */
@@ -113,6 +134,13 @@ export type Database = {
         Row: Lead;
         Insert: Pick<Lead, "first_name" | "email" | "message"> & Partial<Lead>;
         Update: Partial<Lead>;
+        Relationships: [];
+      };
+      vlamax_samples: {
+        Row: VlamaxSample;
+        Insert: Omit<VlamaxSample, "id" | Timestamps> &
+          Partial<Pick<VlamaxSample, "id">>;
+        Update: Partial<VlamaxSample>;
         Relationships: [];
       };
       test_results: {

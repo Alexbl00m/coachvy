@@ -21,6 +21,7 @@ export const routes = {
   plans: "/app/planer",
   newPlan: "/app/planer/ny",
   testResults: "/app/testresultat",
+  vlamax: "/app/vlamax",
   progression: "/app/progression",
   calendar: "/app/kalender",
   aiCoach: "/app/ai-coach",
