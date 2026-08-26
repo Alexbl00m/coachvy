@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/*
+ * Two surfaces, one system.
+ *
+ * The public site is light and the signed-in app is dark, so colours are
+ * addressed by the job they do (canvas, surface, line, text) rather than by
+ * how dark they are. `@theme inline` makes each utility resolve its variable
+ * at use time, so putting `.theme-light` on a wrapper re-points the whole
+ * scale for everything inside it.
+ *
+ * The raw `ink-*` scale stays available for app-only screens that are never
+ * rendered on a light background.
+ */
+
 @theme {
   /* Neutral scale, built around the brand background #1A1A1E */
   --color-ink-950: #121216;
@@ -15,13 +28,61 @@
   --color-ink-100: #e7e7ec;
   --color-ink-50: #f5f5f7;
 
-  /* Brand accent */
+  /* Brand accent. `accent` is identical on both surfaces; the -on colour is
+     what sits on top of it, and -soft is a tinted fill that has to differ. */
   --color-accent: #e6754e;
   --color-accent-strong: #d4653f;
-  --color-accent-soft: #35211a;
+
+  /* Warm neutrals carried over from the Lindblom brand palette. */
+  --color-sand-50: #faf7f4;
+  --color-sand-100: #f2ece6;
+  --color-sand-200: #e4dad0;
+  --color-burgundy: #4d1414;
+  --color-mauve: #83627c;
 
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-on: var(--accent-on);
+}
+
+/* Dark is the default: the app is the larger surface and never flips. */
+:root {
+  --canvas: #1a1a1e;
+  --surface: #1f1f24;
+  --surface-2: #26262c;
+  --line: #26262c;
+  --line-strong: #3a3a44;
+  --text: #e7e7ec;
+  --text-muted: #9a9aa5;
+  --text-subtle: #7a7a86;
+  --accent-soft: #35211a;
+  --accent-on: #121216;
+}
+
+/* The public marketing surface. */
+.theme-light {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #faf7f4;
+  --line: #e8e2dc;
+  --line-strong: #d5cbc1;
+  --text: #1a1a1e;
+  --text-muted: #5c5c66;
+  --text-subtle: #7a7a86;
+  --accent-soft: #fdf1ec;
+  --accent-on: #ffffff;
 }
 
 html,
@@ -30,8 +91,8 @@ body {
 }
 
 body {
-  background-color: var(--color-ink-900);
-  color: var(--color-ink-100);
+  background-color: var(--canvas);
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
@@ -41,7 +102,7 @@ body {
   color: #ffffff;
 }
 
-/* Consistent focus treatment across the app */
+/* Consistent focus treatment across both surfaces */
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;

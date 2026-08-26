@@ -9,11 +9,13 @@ type Size = "sm" | "md";
 const base =
   "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
+// Semantic tokens only: these render on the light public site and the dark
+// app, and must not assume either.
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-ink-950 hover:bg-accent-strong",
+  primary: "bg-accent text-accent-on hover:bg-accent-strong",
   secondary:
-    "border border-ink-600 bg-ink-800 text-ink-100 hover:border-ink-500 hover:bg-ink-700",
-  ghost: "text-ink-300 hover:bg-ink-800 hover:text-ink-50",
+    "border border-line-strong bg-surface-2 text-text hover:border-accent hover:text-accent",
+  ghost: "text-text-muted hover:bg-surface-2 hover:text-text",
 };
 
 const sizes: Record<Size, string> = {

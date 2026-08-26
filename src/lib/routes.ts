@@ -1,30 +1,36 @@
 /** Route table for the app. Keep in sync with the folders under `src/app`. */
 export const routes = {
+  // Public marketing site
+  home: "/",
+  coaching: "/#coaching",
+  testing: "/#testning",
+  about: "/#om-mig",
+  blog: "/#blogg",
+  contact: "/#kontakt",
+  privacy: "/integritetspolicy",
+
+  // Auth
   signIn: "/logga-in",
   signUp: "/registrera",
-  privacy: "/integritetspolicy",
-  dashboard: "/oversikt",
-  adepts: "/adepter",
-  plans: "/planer",
-  newPlan: "/planer/ny",
-  testResults: "/testresultat",
-  progression: "/progression",
-  calendar: "/kalender",
-  aiCoach: "/ai-coach",
-  community: "/community",
-  settings: "/installningar",
+
+  // Everything behind a session lives under /app, so the proxy can protect it
+  // by prefix instead of by a list of public paths that is easy to forget.
+  dashboard: "/app/oversikt",
+  adepts: "/app/adepter",
+  newAdept: "/app/adepter/ny",
+  plans: "/app/planer",
+  newPlan: "/app/planer/ny",
+  testResults: "/app/testresultat",
+  progression: "/app/progression",
+  calendar: "/app/kalender",
+  aiCoach: "/app/ai-coach",
+  community: "/app/community",
+  settings: "/app/installningar",
 } as const;
 
-/** Paths reachable without a session. Matched as prefixes. */
-export const publicPaths: readonly string[] = [
-  routes.signIn,
-  routes.signUp,
-  routes.privacy,
-  "/auth",
-];
+/** The prefix that requires a session. */
+export const APP_PREFIX = "/app";
 
-export function isPublicPath(pathname: string): boolean {
-  return publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
+export function isProtectedPath(pathname: string): boolean {
+  return pathname === APP_PREFIX || pathname.startsWith(`${APP_PREFIX}/`);
 }

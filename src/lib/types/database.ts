@@ -64,6 +64,21 @@ export type TestResult = {
   updated_at: string;
 };
 
+export type LeadStatus = "ny" | "kontaktad" | "avslutad";
+
+/** Contact request from the public site. */
+export type Lead = {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  email: string;
+  message: string;
+  source: string | null;
+  status: LeadStatus;
+  created_at: string;
+  updated_at: string;
+};
+
 type Timestamps = "created_at" | "updated_at";
 
 export type Database = {
@@ -92,6 +107,12 @@ export type Database = {
         Row: TestType;
         Insert: Pick<TestType, "label" | "default_unit"> & Partial<TestType>;
         Update: Partial<TestType>;
+        Relationships: [];
+      };
+      leads: {
+        Row: Lead;
+        Insert: Pick<Lead, "first_name" | "email" | "message"> & Partial<Lead>;
+        Update: Partial<Lead>;
         Relationships: [];
       };
       test_results: {

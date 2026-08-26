@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-import { isPublicPath, routes } from "@/lib/routes";
+import { isProtectedPath, routes } from "@/lib/routes";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./env";
 
@@ -44,13 +44,11 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname, search } = request.nextUrl;
 
-  if (!user && !isPublicPath(pathname)) {
+  if (!user && isProtectedPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = routes.signIn;
     url.search = "";
-    if (pathname !== "/") {
-      url.searchParams.set("next", `${pathname}${search}`);
-    }
+    url.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(url);
   }
 

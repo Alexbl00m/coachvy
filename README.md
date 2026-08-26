@@ -1,13 +1,22 @@
-# Coachvy
+# Lindblom Coaching + Coachvy
 
-Plattform där en coach hanterar sina adepter, deras testresultat och deras
-träningsplaner.
+Ett projekt, två ytor:
+
+- **Den publika sajten** på `/` — Lindblom Coachings hemsida. Ljus, säljande,
+  serverrenderad för SEO.
+- **Coachvy** på `/app` — coachplattformen bakom inloggning. Mörk, där du
+  hanterar adepter, testresultat och planer.
+
+Samma varumärke, samma kodbas, samma Supabase. Sidhuvudet på den publika sajten
+läser sessionen: en besökare ser "Logga in", du ser "Min översikt".
 
 Byggt hittills:
 
 - **Fas 1** – skelettet: inloggning, registrering, sidhuvud, vänstermeny och en
   tom dashboard.
 - **Fas 2** – Adepter och Testmodulen, med riktig CRUD mot Supabase.
+- **Fas 3** – den publika sajten inflyttad från `lindblom-performance-hub`,
+  appen flyttad till `/app`, kontaktformuläret kopplat till databasen.
 
 Planer, Kalender, AI Coach Assistant och Community är fortfarande tomma
 platshållare och byggs modul för modul.
@@ -22,9 +31,21 @@ platshållare och byggs modul för modul.
 | Diagram    | recharts                                |
 | Ikoner     | lucide-react                            |
 
-Varumärke: Montserrat, accent `#E6754E`, bakgrund `#1A1A1E`. Färgskalan ligger
-som Tailwind-tokens i `src/app/globals.css` (`ink-*` och `accent*`) – ändra där,
-inte i enskilda komponenter.
+## Två ytor, ett designsystem
+
+Montserrat och accenten `#E6754E` gäller överallt. Bakgrunden gör det inte: den
+publika sajten är ljus, appen är mörk (`#1A1A1E`).
+
+Det löses med semantiska tokens i `src/app/globals.css` — färger heter efter vad
+de gör (`canvas`, `surface`, `line`, `text`, `text-muted`), inte efter hur mörka
+de är. `:root` håller de mörka värdena, och klassen `theme-light` på den publika
+layouten pekar om hela skalan. Delade komponenter (`Button`, `Field`, `Card`,
+`Logo`) använder bara semantiska tokens och fungerar därför på båda ytorna.
+
+Den råa `ink-*`-skalan finns kvar för appvyer som aldrig renderas ljust.
+
+Redigera färgerna i `globals.css`, aldrig i enskilda komponenter. Marknadsförings-
+texternas siffror och kontaktuppgifter ligger i `src/lib/site.ts`.
 
 ## Kom igång
 
@@ -104,27 +125,36 @@ den av coachen när adepten läggs upp.
 ```
 src/
   app/
-    (auth)/            logga-in, registrera – publika, egen layout
-    (app)/             allt bakom inloggning – sidhuvud + vänstermeny
+    (public)/          publika sajten – ljus yta, sidhuvud + sidfot
+      page.tsx         startsidan (hero, coaching, testning, om mig, kontakt)
+      integritetspolicy/
+    (auth)/            logga-in, registrera – egen layout
+    app/               allt bakom inloggning – mörk yta, vänstermeny
       oversikt/        dashboard efter inloggning
       adepter/         lista, ny adept, [id] med flikarna Översikt/Testresultat
       testresultat/    slussar adepten till sin egen testflik
       planer/ progression/ kalender/ ai-coach/ community/ installningar/
     auth/callback/     växlar Supabase-koden mot en session
-    integritetspolicy/ publik platshållarsida
-  components/          app-shell, sidebar, logga, formulärdelar
+    not-found.tsx      404 i varumärket
+  components/
+    public/            sidhuvud, sidfot och marknadsföringssektionerna
+    adepts/ tests/     appens moduler
+    ui/                delade primitiver (button, field, card)
   lib/
     auth/              server actions för in-/utloggning + sessionsläsning
     adepts/            frågor och server actions för adepter
     tests/             frågor och server actions för testmodulen
-    supabase/          klienter för browser, server och proxy
+    leads/             kontaktformulärets server action
+    site.ts            företagsuppgifter och menyn på publika sajten
     routes.ts          alla sökvägar på ett ställe
-    nav.ts             vänstermenyns innehåll
-  proxy.ts             uppdaterar sessionen och skyddar rutterna
+    supabase/          klienter för browser, server och proxy
+  proxy.ts             uppdaterar sessionen och skyddar /app
 ```
 
 `src/proxy.ts` heter så eftersom Next.js 16 döpt om `middleware.ts` till
-`proxy.ts`.
+`proxy.ts`. Skyddet är strukturellt: allt under `/app` kräver session, resten är
+öppet. En ny publik sida kan alltså inte råka bli inloggningsskyddad för att
+någon glömde lägga till den i en lista.
 
 ## Grafen
 
@@ -139,8 +169,15 @@ accentfärgen (`#e07049`) som ligger i rätt ljushetsband för den mörka ytan.
 Planer står näst på tur, sedan Progression och Kalender. Varje kvarvarande
 undersida renderar i dag `ModulePlaceholder` och byts ut när modulen är klar.
 
-Kända luckor i fas 2:
+Kända luckor:
 
+- **Bloggen är inte byggd.** Hub-sajten hade ett riktigt inlägg och två
+  markerade platshållare; jag hittar inte på tävlingsrapporter åt dig. När du
+  har texterna lägger vi in `/blogg` med MDX-filer i repot.
+- **Inkorgen för kontaktförfrågningar saknas.** Meddelanden sparas i `leads`
+  men det finns ingen vy i appen som visar dem ännu — läs dem i Supabase så
+  länge. Ingen mailavisering heller.
+- Formuläret har en honeypot men ingen hastighetsbegränsning.
 - Ingen inbjudan av adepter via e-post ännu — `adepts.profile_id` kopplas inte
   automatiskt när en adept registrerar sig med samma adress.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.

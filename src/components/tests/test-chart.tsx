@@ -103,6 +103,11 @@ export function TestChart({
   const pad = Math.max((hi - lo) * 0.15, Math.abs(hi) * 0.02, 1);
 
   const ticks = niceTicks(lo - pad, hi + pad);
+
+  // With few tests, label the actual test dates. Letting recharts pick ticks
+  // across a two-day domain repeats the same date five times.
+  const xTicks =
+    points.length <= 6 ? points.map((point) => point.t) : undefined;
   const lastIndex = points.length - 1;
 
   return (
@@ -126,6 +131,7 @@ export function TestChart({
             tick={{ fill: AXIS_TEXT, fontSize: 11 }}
             tickLine={false}
             axisLine={{ stroke: GRID }}
+            ticks={xTicks}
             minTickGap={28}
             tickMargin={8}
             height={28}

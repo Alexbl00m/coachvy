@@ -15,13 +15,13 @@ export function Logo({ markOnly = false, className }: LogoProps) {
     <span className={cn("flex items-center gap-2.5", className)}>
       <span
         aria-hidden
-        className="grid size-8 shrink-0 place-items-center rounded-md bg-accent font-bold text-[15px] tracking-tight text-ink-950"
+        className="grid size-8 shrink-0 place-items-center rounded-md bg-accent font-bold text-[15px] tracking-tight text-accent-on"
       >
         C
       </span>
       <span
         className={cn(
-          "text-[17px] font-semibold tracking-tight text-ink-50",
+          "text-[17px] font-semibold tracking-tight text-text",
           markOnly && "sr-only",
         )}
       >

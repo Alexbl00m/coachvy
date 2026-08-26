@@ -12,7 +12,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-lg border border-ink-800 bg-ink-850 p-5 sm:p-6",
+        "rounded-lg border border-line bg-surface p-5 sm:p-6",
         className,
       )}
     >
@@ -30,7 +30,7 @@ export function CardTitle({
 }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-ink-300">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-text-muted">
         {children}
       </h2>
       {action}
@@ -48,9 +48,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-ink-700 bg-ink-850/50 px-6 py-12 text-center">
-      <p className="text-sm font-medium text-ink-100">{title}</p>
-      <p className="mx-auto mt-1 max-w-md text-sm text-ink-400">{description}</p>
+    <div className="rounded-lg border border-dashed border-line-strong bg-surface-2/60 px-6 py-12 text-center">
+      <p className="text-sm font-medium text-text">{title}</p>
+      <p className="mx-auto mt-1 max-w-md text-sm text-text-muted">{description}</p>
       {action && <div className="mt-5 flex justify-center">{action}</div>}
     </div>
   );

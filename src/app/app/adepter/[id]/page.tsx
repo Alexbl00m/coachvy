@@ -18,7 +18,7 @@ const TABS = [
   { key: "testresultat", label: "Testresultat" },
 ] as const;
 
-export async function generateMetadata({ params }: PageProps<"/adepter/[id]">) {
+export async function generateMetadata({ params }: PageProps<"/app/adepter/[id]">) {
   const { id } = await params;
   const adept = await getAdept(id);
   return { title: adept?.full_name ?? "Adept" };
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps<"/adepter/[id]">) {
 export default async function AdeptPage({
   params,
   searchParams,
-}: PageProps<"/adepter/[id]">) {
+}: PageProps<"/app/adepter/[id]">) {
   const user = await requireSessionUser();
   const { id } = await params;
   const query = await searchParams;

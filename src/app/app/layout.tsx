@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { AppShell } from "@/components/app-shell";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -7,6 +9,10 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
  * prerendered — not even when the build runs without Supabase credentials.
  */
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: { default: "Coachvy", template: "%s · Coachvy" },
+};
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await getSessionUser();
