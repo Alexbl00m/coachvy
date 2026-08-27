@@ -38,6 +38,43 @@ export type LactateStep = {
 
 export type Sport = "cykling" | "löpning" | "simning";
 
+/**
+ * Enheten belastningen matas in i. Modellen är linjär i belastning och bryr
+ * sig inte om enheten, men tempot och etiketterna gör det – och rullbandstest
+ * rapporteras i km/h medan simtest rapporteras i m/s.
+ */
+export type IntensityUnit = "W" | "km/h" | "m/s";
+
+/** Vad tempokolumnen visar för respektive gren. */
+export type PaceKind = "min/km" | "s/100m" | null;
+
+export const UNITS_FOR_SPORT: Record<Sport, IntensityUnit[]> = {
+  cykling: ["W"],
+  löpning: ["km/h", "m/s"],
+  simning: ["m/s", "km/h"],
+};
+
+function paceKindFor(sport: Sport): PaceKind {
+  if (sport === "löpning") return "min/km";
+  if (sport === "simning") return "s/100m";
+  return null;
+}
+
+/** Tempo i sekunder, per km för löpning och per 100 m för simning. */
+export function paceSecondsFor(
+  sport: Sport,
+  unit: IntensityUnit,
+  intensity: number,
+): number | null {
+  if (!(intensity > 0)) return null;
+  const metresPerSecond = unit === "km/h" ? intensity / 3.6 : intensity;
+  if (unit === "W" || !(metresPerSecond > 0)) return null;
+
+  if (sport === "löpning") return 1000 / metresPerSecond;
+  if (sport === "simning") return 100 / metresPerSecond;
+  return null;
+}
+
 export type FitName =
   | "3:e gradens polynom"
   | "4:e gradens polynom"
@@ -103,8 +140,8 @@ export type ThresholdResult = {
   intensity: number | null;
   lactate: number | null;
   heartRate: number | null;
-  /** Sekunder per 100 m – bara för simning. */
-  pace: number | null;
+  /** Tempo i sekunder – per km för löpning, per 100 m för simning. */
+  paceSeconds: number | null;
   note?: string;
 };
 
@@ -114,6 +151,8 @@ export type LactateAnalysis = {
   curve: { intensity: number; lactate: number }[];
   /** Stegen efter baslinjejusteringen, för diagrammet. */
   steps: LactateStep[];
+  /** Vilket slags tempo resultaten bär, om något. */
+  paceKind: PaceKind;
   warnings: string[];
 };
 
@@ -124,23 +163,32 @@ const INTENSITY_DIGITS: Record<Sport, number> = {
   simning: 3,
 };
 
-/** Upplösning i den interpolerade kurvan, efter gren. */
+/** Originalets fasta upplösning i den interpolerade kurvan, efter gren. */
 const INTERPOLATION_STEP: Record<Sport, number> = {
   cykling: 0.1,
   löpning: 0.1,
   simning: 0.01,
 };
 
+/**
+ * Steglängd i det interpolerade rutnätet.
+ *
+ * Originalet har en fast steglängd per gren, vilket fungerar för cykel (25–191 W
+ * ger 1 661 punkter) men blir grovt för allt annat: ett rullbandstest i m/s
+ * spänner kanske 2,9–4,9 och får då 21 punkter, så brytpunktsmetoderna kan
+ * bara svara i steg om 0,1 m/s – nästan 0,4 km/h. Här förfinas steget när
+ * spannet är litet, medan cykelfallet lämnas orört.
+ */
+function interpolationStep(sport: Sport, range: number): number {
+  const base = INTERPOLATION_STEP[sport];
+  if (!(range > 0)) return base;
+  return Math.max(Math.min(base, range / 800), range / 2500);
+}
+
 const round = (value: number, digits: number) => {
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
 };
-
-/** m/s till sekunder per 100 m. */
-export function speedToPace(speed: number): number | null {
-  if (!(speed > 0)) return null;
-  return round(100 / speed, 1);
-}
 
 type Fitted = {
   predict: (x: number) => number;
@@ -187,12 +235,14 @@ export type AnalysisInput = {
    * brytpunkten tidigare i testet.
    */
   loglogRestrainer: number;
+  /** Enheten belastningen är angiven i. Förval: grenens första. */
+  unit?: IntensityUnit;
 };
 
 export function analyseLactateTest(input: AnalysisInput): LactateAnalysis | null {
   const { sport, fit, includeBaseline, methods, loglogRestrainer } = input;
+  const unit = input.unit ?? UNITS_FOR_SPORT[sport][0];
   const digits = INTENSITY_DIGITS[sport];
-  const stepSize = INTERPOLATION_STEP[sport];
   const warnings: string[] = [];
 
   const clean = input.steps
@@ -227,10 +277,11 @@ export function analyseLactateTest(input: AnalysisInput): LactateAnalysis | null
 
   const min = Math.min(...mx);
   const max = Math.max(...mx);
+  const stepSize = interpolationStep(sport, max - min);
 
   const grid: number[] = [];
   for (let v = min; v <= max + stepSize / 2; v += stepSize) {
-    grid.push(round(v, 6));
+    grid.push(round(v, 9));
   }
 
   const curve = grid.map((intensity) => ({
@@ -273,7 +324,8 @@ export function analyseLactateTest(input: AnalysisInput): LactateAnalysis | null
     intensity: intensity === null ? null : round(intensity, digits),
     lactate: lactate === null ? null : round(lactate, 1),
     heartRate: heartRateAt(intensity),
-    pace: sport === "simning" && intensity !== null ? speedToPace(intensity) : null,
+    paceSeconds:
+      intensity === null ? null : paceSecondsFor(sport, unit, intensity),
     note,
   });
 
@@ -513,7 +565,7 @@ export function analyseLactateTest(input: AnalysisInput): LactateAnalysis | null
     );
   }
 
-  return { results, curve, steps, warnings };
+  return { results, curve, steps, paceKind: paceKindFor(sport), warnings };
 }
 
 /**
