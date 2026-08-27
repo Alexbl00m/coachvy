@@ -13,12 +13,16 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import {
   METHOD_CATEGORIES,
+  UNITS_FOR_SPORT,
   analyseLactateTest,
+  paceSecondsFor,
   summariseThresholds,
   type FitName,
+  type IntensityUnit,
   type MethodCategory,
   type Sport,
 } from "@/lib/calculators/lactate";
+import { formatDuration } from "@/lib/calculators/time";
 import { cn } from "@/lib/cn";
 
 type Row = { id: number; intensity: string; lactate: string; heartRate: string };
@@ -35,10 +39,10 @@ const DEMO: Row[] = [
   { id: 7, intensity: "191", lactate: "8,64", heartRate: "198" },
 ];
 
-const SPORTS: { id: Sport; label: string; unit: string }[] = [
-  { id: "cykling", label: "Cykling", unit: "W" },
-  { id: "löpning", label: "Löpning", unit: "m/s" },
-  { id: "simning", label: "Simning", unit: "m/s" },
+const SPORTS: { id: Sport; label: string }[] = [
+  { id: "cykling", label: "Cykling" },
+  { id: "löpning", label: "Löpning" },
+  { id: "simning", label: "Simning" },
 ];
 
 const FITS: FitName[] = [
@@ -56,14 +60,21 @@ export function LactateCalculator() {
   const [rows, setRows] = useState<Row[]>(DEMO);
   const [nextId, setNextId] = useState(DEMO.length);
   const [sport, setSport] = useState<Sport>("cykling");
+  const [unit, setUnit] = useState<IntensityUnit>("W");
   const [fit, setFit] = useState<FitName>("3:e gradens polynom");
   const [includeBaseline, setIncludeBaseline] = useState(true);
   const [methods, setMethods] = useState<MethodCategory[]>(
     METHOD_CATEGORIES.map((m) => m.id),
   );
 
-  const unit = SPORTS.find((s) => s.id === sport)?.unit ?? "W";
   const digits = sport === "cykling" ? 1 : 2;
+  const unitChoices = UNITS_FOR_SPORT[sport];
+
+  /** Byte av gren återställer enheten till grenens vanligaste. */
+  const selectSport = (next: Sport) => {
+    setSport(next);
+    setUnit(UNITS_FOR_SPORT[next][0]);
+  };
 
   const setRow = (id: number, patch: Partial<Row>) =>
     setRows((current) =>
@@ -105,13 +116,24 @@ export function LactateCalculator() {
       includeBaseline,
       methods,
       loglogRestrainer: 1,
+      unit,
     });
-  }, [rows, sport, fit, includeBaseline, methods]);
+  }, [rows, sport, unit, fit, includeBaseline, methods]);
 
   const summary = useMemo(
     () => (analysis ? summariseThresholds(analysis.results) : null),
     [analysis],
   );
+
+  /** Tempot vid en tröskel, färdigt att sätta under nyckeltalet. */
+  const paceHint = (value: number | null | undefined): string | undefined => {
+    if (value == null || !analysis?.paceKind) return undefined;
+    const seconds = paceSecondsFor(sport, unit, value);
+    if (seconds === null) return undefined;
+    return analysis.paceKind === "s/100m"
+      ? `${sv(seconds, 1)} s/100m`
+      : `${formatDuration(seconds)} min/km`;
+  };
 
   const results = [
     {
@@ -120,9 +142,11 @@ export function LactateCalculator() {
         ? sv(summary.lt1, digits)
         : "–",
       unit,
-      hint: summary?.lt1Methods.length
-        ? `median av ${summary.lt1Methods.length} metoder`
-        : undefined,
+      hint:
+        paceHint(summary?.lt1) ??
+        (summary?.lt1Methods.length
+          ? `median av ${summary.lt1Methods.length} metoder`
+          : undefined),
     },
     {
       label: "LT2 · anaerob tröskel",
@@ -130,9 +154,11 @@ export function LactateCalculator() {
         ? sv(summary.lt2, digits)
         : "–",
       unit,
-      hint: summary?.lt2Methods.length
-        ? `median av ${summary.lt2Methods.length} metoder`
-        : undefined,
+      hint:
+        paceHint(summary?.lt2) ??
+        (summary?.lt2Methods.length
+          ? `median av ${summary.lt2Methods.length} metoder`
+          : undefined),
     },
     {
       label: "Zon 2 · spann",
@@ -260,7 +286,7 @@ export function LactateCalculator() {
               <Select
                 id="sport"
                 value={sport}
-                onChange={(e) => setSport(e.target.value as Sport)}
+                onChange={(e) => selectSport(e.target.value as Sport)}
               >
                 {SPORTS.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -269,6 +295,26 @@ export function LactateCalculator() {
                 ))}
               </Select>
             </Field>
+
+            {unitChoices.length > 1 && (
+              <Field
+                label="Enhet på belastningen"
+                htmlFor="unit"
+                hint="Rullbandsrapporter är oftast i km/h"
+              >
+                <Select
+                  id="unit"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value as IntensityUnit)}
+                >
+                  {unitChoices.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
 
             <Field
               label="Kurvanpassning"
@@ -340,7 +386,7 @@ export function LactateCalculator() {
               <LactateChart
                 curve={analysis.curve}
                 steps={analysis.steps}
-                sport={sport}
+                unit={unit}
                 lt1={summary.lt1}
                 lt2={summary.lt2}
               />
@@ -350,7 +396,7 @@ export function LactateCalculator() {
               <CardTitle>Spridning mellan metoder</CardTitle>
               <MethodSpread
                 rows={analysis.results}
-                sport={sport}
+                unit={unit}
                 lt1={summary.lt1}
                 lt2={summary.lt2}
               />
@@ -360,8 +406,15 @@ export function LactateCalculator() {
           <Card>
             <CardTitle>Alla metoder</CardTitle>
             <DataTable
-              headers={["Metod", "Kurva", `Belastning (${unit})`, "Laktat (mmol/l)", "Puls"]}
-              minWidth={680}
+              headers={[
+                "Metod",
+                "Kurva",
+                `Belastning (${unit})`,
+                ...(analysis.paceKind ? [`Tempo (${analysis.paceKind})`] : []),
+                "Laktat (mmol/l)",
+                "Puls",
+              ]}
+              minWidth={analysis.paceKind ? 780 : 680}
               rows={analysis.results.map((r) => [
                 <span key="m" className="flex items-baseline gap-2">
                   {r.method}
@@ -374,11 +427,16 @@ export function LactateCalculator() {
                 <span key="f" className="text-[12px]">
                   {r.fitting}
                 </span>,
-                r.intensity === null
-                  ? "–"
-                  : sport === "simning" && r.pace
-                    ? `${sv(r.intensity, digits)} (${sv(r.pace, 1)} s/100m)`
-                    : sv(r.intensity, digits),
+                r.intensity === null ? "–" : sv(r.intensity, digits),
+                ...(analysis.paceKind
+                  ? [
+                      r.paceSeconds === null
+                        ? "–"
+                        : analysis.paceKind === "s/100m"
+                          ? sv(r.paceSeconds, 1)
+                          : formatDuration(r.paceSeconds),
+                    ]
+                  : []),
                 r.lactate === null ? "–" : sv(r.lactate, 1),
                 r.heartRate === null ? "–" : r.heartRate,
               ])}

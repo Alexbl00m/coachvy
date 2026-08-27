@@ -18,12 +18,13 @@ import {
   CHART_SURFACE,
   SERIES,
 } from "@/lib/calculators/chart-colors";
-import type { LactateStep, Sport } from "@/lib/calculators/lactate";
+import type { IntensityUnit, LactateStep } from "@/lib/calculators/lactate";
 
-const UNIT: Record<Sport, string> = {
-  cykling: "W",
-  löpning: "m/s",
-  simning: "m/s",
+/** Antal decimaler på axeln, efter enhet – watt behöver inga. */
+const AXIS_DIGITS: Record<IntensityUnit, number> = {
+  W: 0,
+  "km/h": 1,
+  "m/s": 2,
 };
 
 const sv = (value: number, digits: number) =>
@@ -71,20 +72,19 @@ function CurveTooltip({
 export function LactateChart({
   curve,
   steps,
-  sport,
+  unit,
   lt1,
   lt2,
 }: {
   curve: Point[];
   steps: LactateStep[];
-  sport: Sport;
+  unit: IntensityUnit;
   lt1: number | null;
   lt2: number | null;
 }) {
   if (curve.length < 2) return null;
 
-  const unit = UNIT[sport];
-  const digits = sport === "cykling" ? 0 : 2;
+  const digits = AXIS_DIGITS[unit];
 
   const maxLactate = Math.max(
     ...curve.map((p) => p.lactate),
@@ -194,12 +194,12 @@ export function LactateChart({
  */
 export function MethodSpread({
   rows,
-  sport,
+  unit,
   lt1,
   lt2,
 }: {
   rows: { method: string; intensity: number | null }[];
-  sport: Sport;
+  unit: IntensityUnit;
   lt1: number | null;
   lt2: number | null;
 }) {
@@ -208,8 +208,7 @@ export function MethodSpread({
   );
   if (usable.length < 2) return null;
 
-  const unit = UNIT[sport];
-  const digits = sport === "cykling" ? 0 : 2;
+  const digits = AXIS_DIGITS[unit];
   const values = usable.map((r) => r.intensity);
   const min = Math.min(...values);
   const max = Math.max(...values);
