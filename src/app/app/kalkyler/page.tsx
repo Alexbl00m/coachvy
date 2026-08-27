@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, ArrowRight, Gauge, LineChart, Waves } from "lucide-react";
+import { Activity, ArrowRight, Bike, Gauge, LineChart, Waves } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { requireCoach } from "@/lib/auth/session";
@@ -8,6 +8,14 @@ import { routes } from "@/lib/routes";
 export const metadata = { title: "Kalkyler" };
 
 const calculators = [
+  {
+    href: routes.bikePower,
+    icon: Bike,
+    title: "Effekt och fart",
+    description:
+      "Effektbalansen på cykel: rullmotstånd, stigning och luft. Räknar fram effekt, fart eller måltid – och vad aero, vikt och däck är värda i tid.",
+    inputs: "Vikt, sträcka, väder och position",
+  },
   {
     href: routes.criticalPower,
     icon: Gauge,
