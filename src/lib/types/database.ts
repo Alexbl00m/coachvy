@@ -85,6 +85,50 @@ export type VlamaxSample = {
   updated_at: string;
 };
 
+/** Ett testtillfälle: protokoll, gren och datum. Rådatan ligger i test_efforts. */
+export type TestSessionRow = {
+  id: string;
+  adept_id: string;
+  protocol: string;
+  sport: string;
+  intensity_unit: string;
+  performed_on: string;
+  weight_kg: number | null;
+  zone_scheme: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Ett steg eller en ansträngning. Vilka fält som är satta beror på protokollet. */
+export type TestEffortRow = {
+  id: string;
+  session_id: string;
+  ordinal: number;
+  intensity: number | null;
+  duration_seconds: number | null;
+  distance_m: number | null;
+  lactate: number | null;
+  heart_rate: number | null;
+  rpe: number | null;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Ett framräknat värde ur ett testtillfälle: CP, LT2, FTP, CS ... */
+export type TestMetricRow = {
+  id: string;
+  session_id: string;
+  key: string;
+  value: number;
+  unit: string;
+  method: string | null;
+  is_primary: boolean;
+  created_at: string;
+};
+
 export type LeadStatus = "ny" | "kontaktad" | "avslutad";
 
 /** Contact request from the public site. */
@@ -141,6 +185,30 @@ export type Database = {
         Insert: Omit<VlamaxSample, "id" | Timestamps> &
           Partial<Pick<VlamaxSample, "id">>;
         Update: Partial<VlamaxSample>;
+        Relationships: [];
+      };
+      test_sessions: {
+        Row: TestSessionRow;
+        Insert: Pick<
+          TestSessionRow,
+          "adept_id" | "protocol" | "sport" | "intensity_unit"
+        > &
+          Partial<TestSessionRow>;
+        Update: Partial<TestSessionRow>;
+        Relationships: [];
+      };
+      test_efforts: {
+        Row: TestEffortRow;
+        Insert: Pick<TestEffortRow, "session_id" | "ordinal"> &
+          Partial<TestEffortRow>;
+        Update: Partial<TestEffortRow>;
+        Relationships: [];
+      };
+      test_metrics: {
+        Row: TestMetricRow;
+        Insert: Pick<TestMetricRow, "session_id" | "key" | "value" | "unit"> &
+          Partial<TestMetricRow>;
+        Update: Partial<TestMetricRow>;
         Relationships: [];
       };
       test_results: {
