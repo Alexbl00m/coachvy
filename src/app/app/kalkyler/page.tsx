@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { Activity, ArrowRight, Bike, Gauge, LineChart, Waves } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  Bike,
+  Droplet,
+  Gauge,
+  LineChart,
+  Waves,
+} from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { requireCoach } from "@/lib/auth/session";
@@ -8,6 +16,14 @@ import { routes } from "@/lib/routes";
 export const metadata = { title: "Kalkyler" };
 
 const calculators = [
+  {
+    href: routes.lactateThresholds,
+    icon: Droplet,
+    title: "Laktattrösklar",
+    description:
+      "LT1 och LT2 ur ett stegtest med sjutton etablerade metoder – Log-log, OBLA, Bsln+, Dmax, LTP och LTratio – plus zonerna de ger.",
+    inputs: "Belastning, laktat och puls per steg",
+  },
   {
     href: routes.bikePower,
     icon: Bike,
