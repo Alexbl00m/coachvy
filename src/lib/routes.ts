@@ -23,6 +23,7 @@ export const routes = {
   testResults: "/app/testresultat",
   calculators: "/app/kalkyler",
   bikePower: "/app/kalkyler/cykeleffekt",
+  lactateThresholds: "/app/kalkyler/laktattrosklar",
   criticalPower: "/app/kalkyler/critical-power",
   criticalSpeed: "/app/kalkyler/critical-speed",
   metabolicProfile: "/app/kalkyler/metabolisk-profil",
