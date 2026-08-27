@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { PageHeader } from "@/components/page-header";
+import { SessionPanel } from "@/components/tests/session-panel";
 import { TestResultsPanel } from "@/components/tests/test-results-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
@@ -12,11 +13,22 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { listTestResults, listTestTypes } from "@/lib/tests/queries";
+import { rollingCriticalPower, rollingCriticalSpeed } from "@/lib/tests/rolling";
+import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
 
 const TABS = [
   { key: "oversikt", label: "Översikt" },
-  { key: "testresultat", label: "Testresultat" },
+  { key: "testtillfallen", label: "Testtillfällen" },
+  { key: "testresultat", label: "Enstaka värden" },
 ] as const;
+
+/** Adeptens sport som fritext, mappad till en gren modellen känner igen. */
+function sportOf(raw: string | null): "cykling" | "löpning" | "simning" {
+  const value = (raw ?? "").toLowerCase();
+  if (value.includes("löp") || value.includes("run")) return "löpning";
+  if (value.includes("sim") || value.includes("swim")) return "simning";
+  return "cykling";
+}
 
 export async function generateMetadata({ params }: PageProps<"/app/adepter/[id]">) {
   const { id } = await params;
@@ -45,10 +57,24 @@ export default async function AdeptPage({
       ? query.vy
       : "oversikt";
 
-  const [results, testTypes] = await Promise.all([
+  const sport = sportOf(adept.sport);
+
+  const [results, testTypes, sessions, efforts] = await Promise.all([
     listTestResults(adept.id),
     canEdit ? listTestTypes() : Promise.resolve([]),
+    listSessions(adept.id),
+    listMaximalEfforts(adept.id, sport),
   ]);
+
+  // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
+  // flyttat kurvan sedan dess.
+  const lastFullTestOn = sessions[0]?.performed_on ?? null;
+  const rolling =
+    sport === "cykling"
+      ? rollingCriticalPower({ efforts, lastFullTestOn })
+      : rollingCriticalSpeed({ efforts, lastFullTestOn });
+
+  const speedUnit = sport === "simning" ? "m/s" : "km/h";
 
   const latest = [...results].sort((a, b) =>
     b.tested_on.localeCompare(a.tested_on),
@@ -143,6 +169,17 @@ export default async function AdeptPage({
             </Card>
           </div>
         </div>
+      ) : tab === "testtillfallen" ? (
+        <SessionPanel
+          adeptId={adept.id}
+          sessions={sessions}
+          rolling={rolling}
+          rollingLabel={sport === "cykling" ? "CP" : "CS"}
+          rollingUnit={sport === "cykling" ? "W" : speedUnit}
+          reserveLabel={sport === "cykling" ? "W′" : "D′"}
+          reserveUnit={sport === "cykling" ? "kJ" : "m"}
+          canEdit={canEdit}
+        />
       ) : (
         <TestResultsPanel
           adeptId={adept.id}
