@@ -22,6 +22,7 @@ export const routes = {
   newPlan: "/app/planer/ny",
   testResults: "/app/testresultat",
   calculators: "/app/kalkyler",
+  bikePower: "/app/kalkyler/cykeleffekt",
   criticalPower: "/app/kalkyler/critical-power",
   criticalSpeed: "/app/kalkyler/critical-speed",
   metabolicProfile: "/app/kalkyler/metabolisk-profil",

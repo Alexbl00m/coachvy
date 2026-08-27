@@ -7,6 +7,12 @@ export const SERIES = {
   /** Brand-accenten, nedsänkt till diagrammens ljushetsband. */
   primary: "#e07049",
   secondary: "#3d9ec2",
+  /**
+   * Tredje serien, för effektbudgeten i cykelkalkylen. Sämsta grannpar med de
+   * två ovan är ΔE 18,1 för normalseende och 14,6 under protanopi – båda över
+   * gränsen. Validerad med dataviz-skillens `validate_palette.js` mot #1f1f24.
+   */
+  tertiary: "#7fa03f",
 } as const;
 
 export const CHART_GRID = "#2f2f37";
