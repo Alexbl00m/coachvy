@@ -117,3 +117,70 @@ body {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/**
+ * Utskrift.
+ *
+ * "Spara som PDF" ligger i webbläsarens egen utskriftsdialog, så en fungerande
+ * utskriftsstil är hela PDF-exporten – utan ett bibliotek som ritar om sidan i
+ * en canvas och tappar både vektortext och radbrytning på vägen.
+ *
+ * Sidan tvingas till den ljusa paletten oavsett var den renderas: en mörk yta
+ * blir en svart sida på papper.
+ */
+@media print {
+  :root {
+    --canvas: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --line: #d5cbc1;
+    --line-strong: #b8ab9e;
+    --text: #1a1a1e;
+    --text-muted: #44444c;
+    --text-subtle: #5c5c66;
+    --accent-soft: #ffffff;
+    --accent-on: #ffffff;
+    --chart-grid: #d5cbc1;
+    --chart-axis-text: #44444c;
+    --chart-surface: #ffffff;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  /* Sajtens ram hör inte hemma i en utskrift. */
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  /* Korten blir ramar i stället för ytor, och får inte brytas mitt itu. */
+  .rounded-lg {
+    border-color: var(--line);
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  table {
+    break-inside: auto;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  /* Inmatningsfälten skrivs ut som sina värden, inte som formulärrutor. */
+  input,
+  select,
+  textarea {
+    border-color: var(--line) !important;
+    background: transparent !important;
+    color: var(--text) !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}

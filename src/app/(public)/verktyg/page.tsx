@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bike, Gauge, Timer } from "lucide-react";
+import { ArrowRight, Bike, FlaskConical, Gauge, Timer } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
@@ -12,6 +12,14 @@ export const metadata = {
 };
 
 const tools = [
+  {
+    href: "/verktyg/testberakning",
+    icon: FlaskConical,
+    title: "Testberäkning",
+    description:
+      "Elva protokoll för cykel, löpning och simning: CP och W′, FTP, critical speed och laktattrösklar. Ta med dig resultatet som PDF.",
+    inputs: "Ditt testresultat",
+  },
   {
     href: "/verktyg/loppprognos",
     icon: Timer,
@@ -53,7 +61,7 @@ export default function ToolsPage() {
         säger.
       </p>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-12 grid gap-4 sm:grid-cols-2">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (

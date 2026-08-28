@@ -7,6 +7,7 @@ export const site = {
   phoneLabel: "070-333 05 11",
   location: "Norrköping",
   instagram: "https://instagram.com/lindblomcoaching",
+  website: "lindblomcoaching.com",
 
   /** Figures shown in the hero. Edit here, not in the markup. */
   activeAdepts: "320+",

@@ -10,7 +10,7 @@ export function ToolHeader({
   description: string;
 }) {
   return (
-    <div className="mb-10">
+    <div className="mb-10 print:hidden">
       <Link
         href="/verktyg"
         className="inline-flex items-center gap-1.5 text-sm text-text-subtle transition-colors hover:text-text"
