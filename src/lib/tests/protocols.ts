@@ -12,6 +12,10 @@ export type ProtocolKey =
   | "laktat-steg"
   | "critical-power"
   | "ftp-20"
+  | "cp-5min"
+  | "cp-6min"
+  | "cp-3min"
+  | "cp-ramp"
   | "critical-speed"
   | "cs-3min"
   | "cs-3-5min"
@@ -115,6 +119,66 @@ export const PROTOCOLS: Protocol[] = [
     maxEfforts: 1,
     shape: EFFORT_SHAPE,
     produces: ["FTP", "Zoner"],
+    zoneScheme: "ftp",
+  },
+  {
+    key: "cp-3min",
+    label: "3 min all-out",
+    sports: ["cykling"],
+    purpose:
+      "Ett enda pass som ger både CP och W′. Kräver att du kan läsa av medeleffekten för sista 30 sekunderna.",
+    howTo:
+      "Efter uppvärmning: tramp maximalt i tre minuter utan att fördela krafterna. CP är medeleffekten under sista 30 sekunderna, W′ arbetet över den nivån.",
+    remote: true,
+    minEfforts: 2,
+    maxEfforts: 2,
+    shape: EFFORT_SHAPE,
+    produces: ["CP", "W′", "FTP", "Zoner"],
+    zoneScheme: "ftp",
+  },
+  {
+    key: "cp-5min",
+    label: "5-minuterstest",
+    sports: ["cykling"],
+    purpose:
+      "Snabbt fjärrtest med ett enda intervall. Ger en skattning av CP, men bygger på ett befolkningssnitt – inte på atletens egen kurva.",
+    howTo:
+      "Ett maximalt femminutersintervall efter uppvärmning. CP skattas till 80 % av medeleffekten.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: 1,
+    shape: EFFORT_SHAPE,
+    produces: ["CP", "W′", "FTP", "Zoner"],
+    zoneScheme: "ftp",
+  },
+  {
+    key: "cp-6min",
+    label: "6-minuterstest",
+    sports: ["cykling"],
+    purpose:
+      "Som femminuterstestet men med en längre insats, vilket ligger närmare CP och gör skattningen något stabilare.",
+    howTo:
+      "Ett maximalt sexminutersintervall efter uppvärmning. CP skattas till 82,5 % av medeleffekten.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: 1,
+    shape: EFFORT_SHAPE,
+    produces: ["CP", "W′", "FTP", "Zoner"],
+    zoneScheme: "ftp",
+  },
+  {
+    key: "cp-ramp",
+    label: "Ramptest",
+    sports: ["cykling"],
+    purpose:
+      "Stegrande belastning till utmattning. Ger en grov CP-skattning – men inget mått på anaerob kapacitet.",
+    howTo:
+      "Öka belastningen jämnt tills du inte orkar hålla kadensen. Ange den högsta effekten och hur snabbt belastningen steg.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: 1,
+    shape: EFFORT_SHAPE,
+    produces: ["CP", "FTP", "Zoner"],
     zoneScheme: "ftp",
   },
   {
