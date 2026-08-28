@@ -15,6 +15,17 @@ export const SERIES = {
   tertiary: "#7fa03f",
 } as const;
 
-export const CHART_GRID = "#2f2f37";
-export const CHART_AXIS_TEXT = "#7a7a86";
-export const CHART_SURFACE = "#1f1f24";
+/**
+ * Diagrammens ram som CSS-variabler i stället för fasta värden.
+ *
+ * Samma komponenter renderas på den mörka appen och den ljusa publika sajten.
+ * Serierna är validerade mot båda ytorna och behöver inte bytas, men rutnätet,
+ * axeltexten och ytan bakom en punkt måste vända – och SVG-attribut löser
+ * var() precis som vilken annan färgangivelse som helst.
+ */
+export const CHART_GRID = "var(--chart-grid)";
+export const CHART_AXIS_TEXT = "var(--chart-axis-text)";
+export const CHART_SURFACE = "var(--chart-surface)";
+
+/** Textfärg för etiketter direkt på datan, som en utpekad punkt. */
+export const CHART_LABEL_TEXT = "var(--text)";

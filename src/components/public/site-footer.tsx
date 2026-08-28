@@ -34,28 +34,33 @@ export function SiteFooter() {
             </h2>
             <ul className="mt-4 space-y-2.5 text-sm text-text-muted">
               <li>
-                <a href="#coaching" className="hover:text-accent">
+                <Link href="/#coaching" className="hover:text-accent">
                   Individuell coaching
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#coaching" className="hover:text-accent">
+                <Link href="/#coaching" className="hover:text-accent">
                   Träningsplan
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#testning" className="hover:text-accent">
+                <Link href="/#testning" className="hover:text-accent">
                   Laktattest cykel
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#testning" className="hover:text-accent">
+                <Link href="/#testning" className="hover:text-accent">
                   Laktattest löpning
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#testning" className="hover:text-accent">
+                <Link href="/#testning" className="hover:text-accent">
                   VLamax-test
+                </Link>
+              </li>
+              <li>
+                <a href="/verktyg" className="hover:text-accent">
+                  Fria verktyg
                 </a>
               </li>
             </ul>

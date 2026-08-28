@@ -13,9 +13,15 @@ export const site = {
   openSpots: 8,
 } as const;
 
+/**
+ * Adresserna är absoluta, inte bara ankare. Headern visas även på
+ * verktygssidorna, och där skulle "#kontakt" peka på ett ankare som inte
+ * finns på just den sidan i stället för på startsidans kontaktsektion.
+ */
 export const sections = [
-  { href: "#coaching", label: "Coaching" },
-  { href: "#testning", label: "Testning" },
-  { href: "#om-mig", label: "Om mig" },
-  { href: "#kontakt", label: "Kontakt" },
+  { href: "/#coaching", label: "Coaching" },
+  { href: "/#testning", label: "Testning" },
+  { href: "/verktyg", label: "Verktyg" },
+  { href: "/#om-mig", label: "Om mig" },
+  { href: "/#kontakt", label: "Kontakt" },
 ] as const;

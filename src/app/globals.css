@@ -69,6 +69,12 @@
   --text-subtle: #7a7a86;
   --accent-soft: #35211a;
   --accent-on: #121216;
+
+  /* Diagrammens ram. Serierna själva är validerade mot båda ytorna och byts
+     inte; det är rutnätet, axeltexten och ytan bakom som måste vända. */
+  --chart-grid: #2f2f37;
+  --chart-axis-text: #7a7a86;
+  --chart-surface: #1f1f24;
 }
 
 /* The public marketing surface. */
@@ -83,6 +89,10 @@
   --text-subtle: #7a7a86;
   --accent-soft: #fdf1ec;
   --accent-on: #ffffff;
+
+  --chart-grid: #e8e2dc;
+  --chart-axis-text: #6b6b75;
+  --chart-surface: #ffffff;
 }
 
 html,
