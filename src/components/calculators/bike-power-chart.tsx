@@ -15,6 +15,7 @@ import {
 import {
   CHART_AXIS_TEXT,
   CHART_GRID,
+  CHART_LABEL_TEXT,
   CHART_SURFACE,
   SERIES,
 } from "@/lib/calculators/chart-colors";
@@ -154,7 +155,7 @@ export function SpeedPowerChart({
               label={{
                 value: `${sv(currentKmh, 1)} km/h · ${Math.round(currentWatts)} W`,
                 position: "top",
-                fill: "#e7e7ec",
+                fill: CHART_LABEL_TEXT,
                 fontSize: 11,
               }}
             />
