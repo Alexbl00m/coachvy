@@ -238,6 +238,15 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         metric("CP_per_kg", "CP per kg", result.criticalPower / weightKg, "W/kg"),
       );
     }
+    const profile = anaerobicProfile(result.criticalPower, result.wPrime * 1000);
+    if (profile) {
+      metrics.push(
+        metric("W_prime_CP", "W′/CP", profile.ratio, "J/W", {
+          method: profile.label,
+        }),
+      );
+      warnings.push(`${profile.label}: ${profile.reading}`);
+    }
     if (result.goodnessOfFit !== null) {
       metrics.push(metric("R2", "Anpassning", result.goodnessOfFit, "%"));
     } else {
@@ -286,6 +295,132 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
     );
 
     return { metrics, zones: ftpZones(ftp), zoneUnit: "W", warnings };
+  }
+
+  // -------------------------------------------------------------------------
+  // Enkelinsatsprotokoll på cykel: 5 min, 6 min, ramp
+  //
+  // Alla tre skattar CP ur ett enda tal via en publicerad faktor. Faktorerna
+  // är befolkningssnitt, inte atletens egen kurva, så de sätts aldrig som
+  // primärvärde utan en varning om vad det betyder.
+  // -------------------------------------------------------------------------
+  if (protocol === "cp-5min" || protocol === "cp-6min" || protocol === "cp-ramp") {
+    const effort = efforts.find((e) => e.intensity !== null && e.intensity > 0);
+    if (!effort || effort.intensity === null) {
+      return {
+        metrics: [],
+        zones: [],
+        zoneUnit: "W",
+        warnings: ["Ange effekten för insatsen."],
+      };
+    }
+
+    const power = effort.intensity;
+    const settings = {
+      "cp-5min": { factor: 0.8, seconds: 300, label: "80 % av 5 min", source: "Pettitt m.fl. (2019)" },
+      "cp-6min": { factor: 0.825, seconds: 360, label: "82,5 % av 6 min", source: "Vautier m.fl. (1995)" },
+      "cp-ramp": { factor: 0.75, seconds: 0, label: "75 % av toppeffekten", source: "Díaz m.fl. (2018)" },
+    }[protocol];
+
+    const cp = power * settings.factor;
+    const metrics: Metric[] = [
+      metric("CP", "Critical power", cp, "W", {
+        method: settings.label,
+        isPrimary: true,
+      }),
+      metric("FTP", "FTP", cp * 0.95, "W", { method: "0,95 × CP" }),
+      metric("P_test", "Effekt i testet", power, "W"),
+    ];
+
+    // W' bara där det faktiskt går att härleda: överskottsarbetet över CP
+    // under insatsen. Ramptestet har ingen sådan insats – belastningen steg
+    // hela tiden – så där finns inget W' att räkna fram.
+    if (settings.seconds > 0) {
+      const wPrime = (power - cp) * settings.seconds;
+      if (wPrime > 0) {
+        metrics.push(
+          metric("W_prime", "W′ – anaerob kapacitet", wPrime / 1000, "kJ", {
+            method: `(P − CP) × ${settings.seconds} s`,
+            isPrimary: true,
+          }),
+        );
+      }
+    } else {
+      warnings.push(
+        "Ramptestet ger ingen anaerob kapacitet. Originalkalkylatorn satte W′ till 20 kJ plus 100 J per kilo kroppsvikt, alltså ett tal som bara berodde på hur mycket atleten vägde och inte alls på hur testet gick. Det är utelämnat här.",
+      );
+    }
+
+    if (weightKg && weightKg > 0) {
+      metrics.push(metric("CP_per_kg", "CP per kg", cp / weightKg, "W/kg"));
+      metrics.push(
+        metric("VO2max", "VO2max (skattad)", (10.8 * cp) / weightKg + 7, "ml/kg/min"),
+      );
+    }
+
+    warnings.push(
+      `CP räknas som ${settings.label} enligt ${settings.source}. Faktorn är ett snitt över en testgrupp – en enskild atlet kan ligga flera procent åt endera hållet. Ett test med två eller tre insatser ger atletens egen kurva i stället för gruppens.`,
+    );
+
+    return { metrics, zones: ftpZones(cp * 0.95), zoneUnit: "W", warnings };
+  }
+
+  // -------------------------------------------------------------------------
+  // 3 min all-out på cykel
+  // -------------------------------------------------------------------------
+  if (protocol === "cp-3min") {
+    const sorted = [...efforts]
+      .filter((e) => e.intensity !== null && e.durationSeconds !== null)
+      .sort((a, b) => (a.durationSeconds as number) - (b.durationSeconds as number));
+
+    const tail = sorted.find((e) => Math.abs((e.durationSeconds as number) - 30) < 15);
+    const whole = sorted.find((e) => (e.durationSeconds as number) >= 150);
+
+    if (!tail || !whole) {
+      return {
+        metrics: [],
+        zones: [],
+        zoneUnit: "W",
+        warnings: [
+          "Två rader krävs: medeleffekten under sista 30 sekunderna, och medeleffekten för hela testet (180 s).",
+        ],
+      };
+    }
+
+    // Vanhatalo m.fl. (2007): CP är effekten i slutet, W' arbetet över den.
+    const cp = tail.intensity as number;
+    const wPrime = ((whole.intensity as number) - cp) * (whole.durationSeconds as number);
+
+    const metrics: Metric[] = [
+      metric("CP", "Critical power", cp, "W", {
+        method: "sista 30 s",
+        isPrimary: true,
+      }),
+    ];
+
+    if (wPrime > 0) {
+      metrics.push(
+        metric("W_prime", "W′ – anaerob kapacitet", wPrime / 1000, "kJ", {
+          method: "(medeleffekt − CP) × 180 s",
+          isPrimary: true,
+        }),
+      );
+    } else {
+      warnings.push(
+        "Medeleffekten för hela testet ligger inte över slutvärdet, vilket betyder att insatsen inte var maximal från start. W′ går inte att räkna fram.",
+      );
+    }
+
+    metrics.push(metric("FTP", "FTP", cp * 0.95, "W", { method: "0,95 × CP" }));
+    if (weightKg && weightKg > 0) {
+      metrics.push(metric("CP_per_kg", "CP per kg", cp / weightKg, "W/kg"));
+    }
+
+    warnings.push(
+      "Testet förutsätter att atleten går ut maximalt från första sekunden och aldrig fördelar krafterna. Den som sparar sig får ett för högt CP.",
+    );
+
+    return { metrics, zones: ftpZones(cp * 0.95), zoneUnit: "W", warnings };
   }
 
   // -------------------------------------------------------------------------
@@ -471,3 +606,55 @@ export function racePredictions(
 }
 
 export { toMetresPerSecond, toUnit };
+
+/**
+ * Kvoten W′/CP och vad den säger om atletens profil.
+ *
+ * Måttet är hur stor den anaeroba reserven är i förhållande till den aeroba
+ * effekten: hur många joule över CP atleten har per watt CP. Det är ett rent
+ * förhållande mellan två mätta storheter, och därför jämförbart mellan
+ * atleter på ett sätt som varken CP eller W′ är var för sig.
+ *
+ * En hög kvot betyder att mycket av kapaciteten ligger över tröskeln – en
+ * sprinttyp som vinner på att kunna gå över CP ofta och länge. En låg kvot
+ * betyder motsatsen: en diesel vars styrka sitter i själva tröskeln.
+ *
+ * Här står medvetet ingen träningsrekommendation. Originalappen valde mellan
+ * tre färdiga punktlistor efter CP/kg – samma råd till alla i ett brett spann,
+ * utan att titta på W′, atletens gren eller vad hen faktiskt tränar. Vad den
+ * här atleten ska göra åt sin profil är coachens jobb, inte en tabells.
+ */
+export function anaerobicProfile(
+  criticalPower: number,
+  wPrimeJoules: number,
+): { ratio: number; label: string; reading: string } | null {
+  if (!(criticalPower > 0) || !(wPrimeJoules > 0)) return null;
+
+  const ratio = wPrimeJoules / criticalPower;
+
+  // Gränserna nedan är beskrivande, inte normerande: de delar in kvoten i tre
+  // band så att en förändring över tid går att sätta ord på. De säger inget
+  // om hur bra atleten är.
+  if (ratio < 55) {
+    return {
+      ratio,
+      label: "Aerob profil",
+      reading:
+        "Liten anaerob reserv i förhållande till tröskeln. Styrkan sitter i att hålla hög effekt länge, inte i att gå över den.",
+    };
+  }
+  if (ratio > 85) {
+    return {
+      ratio,
+      label: "Anaerob profil",
+      reading:
+        "Stor anaerob reserv i förhållande till tröskeln. Tål upprepade insatser över CP, men tappar mer på långa jämna belastningar.",
+    };
+  }
+  return {
+    ratio,
+    label: "Jämn profil",
+    reading:
+      "Anaerob reserv och tröskel står i ungefär samma förhållande som hos de flesta uthållighetsatleter.",
+  };
+}
