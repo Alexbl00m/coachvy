@@ -256,3 +256,17 @@ export function defaultUnitFor(sport: Sport): "W" | "km/h" | "m/s" {
   if (sport === "löpning") return "km/h";
   return "m/s";
 }
+
+/**
+ * Adeptens gren som fritext till den gren modellerna känner igen.
+ *
+ * `adepts.sport` är en fri sträng eftersom en adept kan vara triathlet eller
+ * skriva "landsväg". Beräkningarna behöver ett av tre värden, och cykling är
+ * förvalet eftersom det är den gren som har flest protokoll.
+ */
+export function sportOf(raw: string | null): Sport {
+  const value = (raw ?? "").toLowerCase();
+  if (value.includes("löp") || value.includes("run")) return "löpning";
+  if (value.includes("sim") || value.includes("swim")) return "simning";
+  return "cykling";
+}

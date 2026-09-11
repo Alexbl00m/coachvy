@@ -3,6 +3,9 @@
  * this file can be replaced by `supabase gen types typescript --linked`.
  */
 
+import type { Sport } from "@/lib/calculators/lactate";
+import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
+
 export type AccountRole = "coach" | "adept";
 
 export type Profile = {
@@ -129,6 +132,31 @@ export type TestMetricRow = {
   created_at: string;
 };
 
+/**
+ * Ett enskilt pass.
+ *
+ * `blocks` är jsonb: passet läses och skrivs som en helhet och frågas aldrig
+ * ut steg för steg, till skillnad från test_efforts. Se migrationen.
+ */
+export type WorkoutRow = {
+  id: string;
+  adept_id: string;
+  title: string;
+  sport: Sport;
+  summary: string | null;
+  rationale: string | null;
+  basis: TargetBasis;
+  reference: number;
+  critical: number | null;
+  reserve: number | null;
+  blocks: WorkoutBlock[];
+  prompt: string | null;
+  scheduled_for: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LeadStatus = "ny" | "kontaktad" | "avslutad";
 
 /** Contact request from the public site. */
@@ -209,6 +237,16 @@ export type Database = {
         Insert: Pick<TestMetricRow, "session_id" | "key" | "value" | "unit"> &
           Partial<TestMetricRow>;
         Update: Partial<TestMetricRow>;
+        Relationships: [];
+      };
+      workouts: {
+        Row: WorkoutRow;
+        Insert: Pick<
+          WorkoutRow,
+          "adept_id" | "title" | "sport" | "basis" | "reference" | "blocks"
+        > &
+          Partial<WorkoutRow>;
+        Update: Partial<WorkoutRow>;
         Relationships: [];
       };
       test_results: {

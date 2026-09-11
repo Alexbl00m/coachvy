@@ -20,6 +20,7 @@ export const routes = {
   newAdept: "/app/adepter/ny",
   plans: "/app/planer",
   newPlan: "/app/planer/ny",
+  workoutBuilder: "/app/pass",
   testResults: "/app/testresultat",
   calculators: "/app/kalkyler",
   bikePower: "/app/kalkyler/cykeleffekt",

@@ -3,6 +3,7 @@ import {
   Bot,
   CalendarDays,
   ClipboardList,
+  Dumbbell,
   FlaskConical,
   Gauge,
   MessagesSquare,
@@ -35,6 +36,12 @@ const allSections: NavSection[] = [
   {
     items: [
       { label: "Adepter", href: routes.adepts, icon: Users, audience: "coach" },
+      {
+        label: "Passbyggare",
+        href: routes.workoutBuilder,
+        icon: Dumbbell,
+        audience: "coach",
+      },
       { label: "Planer", href: routes.plans, icon: ClipboardList },
       { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
       { label: "Progression", href: routes.progression, icon: BarChart3 },

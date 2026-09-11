@@ -6,6 +6,7 @@ import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { PageHeader } from "@/components/page-header";
 import { SessionPanel } from "@/components/tests/session-panel";
 import { TestResultsPanel } from "@/components/tests/test-results-panel";
+import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
@@ -13,22 +14,17 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { listTestResults, listTestTypes } from "@/lib/tests/queries";
+import { sportOf } from "@/lib/tests/protocols";
 import { rollingCriticalPower, rollingCriticalSpeed } from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
+import { listWorkouts } from "@/lib/workouts/queries";
 
 const TABS = [
   { key: "oversikt", label: "Översikt" },
   { key: "testtillfallen", label: "Testtillfällen" },
+  { key: "pass", label: "Pass" },
   { key: "testresultat", label: "Enstaka värden" },
 ] as const;
-
-/** Adeptens sport som fritext, mappad till en gren modellen känner igen. */
-function sportOf(raw: string | null): "cykling" | "löpning" | "simning" {
-  const value = (raw ?? "").toLowerCase();
-  if (value.includes("löp") || value.includes("run")) return "löpning";
-  if (value.includes("sim") || value.includes("swim")) return "simning";
-  return "cykling";
-}
 
 export async function generateMetadata({ params }: PageProps<"/app/adepter/[id]">) {
   const { id } = await params;
@@ -59,11 +55,12 @@ export default async function AdeptPage({
 
   const sport = sportOf(adept.sport);
 
-  const [results, testTypes, sessions, efforts] = await Promise.all([
+  const [results, testTypes, sessions, efforts, workouts] = await Promise.all([
     listTestResults(adept.id),
     canEdit ? listTestTypes() : Promise.resolve([]),
     listSessions(adept.id),
     listMaximalEfforts(adept.id, sport),
+    listWorkouts(adept.id),
   ]);
 
   // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
@@ -180,6 +177,8 @@ export default async function AdeptPage({
           reserveUnit={sport === "cykling" ? "kJ" : "m"}
           canEdit={canEdit}
         />
+      ) : tab === "pass" ? (
+        <WorkoutPanel adeptId={adept.id} workouts={workouts} canEdit={canEdit} />
       ) : (
         <TestResultsPanel
           adeptId={adept.id}

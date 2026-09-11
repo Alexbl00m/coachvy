@@ -145,6 +145,30 @@ body {
     --chart-surface: #ffffff;
   }
 
+  /*
+   * Den råa ink-skalan vänds också.
+   *
+   * Appens egna vyer – rubriker, sidomeny, adeptsidor – är byggda mot den
+   * mörka skalan direkt och inte mot de semantiska talen. Vänds bara de
+   * semantiska blir en sidrubrik i ink-50 nästan osynlig mot vitt papper.
+   * Skalan speglas därför på samma sätt: de mörka stegen blir ytor, de ljusa
+   * blir text.
+   */
+  :root {
+    --color-ink-950: #ffffff;
+    --color-ink-900: #ffffff;
+    --color-ink-850: #ffffff;
+    --color-ink-800: #d5cbc1;
+    --color-ink-700: #c4b8ab;
+    --color-ink-600: #b8ab9e;
+    --color-ink-500: #86868f;
+    --color-ink-400: #5c5c66;
+    --color-ink-300: #44444c;
+    --color-ink-200: #33333a;
+    --color-ink-100: #26262c;
+    --color-ink-50: #1a1a1e;
+  }
+
   body {
     background: #ffffff;
   }
@@ -152,7 +176,8 @@ body {
   /* Sajtens ram hör inte hemma i en utskrift. */
   header,
   footer,
-  nav {
+  nav,
+  aside {
     display: none !important;
   }
 
