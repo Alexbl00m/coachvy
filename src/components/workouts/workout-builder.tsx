@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 import { PrintButton } from "@/components/workouts/print-button";
+import { ContextSummary } from "@/components/workouts/context-summary";
 import { WorkoutView } from "@/components/workouts/workout-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import {
 } from "@/lib/workouts/context";
 import { generateWorkout } from "@/lib/workouts/generate";
 import { saveWorkout } from "@/lib/workouts/actions";
-import { formatPace, type Workout } from "@/lib/workouts/schema";
+import type { Workout } from "@/lib/workouts/schema";
 
 type AdeptOption = { id: string; full_name: string };
 
@@ -55,9 +56,6 @@ const decimal = (raw: string): number | null => {
   const value = Number(raw.replace(",", "."));
   return raw.trim() && Number.isFinite(value) && value > 0 ? value : null;
 };
-
-const sv = (value: number, digits: number) =>
-  value.toFixed(digits).replace(".", ",");
 
 export function WorkoutBuilder({
   adepts,
@@ -384,44 +382,6 @@ export function WorkoutBuilder({
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-/** Vad passet vilar på, i klartext. */
-function ContextSummary({ context }: { context: AthleteContext }) {
-  const cycling = context.sport === "cykling";
-
-  return (
-    <div className="border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
-      {context.reference !== null && context.basis ? (
-        <p className="text-text-muted">
-          {context.basis}{" "}
-          <span className="tabular-nums text-text">
-            {cycling
-              ? `${Math.round(context.reference)} W`
-              : `${sv(context.reference, 2)} m/s · ${formatPace(context.reference, context.sport)}`}
-          </span>
-          {context.referenceSource && ` – ${context.referenceSource}`}
-        </p>
-      ) : (
-        <p>Inget referensvärde ännu.</p>
-      )}
-
-      {context.balance && (
-        <p className="mt-1 text-text-muted">
-          {cycling
-            ? `CP ${Math.round(context.balance.critical)} W · W′ ${sv(context.balance.reserve / 1000, 1)} kJ`
-            : `CS ${sv(context.balance.critical, 2)} m/s · D′ ${Math.round(context.balance.reserve)} m`}
-          {context.balanceSource && ` – ${context.balanceSource}`}
-        </p>
-      )}
-
-      {context.gaps.map((gap) => (
-        <p key={gap} className="mt-1.5">
-          {gap}
-        </p>
-      ))}
     </div>
   );
 }

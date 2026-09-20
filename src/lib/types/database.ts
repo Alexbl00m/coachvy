@@ -98,6 +98,7 @@ export type TestSessionRow = {
   performed_on: string;
   weight_kg: number | null;
   zone_scheme: string | null;
+  training_phase: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;
@@ -155,6 +156,71 @@ export type WorkoutRow = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Adeptens bakgrund. Egen tabell så att adepts förblir coachens register. */
+export type AdeptProfileRow = {
+  adept_id: string;
+  birth_year: number | null;
+  sex: "man" | "kvinna" | "annat" | null;
+  height_cm: number | null;
+  training_years: number | null;
+  weekly_hours: number | null;
+  weekly_sessions: number | null;
+  injuries: string | null;
+  medical: string | null;
+  strengths: string | null;
+  weaknesses: string | null;
+  goal: string | null;
+  goal_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Den dagliga incheckningen: sessions-RPE och Hoopers fyra frågor. */
+export type AdeptCheckinRow = {
+  id: string;
+  adept_id: string;
+  performed_on: string;
+  session_rpe: number | null;
+  duration_minutes: number | null;
+  sleep: number | null;
+  fatigue: number | null;
+  soreness: number | null;
+  stress: number | null;
+  workout_id: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Ett meddelande i tråden mellan coach och adept. */
+export type CoachMessageRow = {
+  id: string;
+  adept_id: string;
+  sender_id: string;
+  body: string;
+  read_at: string | null;
+  workout_id: string | null;
+  session_id: string | null;
+  created_at: string;
+};
+
+export type AiConversationRow = {
+  id: string;
+  adept_id: string;
+  created_by: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiMessageRow = {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
 };
 
 export type LeadStatus = "ny" | "kontaktad" | "avslutad";
@@ -249,6 +315,39 @@ export type Database = {
         Update: Partial<WorkoutRow>;
         Relationships: [];
       };
+      adept_profiles: {
+        Row: AdeptProfileRow;
+        Insert: Pick<AdeptProfileRow, "adept_id"> & Partial<AdeptProfileRow>;
+        Update: Partial<AdeptProfileRow>;
+        Relationships: [];
+      };
+      adept_checkins: {
+        Row: AdeptCheckinRow;
+        Insert: Pick<AdeptCheckinRow, "adept_id"> & Partial<AdeptCheckinRow>;
+        Update: Partial<AdeptCheckinRow>;
+        Relationships: [];
+      };
+      coach_messages: {
+        Row: CoachMessageRow;
+        Insert: Pick<CoachMessageRow, "adept_id" | "sender_id" | "body"> &
+          Partial<CoachMessageRow>;
+        Update: Partial<CoachMessageRow>;
+        Relationships: [];
+      };
+      ai_conversations: {
+        Row: AiConversationRow;
+        Insert: Pick<AiConversationRow, "adept_id" | "created_by"> &
+          Partial<AiConversationRow>;
+        Update: Partial<AiConversationRow>;
+        Relationships: [];
+      };
+      ai_messages: {
+        Row: AiMessageRow;
+        Insert: Pick<AiMessageRow, "conversation_id" | "role" | "content"> &
+          Partial<AiMessageRow>;
+        Update: Partial<AiMessageRow>;
+        Relationships: [];
+      };
       test_results: {
         Row: TestResult;
         Insert: Pick<
@@ -261,7 +360,12 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      mark_messages_read: {
+        Args: { adept: string };
+        Returns: number;
+      };
+    };
     Enums: {
       account_role: AccountRole;
     };

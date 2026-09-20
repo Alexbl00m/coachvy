@@ -14,6 +14,7 @@ export type TestSession = {
   performed_on: string;
   weight_kg: number | null;
   zone_scheme: ZoneScheme | null;
+  training_phase: string | null;
   notes: string | null;
   created_at: string;
 };

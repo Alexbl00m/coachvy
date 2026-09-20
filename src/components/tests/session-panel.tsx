@@ -6,6 +6,7 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
+import { phaseLabel } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
 import type { RollingResult } from "@/lib/tests/rolling";
 import type { SessionWithMetrics } from "@/lib/tests/session-queries";
@@ -157,6 +158,11 @@ export function SessionPanel({
                     <span className="text-[13px] text-text-subtle">
                       {formatDate(session.performed_on)} · {session.sport}
                     </span>
+                    {phaseLabel(session.training_phase) && (
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-muted">
+                        {phaseLabel(session.training_phase)}
+                      </span>
+                    )}
 
                     <span className="ml-auto flex flex-wrap items-baseline gap-x-4 tabular-nums">
                       {primary.length === 0 ? (

@@ -41,6 +41,19 @@ export type AthleteContext = {
   balanceSource: string | null;
   /** Allt mätt som är värt att visa för coachen och skicka med i prompten. */
   known: KnownValue[];
+  /**
+   * Adeptens bakgrund ur profilen, som text. Skador, veckovolym, mål.
+   * Det coachen annars hade skrivit om i varje prompt.
+   */
+  background: string | null;
+  /**
+   * Belastningsläget just nu, ur incheckningarna.
+   *
+   * Ett pass byggs inte i ett vakuum. En atlet som ligger 40 % över sin
+   * vanliga vecka och sov dåligt i natt ska inte få samma pass som en utvilad,
+   * och modellen kan bara ta hänsyn till det om den får veta det.
+   */
+  loadSummary: string | null;
   /** Vad som saknas och vad det betyder. */
   gaps: string[];
 };
@@ -136,6 +149,8 @@ export function manualAthleteContext(
     balance,
     balanceSource: balance ? "angivet för hand" : null,
     known: [],
+    background: null,
+    loadSummary: null,
     gaps:
       balance === null
         ? [
@@ -154,6 +169,10 @@ export type ContextInput = {
   sessions: SessionWithMetrics[];
   /** Rullande CP/CS, när det finns underlag. */
   rolling: RollingResult | null;
+  /** Bakgrunden ur adeptprofilen, redan formaterad. */
+  background?: string | null;
+  /** Belastningsläget ur incheckningarna, redan formaterat. */
+  loadSummary?: string | null;
 };
 
 export function buildAthleteContext(input: ContextInput): AthleteContext {
@@ -329,6 +348,8 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
     balance,
     balanceSource,
     known,
+    background: input.background ?? null,
+    loadSummary: input.loadSummary ?? null,
     gaps,
   };
 }
@@ -371,8 +392,16 @@ export function contextToPrompt(context: AthleteContext): string {
     }
   }
 
+  if (context.background) {
+    lines.push("", context.background);
+  }
+
+  if (context.loadSummary) {
+    lines.push("", context.loadSummary);
+  }
+
   if (context.gaps.length > 0) {
-    lines.push(`Saknas: ${context.gaps.join(" ")}`);
+    lines.push("", `Saknas: ${context.gaps.join(" ")}`);
   }
 
   return lines.join("\n");

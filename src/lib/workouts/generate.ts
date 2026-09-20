@@ -5,9 +5,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { requireCoach } from "@/lib/auth/session";
 import type { Sport } from "@/lib/calculators/lactate";
 import { getAdept } from "@/lib/adepts/queries";
+import { getAdeptProfile, profileToPrompt } from "@/lib/adepts/profile";
 import { sportOf } from "@/lib/tests/protocols";
 import { rollingCriticalPower, rollingCriticalSpeed } from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
+import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
+import { listCheckins, toCheckin } from "@/lib/training/queries";
 import { readBalance, wPrimeBalance } from "./balance";
 import {
   buildAthleteContext,
@@ -71,9 +74,11 @@ export async function contextForAdept(
   if (!adept) return null;
 
   const sport = sportOf(adept.sport);
-  const [sessions, efforts] = await Promise.all([
+  const [sessions, efforts, profile, checkins] = await Promise.all([
     listSessions(adeptId),
     listMaximalEfforts(adeptId, sport),
+    getAdeptProfile(adeptId),
+    listCheckins(adeptId, 60),
   ]);
 
   const lastFullTestOn = sessions[0]?.performed_on ?? null;
@@ -92,6 +97,10 @@ export async function contextForAdept(
     weightKg: weightKg === null ? null : Number(weightKg),
     sessions,
     rolling,
+    background: profileToPrompt(profile),
+    loadSummary: loadToPrompt(
+      buildLoadSeries(checkins.map(toCheckin), { days: 28 }),
+    ),
   });
 }
 

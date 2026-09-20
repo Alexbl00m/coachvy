@@ -88,6 +88,13 @@ auth.users
                         tested_on, comment, created_by
           workouts      id, title, sport, basis, reference, critical,
                         reserve, blocks (jsonb), prompt, scheduled_for
+          adept_profiles  bakgrunden: träningsår, veckovolym, skador,
+                        styrkor, svagheter, mål
+          adept_checkins  en per dag: session_rpe, duration_minutes,
+                        sleep, fatigue, soreness, stress
+          coach_messages  tråden mellan coach och adept, med read_at
+          ai_conversations  coachens AI-tråd per adept
+              └── ai_messages
 
     test_types          id, coach_id (null = inbyggd), label, default_unit
 ```
@@ -138,6 +145,7 @@ src/
       oversikt/        dashboard efter inloggning
       adepter/         lista, ny adept, [id] med flikarna Översikt/Test/Pass
       pass/            passbyggaren
+      ai-coach/        bollplank om en adept
       testresultat/    slussar adepten till sin egen testflik
       planer/ progression/ kalender/ ai-coach/ community/ installningar/
     auth/callback/     växlar Supabase-koden mot en session
@@ -146,12 +154,18 @@ src/
     public/            sidhuvud, sidfot och marknadsföringssektionerna
     adepts/ tests/     appens moduler
     workouts/          passbyggarens vy, graf och stegtabell
+    training/          incheckning, belastningsgraf och skala
+    messages/          tråden mellan coach och adept
+    ai-coach/          chatten
     ui/                delade primitiver (button, field, card)
   lib/
     auth/              server actions för in-/utloggning + sessionsläsning
     adepts/            frågor och server actions för adepter
     tests/             frågor och server actions för testmodulen
     workouts/          passmodellen, W′bal, underlaget och genereringen
+    training/          sRPE-belastning och återhämtning
+    messages/          frågor och server actions för tråden
+    ai-coach/          trådar och modellanropet
     leads/             kontaktformulärets server action
     site.ts            företagsuppgifter och menyn på publika sajten
     routes.ts          alla sökvägar på ett ställe
@@ -296,6 +310,76 @@ Nyckeln läses ur `ANTHROPIC_API_KEY` och är **valfri**: utan den säger
 prompt-rutan vad som saknas, och resten av modulen — sparade pass, graf, W′bal,
 utskrift — fungerar ändå.
 
+## Återkopplingen
+
+Appen gick länge bara åt ett håll: coachen mätte, räknade och föreskrev.
+Passbyggaren förutsäger vad ett pass *ska* kosta – men ingenting kom tillbaka
+om hur det faktiskt gick. Den dagliga incheckningen är andra halvan.
+
+Två mått som medvetet aldrig slås ihop.
+
+**Belastning** är sessions-RPE gånger passets längd i minuter (Foster 1998).
+RPE:t är Borg CR10 för passet som helhet, satt en stund efteråt: 0 är vila, 10
+det hårdaste atleten kan föreställa sig. Sextio minuter som kändes som 7 ger
+420 godtyckliga enheter – godtyckliga, men jämförbara med sig själva över tid.
+
+**Återhämtning** är Hoopers fyra frågor (Hooper & Mackinnon 1995): sömn,
+trötthet, muskelömhet och stress. Originalet räknar 1 som bäst; här är skalan
+vänd så att 5 är bäst, eftersom resten av appen läser högre tal som bättre. En
+skala som byter riktning mitt i ett formulär blir ifylld fel.
+
+Att snitta ihop de två – frestande när båda är tal mellan 1 och 10 – ger ett
+värde utan innebörd. De mäter olika saker och pekar åt olika håll, och de
+redovisas var för sig hela vägen.
+
+### Kvoten, och vad den inte säger
+
+De sju senaste dagarna jämförs med de 21 dessförinnan, inte med ett
+28-dagarsfönster som innehåller dem själva. Den vanliga kopplade formen har
+akutfönstret inbakat i det kroniska, så täljare och nämnare rör sig ihop och
+kvoten dras mot 1 av ren konstruktion (Windt & Gabbett 2019).
+
+**Inga gränser ritas ut i den.** Tröskelvärdena som brukar sättas – "0,8 till
+1,3 är tryggt" – vilar på svagare underlag än de framställs som, och
+Impellizzeri m.fl. (2020) visade att en stor del av sambandet var en artefakt
+av hur måttet konstrueras. Kvoten säger om veckan avviker från månaden före,
+ingenting mer.
+
+En dag utan incheckning räknas som noll i summorna – annars går de inte att
+räkna alls – men täckningsgraden redovisas, så en tunn period syns som vad den
+är i stället för som låg belastning.
+
+### Bakgrunden går med i prompten
+
+`adept_profiles` håller det coachen annars skriver om i varje prompt: skador,
+normal veckovolym, mål och datum, styrkor och svagheter. Den och
+belastningsläget läggs automatiskt till underlaget i passbyggaren och
+AI-coachen, och båda visar vad som faktiskt följer med – coachen ska kunna se
+att hälsenan och veckans belastning går med, inte behöva lita på det.
+
+Ett testtillfälle bär också vilken **träningsfas** det togs i. Ett tapp mitt i
+ett uppbyggnadsblock betyder inte samma sak som ett tapp i tävlingsperioden.
+
+## AI Coach
+
+`/app/ai-coach` är ett bollplank om en adept, inte en allmän träningschatt.
+Frågan besvaras mot hennes mätta värden: tröskel och anaerob kapacitet ur
+testtillfällena, den rullande modellen, bakgrunden, belastningen och de senaste
+testerna och passen.
+
+Underlaget byggs om vid varje fråga i stället för att frysas i tråden. Talen
+rör sig – ett nytt test, en veckas incheckningar – och ett svar som räknar på
+förra månadens CP är sämre än inget svar.
+
+Tråden är coachens arbetsanteckningar om atleten, inte ett samtal med henne.
+Adepten ser den inte, och gränssnittet säger det rakt ut så att ingen skriver
+något där i tron att hon gör det. Samtalet *med* adepten ligger i stället under
+fliken Meddelanden på hennes sida, där båda kan skriva.
+
+Modellen är `claude-opus-5` med adaptivt tänkande och strömmande svar.
+Systemprompten ligger bakom en cachepunkt, atletens tal efter den.
+`ANTHROPIC_API_KEY` är valfri – utan den säger rutan vad som saknas.
+
 ## Grafen
 
 Testkurvan visar **en testtyp i taget**, valbar med knapparna ovanför
@@ -330,5 +414,17 @@ Kända luckor:
   `workouts.scheduled_for` finns i tabellen men används inte ännu.
 - Inget passbibliotek över adepter: ett bra pass går att öppna och ändra, men
   bara från den adept det sparades på.
+- **AI-coachens modellanrop är inte kört mot skarpt API**, av samma skäl som
+  passbyggarens: miljön saknar nyckel. Allt runt omkring – trådarna, RLS,
+  underlaget, vyn – är verifierat.
+- Incheckningen kopplas inte till ett föreskrivet pass ännu.
+  `adept_checkins.workout_id` finns i tabellen men sätts inte, så planerad och
+  faktisk belastning går inte att lägga mot varandra automatiskt.
+- Ingen avisering när en adept checkar in eller skriver. Coachen ser
+  olästmarkeringen först när hon öppnar adeptens sida.
+- Belastningsmodellen räknar ingen monotoni eller strain (Foster 1998). De hör
+  ihop med sRPE men lades åt sidan: monotoni är odefinierad när belastningen är
+  exakt lika varje dag, vilket är just det extremfall måttet finns för att
+  flagga.
 - VLamax-modellens könsvariabel bygger på två kvinnor — opålitlig för kvinnor
   tills fler mätningar lagts till.

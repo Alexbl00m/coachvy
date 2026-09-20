@@ -11,9 +11,10 @@ import {
 } from "@/components/calculators/protocol-parts";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
+import { TRAINING_PHASES } from "@/lib/tests/phases";
 import { saveTestSession } from "@/lib/tests/session-actions";
 import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
@@ -44,6 +45,7 @@ export function NewSessionForm({
   const [performedOn, setPerformedOn] = useState(
     new Date().toISOString().slice(0, 10),
   );
+  const [trainingPhase, setTrainingPhase] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +59,7 @@ export function NewSessionForm({
         unit: calc.unit,
         performedOn,
         weightKg: calc.weight.trim() ? decimal(calc.weight) : null,
+        trainingPhase: trainingPhase || null,
         notes: notes.trim() || null,
         efforts: calc.filled,
       });
@@ -107,6 +110,26 @@ export function NewSessionForm({
                 value={calc.weight}
                 onChange={(e) => calc.setWeight(e.target.value)}
               />
+            </Field>
+
+            <Field
+              label="Träningsfas"
+              htmlFor="training_phase"
+              hint="gör progressionskurvan läsbar"
+              optional
+            >
+              <Select
+                id="training_phase"
+                value={trainingPhase}
+                onChange={(e) => setTrainingPhase(e.target.value)}
+              >
+                <option value="">–</option>
+                {TRAINING_PHASES.map((phase) => (
+                  <option key={phase.key} value={phase.key}>
+                    {phase.label}
+                  </option>
+                ))}
+              </Select>
             </Field>
 
             <Field label="Anteckning" htmlFor="notes" optional>

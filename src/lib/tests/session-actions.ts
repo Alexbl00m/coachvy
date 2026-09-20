@@ -16,6 +16,8 @@ export type SaveSessionInput = {
   unit: IntensityUnit;
   performedOn: string;
   weightKg: number | null;
+  /** Perioden testet togs i. Gör progressionskurvan läsbar. */
+  trainingPhase: string | null;
   notes: string | null;
   efforts: Effort[];
 };
@@ -86,6 +88,7 @@ export async function saveTestSession(
       performed_on: input.performedOn,
       weight_kg: input.weightKg,
       zone_scheme: spec.zoneScheme,
+      training_phase: input.trainingPhase,
       notes: input.notes,
     })
     .select("id")

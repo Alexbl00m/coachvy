@@ -57,7 +57,12 @@ const allSections: NavSection[] = [
         icon: Gauge,
         audience: "coach",
       },
-      { label: "AI Coach Assistant", href: routes.aiCoach, icon: Bot },
+      {
+        label: "AI Coach Assistant",
+        href: routes.aiCoach,
+        icon: Bot,
+        audience: "coach",
+      },
       { label: "Community", href: routes.community, icon: MessagesSquare },
     ],
   },
