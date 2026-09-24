@@ -43,6 +43,19 @@ export default async function SessionPage({
     weightKg: session.weight_kg,
   });
 
+  /**
+   * Storheten med ord i stället för sin databasnyckel.
+   *
+   * `test_metrics` sparar bara nyckeln – etiketten hör till beräkningen och
+   * skulle bli inaktuell i databasen så fort en formulering ändrades. Den
+   * hämtas därför ur omräkningen, som ändå görs för zonerna. Nyckeln står
+   * kvar som nödfallsutväg för värden en nyare modell inte längre räknar ut.
+   */
+  const labels = new Map(recomputed.metrics.map((m) => [m.key, m.label]));
+  const labelFor = (key: string) =>
+    labels.get(key) ?? key.split(":")[0].replace("_prime", "′");
+
+
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
 
@@ -152,7 +165,7 @@ export default async function SessionPage({
               headers={["Storhet", "Metod", "Värde"]}
               minWidth={480}
               rows={secondary.map((m) => [
-                m.key.split(":")[0].replace("_prime", "′"),
+                labelFor(m.key),
                 m.method ?? "–",
                 `${sv(Number(m.value), digitsFor(m.unit))} ${m.unit}`,
               ])}
