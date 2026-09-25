@@ -16,6 +16,9 @@ export type SaveSessionInput = {
   unit: IntensityUnit;
   performedOn: string;
   weightKg: number | null;
+  /** Kroppsfett och kön – bara för protokoll som räknar per fettfri massa. */
+  bodyFatPct?: number | null;
+  sex?: "man" | "kvinna" | null;
   /** Perioden testet togs i. Gör progressionskurvan läsbar. */
   trainingPhase: string | null;
   notes: string | null;
@@ -40,12 +43,9 @@ export async function saveTestSession(
   const spec = protocolByKey(input.protocol);
   if (!spec) return { ok: false, error: "Okänt protokoll." };
 
+  // En rad med bara en längd är en förifylld mall, ingen insats.
   const efforts = input.efforts.filter(
-    (e) =>
-      e.intensity !== null ||
-      e.distanceM !== null ||
-      e.durationSeconds !== null ||
-      e.lactate !== null,
+    (e) => e.intensity !== null || e.distanceM !== null || e.lactate !== null,
   );
 
   if (efforts.length < spec.minEfforts) {
@@ -59,12 +59,25 @@ export async function saveTestSession(
 
   if (!input.performedOn) return { ok: false, error: "Välj ett datum." };
 
+  // Sparas bara där de används; ett CP-test ska inte bära ett kroppsfett som
+  // ingen beräkning läst.
+  const bodyFatPct = spec.needsBodyComposition ? (input.bodyFatPct ?? null) : null;
+  const sex = spec.needsBodyComposition ? (input.sex ?? null) : null;
+  if (bodyFatPct !== null && !(bodyFatPct > 0 && bodyFatPct < 60)) {
+    return { ok: false, error: "Kroppsfettet ska vara en procentsats mellan 0 och 60." };
+  }
+  if (sex !== null && sex !== "man" && sex !== "kvinna") {
+    return { ok: false, error: "Okänt kön." };
+  }
+
   const analysis = analyseSession({
     protocol: input.protocol,
     sport: input.sport,
     unit: input.unit,
     efforts,
     weightKg: input.weightKg,
+    bodyFatPct,
+    sex,
   });
 
   if (analysis.metrics.length === 0) {
@@ -87,6 +100,8 @@ export async function saveTestSession(
       intensity_unit: input.unit,
       performed_on: input.performedOn,
       weight_kg: input.weightKg,
+      body_fat_pct: bodyFatPct,
+      sex,
       zone_scheme: spec.zoneScheme,
       training_phase: input.trainingPhase,
       notes: input.notes,

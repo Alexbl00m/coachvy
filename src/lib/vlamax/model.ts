@@ -1,22 +1,47 @@
 import type { VlamaxSample } from "@/lib/types/database";
 
 /**
- * VLamax-prediktion, portad från `vlamax_calc_app` (scikit-learn
- * LinearRegression i Python).
+ * VLamax-prediktion ur ett sprinttest.
  *
- * Modellen är en vanlig minsta-kvadratanpassning på fem variabler:
- * fettfri massa, sprintlängd, snitteffekt, toppeffekt och kön. Den tränas om
- * varje gång referensdatan ändras — datamängden är liten nog att det kostar
- * mikrosekunder, och då slipper vi en modellfil som kan hamna ur synk.
+ * VLamax är den glykolytiska förmågan per muskelmassa, och modellen säger just
+ * det: VLamax följer sprinteffekten per kilo fettfri massa, med kön som
+ * justering. Tre parametrar.
+ *
+ * Portningen från `vlamax_calc_app` hade fem – fettfri massa, sprintlängd,
+ * snitteffekt, toppeffekt och kön, var för sig. På de ursprungliga tretton
+ * atleterna gick det bra, men de låg tätt. När tre INSCYD-rapporter lades till
+ * visade sig formen vara fel: den tyngsta atleten, med 1047 W över 74,8 kg
+ * fettfri massa, fick 0,75 mot uppmätta 0,60 när han lämnades utanför.
+ * Modellen såg massan och watten var för sig och missade att hans sprint per
+ * kilo muskel var lägre än den lättare atlet som hade 0,73.
+ *
+ * Med sprint per kilo fettfri massa (korsvaliderat, leave-one-out):
+ *
+ *                        13 atleter   16 atleter   den tyngsta utelämnad
+ *   fem variabler          ± 0,031      ± 0,058         + 0,15
+ *   W/kg FFM + kön         ± 0,031      ± 0,037         + 0,07
+ *
+ * Lika bra på de ursprungliga, klart bättre på helheten, och med två
+ * parametrar färre att överanpassa på sexton rader. Toppeffekten tillförde
+ * ingenting ens i den gamla formen (± 0,031 med och utan) och är borttagen.
+ *
+ * Modellen tränas om varje gång referensdatan ändras. Datamängden är liten
+ * nog att det kostar mikrosekunder, och då slipper vi en modellfil som kan
+ * hamna ur synk med datan.
  */
 
 export type VlamaxInput = {
   sex: "man" | "kvinna";
   weightKg: number;
   bodyFatPct: number;
+  /**
+   * Sprintens längd. Ingår inte i modellen men vaktas: referensdatan är
+   * 17–23 s, och en 30-sekundersinsats har lägre snitteffekt av helt andra
+   * skäl än lägre VLamax.
+   */
   sprintSeconds: number;
+  /** Medeleffekt under sprinten. */
   wattAvg: number;
-  wattPeak: number;
 };
 
 export type VlamaxPrediction = {
@@ -37,19 +62,21 @@ export type OutOfRange = {
   unit: string;
 };
 
-/** Fettfri massa — den enda härledda variabeln i modellen. */
+/** Fettfri massa. */
 export function fatFreeMass(weightKg: number, bodyFatPct: number): number {
   return weightKg * (1 - bodyFatPct / 100);
 }
 
-/** [intercept, FFM, sprintlängd, snitteffekt, toppeffekt, kön] */
+/** Sprinteffekt per kilo fettfri massa – modellens egentliga variabel. */
+export function sprintPerFfm(wattAvg: number, weightKg: number, bodyFatPct: number): number {
+  return wattAvg / fatFreeMass(weightKg, bodyFatPct);
+}
+
+/** [intercept, W/kg FFM, kön] */
 function designRow(input: VlamaxInput): number[] {
   return [
     1,
-    fatFreeMass(input.weightKg, input.bodyFatPct),
-    input.sprintSeconds,
-    input.wattAvg,
-    input.wattPeak,
+    sprintPerFfm(input.wattAvg, input.weightKg, input.bodyFatPct),
     input.sex === "kvinna" ? 1 : 0,
   ];
 }
@@ -61,14 +88,14 @@ function sampleToInput(sample: VlamaxSample): VlamaxInput {
     bodyFatPct: Number(sample.body_fat_pct),
     sprintSeconds: Number(sample.sprint_seconds),
     wattAvg: Number(sample.watt_avg),
-    wattPeak: Number(sample.watt_peak),
   };
 }
 
 /**
  * Löser normalekvationerna med Gauss-Jordan-elimination. Returnerar null när
  * systemet är singulärt, vilket händer så fort det finns färre rader än
- * variabler — då finns ingen entydig anpassning.
+ * variabler – då finns ingen entydig anpassning. Samma sak händer om alla
+ * referensrader har samma kön, eftersom könskolumnen då är konstant.
  */
 function solveLeastSquares(rows: number[][], targets: number[]): number[] | null {
   const width = rows[0]?.length ?? 0;
@@ -118,7 +145,7 @@ function applyModel(coefficients: number[], input: VlamaxInput): number {
 
 /**
  * Leave-one-out: träna om utan varje rad och mät felet på just den raden. Det
- * är det ärligaste felmåttet en så här liten datamängd tillåter — felet på
+ * är det ärligaste felmåttet en så här liten datamängd tillåter – felet på
  * egen träningsdata skulle se mycket bättre ut än verkligheten.
  */
 function crossValidatedRmse(samples: VlamaxSample[]): number | null {
@@ -146,10 +173,11 @@ const GUARDED: {
   from: (sample: VlamaxSample) => number;
 }[] = [
   {
-    label: "Fettfri massa",
-    unit: "kg",
-    of: (i) => fatFreeMass(i.weightKg, i.bodyFatPct),
-    from: (s) => fatFreeMass(Number(s.weight_kg), Number(s.body_fat_pct)),
+    label: "Sprint per kilo fettfri massa",
+    unit: "W/kg",
+    of: (i) => sprintPerFfm(i.wattAvg, i.weightKg, i.bodyFatPct),
+    from: (s) =>
+      sprintPerFfm(Number(s.watt_avg), Number(s.weight_kg), Number(s.body_fat_pct)),
   },
   {
     label: "Sprintlängd",
@@ -158,16 +186,10 @@ const GUARDED: {
     from: (s) => Number(s.sprint_seconds),
   },
   {
-    label: "Snitteffekt",
-    unit: "W",
-    of: (i) => i.wattAvg,
-    from: (s) => Number(s.watt_avg),
-  },
-  {
-    label: "Toppeffekt",
-    unit: "W",
-    of: (i) => i.wattPeak,
-    from: (s) => Number(s.watt_peak),
+    label: "Fettfri massa",
+    unit: "kg",
+    of: (i) => fatFreeMass(i.weightKg, i.bodyFatPct),
+    from: (s) => fatFreeMass(Number(s.weight_kg), Number(s.body_fat_pct)),
   },
 ];
 
@@ -189,7 +211,13 @@ function rangeWarnings(
     const value = guard.of(input);
 
     if (value < min || value > max) {
-      warnings.push({ label: guard.label, value, min, max, unit: guard.unit });
+      warnings.push({
+        label: guard.label,
+        value: Math.round(value * 10) / 10,
+        min: Math.round(min * 10) / 10,
+        max: Math.round(max * 10) / 10,
+        unit: guard.unit,
+      });
     }
   }
 
@@ -214,7 +242,7 @@ export function predictVlamax(
   };
 }
 
-/** Hur många kvinnor referensdatan innehåller — se kommentaren i UI:t. */
+/** Hur många kvinnor referensdatan innehåller – se kommentaren i UI:t. */
 export function countBySex(samples: VlamaxSample[]) {
   return {
     man: samples.filter((s) => s.sex === "man").length,

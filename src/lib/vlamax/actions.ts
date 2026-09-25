@@ -51,7 +51,6 @@ export async function addVlamaxSample(
     body_fat_pct: num(formData, "body_fat_pct"),
     sprint_seconds: num(formData, "sprint_seconds"),
     watt_avg: num(formData, "watt_avg"),
-    watt_peak: num(formData, "watt_peak"),
     vlamax: num(formData, "vlamax"),
   };
 
@@ -59,6 +58,14 @@ export async function addVlamaxSample(
     if (!Number.isFinite(value)) {
       return { error: `Fältet "${key}" måste vara ett tal.`, values };
     }
+  }
+
+  // Toppeffekt är valfri: modellen använder den inte, men den sparas om den
+  // finns så att ett senare modellval kan prövas mot den.
+  const peakRaw = field(formData, "watt_peak");
+  const wattPeak = peakRaw ? num(formData, "watt_peak") : null;
+  if (wattPeak !== null && !Number.isFinite(wattPeak)) {
+    return { error: 'Fältet "watt_peak" måste vara ett tal.', values };
   }
 
   const heightRaw = field(formData, "height_cm");
@@ -71,6 +78,7 @@ export async function addVlamaxSample(
     sex,
     height_cm: heightRaw ? num(formData, "height_cm") : null,
     age: ageRaw ? Math.round(num(formData, "age")) : null,
+    watt_peak: wattPeak,
     ...numeric,
   });
 

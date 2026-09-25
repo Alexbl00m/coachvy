@@ -327,6 +327,19 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
     if (lt2 && lt2.unit === "W" && lt2.value > 0) {
       push("LT2", "LT2 – anaerob tröskel", lt2.value, "W", lt2);
     }
+
+    // Den metabola profilen. Inget av det styr procenttalen, men det säger
+    // varför atleten är som hen är: en hög VLamax förklarar en låg tröskel i
+    // förhållande till VO2max, och FatMax är där långa lugna pass hör hemma.
+    for (const [key, label] of [
+      ["AT", "Anaerob tröskel (Mader)"],
+      ["FatMax", "FatMax"],
+      ["VLamax", "VLamax"],
+      ["VO2max", "VO2max"],
+    ] as const) {
+      const found = latestMetric(sessions, key);
+      if (found && found.value > 0) push(key, label, found.value, found.unit, found);
+    }
   }
 
   if (reference === null) {
@@ -387,7 +400,7 @@ export function contextToPrompt(context: AthleteContext): string {
     lines.push("Övriga mätta värden:");
     for (const k of rest) {
       lines.push(
-        `- ${k.label}: ${k.value.toFixed(k.unit === "m/s" ? 2 : 0)} ${k.unit}${k.performedOn ? ` (${k.source}, ${k.performedOn})` : ` (${k.source})`}`,
+        `- ${k.label}: ${k.value.toFixed(k.unit === "m/s" || k.unit === "mmol/l/s" ? 2 : k.unit === "ml/kg/min" || k.unit === "kg" ? 1 : 0)} ${k.unit}${k.performedOn ? ` (${k.source}, ${k.performedOn})` : ` (${k.source})`}`,
       );
     }
   }

@@ -38,14 +38,33 @@ export function parseDuration(raw: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-const emptyRow = (id: number): EffortRow => ({
+/** Sekunder till "0:20" eller "12:00" – samma form som fältet läser in. */
+export function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const rest = Math.round(seconds - minutes * 60);
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+const emptyRow = (id: number, seconds?: number): EffortRow => ({
   id,
   intensity: "",
-  duration: "",
+  duration: seconds !== undefined ? formatDuration(seconds) : "",
   distance: "",
   lactate: "",
   heartRate: "",
 });
+
+/** Rader med innehåll. En förifylld längd utan värde räknas inte. */
+function hasContent(e: Effort): boolean {
+  return e.intensity !== null || e.distanceM !== null || e.lactate !== null;
+}
+
+export type Sex = "man" | "kvinna";
+
+export type BodyComposition = {
+  bodyFat: string;
+  sex: Sex | "";
+};
 
 export type ProtocolCalculator = {
   sport: Sport;
@@ -56,6 +75,11 @@ export type ProtocolCalculator = {
   setUnit: (next: IntensityUnit) => void;
   weight: string;
   setWeight: (next: string) => void;
+  /** Bara för protokoll som kräver det – se `needsBodyComposition`. */
+  bodyFat: string;
+  setBodyFat: (next: string) => void;
+  sex: Sex | "";
+  setSex: (next: Sex | "") => void;
 
   rows: EffortRow[];
   setRow: (id: number, patch: Partial<EffortRow>) => void;
@@ -79,6 +103,7 @@ export type ProtocolCalculator = {
 export function useProtocolCalculator(
   initialSport: Sport = "cykling",
   initialWeight = "",
+  initialBody: BodyComposition = { bodyFat: "", sex: "" },
 ): ProtocolCalculator {
   const [sport, setSportState] = useState<Sport>(initialSport);
   const [protocol, setProtocolState] = useState<ProtocolKey>(
@@ -86,7 +111,9 @@ export function useProtocolCalculator(
   );
   const [unit, setUnit] = useState<IntensityUnit>(defaultUnitFor(initialSport));
   const [weight, setWeight] = useState(initialWeight);
-  const [rows, setRows] = useState<EffortRow[]>([0, 1, 2].map(emptyRow));
+  const [bodyFat, setBodyFat] = useState(initialBody.bodyFat);
+  const [sex, setSex] = useState<Sex | "">(initialBody.sex);
+  const [rows, setRows] = useState<EffortRow[]>([0, 1, 2].map((id) => emptyRow(id)));
   const [nextId, setNextId] = useState(3);
 
   /**
@@ -109,13 +136,25 @@ export function useProtocolCalculator(
           : current;
 
       // Och fyll på om det nya protokollet kräver fler rader än som finns.
-      if (trimmed.length < spec.minEfforts) {
-        const extra = spec.minEfforts - trimmed.length;
+      const wanted = Math.max(spec.minEfforts, spec.template?.length ?? 0);
+      if (trimmed.length < wanted) {
+        const extra = wanted - trimmed.length;
         trimmed = [
           ...trimmed,
           ...Array.from({ length: extra }, (_, i) => emptyRow(nextId + i)),
         ];
         setNextId((n) => n + extra);
+      }
+
+      // Protokoll med givna längder får dem ifyllda där fältet är tomt. Det
+      // coachen redan skrivit rörs inte.
+      const template = spec.template;
+      if (template) {
+        trimmed = trimmed.map((row, i) =>
+          i < template.length && !row.duration.trim()
+            ? { ...row, duration: formatDuration(template[i]) }
+            : row,
+        );
       }
       return trimmed;
     });
@@ -170,13 +209,7 @@ export function useProtocolCalculator(
       };
     });
 
-    return parsed.filter(
-      (e) =>
-        e.intensity !== null ||
-        e.distanceM !== null ||
-        e.durationSeconds !== null ||
-        e.lactate !== null,
-    );
+    return parsed.filter(hasContent);
   }, [rows]);
 
   const analysis = useMemo(
@@ -187,8 +220,10 @@ export function useProtocolCalculator(
         unit,
         efforts: filled,
         weightKg: weight.trim() ? decimal(weight) : null,
+        bodyFatPct: bodyFat.trim() ? decimal(bodyFat) : null,
+        sex: sex || null,
       }),
-    [protocol, sport, unit, filled, weight],
+    [protocol, sport, unit, filled, weight, bodyFat, sex],
   );
 
   return {
@@ -200,6 +235,10 @@ export function useProtocolCalculator(
     setUnit,
     weight,
     setWeight,
+    bodyFat,
+    setBodyFat,
+    sex,
+    setSex,
     rows,
     setRow,
     addRow,

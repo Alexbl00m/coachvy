@@ -213,27 +213,73 @@ Den klamras nu till noll där.
 
 ## VLamax-kalkylen
 
-`/app/vlamax` skattar VLamax från ett sprinttest. Modellen är samma minsta-
-kvadratanpassning som Streamlit-appen körde med scikit-learn, portad till
-TypeScript i `src/lib/vlamax/model.ts`: fettfri massa, sprintlängd, snitteffekt,
-toppeffekt och kön in — VLamax ut.
+`/app/vlamax` skattar VLamax från ett sprinttest, i `src/lib/vlamax/model.ts`:
+sprinteffekt per kilo fettfri massa och kön in — VLamax ut. Tre parametrar,
+minsta kvadrat.
 
-Referensdatan flyttade från en CSV till tabellen `vlamax_samples`. Inbyggda
-rader (`coach_id is null`) är de 13 INSCYD-mätningarna; en coach kan lägga till
-egna, och modellen tränas om vid nästa sidladdning.
+Portningen från Streamlit-appen hade fem variabler: fettfri massa,
+sprintlängd, snitteffekt, toppeffekt och kön, var för sig. När tre
+INSCYD-rapporter lades till visade sig formen vara fel. Den tyngsta atleten
+fick 0,75 mot uppmätta 0,60 när han lämnades utanför – modellen såg massan och
+watten var för sig och missade att hans sprint per kilo muskel var lägre än en
+lättare atlets. Korsvaliderat (leave-one-out):
 
-Två saker som inte fanns i originalet:
+| Modell | 13 atleter | 16 atleter |
+|---|---|---|
+| Fem variabler | ± 0,031 | ± 0,058 |
+| W/kg fettfri massa + kön | ± 0,031 | ± 0,037 |
 
-- **Felmarginalen visas.** Leave-one-out-korsvalidering ger RMSE ≈ 0,031
-  mmol/l/s på de 13 raderna. Att bara gissa medelvärdet ger 0,098, så modellen
-  gör verklig nytta — men siffran är en skattning, inte en mätning, och
-  gränssnittet säger det.
-- **Extrapolation flaggas.** En linjär modell räknar villigt vidare utanför
-  datan den sett. Ligger något indatavärde utanför referensdatans spann visas en
-  varning och möjligheten att spara resultatet försvinner.
+Toppeffekten tillförde ingenting ens i den gamla formen och är borttagen.
 
-Kön är en variabel som vilar på två kvinnor i datan. Det står i gränssnittet,
-och det är den enskilt viktigaste luckan att fylla.
+Referensdatan ligger i koden, `src/lib/vlamax/reference.ts`: de 13 ursprungliga
+plus 3 nya, alla anonymiserade. Den flyttade ur databasen för att testprotokollet
+nedan räknar i webbläsaren – också på den publika sidan, där en anonym besökare
+inte får läsa tabellen. Coachens egna mätningar ligger kvar i `vlamax_samples`
+och läggs till ovanpå; modellen tränas om vid nästa sidladdning.
+
+- **Felmarginalen visas**, från korsvalideringen. Att bara gissa medelvärdet
+  ger 0,098, så modellen gör verklig nytta – men siffran är en skattning.
+- **Extrapolation flaggas.** Utanför referensdatans spann i sprint per kilo
+  fettfri massa, sprintlängd eller fettfri massa visas en varning, och
+  kalkylen låter inte resultatet sparas.
+
+## Metabol profil som testprotokoll
+
+Samma batteri som INSCYD: en 20-sekunders sprint och maxinsatser på 3, 6 och 12
+minuter, plus vikt, kroppsfett och kön. Ett testtillfälle ger allt på en gång,
+i fyra steg som var och ett går att pröva för sig:
+
+1. **CP och W′** ur de tre längre insatserna – den vanliga hyperbolen.
+2. **VLamax** ur sprinten, med modellen ovan.
+3. **VO2max** ur 6-minuten med ACSM-ekvationen. INSCYDs syreupptagskurva är
+   ACSM-lik (den återger deras %VO2max vid tröskeln inom en procentenhet), och
+   deras effekt vid VO2max ligger på 6-minuten.
+4. **Tröskel och FatMax** ur Mader-modellen med VO2max och VLamax.
+
+Prövat mot tre INSCYD-rapporter:
+
+| | VO2max | Tröskel | FatMax |
+|---|---|---|---|
+| Steg 4 med INSCYDs egna VO2max och VLamax | – | 301/294/374 mot 303/303/374 W | 205/207/252 mot 198/205/245 W |
+| Hela kedjan, rena test | −1,2 och −0,1 | 12–15 W lägre | 3–9 W lägre |
+
+Mader-modellen stämmer alltså; det som skiljer är indatan. Det tredje testet
+hade en för lugnt körd 6-minut, och hela kedjan missade där. Två kontroller
+fångar det nu:
+
+- **6-minuten mot hyperbolen.** Kurvan genom 3 och 12 minuter förutsäger
+  6-minuten. På rena test ligger den faktiska 12–16 W över; under är ett tecken
+  på pacing, och det står i resultatet.
+- **Tröskel mot CP.** Två oberoende vägar till ungefär samma ställe. Hamnar
+  tröskeln under 88 % av CP stämmer något i kedjan inte.
+
+Sprinten ingår inte i CP, och insatser på 1–2 minuter används inte alls –
+för långa för VLamax-modellen, för korta för hyperbolen. Saknas 6-minuten tas
+effekten vid VO2max ur hyperbolen i stället. Kroppsfett och kön sparas på
+testtillfället (`test_sessions.body_fat_pct`, `sex`) så att testet kan räknas om
+med de värden som gällde då, och varningarna räknas om varje gång testet
+öppnas. VLamax, VO2max, tröskel och FatMax följer med till passbyggaren och
+AI-coachen.
 
 ## Passbyggare
 
@@ -428,3 +474,7 @@ Kända luckor:
   flagga.
 - VLamax-modellens könsvariabel bygger på två kvinnor — opålitlig för kvinnor
   tills fler mätningar lagts till.
+- VLamax-referensdatan saknar tunga atleter: ingen har mer än 74,8 kg fettfri
+  massa. En atlet på 90 kg med normalt kroppsfett flaggas därför som
+  extrapolation i det metabola protokollet. Egna INSCYD-mätningar på tyngre
+  atleter i `vlamax_samples` löser det.

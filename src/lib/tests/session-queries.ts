@@ -13,6 +13,8 @@ export type TestSession = {
   intensity_unit: IntensityUnit;
   performed_on: string;
   weight_kg: number | null;
+  body_fat_pct: number | null;
+  sex: "man" | "kvinna" | null;
   zone_scheme: ZoneScheme | null;
   training_phase: string | null;
   notes: string | null;

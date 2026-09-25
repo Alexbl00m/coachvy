@@ -19,7 +19,8 @@ export type ProtocolKey =
   | "critical-speed"
   | "cs-3min"
   | "cs-3-5min"
-  | "cs-simning";
+  | "cs-simning"
+  | "metabol-profil";
 
 /** Vad ett steg i protokollet bär för fält. */
 export type EffortShape = {
@@ -49,6 +50,17 @@ export type Protocol = {
   /** Vilka storheter protokollet räknar fram. */
   produces: string[];
   zoneScheme: ZoneScheme;
+  /**
+   * Kräver protokollet kroppsfett och kön? VLamax är glykolytisk förmåga per
+   * muskelmassa, och utan fettfri massa finns ingen muskelmassa att räkna på.
+   */
+  needsBodyComposition?: boolean;
+  /**
+   * Förvalda längder i sekunder, en per rad. Fylls i när protokollet väljs,
+   * så att coachen inte behöver skriva "0:20" och "12:00" varje gång – och
+   * så att sprinten hamnar där analysen letar efter den.
+   */
+  template?: number[];
 };
 
 const STEP_SHAPE: EffortShape = {
@@ -90,6 +102,25 @@ export const PROTOCOLS: Protocol[] = [
     shape: STEP_SHAPE,
     produces: ["LT1", "LT2", "Zoner"],
     zoneScheme: "tröskel",
+  },
+  {
+    key: "metabol-profil",
+    label: "Metabol profil",
+    sports: ["cykling"],
+    purpose:
+      "Samma batteri som INSCYD: en sprint och tre maxinsatser. Ger critical power ur de tre längre, VLamax ur sprinten, och tröskel och FatMax ur båda.",
+    howTo:
+      "Först en 20 sekunders sprint, utvilad och all-out. Sedan maximala insatser på 3, 6 och 12 minuter med full återhämtning emellan – helst fördelat på två dagar. Vikt och kroppsfett krävs för VLamax.",
+    remote: true,
+    // Sprint plus två längre räcker för att räkna; tre längre ger en
+    // anpassningsgrad och en kontroll av 6-minuten.
+    minEfforts: 3,
+    maxEfforts: 5,
+    shape: EFFORT_SHAPE,
+    produces: ["CP", "W′", "VLamax", "VO2max", "Tröskel", "FatMax", "Zoner"],
+    zoneScheme: "ftp",
+    needsBodyComposition: true,
+    template: [20, 180, 360, 720],
   },
   {
     key: "critical-power",

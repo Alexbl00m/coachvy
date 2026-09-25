@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Printer } from "lucide-react";
 
 import {
+  BodyFields,
   EffortTable,
   ProtocolPicker,
   ProtocolResults,
@@ -85,14 +86,7 @@ export function PublicTestCalculator() {
               unit={calc.unit}
               onChange={calc.setUnit}
             />
-            <Field label="Vikt" htmlFor="weight" hint="kg – ger W/kg" optional>
-              <Input
-                id="weight"
-                inputMode="decimal"
-                value={calc.weight}
-                onChange={(e) => calc.setWeight(e.target.value)}
-              />
-            </Field>
+            <BodyFields calc={calc} />
           </div>
 
           {calc.spec && (

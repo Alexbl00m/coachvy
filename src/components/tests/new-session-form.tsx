@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import {
+  BodyFields,
   EffortTable,
   ProtocolPicker,
   ProtocolResults,
@@ -30,16 +31,24 @@ export function NewSessionForm({
   adeptId,
   adeptSport,
   adeptWeight,
+  adeptBodyFat = null,
+  adeptSex = null,
 }: {
   adeptId: string;
   adeptSport: Sport;
   adeptWeight: number | null;
+  adeptBodyFat?: number | null;
+  adeptSex?: "man" | "kvinna" | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const calc = useProtocolCalculator(
     adeptSport,
-    adeptWeight ? String(adeptWeight) : "",
+    adeptWeight ? String(adeptWeight).replace(".", ",") : "",
+    {
+      bodyFat: adeptBodyFat ? String(adeptBodyFat).replace(".", ",") : "",
+      sex: adeptSex ?? "",
+    },
   );
 
   const [performedOn, setPerformedOn] = useState(
@@ -59,6 +68,8 @@ export function NewSessionForm({
         unit: calc.unit,
         performedOn,
         weightKg: calc.weight.trim() ? decimal(calc.weight) : null,
+        bodyFatPct: calc.bodyFat.trim() ? decimal(calc.bodyFat) : null,
+        sex: calc.sex || null,
         trainingPhase: trainingPhase || null,
         notes: notes.trim() || null,
         efforts: calc.filled,
@@ -103,14 +114,7 @@ export function NewSessionForm({
 
             <UnitField sport={calc.sport} unit={calc.unit} onChange={calc.setUnit} />
 
-            <Field label="Vikt vid testet" htmlFor="weight" hint="kg – ger W/kg" optional>
-              <Input
-                id="weight"
-                inputMode="decimal"
-                value={calc.weight}
-                onChange={(e) => calc.setWeight(e.target.value)}
-              />
-            </Field>
+            <BodyFields calc={calc} />
 
             <Field
               label="Träningsfas"

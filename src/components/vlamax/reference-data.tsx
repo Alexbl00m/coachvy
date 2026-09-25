@@ -65,7 +65,7 @@ export function ReferenceData({ samples }: { samples: VlamaxSample[] }) {
                 name="label"
                 required
                 defaultValue={state.values?.label ?? ""}
-                placeholder="T.ex. Atlet 14"
+                placeholder="T.ex. Athlet 17"
               />
             </Field>
 
@@ -132,12 +132,11 @@ export function ReferenceData({ samples }: { samples: VlamaxSample[] }) {
               />
             </Field>
 
-            <Field label="Toppeffekt" htmlFor="watt_peak" hint="W">
+            <Field label="Toppeffekt" htmlFor="watt_peak" hint="W – sparas, ingår inte i modellen" optional>
               <Input
                 id="watt_peak"
                 name="watt_peak"
                 inputMode="decimal"
-                required
                 defaultValue={state.values?.watt_peak ?? ""}
               />
             </Field>

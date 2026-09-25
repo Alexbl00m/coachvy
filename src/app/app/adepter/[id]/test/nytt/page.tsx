@@ -4,10 +4,12 @@ import { ArrowLeft } from "lucide-react";
 
 import { NewSessionForm } from "@/components/tests/new-session-form";
 import { PageHeader } from "@/components/page-header";
+import { getAdeptProfile } from "@/lib/adepts/profile";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireCoach } from "@/lib/auth/session";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
+import { listSessions } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Nytt testtillfälle" };
 
@@ -25,8 +27,21 @@ export default async function NewSessionPage({
   await requireCoach();
   const { id } = await params;
 
-  const adept = await getAdept(id);
+  const [adept, profile, sessions] = await Promise.all([
+    getAdept(id),
+    getAdeptProfile(id),
+    listSessions(id),
+  ]);
   if (!adept) notFound();
+
+  // Förifyllt ur det senaste test som hade värdet, så att coachen bara
+  // behöver ändra det som faktiskt ändrats sedan dess.
+  const lastWeight = sessions.find((s) => s.weight_kg != null)?.weight_kg ?? null;
+  const lastBodyFat = sessions.find((s) => s.body_fat_pct != null)?.body_fat_pct ?? null;
+  const sex =
+    profile?.sex === "man" || profile?.sex === "kvinna"
+      ? profile.sex
+      : (sessions.find((s) => s.sex != null)?.sex ?? null);
 
   return (
     <>
@@ -46,7 +61,9 @@ export default async function NewSessionPage({
       <NewSessionForm
         adeptId={adept.id}
         adeptSport={sportOf(adept.sport)}
-        adeptWeight={null}
+        adeptWeight={lastWeight === null ? null : Number(lastWeight)}
+        adeptBodyFat={lastBodyFat === null ? null : Number(lastBodyFat)}
+        adeptSex={sex}
       />
     </>
   );

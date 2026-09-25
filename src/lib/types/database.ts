@@ -82,7 +82,8 @@ export type VlamaxSample = {
   age: number | null;
   sprint_seconds: number;
   watt_avg: number;
-  watt_peak: number;
+  /** Sparas men används inte av modellen längre. */
+  watt_peak: number | null;
   vlamax: number;
   created_at: string;
   updated_at: string;
@@ -97,6 +98,9 @@ export type TestSessionRow = {
   intensity_unit: string;
   performed_on: string;
   weight_kg: number | null;
+  /** Bara för det metabola protokollet – VLamax räknas per fettfri massa. */
+  body_fat_pct: number | null;
+  sex: "man" | "kvinna" | null;
   zone_scheme: string | null;
   training_phase: string | null;
   notes: string | null;

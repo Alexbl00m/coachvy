@@ -41,6 +41,8 @@ export default async function SessionPage({
     unit: session.intensity_unit,
     efforts: toEfforts(session.test_efforts),
     weightKg: session.weight_kg,
+    bodyFatPct: session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
+    sex: session.sex ?? null,
   });
 
   /**
@@ -73,6 +75,10 @@ export default async function SessionPage({
         title={spec?.label ?? session.protocol}
         description={`${formatDate(session.performed_on)} · ${session.sport}${
           session.weight_kg ? ` · ${sv(Number(session.weight_kg), 1)} kg` : ""
+        }${
+          session.body_fat_pct != null
+            ? ` · ${sv(Number(session.body_fat_pct), 1)} % kroppsfett`
+            : ""
         }`}
       />
 
@@ -80,7 +86,7 @@ export default async function SessionPage({
         <div className="mb-6">
           <ResultGrid
             items={primary.slice(0, 4).map((m) => ({
-              label: m.key.replace("_prime", "′"),
+              label: labelFor(m.key),
               value: sv(Number(m.value), digitsFor(m.unit)),
               unit: m.unit,
               hint: m.method ?? undefined,
@@ -155,6 +161,20 @@ export default async function SessionPage({
               modellen får det här testet bättre zoner utan att någon rör
               databasen.
             </p>
+          </Card>
+        )}
+
+        {/* Varningarna räknas om som zonerna. Ett test med en för lugn
+            6-minut eller en VLamax utanför referensdatan ska säga det också
+            när det öppnas om en månad, inte bara medan det skrevs in. */}
+        {recomputed.warnings.length > 0 && (
+          <Card>
+            <CardTitle>Att veta om resultatet</CardTitle>
+            <ul className="space-y-2 text-sm leading-relaxed text-text-muted">
+              {recomputed.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
           </Card>
         )}
 

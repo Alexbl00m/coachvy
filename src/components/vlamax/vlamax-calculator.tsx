@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
-import { predictVlamax, type VlamaxInput } from "@/lib/vlamax/model";
+import { predictVlamax, sprintPerFfm, type VlamaxInput } from "@/lib/vlamax/model";
 import type { Adept, VlamaxSample } from "@/lib/types/database";
 
 import { SaveAsTestResult } from "@/components/vlamax/save-as-test-result";
@@ -17,7 +17,6 @@ const DEFAULTS: VlamaxInput = {
   bodyFatPct: 15,
   sprintSeconds: 20,
   wattAvg: 650,
-  wattPeak: 900,
 };
 
 function decimal(raw: string): number {
@@ -47,8 +46,7 @@ export function VlamaxCalculator({
     Number.isFinite(input.weightKg) &&
     Number.isFinite(input.bodyFatPct) &&
     Number.isFinite(input.sprintSeconds) &&
-    Number.isFinite(input.wattAvg) &&
-    Number.isFinite(input.wattPeak);
+    Number.isFinite(input.wattAvg);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -105,25 +103,21 @@ export function VlamaxCalculator({
             />
           </Field>
 
-          <Field label="Toppeffekt" htmlFor="peak" hint="W">
-            <Input
-              id="peak"
-              inputMode="decimal"
-              defaultValue={String(DEFAULTS.wattPeak)}
-              onChange={(e) => set({ wattPeak: decimal(e.target.value) })}
-            />
-          </Field>
         </div>
 
         <p className="mt-5 border-t border-line pt-4 text-[12px] leading-relaxed text-text-subtle">
-          Längd och ålder ingår inte i modellen — den använder fettfri massa,
-          sprintlängd, snitteffekt, toppeffekt och kön. Vikt och kroppsfett
-          räknas ihop till fettfri massa:{" "}
-          <span className="text-text-muted">
-            {Number.isFinite(input.weightKg) && Number.isFinite(input.bodyFatPct)
-              ? `${(input.weightKg * (1 - input.bodyFatPct / 100)).toFixed(1)} kg`
+          Modellen läser sprinteffekten per kilo fettfri massa, plus kön. VLamax
+          är glykolytisk förmåga per muskelmassa, och det är det måttet som
+          följer den – en tung atlet med stor sprint kan ha lägre VLamax än en
+          lätt med mindre. Just nu:{" "}
+          <span className="text-text-muted tabular-nums">
+            {Number.isFinite(input.weightKg) &&
+            Number.isFinite(input.bodyFatPct) &&
+            Number.isFinite(input.wattAvg)
+              ? `${sprintPerFfm(input.wattAvg, input.weightKg, input.bodyFatPct).toFixed(1).replace(".", ",")} W/kg fettfri massa`
               : "–"}
           </span>
+          . Sprintlängden räknas inte in men vaktas – referensdatan är 17–23 s.
         </p>
       </Card>
 

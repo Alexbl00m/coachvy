@@ -10,7 +10,7 @@ import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
 import type { SessionAnalysis } from "@/lib/tests/analysis";
 import type { Protocol, ProtocolKey } from "@/lib/tests/protocols";
-import type { EffortRow } from "@/lib/tests/use-protocol-calculator";
+import type { EffortRow, ProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
 const SPORTS: { id: Sport; label: string }[] = [
   { id: "cykling", label: "Cykling" },
@@ -275,6 +275,59 @@ export function UnitField({
         <option value="m/s">m/s</option>
       </Select>
     </Field>
+  );
+}
+
+/**
+ * Vikt, och för protokoll som räknar per fettfri massa även kroppsfett och kön.
+ *
+ * För de flesta protokoll är vikten ett tillägg som ger W/kg. För den metabola
+ * profilen bär den hela kedjan – utan den ingen VO2max, och utan kroppsfett
+ * ingen VLamax – och då ska fältet inte se valfritt ut.
+ */
+export function BodyFields({ calc }: { calc: ProtocolCalculator }) {
+  const needsBody = Boolean(calc.spec?.needsBodyComposition);
+
+  return (
+    <>
+      <Field
+        label="Vikt vid testet"
+        htmlFor="weight"
+        hint={needsBody ? "kg" : "kg – ger W/kg"}
+        optional={!needsBody}
+      >
+        <Input
+          id="weight"
+          inputMode="decimal"
+          value={calc.weight}
+          onChange={(e) => calc.setWeight(e.target.value)}
+        />
+      </Field>
+
+      {needsBody && (
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Kroppsfett" htmlFor="body_fat" hint="%">
+            <Input
+              id="body_fat"
+              inputMode="decimal"
+              value={calc.bodyFat}
+              onChange={(e) => calc.setBodyFat(e.target.value)}
+            />
+          </Field>
+          <Field label="Kön" htmlFor="sex">
+            <Select
+              id="sex"
+              value={calc.sex}
+              onChange={(e) => calc.setSex(e.target.value as ProtocolCalculator["sex"])}
+            >
+              <option value="">–</option>
+              <option value="man">Man</option>
+              <option value="kvinna">Kvinna</option>
+            </Select>
+          </Field>
+        </div>
+      )}
+    </>
   );
 }
 
