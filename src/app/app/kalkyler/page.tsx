@@ -61,7 +61,7 @@ const calculators = [
     icon: Waves,
     title: "VLamax",
     description:
-      "Skattar VLamax från ett sprinttest, tränad på atleter där värdet mätts med INSCYD.",
+      "Skattar VLamax från ett sprinttest, tränad på atleter där VLamax bestämts i en metabol profilering.",
     inputs: "Kroppssammansättning och sprinteffekt",
   },
 ];

@@ -19,7 +19,7 @@ export default async function VlamaxPage() {
     <>
       <PageHeader
         title="VLamax-kalkyl"
-        description="Skattar VLamax utifrån ett sprinttest, tränad på atleter där värdet mätts med INSCYD."
+        description="Skattar VLamax utifrån ett sprinttest, tränad på atleter där VLamax bestämts i en metabol profilering."
       />
 
       <VlamaxCalculator samples={samples} adepts={adepts} />

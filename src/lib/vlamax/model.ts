@@ -9,7 +9,7 @@ import type { VlamaxSample } from "@/lib/types/database";
  *
  * Portningen från `vlamax_calc_app` hade fem – fettfri massa, sprintlängd,
  * snitteffekt, toppeffekt och kön, var för sig. På de ursprungliga tretton
- * atleterna gick det bra, men de låg tätt. När tre INSCYD-rapporter lades till
+ * atleterna gick det bra, men de låg tätt. När tre profileringsrapporter lades till
  * visade sig formen vara fel: den tyngsta atleten, med 1047 W över 74,8 kg
  * fettfri massa, fick 0,75 mot uppmätta 0,60 när han lämnades utanför.
  * Modellen såg massan och watten var för sig och missade att hans sprint per

@@ -1,7 +1,7 @@
 -- Coachvy – VLamax-referensdatan flyttar till koden.
 --
 -- De inbyggda raderna (coach_id null) ligger nu i src/lib/vlamax/reference.ts,
--- tillsammans med tre nya INSCYD-mätningar. Två skäl:
+-- tillsammans med tre nya profileringsmätningar. Två skäl:
 --
 --   * Det metabola testprotokollet räknar i webbläsaren, också på den publika
 --     sidan där en anonym besökare inte får läsa den här tabellen. Datan måste

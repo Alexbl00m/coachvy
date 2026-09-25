@@ -188,7 +188,7 @@ någon glömde lägga till den i en lista.
 | Critical power | W = CP·t + W' (Monod & Scherrer) | Testlängd och medeleffekt |
 | Critical speed | D = CS·t + D' | Tid och distans, löpning eller simning |
 | Metabol profil | Mader & Heck (1986) | VO2max, VLamax, effekt vid VO2max |
-| VLamax | Regression mot INSCYD-mätningar | Kroppssammansättning och sprinteffekt |
+| VLamax | Regression mot profileringsmätningar | Kroppssammansättning och sprinteffekt |
 
 ### Vad som ändrades i portningen
 
@@ -219,7 +219,7 @@ minsta kvadrat.
 
 Portningen från Streamlit-appen hade fem variabler: fettfri massa,
 sprintlängd, snitteffekt, toppeffekt och kön, var för sig. När tre
-INSCYD-rapporter lades till visade sig formen vara fel. Den tyngsta atleten
+profileringsrapporter lades till visade sig formen vara fel. Den tyngsta atleten
 fick 0,75 mot uppmätta 0,60 när han lämnades utanför – modellen såg massan och
 watten var för sig och missade att hans sprint per kilo muskel var lägre än en
 lättare atlets. Korsvaliderat (leave-one-out):
@@ -245,22 +245,21 @@ och läggs till ovanpå; modellen tränas om vid nästa sidladdning.
 
 ## Metabol profil som testprotokoll
 
-Samma batteri som INSCYD: en 20-sekunders sprint och maxinsatser på 3, 6 och 12
-minuter, plus vikt, kroppsfett och kön. Ett testtillfälle ger allt på en gång,
-i fyra steg som var och ett går att pröva för sig:
+En 20-sekunders sprint och maxinsatser på 3, 6 och 12 minuter, plus vikt,
+kroppsfett och kön. Ett testtillfälle ger allt på en gång, i fyra steg som var och ett går att pröva för sig:
 
 1. **CP och W′** ur de tre längre insatserna – den vanliga hyperbolen.
 2. **VLamax** ur sprinten, med modellen ovan.
-3. **VO2max** ur 6-minuten med ACSM-ekvationen. INSCYDs syreupptagskurva är
-   ACSM-lik (den återger deras %VO2max vid tröskeln inom en procentenhet), och
-   deras effekt vid VO2max ligger på 6-minuten.
+3. **VO2max** ur 6-minuten med ACSM-ekvationen. Profileringens syreupptagskurva
+   är ACSM-lik (den återger dess %VO2max vid tröskeln inom en procentenhet), och
+   dess effekt vid VO2max ligger på 6-minuten.
 4. **Tröskel och FatMax** ur Mader-modellen med VO2max och VLamax.
 
-Prövat mot tre INSCYD-rapporter:
+Prövat mot tre externa metabola profileringar av samma atleter:
 
 | | VO2max | Tröskel | FatMax |
 |---|---|---|---|
-| Steg 4 med INSCYDs egna VO2max och VLamax | – | 301/294/374 mot 303/303/374 W | 205/207/252 mot 198/205/245 W |
+| Steg 4 med profileringens egna VO2max och VLamax | – | 301/294/374 mot 303/303/374 W | 205/207/252 mot 198/205/245 W |
 | Hela kedjan, rena test | −1,2 och −0,1 | 12–15 W lägre | 3–9 W lägre |
 
 Mader-modellen stämmer alltså; det som skiljer är indatan. Det tredje testet
@@ -476,5 +475,5 @@ Kända luckor:
   tills fler mätningar lagts till.
 - VLamax-referensdatan saknar tunga atleter: ingen har mer än 74,8 kg fettfri
   massa. En atlet på 90 kg med normalt kroppsfett flaggas därför som
-  extrapolation i det metabola protokollet. Egna INSCYD-mätningar på tyngre
+  extrapolation i det metabola protokollet. Egna profileringsmätningar på tyngre
   atleter i `vlamax_samples` löser det.

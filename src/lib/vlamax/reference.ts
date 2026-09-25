@@ -1,7 +1,8 @@
 import type { VlamaxSample } from "@/lib/types/database";
 
 /**
- * Den inbyggda referensdatan: atleter där VLamax mätts med INSCYD.
+ * Den inbyggda referensdatan: atleter där VLamax bestämts i en extern metabol
+ * profilering.
  *
  * Den ligger i koden och inte i databasen av två skäl. Testprotokollen räknar
  * i webbläsaren – också på den publika sidan, där en anonym besökare inte får
@@ -45,7 +46,7 @@ const ROWS: Row[] = [
   ["Athletin 1", "kvinna", 56, 14, 164, 42, 23, 405, 616, 0.39],
   ["Athletin 2", "kvinna", 59, 14, 165, 42, 21, 416, 579, 0.41],
 
-  // Tre INSCYD-rapporter från 2020–2021, anonymiserade som de ovan.
+  // Tre profileringsrapporter från 2020–2021, anonymiserade som de ovan.
   // Sprintlängden är den exakta ur rapportens testdata, inte den nominella:
   // 17 s för Athlet 14, inte 20. Athlet 14 är också den som vidgade spannet –
   // tyngst och starkast i sprinten av alla, och den som fick modellen bytt.

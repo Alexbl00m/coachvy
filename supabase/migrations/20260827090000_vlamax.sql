@@ -4,7 +4,7 @@
 -- appen skrev till; här ligger den i databasen så att den växer när fler
 -- atleter testas, och så att varje coach kan bygga vidare på sin egen.
 --
--- coach_id null = inbyggd referensdata (Alexanders INSCYD-mätningar).
+-- coach_id null = inbyggd referensdata (Alexanders profileringsmätningar).
 -- Modellen tränas på inbyggda rader plus coachens egna.
 
 create table if not exists public.vlamax_samples (
@@ -19,7 +19,7 @@ create table if not exists public.vlamax_samples (
   sprint_seconds numeric not null,
   watt_avg numeric not null,
   watt_peak numeric not null,
-  -- Uppmätt VLamax (INSCYD) – det modellen tränas mot.
+  -- Uppmätt VLamax – det modellen tränas mot.
   vlamax numeric not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -41,7 +41,7 @@ create trigger vlamax_samples_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- Inbyggd referensdata: 13 atleter med VLamax uppmätt via INSCYD.
+-- Inbyggd referensdata: 13 atleter med VLamax från en metabol profilering.
 -- ---------------------------------------------------------------------------
 
 insert into public.vlamax_samples

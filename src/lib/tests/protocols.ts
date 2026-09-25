@@ -108,7 +108,7 @@ export const PROTOCOLS: Protocol[] = [
     label: "Metabol profil",
     sports: ["cykling"],
     purpose:
-      "Samma batteri som INSCYD: en sprint och tre maxinsatser. Ger critical power ur de tre längre, VLamax ur sprinten, och tröskel och FatMax ur båda.",
+      "En sprint och tre maxinsatser. Ger critical power ur de tre längre, VLamax ur sprinten, och tröskel och FatMax ur båda.",
     howTo:
       "Först en 20 sekunders sprint, utvilad och all-out. Sedan maximala insatser på 3, 6 och 12 minuter med full återhämtning emellan – helst fördelat på två dagar. Vikt och kroppsfett krävs för VLamax.",
     remote: true,

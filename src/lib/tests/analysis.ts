@@ -675,22 +675,22 @@ export function anaerobicProfile(
 const sv1 = (n: number, digits = 0) => n.toFixed(digits).replace(".", ",");
 
 /**
- * Samma batteri som INSCYD: en sprint och tre maxinsatser.
+ * En sprint och tre maxinsatser – ett batteri för metabol profilering.
  *
  * Kedjan är fyra steg, och varje steg går att pröva för sig:
  *
  * 1. CP och W′ ur 3, 6 och 12 minuter – den vanliga hyperbolen, inget nytt.
  * 2. VLamax ur sprinten per kilo fettfri massa, mot de sexton atleter i
- *    referensdatan där VLamax mätts med INSCYD.
- * 3. VO2max ur 6-minuterseffekten med ACSM-ekvationen. INSCYDs egen
- *    syreupptagskurva är ACSM-lik: den återger deras %VO2max vid tröskeln
- *    inom en procentenhet. Och deras effekt vid VO2max ligger på 6-minuten.
+ *    referensdatan där VLamax bestämts i en extern metabol profilering.
+ * 3. VO2max ur 6-minuterseffekten med ACSM-ekvationen. Profileringens egen
+ *    syreupptagskurva är ACSM-lik: den återger dess %VO2max vid tröskeln
+ *    inom en procentenhet. Och dess effekt vid VO2max ligger på 6-minuten.
  * 4. Tröskel och FatMax ur Mader-modellen med de två talen ovan.
  *
- * Prövat mot tre INSCYD-rapporter: matad med INSCYDs egna VO2max och VLamax
+ * Prövat mot tre externa profileringar: matad med deras egna VO2max och VLamax
  * gav steg 4 tröskeln 301/294/374 W mot deras 303/303/374, alltså stämmer
  * modellen. Hela kedjan från rådata gav tröskeln 12–15 W och FatMax 3–9 W
- * lägre än INSCYD på de rena testen. Det tredje testet hade en för lugnt
+ * lägre än profileringen på de rena testen. Det tredje testet hade en för lugnt
  * körd 6-minut, och det är den kontrollen längre ned till för.
  */
 function metabolicProfile(
@@ -789,8 +789,8 @@ function metabolicProfile(
     }
   } else {
     // Utan en 6-minut får hyperbolen stå för den. En 5-minut direkt vore
-    // närmare till hands men ger för hög effekt: VO2max-effekten i INSCYDs
-    // rapporter ligger på 6-minuten, inte på den kortaste insatsen som når dit.
+    // närmare till hands men ger för hög effekt: VO2max-effekten i
+    // referensprofileringarna ligger på 6-minuten, inte på den kortaste insatsen som når dit.
     mapPower = cp.criticalPower + (cp.wPrime * 1000) / 360;
     mapMethod = "CP + W′/360 s";
     warnings.push(
@@ -842,7 +842,7 @@ function metabolicProfile(
         );
       }
       warnings.push(
-        `VLamax skattas ur ${prediction.sampleCount} atleter uppmätta med INSCYD. Typiskt fel på en ny atlet: ±${sv1(prediction.rmse, 2)} mmol/l/s.`,
+        `VLamax skattas ur ${prediction.sampleCount} referensatleter med känd VLamax. Typiskt fel på en ny atlet: ±${sv1(prediction.rmse, 2)} mmol/l/s.`,
       );
     }
   }
@@ -882,7 +882,7 @@ function metabolicProfile(
   }
   // Två oberoende vägar till ungefär samma ställe: CP ur hyperbolen och
   // tröskeln ur modellen. De brukar ligga inom tio procent av varandra – på de
-  // rena INSCYD-testen 2–5 %. Mycket större glapp betyder att VO2max eller
+  // rena jämförelsetesten 2–5 %. Mycket större glapp betyder att VO2max eller
   // VLamax är fel, och oftast är det 6-minuten.
   if (at !== null && at < 0.88 * cp.criticalPower) {
     warnings.push(
@@ -891,7 +891,7 @@ function metabolicProfile(
   }
   if (at !== null || fatMax !== null) {
     warnings.push(
-      "Tröskel och FatMax räknas med Mader-modellen ur VO2max och VLamax. Mot tre INSCYD-rapporter hamnade tröskeln 12–15 W och FatMax 3–9 W lägre än INSCYDs på rena test.",
+      "Tröskel och FatMax räknas med Mader-modellen ur VO2max och VLamax. Jämfört med tre externa metabola profileringar av samma atleter hamnade tröskeln 12–15 W och FatMax 3–9 W lägre på rena test.",
     );
   }
 
