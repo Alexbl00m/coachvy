@@ -319,10 +319,25 @@ vara ett löpvärde – den skiljer sig mellan löpning och cykling hos samma at
 (Quittmann-gruppen, Deutsche Sporthochschule Köln), så ett cykelvärde går inte
 att flytta över.
 
-Inte med ännu: Quests laktatkurva i steady state (förväntat blodlaktat per
-fart) och maratonprognosen ur farten vid 2,5 mmol. Kurvan är tänkt att läggas
-mot uppmätta löpbandstester för att skatta VLamax och löpekonomi, och den ska
-prövas mot riktiga tester innan den används.
+Inte med: Quests laktatkurva i steady state (förväntat blodlaktat per fart)
+och maratonprognosen ur farten vid 2,5 mmol. Kurvan prövades mot ett
+löpbandstest med fjorton steg à fyra minuter och håller inte. Formeln säger att
+laktatet går mot oändligheten vid tröskeln, medan det uppmätta steg jämnt från
+1,4 till 3,1 mmol och sedan vidare till 6,3. Ett stegtest är ingen steady
+state: fyra minuter räcker inte för att laktatet ska hinna jämvikt, så värdena
+halkar efter belastningen. Ingen kombination av VLamax, elimineringskonstant
+och vilolaktat gav en anpassning värd namnet – felet blev minst vid den lägsta
+VLamax som prövades, vilket betyder att kurvan inte bestämmer VLamax alls.
+
+Att skatta VLamax och löpekonomi ur ett stegtest kräver i stället en
+tidssimulering av själva protokollet, steg för steg, och flera tester att pröva
+den mot – helst med gasanalys, så att löpekonomi och VO2max är mätta och inte
+antagna.
+
+Samma test gav ändå ett gott tecken för modellen som den är. Med rapportens
+egna VO2max och VLamax hamnade löpmodellens tröskel på 14,6 km/h, samma som
+Coachvys Dmax på stegen och 4–5 % under deras LT2 (15,3). Det är samma riktning
+och storlek som på cykel.
 
 ## Medlemskap
 
