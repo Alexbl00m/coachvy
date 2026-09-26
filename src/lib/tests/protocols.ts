@@ -61,6 +61,11 @@ export type Protocol = {
    * så att sprinten hamnar där analysen letar efter den.
    */
   template?: number[];
+  /**
+   * Ingår i medlemskapet. Visas aldrig på den publika sidan, räknas bara på
+   * servern och kräver ett medlemskonto för att förhandsvisas och sparas.
+   */
+  membersOnly?: boolean;
 };
 
 const STEP_SHAPE: EffortShape = {
@@ -121,6 +126,7 @@ export const PROTOCOLS: Protocol[] = [
     zoneScheme: "ftp",
     needsBodyComposition: true,
     template: [20, 180, 360, 720],
+    membersOnly: true,
   },
   {
     key: "critical-power",
@@ -277,8 +283,17 @@ export function protocolByKey(key: string): Protocol | null {
   return PROTOCOLS.find((p) => p.key === key) ?? null;
 }
 
-export function protocolsForSport(sport: Sport): Protocol[] {
-  return PROTOCOLS.filter((p) => p.sports.includes(sport));
+/**
+ * Protokollen för en gren. Medlemsprotokollen tas bara med när vyn uttryckligen
+ * ber om dem – den publika sidan gör det aldrig.
+ */
+export function protocolsForSport(
+  sport: Sport,
+  options: { includeMembersOnly?: boolean } = {},
+): Protocol[] {
+  return PROTOCOLS.filter(
+    (p) => p.sports.includes(sport) && (options.includeMembersOnly || !p.membersOnly),
+  );
 }
 
 /** Enheten belastningen anges i för en gren. */

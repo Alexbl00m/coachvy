@@ -1,15 +1,20 @@
+import "server-only";
+
 import type { VlamaxSample } from "@/lib/types/database";
 
 /**
  * Den inbyggda referensdatan: atleter där VLamax bestämts i en extern metabol
  * profilering.
  *
- * Den ligger i koden och inte i databasen av två skäl. Testprotokollen räknar
- * i webbläsaren – också på den publika sidan, där en anonym besökare inte får
- * läsa tabellen – och då måste datan finnas där modellen körs. Och den hör
- * ihop med modellens form: när formen byttes från fem variabler till sprint
- * per kilo fettfri massa var det den här datan valet prövades mot. Ligger de
- * i samma commit går det att se vad som validerades mot vad.
+ * Den ligger i koden och inte i databasen för att den hör ihop med modellens
+ * form: när formen byttes från fem variabler till sprint per kilo fettfri
+ * massa var det den här datan valet prövades mot. Ligger de i samma commit går
+ * det att se vad som validerades mot vad.
+ *
+ * Den får bara läsas på servern. Datan är det som gör den metabola profilen
+ * värd att betala för, och `import "server-only"` stoppar bygget om en
+ * klientkomponent någonsin försöker dra in den. VLamax-kalkylen skickar den
+ * vidare som props, men bara till medlemmar.
  *
  * Coachens egna mätningar ligger kvar i `vlamax_samples` och läggs till ovanpå.
  *

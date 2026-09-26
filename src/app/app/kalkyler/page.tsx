@@ -6,10 +6,12 @@ import {
   Droplet,
   Gauge,
   LineChart,
+  Lock,
   Waves,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { isMember } from "@/lib/auth/membership";
 import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 
@@ -55,6 +57,7 @@ const calculators = [
     description:
       "Laktatproduktion mot laktatförbränning enligt Mader-modellen. Ger anaerob tröskel, FatMax och substratomsättning.",
     inputs: "VO2max, VLamax och effekt vid VO2max",
+    membersOnly: true,
   },
   {
     href: routes.vlamax,
@@ -63,11 +66,13 @@ const calculators = [
     description:
       "Skattar VLamax från ett sprinttest, tränad på atleter där VLamax bestämts i en metabol profilering.",
     inputs: "Kroppssammansättning och sprinteffekt",
+    membersOnly: true,
   },
 ];
 
 export default async function KalkylerPage() {
-  await requireCoach();
+  const user = await requireCoach();
+  const member = isMember(user);
 
   return (
     <>
@@ -86,8 +91,14 @@ export default async function KalkylerPage() {
               className="group rounded-lg border border-line bg-surface p-6 transition-colors hover:border-accent"
             >
               <Icon aria-hidden className="size-6 text-accent" />
-              <h2 className="mt-4 flex items-center gap-2 text-lg font-semibold text-text">
+              <h2 className="mt-4 flex flex-wrap items-center gap-2 text-lg font-semibold text-text">
                 {item.title}
+                {"membersOnly" in item && item.membersOnly && (
+                  <span className="inline-flex items-center gap-1 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-normal text-accent">
+                    <Lock aria-hidden className="size-3" />
+                    {member ? "Medlem" : "Ingår i medlemskapet"}
+                  </span>
+                )}
                 <ArrowRight
                   aria-hidden
                   className="size-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent"

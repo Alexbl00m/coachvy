@@ -17,7 +17,7 @@ const tools = [
     icon: FlaskConical,
     title: "Testberäkning",
     description:
-      "Tolv protokoll för cykel, löpning och simning: CP och W′, FTP, VLamax, critical speed och laktattrösklar. Ta med dig resultatet som PDF.",
+      "Elva protokoll för cykel, löpning och simning: CP och W′, FTP, critical speed och laktattrösklar. Ta med dig resultatet som PDF.",
     inputs: "Ditt testresultat",
   },
   {

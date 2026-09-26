@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isMember } from "@/lib/auth/membership";
 import { requireCoach } from "@/lib/auth/session";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
-import { analyseSession, type Effort } from "./analysis";
+import type { Effort } from "./analysis";
+import { analyseSessionOnServer } from "./metabolic-profile";
 import { protocolByKey, type ProtocolKey } from "./protocols";
 
 export type SaveSessionInput = {
@@ -38,10 +40,13 @@ export type SaveSessionResult =
 export async function saveTestSession(
   input: SaveSessionInput,
 ): Promise<SaveSessionResult> {
-  await requireCoach();
+  const user = await requireCoach();
 
   const spec = protocolByKey(input.protocol);
   if (!spec) return { ok: false, error: "Okänt protokoll." };
+  if (spec.membersOnly && !isMember(user)) {
+    return { ok: false, error: `${spec.label} ingår i medlemskapet.` };
+  }
 
   // En rad med bara en längd är en förifylld mall, ingen insats.
   const efforts = input.efforts.filter(
@@ -70,7 +75,7 @@ export async function saveTestSession(
     return { ok: false, error: "Okänt kön." };
   }
 
-  const analysis = analyseSession({
+  const analysis = analyseSessionOnServer({
     protocol: input.protocol,
     sport: input.sport,
     unit: input.unit,

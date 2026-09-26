@@ -2,14 +2,16 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { MetabolicCalculator } from "@/components/calculators/metabolic-calculator";
+import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
+import { isMember } from "@/lib/auth/membership";
 import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 
 export const metadata = { title: "Metabol profil" };
 
 export default async function MetaboliskProfilPage() {
-  await requireCoach();
+  const user = await requireCoach();
 
   return (
     <>
@@ -26,7 +28,7 @@ export default async function MetaboliskProfilPage() {
         description="Laktatproduktion mot laktatförbränning enligt Mader-modellen. Ger anaerob tröskel, FatMax och substratomsättning från VO2max och VLamax."
       />
 
-      <MetabolicCalculator />
+      {isMember(user) ? <MetabolicCalculator /> : <MembersOnly feature="Metabol profil" />}
     </>
   );
 }

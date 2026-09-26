@@ -6,6 +6,7 @@ import { NewSessionForm } from "@/components/tests/new-session-form";
 import { PageHeader } from "@/components/page-header";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { getAdept } from "@/lib/adepts/queries";
+import { isMember } from "@/lib/auth/membership";
 import { requireCoach } from "@/lib/auth/session";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
@@ -24,7 +25,7 @@ function sportOf(raw: string | null): Sport {
 export default async function NewSessionPage({
   params,
 }: PageProps<"/app/adepter/[id]/test/nytt">) {
-  await requireCoach();
+  const user = await requireCoach();
   const { id } = await params;
 
   const [adept, profile, sessions] = await Promise.all([
@@ -64,6 +65,7 @@ export default async function NewSessionPage({
         adeptWeight={lastWeight === null ? null : Number(lastWeight)}
         adeptBodyFat={lastBodyFat === null ? null : Number(lastBodyFat)}
         adeptSex={sex}
+        member={isMember(user)}
       />
     </>
   );

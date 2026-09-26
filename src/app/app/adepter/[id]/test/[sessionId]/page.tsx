@@ -9,7 +9,7 @@ import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
-import { analyseSession } from "@/lib/tests/analysis";
+import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { getSession, toEfforts } from "@/lib/tests/session-queries";
 
@@ -35,7 +35,7 @@ export default async function SessionPage({
 
   // Zonerna räknas om ur rådatan i stället för att lagras: förbättras modellen
   // får ett gammalt test bättre zoner utan att någon rör databasen.
-  const recomputed = analyseSession({
+  const recomputed = analyseSessionOnServer({
     protocol: session.protocol,
     sport: session.sport,
     unit: session.intensity_unit,

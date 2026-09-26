@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
-import { analyseSession, type Effort, type SessionAnalysis } from "./analysis";
+import {
+  analyseSession,
+  type AnalysisArgs,
+  type Effort,
+  type SessionAnalysis,
+} from "./analysis";
 import {
   defaultUnitFor,
   protocolByKey,
@@ -22,6 +27,9 @@ export type EffortRow = {
 };
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
+
+/** Innan servern svarat första gången finns inget att visa. */
+const NOTHING_YET: SessionAnalysis = { metrics: [], zones: [], zoneUnit: "W", warnings: [] };
 
 /** "3:30" eller "210" till sekunder. */
 export function parseDuration(raw: string): number | null {
@@ -66,6 +74,24 @@ export type BodyComposition = {
   sex: Sex | "";
 };
 
+/**
+ * Hur medlemsprotokollen behandlas i en vy.
+ *
+ * hidden – syns inte alls (den publika sidan). locked – syns men går inte att
+ * välja (coach utan medlemskap). open – går att använda (medlem).
+ */
+export type MembersOnlyMode = "hidden" | "locked" | "open";
+
+export type CalculatorOptions = {
+  membersOnly?: MembersOnlyMode;
+  /**
+   * Server action som räknar protokoll som inte får räknas i webbläsaren.
+   * Skickas in av vyn i stället för att importeras här, så att den publika
+   * sidan inte ens har en referens till den.
+   */
+  previewOnServer?: (args: AnalysisArgs) => Promise<SessionAnalysis>;
+};
+
 export type ProtocolCalculator = {
   sport: Sport;
   setSport: (next: Sport) => void;
@@ -88,6 +114,10 @@ export type ProtocolCalculator = {
 
   spec: Protocol | null;
   available: Protocol[];
+  /** Protokoll som syns men kräver medlemskap. */
+  isLocked: (key: ProtocolKey) => boolean;
+  /** Väntar på ett svar från servern. */
+  pending: boolean;
   /** Raderna som faktiskt innehåller något. */
   filled: Effort[];
   analysis: SessionAnalysis;
@@ -104,10 +134,17 @@ export function useProtocolCalculator(
   initialSport: Sport = "cykling",
   initialWeight = "",
   initialBody: BodyComposition = { bodyFat: "", sex: "" },
+  options: CalculatorOptions = {},
 ): ProtocolCalculator {
+  const membersOnly = options.membersOnly ?? "hidden";
+  const listFor = (s: Sport) =>
+    protocolsForSport(s, { includeMembersOnly: membersOnly !== "hidden" });
+  const isLocked = (key: ProtocolKey) =>
+    membersOnly !== "open" && Boolean(protocolByKey(key)?.membersOnly);
+
   const [sport, setSportState] = useState<Sport>(initialSport);
   const [protocol, setProtocolState] = useState<ProtocolKey>(
-    protocolsForSport(initialSport)[0]?.key ?? "laktat-steg",
+    listFor(initialSport).find((p) => !isLocked(p.key))?.key ?? "laktat-steg",
   );
   const [unit, setUnit] = useState<IntensityUnit>(defaultUnitFor(initialSport));
   const [weight, setWeight] = useState(initialWeight);
@@ -125,6 +162,7 @@ export function useProtocolCalculator(
    * utskriften. Ett enintervallstest såg då ut som ett tretest.
    */
   const setProtocol = (next: ProtocolKey) => {
+    if (isLocked(next)) return;
     setProtocolState(next);
     const spec = protocolByKey(next);
     if (!spec) return;
@@ -164,7 +202,7 @@ export function useProtocolCalculator(
     setSportState(next);
     setUnit(defaultUnitFor(next));
     // Protokollen är grenspecifika, så valet måste följa med.
-    const forNext = protocolsForSport(next);
+    const forNext = listFor(next).filter((p) => !isLocked(p.key));
     if (!forNext.some((p) => p.key === protocol)) {
       setProtocol(forNext[0].key);
     }
@@ -212,19 +250,65 @@ export function useProtocolCalculator(
     return parsed.filter(hasContent);
   }, [rows]);
 
-  const analysis = useMemo(
-    () =>
-      analyseSession({
-        protocol,
-        sport,
-        unit,
-        efforts: filled,
-        weightKg: weight.trim() ? decimal(weight) : null,
-        bodyFatPct: bodyFat.trim() ? decimal(bodyFat) : null,
-        sex: sex || null,
-      }),
+  const args = useMemo<AnalysisArgs>(
+    () => ({
+      protocol,
+      sport,
+      unit,
+      efforts: filled,
+      weightKg: weight.trim() ? decimal(weight) : null,
+      bodyFatPct: bodyFat.trim() ? decimal(bodyFat) : null,
+      sex: sex || null,
+    }),
     [protocol, sport, unit, filled, weight, bodyFat, sex],
   );
+
+  const onServer = Boolean(protocolByKey(protocol)?.membersOnly);
+  const local = useMemo(() => analyseSession(args), [args]);
+
+  /**
+   * Svaret från servern, med nyckeln för de indata det gäller. En äldre
+   * förfrågan som hinner tillbaka efter en nyare skrivs aldrig över den.
+   */
+  const [remote, setRemote] = useState<{ key: string; result: SessionAnalysis } | null>(
+    null,
+  );
+  const argsKey = JSON.stringify(args);
+  const preview = options.previewOnServer;
+
+  useEffect(() => {
+    if (!onServer || !preview) return;
+    let cancelled = false;
+    // Kort väntan så att varje tangenttryck inte blir ett anrop.
+    const timer = setTimeout(() => {
+      preview(JSON.parse(argsKey) as AnalysisArgs)
+        .then((result) => {
+          if (!cancelled) setRemote({ key: argsKey, result });
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRemote({
+              key: argsKey,
+              result: {
+                metrics: [],
+                zones: [],
+                zoneUnit: "W",
+                warnings: ["Kunde inte räkna ut testet just nu. Försök igen om en stund."],
+              },
+            });
+          }
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [onServer, preview, argsKey]);
+
+  // Medan ett nytt svar är på väg visas det förra, så att resultatet inte
+  // blinkar bort vid varje tangenttryck. Sparandet räknar alltid om på servern.
+  const analysis = onServer && preview ? (remote?.result ?? NOTHING_YET) : local;
+  const pending = onServer && Boolean(preview) && remote?.key !== argsKey;
 
   return {
     sport,
@@ -244,7 +328,9 @@ export function useProtocolCalculator(
     addRow,
     removeRow,
     spec: protocolByKey(protocol),
-    available: protocolsForSport(sport),
+    available: listFor(sport),
+    isLocked,
+    pending,
     filled,
     analysis,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Lock, Plus, Trash2 } from "lucide-react";
 
 import { DataTable, ResultGrid } from "@/components/calculators/result-grid";
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,15 @@ export function ProtocolPicker({
   protocol,
   onProtocol,
   available,
+  isLocked = () => false,
 }: {
   sport: Sport;
   onSport: (next: Sport) => void;
   protocol: ProtocolKey;
   onProtocol: (next: ProtocolKey) => void;
   available: Protocol[];
+  /** Protokoll som syns men kräver medlemskap. */
+  isLocked?: (key: ProtocolKey) => boolean;
 }) {
   return (
     <>
@@ -63,17 +66,21 @@ export function ProtocolPicker({
       <div className="space-y-2">
         {available.map((item) => {
           const active = item.key === protocol;
+          const locked = isLocked(item.key);
           return (
             <button
               key={item.key}
               type="button"
               onClick={() => onProtocol(item.key)}
               aria-pressed={active}
+              disabled={locked}
               className={cn(
                 "w-full rounded-lg border p-4 text-left transition-colors",
                 active
                   ? "border-accent bg-accent-soft"
-                  : "border-line hover:border-accent/60",
+                  : locked
+                    ? "cursor-not-allowed border-dashed border-line opacity-70"
+                    : "border-line hover:border-accent/60",
               )}
             >
               <span className="flex flex-wrap items-baseline gap-2">
@@ -81,6 +88,12 @@ export function ProtocolPicker({
                 <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-muted">
                   {item.remote ? "på distans" : "på plats"}
                 </span>
+                {item.membersOnly && (
+                  <span className="inline-flex items-center gap-1 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] text-accent">
+                    <Lock aria-hidden className="size-3" />
+                    {locked ? "Ingår i medlemskapet" : "Medlem"}
+                  </span>
+                )}
               </span>
               <span className="mt-1.5 block text-[13px] leading-relaxed text-text-muted">
                 {item.purpose}

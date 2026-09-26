@@ -16,6 +16,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
+import { previewOnServer } from "@/lib/tests/preview-actions";
 import { saveTestSession } from "@/lib/tests/session-actions";
 import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
@@ -33,12 +34,15 @@ export function NewSessionForm({
   adeptWeight,
   adeptBodyFat = null,
   adeptSex = null,
+  member = false,
 }: {
   adeptId: string;
   adeptSport: Sport;
   adeptWeight: number | null;
   adeptBodyFat?: number | null;
   adeptSex?: "man" | "kvinna" | null;
+  /** Coachen har medlemskap – låser upp den metabola profilen. */
+  member?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -49,6 +53,7 @@ export function NewSessionForm({
       bodyFat: adeptBodyFat ? String(adeptBodyFat).replace(".", ",") : "",
       sex: adeptSex ?? "",
     },
+    { membersOnly: member ? "open" : "locked", previewOnServer },
   );
 
   const [performedOn, setPerformedOn] = useState(
@@ -83,7 +88,7 @@ export function NewSessionForm({
     });
   };
 
-  const canSave = calc.analysis.metrics.length > 0 && !pending;
+  const canSave = calc.analysis.metrics.length > 0 && !pending && !calc.pending;
   const stepwise = Boolean(calc.spec?.shape.lactate);
 
   return (
@@ -97,6 +102,7 @@ export function NewSessionForm({
             protocol={calc.protocol}
             onProtocol={calc.setProtocol}
             available={calc.available}
+            isLocked={calc.isLocked}
           />
         </Card>
 
@@ -176,7 +182,9 @@ export function NewSessionForm({
           {pending ? "Sparar …" : "Spara testtillfället"}
         </Button>
         <span className="text-[13px] text-text-subtle">
-          {calc.analysis.metrics.length === 0
+          {calc.pending && calc.filled.length > 0
+            ? "Räknar …"
+            : calc.analysis.metrics.length === 0
             ? `Fyll i minst ${calc.spec?.minEfforts ?? 2} rader så räknas testet ut.`
             : `${calc.filled.length} ${stepwise ? "steg" : "insatser"} · ${calc.analysis.metrics.length} värden sparas`}
         </span>

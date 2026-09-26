@@ -21,6 +21,8 @@ export type Profile = {
 export type Coach = {
   id: string;
   company_name: string | null;
+  /** Sätts i databasen, aldrig av coachen själv – se migrationen för medlemskap. */
+  plan: "bas" | "medlem";
   created_at: string;
   updated_at: string;
 };

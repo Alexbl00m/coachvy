@@ -232,10 +232,9 @@ lättare atlets. Korsvaliderat (leave-one-out):
 Toppeffekten tillförde ingenting ens i den gamla formen och är borttagen.
 
 Referensdatan ligger i koden, `src/lib/vlamax/reference.ts`: de 13 ursprungliga
-plus 3 nya, alla anonymiserade. Den flyttade ur databasen för att testprotokollet
-nedan räknar i webbläsaren – också på den publika sidan, där en anonym besökare
-inte får läsa tabellen. Coachens egna mätningar ligger kvar i `vlamax_samples`
-och läggs till ovanpå; modellen tränas om vid nästa sidladdning.
+plus 3 nya, alla anonymiserade. Filen får bara importeras på servern. Coachens
+egna mätningar ligger kvar i `vlamax_samples` och läggs till ovanpå; modellen
+tränas om vid nästa sidladdning.
 
 - **Felmarginalen visas**, från korsvalideringen. Att bara gissa medelvärdet
   ger 0,098, så modellen gör verklig nytta – men siffran är en skattning.
@@ -279,6 +278,35 @@ testtillfället (`test_sessions.body_fat_pct`, `sex`) så att testet kan räknas
 med de värden som gällde då, och varningarna räknas om varje gång testet
 öppnas. VLamax, VO2max, tröskel och FatMax följer med till passbyggaren och
 AI-coachen.
+
+## Medlemskap
+
+Den metabola profilen – testprotokollet, VLamax-kalkylen och den metabola
+kalkylen – ingår i medlemskapet. Vem som helst kan registrera ett coachkonto;
+`coaches.plan` (`bas` eller `medlem`) är det som skiljer ett gratiskonto från
+ett betalande.
+
+- **Publika sidan** visar aldrig protokollet, och ingen del av beräkningen
+  följer med dit.
+- **Beräkningen körs bara på servern.** `src/lib/tests/metabolic-profile.ts`
+  och referensdatan importerar `server-only`, så bygget stoppar om en
+  klientkomponent försöker dra in dem. Formuläret förhandsvisar via en server
+  action och får bara tillbaka resultatet.
+- **Utan medlemskap** syns protokollet låst, kalkylsidorna visar ett
+  medlemskort i stället för kalkylen, och server actions för förhandsvisning
+  och sparande svarar att funktionen ingår i medlemskapet.
+- **Kolumnen kan inte ändras från appen.** En trigger stoppar alla ändringar
+  av `plan` som kommer via API:t, också när coachen uppdaterar sin egen rad.
+  Den ändras i SQL-editorn eller av en framtida betalningswebhook med
+  service-nyckeln:
+
+  ```sql
+  update public.coaches set plan = 'medlem'
+  where id = (select id from public.profiles where email = 'din@adress');
+  ```
+
+Gamla testtillfällen visas och räknas om för alla som får se dem, också om
+coachens medlemskap har gått ut – det är deras data.
 
 ## Passbyggare
 

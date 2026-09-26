@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { isMember } from "@/lib/auth/membership";
 import { requireCoach } from "@/lib/auth/session";
 import { field, type FormState } from "@/lib/form-state";
 import { routes } from "@/lib/routes";
@@ -38,6 +39,9 @@ export async function addVlamaxSample(
 ): Promise<FormState> {
   const coach = await requireCoach();
   const values = echo(formData);
+  if (!isMember(coach)) {
+    return { error: "VLamax-kalkylen ingår i medlemskapet.", values };
+  }
 
   const label = field(formData, "label");
   const sex = field(formData, "sex");
@@ -106,6 +110,7 @@ export async function saveVlamaxAsTestResult(
   formData: FormData,
 ): Promise<FormState> {
   const coach = await requireCoach();
+  if (!isMember(coach)) return { error: "VLamax-kalkylen ingår i medlemskapet." };
 
   const adeptId = field(formData, "adept_id");
   const value = num(formData, "value");
