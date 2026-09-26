@@ -55,8 +55,8 @@ const calculators = [
     icon: LineChart,
     title: "Metabol profil",
     description:
-      "Laktatproduktion mot laktatförbränning enligt Mader-modellen. Ger anaerob tröskel, FatMax och substratomsättning.",
-    inputs: "VO2max, VLamax och effekt vid VO2max",
+      "Laktatproduktion mot laktatförbränning enligt Mader-modellen, för cykel och löpning. Ger anaerob tröskel, FatMax, CarbMax och substratomsättning.",
+    inputs: "VO2max, VLamax och effekt vid VO2max eller löpekonomi",
     membersOnly: true,
   },
   {

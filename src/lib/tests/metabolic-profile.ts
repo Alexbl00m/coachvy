@@ -57,9 +57,10 @@ const sv1 = (n: number, digits = 0) => n.toFixed(digits).replace(".", ",");
  *
  * Prövat mot tre externa profileringar: matad med deras egna VO2max och VLamax
  * gav steg 4 tröskeln 301/294/374 W mot deras 303/303/374, alltså stämmer
- * modellen. Hela kedjan från rådata gav tröskeln 12–15 W och FatMax 3–9 W
- * lägre än profileringen på de rena testen. Det tredje testet hade en för lugnt
- * körd 6-minut, och det är den kontrollen längre ned till för.
+ * modellen. Hela kedjan från rådata, med varje atlet utelämnad ur
+ * VLamax-referensdatan när hens egen VLamax skattades, gav tröskeln 6 och 17 W
+ * lägre och FatMax +6 och −6 W mot profileringen på de två rena testen. Det
+ * tredje hade en för lugnt körd 6-minut, och det är kontrollen längre ned till för.
  */
 export function metabolicProfile(
   efforts: Effort[],
@@ -259,7 +260,7 @@ export function metabolicProfile(
   }
   if (at !== null || fatMax !== null) {
     warnings.push(
-      "Tröskel och FatMax räknas med Mader-modellen ur VO2max och VLamax. Jämfört med tre externa metabola profileringar av samma atleter hamnade tröskeln 12–15 W och FatMax 3–9 W lägre på rena test.",
+      "Tröskel och FatMax räknas med Mader-modellen ur VO2max och VLamax. Jämfört med tre externa metabola profileringar av samma atleter hamnade tröskeln 6–17 W lägre och FatMax inom ±6 W på rena test.",
     );
   }
 

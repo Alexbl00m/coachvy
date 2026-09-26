@@ -69,7 +69,20 @@ export type MetabolicThresholds = {
   anaerobicThreshold: MetabolicPoint | null;
   /** FatMax: högsta fettförbrukning under tröskeln. */
   fatMax: MetabolicPoint | null;
+  /**
+   * CarbMax: första punkten där kolhydratförbrukningen når
+   * `CARB_MAX_GRAMS_PER_HOUR`. Ovanför den förbränns kolhydrater fortare än
+   * de går att fylla på under ett lopp.
+   */
+  carbMax: MetabolicPoint | null;
 };
+
+/**
+ * Ungefär det tak för kolhydratintag under arbete som idrottsnutritionen
+ * räknar med när flera sockerarter kombineras (glukos plus fruktos). Vissa
+ * tränar magen högre, så gränsen är en riktlinje och inte en fysiologisk konstant.
+ */
+export const CARB_MAX_GRAMS_PER_HOUR = 90;
 
 export type MetabolicProfile = {
   points: MetabolicPoint[];
@@ -92,7 +105,10 @@ export function calculateMetabolicProfile(
   const { ks1, ks2, laCombConstant, volRel } = constants;
 
   if (!(vo2max > 0) || !(vo2maxPower > 0) || !(weightKg > 0)) {
-    return { points: [], thresholds: { anaerobicThreshold: null, fatMax: null } };
+    return {
+      points: [],
+      thresholds: { anaerobicThreshold: null, fatMax: null, carbMax: null },
+    };
   }
 
   const steps = 200;
@@ -142,7 +158,9 @@ export function calculateMetabolicProfile(
       : null;
 
     const point: MetabolicPoint = {
-      power: Number(power.toFixed(1)),
+      // Två decimaler: i löpning är intensiteten m/s, och en decimal vore
+      // 0,1 m/s – drygt tjugo sekunder per kilometer vid tröskelfart.
+      power: Number(power.toFixed(2)),
       percentOfMax: Number(((power / vo2maxPower) * 100).toFixed(1)),
       vo2: Number(vo2.toFixed(2)),
       lactateProduction: Number(lactateProduction.toFixed(3)),
@@ -163,7 +181,7 @@ export function calculateMetabolicProfile(
 
 function findThresholds(points: MetabolicPoint[]): MetabolicThresholds {
   if (points.length === 0) {
-    return { anaerobicThreshold: null, fatMax: null };
+    return { anaerobicThreshold: null, fatMax: null, carbMax: null };
   }
 
   // Tröskeln: första punkten där produktionen passerar förbränningen.
@@ -174,11 +192,95 @@ function findThresholds(points: MetabolicPoint[]): MetabolicThresholds {
 
   // FatMax söks bara under tröskeln — ovanför den är fettbidraget på väg ned.
   const belowThreshold = points.slice(0, atIndex >= 0 ? atIndex + 1 : undefined);
-  const fatMax = belowThreshold.reduce<MetabolicPoint | null>(
-    (best, point) =>
-      best === null || point.fatPerHour > best.fatPerHour ? point : best,
-    null,
-  );
+  //
+  // Fettkurvan är platt i toppen, och med 0,1 g/h avrundning blir flera
+  // punkter lika höga. Att ta den första gav alltid den lägsta intensiteten på
+  // platån – 0,05 m/s för långsamt i löpning. Mitten av platån ligger närmast
+  // den verkliga toppen.
+  const peakFat = Math.max(...belowThreshold.map((p) => p.fatPerHour));
+  const plateau = belowThreshold.filter((p) => p.fatPerHour === peakFat);
+  const fatMax = plateau.length > 0 ? plateau[Math.floor((plateau.length - 1) / 2)] : null;
 
-  return { anaerobicThreshold, fatMax };
+  const carbMax =
+    points.find((p) => p.carbsPerHour >= CARB_MAX_GRAMS_PER_HOUR) ?? null;
+
+  return { anaerobicThreshold, fatMax, carbMax };
+}
+
+// ---------------------------------------------------------------------------
+// Löpning
+// ---------------------------------------------------------------------------
+
+export type RunningInput = {
+  /** ml/kg/min. */
+  vo2max: number;
+  /** mmol/l/s – ett löpvärde, inte ett från cykel. */
+  vlamax: number;
+  /**
+   * Löpekonomi: syrekostnaden per kilometer, ml/kg/km. Tränade löpare ligger
+   * ofta runt 190–220, men spridningen mellan löpare på samma fart är stor.
+   */
+  runningEconomy: number;
+  weightKg: number;
+  maxHeartRate?: number | null;
+};
+
+/** Farten vid VO2max, m/s: den fart där syrekostnaden når VO2max. */
+export function speedAtVo2max(vo2max: number, runningEconomy: number): number {
+  if (!(vo2max > 0) || !(runningEconomy > 0)) return 0;
+  // ml/kg/min delat med ml/kg/m ger m/min.
+  return vo2max / (runningEconomy / 1000) / 60;
+}
+
+/**
+ * Löpekonomi ur ett mätvärde: syreupptaget vid en submaximal fart under
+ * tröskeln, till exempel från ett löpbandstest med gasanalys.
+ */
+export function runningEconomyFrom(vo2: number, speedKmh: number): number {
+  if (!(vo2 > 0) || !(speedKmh > 0)) return 0;
+  const metresPerMinute = (speedKmh * 1000) / 60;
+  return (vo2 / metresPerMinute) * 1000;
+}
+
+/**
+ * Metabol profil för löpning.
+ *
+ * Samma modell som på cykel. Det enda som skiljer är hur syreupptaget
+ * översätts till belastning: på cykel kostar en watt nästan lika mycket syre
+ * för alla, i löpning avgör löpekonomin hur fort en viss syremängd bär. Med
+ * farten vid VO2max som ände på skalan blir resten exakt samma räkning, och
+ * punkternas `power` är fart i m/s.
+ *
+ * Portad från metabolic-quest (`src/utils/metabolicCalculations.ts`), med två
+ * rättelser:
+ *
+ * - Farten räknades där ur syreupptaget plus det laktat som *bildas*, vid
+ *   varje intensitet. Under tröskeln förbränns det laktatet och dess syre
+ *   finns redan i syreupptaget – det räknades alltså två gånger. Med
+ *   standardvärdena gav det tröskeln 3,70 m/s (4:30/km) i stället för 3,40
+ *   (4:54/km). Här översätts bara syreupptaget, som på cykel.
+ * - Fettförbränningen räknades ur absolutbeloppet av nettolaktatet och steg
+ *   därför igen ovanför tröskeln. Den klamras till noll där, som på cykel.
+ */
+export function calculateRunningProfile(
+  input: RunningInput,
+  constants: MaderConstants = MADER_DEFAULTS,
+): MetabolicProfile {
+  return calculateMetabolicProfile(
+    {
+      vo2max: input.vo2max,
+      vlamax: input.vlamax,
+      vo2maxPower: speedAtVo2max(input.vo2max, input.runningEconomy),
+      weightKg: input.weightKg,
+      maxHeartRate: input.maxHeartRate,
+    },
+    constants,
+  );
+}
+
+/** m/s till "4:54". */
+export function paceFromSpeed(metresPerSecond: number): string {
+  if (!(metresPerSecond > 0)) return "–";
+  const secondsPerKm = Math.round(1000 / metresPerSecond);
+  return `${Math.floor(secondsPerKm / 60)}:${String(secondsPerKm % 60).padStart(2, "0")}`;
 }

@@ -25,7 +25,7 @@ export default async function MetaboliskProfilPage() {
 
       <PageHeader
         title="Metabol profil"
-        description="Laktatproduktion mot laktatförbränning enligt Mader-modellen. Ger anaerob tröskel, FatMax och substratomsättning från VO2max och VLamax."
+        description="Laktatproduktion mot laktatförbränning enligt Mader-modellen, för cykel och löpning. Ger anaerob tröskel, FatMax, CarbMax och substratomsättning från VO2max och VLamax."
       />
 
       {isMember(user) ? <MetabolicCalculator /> : <MembersOnly feature="Metabol profil" />}

@@ -18,7 +18,9 @@ import {
   CHART_SURFACE,
   SERIES,
 } from "@/lib/calculators/chart-colors";
-import type { MetabolicPoint } from "@/lib/calculators/metabolic";
+import { paceFromSpeed, type MetabolicPoint } from "@/lib/calculators/metabolic";
+
+type Mode = "cykling" | "löpning";
 
 type SeriesKey = "lactate" | "fuel";
 
@@ -49,10 +51,12 @@ function ChartTooltip({
   active,
   payload,
   unit,
+  mode,
 }: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string; payload: MetabolicPoint }>;
   unit: string;
+  mode: Mode;
 }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
@@ -60,7 +64,10 @@ function ChartTooltip({
   return (
     <div className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg">
       <p className="text-[11px] text-text-muted">
-        {Math.round(point.power)} W · {point.percentOfMax}%
+        {mode === "cykling"
+          ? `${Math.round(point.power)} W`
+          : `${paceFromSpeed(point.power)}/km · ${(point.power * 3.6).toFixed(1).replace(".", ",")} km/h`}{" "}
+        · {point.percentOfMax}%
       </p>
       {payload?.map((entry) => (
         <p key={entry.name} className="mt-1 flex items-center gap-2 text-sm">
@@ -71,7 +78,7 @@ function ChartTooltip({
           />
           <span className="text-text-muted">{entry.name}</span>
           <span className="ml-auto font-semibold text-text tabular-nums">
-            {entry.value.toFixed(1)}
+            {entry.value.toFixed(1).replace(".", ",")}
           </span>
         </p>
       ))}
@@ -89,10 +96,13 @@ export function MetabolicChart({
   points,
   series,
   thresholdPower,
+  mode = "cykling",
 }: {
   points: MetabolicPoint[];
   series: SeriesKey;
   thresholdPower: number | null;
+  /** I löpning är punkternas `power` fart i m/s; axeln visar km/h. */
+  mode?: Mode;
 }) {
   const config = CONFIG[series];
 
@@ -114,6 +124,15 @@ export function MetabolicChart({
 
   const yMax = anchor && anchor > 0 ? Number((anchor * headroom).toFixed(2)) : undefined;
 
+  // I löpning ligger punkterna i m/s men axeln visas i km/h. Utan egna
+  // markeringar hamnar de på jämna m/s – 0, 7, 14, 17 km/h. Här blir de
+  // jämna km/h i stället.
+  const top = points.length > 0 ? points[points.length - 1].power * 3.6 : 0;
+  const runningTicks =
+    mode === "löpning" && top > 0
+      ? Array.from({ length: Math.floor(top / 4) + 1 }, (_, i) => (i * 4) / 3.6)
+      : undefined;
+
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -123,14 +142,17 @@ export function MetabolicChart({
             dataKey="power"
             type="number"
             domain={["dataMin", "dataMax"]}
-            tickFormatter={(v: number) => String(Math.round(v))}
+            ticks={runningTicks}
+            tickFormatter={(v: number) =>
+              mode === "cykling" ? String(Math.round(v)) : (v * 3.6).toFixed(0)
+            }
             tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
             tickLine={false}
             axisLine={{ stroke: CHART_GRID }}
             height={28}
             tickMargin={8}
             label={{
-              value: "Effekt (W)",
+              value: mode === "cykling" ? "Effekt (W)" : "Fart (km/h)",
               position: "insideBottomRight",
               offset: -4,
               fill: CHART_AXIS_TEXT,
@@ -154,7 +176,7 @@ export function MetabolicChart({
           />
           <Tooltip
             cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
-            content={<ChartTooltip unit={config.unit} />}
+            content={<ChartTooltip unit={config.unit} mode={mode} />}
           />
           <Legend
             verticalAlign="top"

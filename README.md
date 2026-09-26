@@ -259,7 +259,7 @@ Prövat mot tre externa metabola profileringar av samma atleter:
 | | VO2max | Tröskel | FatMax |
 |---|---|---|---|
 | Steg 4 med profileringens egna VO2max och VLamax | – | 301/294/374 mot 303/303/374 W | 205/207/252 mot 198/205/245 W |
-| Hela kedjan, rena test | −1,2 och −0,1 | 12–15 W lägre | 3–9 W lägre |
+| Hela kedjan, rena test (atleten utelämnad ur VLamax-datan) | −1,2 och −0,1 | −6 och −17 W | +6 och −6 W |
 
 Mader-modellen stämmer alltså; det som skiljer är indatan. Det tredje testet
 hade en för lugnt körd 6-minut, och hela kedjan missade där. Två kontroller
@@ -278,6 +278,51 @@ testtillfället (`test_sessions.body_fat_pct`, `sex`) så att testet kan räknas
 med de värden som gällde då, och varningarna räknas om varje gång testet
 öppnas. VLamax, VO2max, tröskel och FatMax följer med till passbyggaren och
 AI-coachen.
+
+## Metabol profil för löpning
+
+Den metabola kalkylen räknar både cykel och löpning. Modellen är densamma –
+Mader-modellen beskriver musklernas omsättning, inte grenen. Det som skiljer är
+hur syreupptaget blir belastning: på cykel kostar en watt nästan lika mycket
+syre för alla, i löpning avgör **löpekonomin** (ml/kg/km) hur fort en viss
+syremängd bär. Farten vid VO2max blir VO2max delat med löpekonomin, och den
+ersätter effekten vid VO2max som ände på skalan. Resten är exakt samma räkning.
+
+Portad från `metabolic-quest`, med två rättelser:
+
+- **Farten räknades för högt.** Quest lade laktatet som *bildas* till
+  energibehovet vid varje intensitet. Under tröskeln förbränns det laktatet,
+  och dess syre finns redan i syreupptaget, så det räknades två gånger. Med
+  Quests standardvärden gav det tröskeln 3,70 m/s (4:30/km) i stället för 3,40
+  (4:54/km).
+- **Fettförbränningen steg igen ovanför tröskeln**, samma fel som i den portade
+  cykelmodellen. Den klamras till noll där.
+
+Verifierat mot en oberoende omräkning av Quests loop med rättelserna och
+Coachvys konstanter: tröskel, FatMax och CarbMax inom ett beräkningssteg i tre
+olika löparprofiler, och Quests eget standardfall ger 3,40 m/s med Quests
+konstanter.
+
+Två tillägg som gäller båda grenarna:
+
+- **CarbMax** – den intensitet där kolhydratförbrukningen når 90 g/h, ungefär
+  vad magen tar upp under ett lopp med blandade sockerarter. Över den töms
+  förråden fortare än de går att fylla på.
+- **FatMax ur platåns mitt.** Fettkurvan är platt i toppen, och med avrundade
+  värden valdes alltid den lägsta intensiteten på platån – 0,05 m/s för långsamt
+  i löpning. Nu tas mitten. På cykel flyttar det FatMax 0–2 W.
+
+Löpekonomin kan fyllas i direkt eller räknas ur ett löpbandstest: syreupptaget
+vid en jämn fart under tröskeln. Den kan skilja 20–30 % mellan löpare på samma
+fart, så ett uppmätt värde gör mer för precisionen än något annat. VLamax ska
+vara ett löpvärde – den skiljer sig mellan löpning och cykling hos samma atlet
+(Quittmann-gruppen, Deutsche Sporthochschule Köln), så ett cykelvärde går inte
+att flytta över.
+
+Inte med ännu: Quests laktatkurva i steady state (förväntat blodlaktat per
+fart) och maratonprognosen ur farten vid 2,5 mmol. Kurvan är tänkt att läggas
+mot uppmätta löpbandstester för att skatta VLamax och löpekonomi, och den ska
+prövas mot riktiga tester innan den används.
 
 ## Medlemskap
 
