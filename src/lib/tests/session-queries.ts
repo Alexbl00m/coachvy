@@ -15,6 +15,10 @@ export type TestSession = {
   weight_kg: number | null;
   body_fat_pct: number | null;
   sex: "man" | "kvinna" | null;
+  peak_intensity: number | null;
+  vo2max: number | null;
+  peak_lactate: number | null;
+  peak_heart_rate: number | null;
   zone_scheme: ZoneScheme | null;
   training_phase: string | null;
   notes: string | null;

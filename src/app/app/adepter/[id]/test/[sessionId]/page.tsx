@@ -19,7 +19,11 @@ const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
 
 const digitsFor = (unit: string) =>
-  unit === "W" || unit === "m" || unit === "%" || unit === "ml/kg/min" ? 0 : unit === "kJ" ? 1 : 2;
+  ["W", "m", "%", "ml/kg/min", "g/h", "slag/min"].includes(unit)
+    ? 0
+    : unit === "kJ" || unit === "mmol/l" || unit === "km/h"
+      ? 1
+      : 2;
 
 export default async function SessionPage({
   params,
@@ -43,6 +47,16 @@ export default async function SessionPage({
     weightKg: session.weight_kg,
     bodyFatPct: session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
     sex: session.sex ?? null,
+    finish: {
+      peakIntensity: session.peak_intensity != null ? Number(session.peak_intensity) : null,
+      vo2max: session.vo2max != null ? Number(session.vo2max) : null,
+      peakLactate: session.peak_lactate != null ? Number(session.peak_lactate) : null,
+      peakHeartRate: session.peak_heart_rate != null ? Number(session.peak_heart_rate) : null,
+    },
+  }, {
+    // Medlemsdelarna räknas om när testet sparades med dem – det är vad som
+    // betalades för då, oavsett vem som tittar nu.
+    members: session.test_metrics.some((m) => m.key === "VLamax"),
   });
 
   /**

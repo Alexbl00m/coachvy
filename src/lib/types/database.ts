@@ -103,6 +103,11 @@ export type TestSessionRow = {
   /** Bara för det metabola protokollet – VLamax räknas per fettfri massa. */
   body_fat_pct: number | null;
   sex: "man" | "kvinna" | null;
+  /** Slutet på ett stegtest: toppen på skalan och det som mättes där. */
+  peak_intensity: number | null;
+  vo2max: number | null;
+  peak_lactate: number | null;
+  peak_heart_rate: number | null;
   zone_scheme: string | null;
   training_phase: string | null;
   notes: string | null;

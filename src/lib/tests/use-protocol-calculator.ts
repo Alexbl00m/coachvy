@@ -27,6 +27,10 @@ export type EffortRow = {
 };
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
+const positive = (raw: string) => {
+  const value = decimal(raw);
+  return raw.trim() && Number.isFinite(value) && value > 0 ? value : null;
+};
 
 /** Innan servern svarat första gången finns inget att visa. */
 const NOTHING_YET: SessionAnalysis = { metrics: [], zones: [], zoneUnit: "W", warnings: [] };
@@ -69,6 +73,31 @@ function hasContent(e: Effort): boolean {
 
 export type Sex = "man" | "kvinna";
 
+/** Slutet på ett stegtest, som text i fälten. */
+export type FinishFields = {
+  peak: string;
+  vo2max: string;
+  peakLactate: string;
+  peakHeartRate: string;
+};
+
+const EMPTY_FINISH: FinishFields = { peak: "", vo2max: "", peakLactate: "", peakHeartRate: "" };
+
+/**
+ * Toppen ur en ramp till utmattning (Kuipers m.fl. 1985): sista fullföljda
+ * nivån plus den andel av nästa nivå som hanns med.
+ */
+export function peakFromRamp(
+  lastCompleted: number,
+  increment: number,
+  levelSeconds: number,
+  secondsOnNext: number,
+): number | null {
+  if (![lastCompleted, increment, levelSeconds, secondsOnNext].every(Number.isFinite)) return null;
+  if (!(lastCompleted > 0) || !(increment > 0) || !(levelSeconds > 0) || secondsOnNext < 0) return null;
+  return lastCompleted + increment * Math.min(secondsOnNext / levelSeconds, 1);
+}
+
 export type BodyComposition = {
   bodyFat: string;
   sex: Sex | "";
@@ -106,6 +135,9 @@ export type ProtocolCalculator = {
   setBodyFat: (next: string) => void;
   sex: Sex | "";
   setSex: (next: Sex | "") => void;
+  /** Slutet på ett stegtest – bara för protokoll med `hasFinish`. */
+  finish: FinishFields;
+  setFinish: (patch: Partial<FinishFields>) => void;
 
   rows: EffortRow[];
   setRow: (id: number, patch: Partial<EffortRow>) => void;
@@ -150,6 +182,9 @@ export function useProtocolCalculator(
   const [weight, setWeight] = useState(initialWeight);
   const [bodyFat, setBodyFat] = useState(initialBody.bodyFat);
   const [sex, setSex] = useState<Sex | "">(initialBody.sex);
+  const [finish, setFinishState] = useState<FinishFields>(EMPTY_FINISH);
+  const setFinish = (patch: Partial<FinishFields>) =>
+    setFinishState((current) => ({ ...current, ...patch }));
   const [rows, setRows] = useState<EffortRow[]>([0, 1, 2].map((id) => emptyRow(id)));
   const [nextId, setNextId] = useState(3);
 
@@ -259,20 +294,36 @@ export function useProtocolCalculator(
       weightKg: weight.trim() ? decimal(weight) : null,
       bodyFatPct: bodyFat.trim() ? decimal(bodyFat) : null,
       sex: sex || null,
+      finish: protocolByKey(protocol)?.hasFinish
+        ? {
+            peakIntensity: positive(finish.peak),
+            vo2max: positive(finish.vo2max),
+            peakLactate: positive(finish.peakLactate),
+            peakHeartRate: positive(finish.peakHeartRate),
+          }
+        : null,
     }),
-    [protocol, sport, unit, filled, weight, bodyFat, sex],
+    [protocol, sport, unit, filled, weight, bodyFat, sex, finish],
   );
 
-  const onServer = Boolean(protocolByKey(protocol)?.membersOnly);
+  // Medlemsprotokoll räknas alltid på servern. Protokoll med medlemsdelar
+  // (VLamax ur stegtestet) gör det bara för medlemmar – andra får den vanliga
+  // analysen här i webbläsaren.
+  const currentSpec = protocolByKey(protocol);
+  const onServer = Boolean(
+    currentSpec?.membersOnly || (membersOnly === "open" && currentSpec?.memberExtras),
+  );
   const local = useMemo(() => analyseSession(args), [args]);
 
   /**
    * Svaret från servern, med nyckeln för de indata det gäller. En äldre
    * förfrågan som hinner tillbaka efter en nyare skrivs aldrig över den.
    */
-  const [remote, setRemote] = useState<{ key: string; result: SessionAnalysis } | null>(
-    null,
-  );
+  const [remote, setRemote] = useState<{
+    key: string;
+    protocol: ProtocolKey;
+    result: SessionAnalysis;
+  } | null>(null);
   const argsKey = JSON.stringify(args);
   const preview = options.previewOnServer;
 
@@ -283,12 +334,13 @@ export function useProtocolCalculator(
     const timer = setTimeout(() => {
       preview(JSON.parse(argsKey) as AnalysisArgs)
         .then((result) => {
-          if (!cancelled) setRemote({ key: argsKey, result });
+          if (!cancelled) setRemote({ key: argsKey, protocol, result });
         })
         .catch(() => {
           if (!cancelled) {
             setRemote({
               key: argsKey,
+              protocol,
               result: {
                 metrics: [],
                 zones: [],
@@ -303,11 +355,18 @@ export function useProtocolCalculator(
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [onServer, preview, argsKey]);
+  }, [onServer, preview, argsKey, protocol]);
 
   // Medan ett nytt svar är på väg visas det förra, så att resultatet inte
   // blinkar bort vid varje tangenttryck. Sparandet räknar alltid om på servern.
-  const analysis = onServer && preview ? (remote?.result ?? NOTHING_YET) : local;
+  // Ett svar för ett annat protokoll visas aldrig. Innan servern svarat visar
+  // ett protokoll med medlemsdelar den vanliga analysen; ett rent
+  // medlemsprotokoll har ingen att visa.
+  const fresh = remote && remote.protocol === protocol ? remote.result : null;
+  const analysis =
+    onServer && preview
+      ? (fresh ?? (currentSpec?.membersOnly ? NOTHING_YET : local))
+      : local;
   const pending = onServer && Boolean(preview) && remote?.key !== argsKey;
 
   return {
@@ -323,6 +382,8 @@ export function useProtocolCalculator(
     setBodyFat,
     sex,
     setSex,
+    finish,
+    setFinish,
     rows,
     setRow,
     addRow,

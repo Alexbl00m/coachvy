@@ -6,6 +6,7 @@ import { Printer } from "lucide-react";
 import {
   BodyFields,
   EffortTable,
+  FinishCard,
   ProtocolPicker,
   ProtocolResults,
   UnitField,
@@ -105,6 +106,8 @@ export function PublicTestCalculator() {
         onAdd={calc.addRow}
         onRemove={calc.removeRow}
       />
+
+      <FinishCard calc={calc} />
 
       <div className="flex flex-wrap items-center gap-3 print:hidden">
         <Button

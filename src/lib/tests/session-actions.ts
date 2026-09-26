@@ -7,7 +7,7 @@ import { requireCoach } from "@/lib/auth/session";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
-import type { Effort } from "./analysis";
+import type { Effort, TestFinish } from "./analysis";
 import { analyseSessionOnServer } from "./metabolic-profile";
 import { protocolByKey, type ProtocolKey } from "./protocols";
 
@@ -21,6 +21,8 @@ export type SaveSessionInput = {
   /** Kroppsfett och kön – bara för protokoll som räknar per fettfri massa. */
   bodyFatPct?: number | null;
   sex?: "man" | "kvinna" | null;
+  /** Slutet på ett stegtest: Vmax/Wmax, uppmätt VO2max, maxlaktat, maxpuls. */
+  finish?: TestFinish | null;
   /** Perioden testet togs i. Gör progressionskurvan läsbar. */
   trainingPhase: string | null;
   notes: string | null;
@@ -75,6 +77,21 @@ export async function saveTestSession(
     return { ok: false, error: "Okänt kön." };
   }
 
+  const finish = spec.hasFinish ? (input.finish ?? null) : null;
+  if (finish) {
+    const checks: [number | null, number, number, string][] = [
+      [finish.peakIntensity, 0, 5000, "Toppen"],
+      [finish.vo2max, 10, 100, "VO2max"],
+      [finish.peakLactate, 0, 40, "Maxlaktatet"],
+      [finish.peakHeartRate, 60, 250, "Maxpulsen"],
+    ];
+    for (const [value, min, max, label] of checks) {
+      if (value !== null && !(value > min && value < max)) {
+        return { ok: false, error: `${label} ligger utanför ett rimligt spann.` };
+      }
+    }
+  }
+
   const analysis = analyseSessionOnServer({
     protocol: input.protocol,
     sport: input.sport,
@@ -83,7 +100,8 @@ export async function saveTestSession(
     weightKg: input.weightKg,
     bodyFatPct,
     sex,
-  });
+    finish,
+  }, { members: isMember(user) });
 
   if (analysis.metrics.length === 0) {
     return {
@@ -107,6 +125,10 @@ export async function saveTestSession(
       weight_kg: input.weightKg,
       body_fat_pct: bodyFatPct,
       sex,
+      peak_intensity: finish?.peakIntensity ?? null,
+      vo2max: finish?.vo2max ?? null,
+      peak_lactate: finish?.peakLactate ?? null,
+      peak_heart_rate: finish?.peakHeartRate ? Math.round(finish.peakHeartRate) : null,
       zone_scheme: spec.zoneScheme,
       training_phase: input.trainingPhase,
       notes: input.notes,

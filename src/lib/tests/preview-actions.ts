@@ -37,5 +37,5 @@ export async function previewOnServer(args: AnalysisArgs): Promise<SessionAnalys
     return locked("För många rader.");
   }
 
-  return analyseSessionOnServer(args);
+  return analyseSessionOnServer(args, { members: isMember(user) });
 }

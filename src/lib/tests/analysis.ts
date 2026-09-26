@@ -64,7 +64,25 @@ export type AnalysisArgs = {
   /** Bara den metabola profilen använder dem – VLamax behöver fettfri massa. */
   bodyFatPct?: number | null;
   sex?: "man" | "kvinna" | null;
+  /** Slutet på ett stegtest. */
+  finish?: TestFinish | null;
 };
+
+/**
+ * Det all-out-slut ett stegtest ska ha: en ramp till utmattning (Vmax/Wmax)
+ * eller ett VO2max-test. Allt är valfritt; det som finns används.
+ */
+export type TestFinish = {
+  /** Vmax eller Wmax, i testets enhet. */
+  peakIntensity: number | null;
+  /** Uppmätt VO2max, ml/kg/min. */
+  vo2max: number | null;
+  peakLactate: number | null;
+  peakHeartRate: number | null;
+};
+
+/** Toppens namn i testets enhet. */
+export const peakLabel = (unit: IntensityUnit) => (unit === "W" ? "Wmax" : "Vmax");
 
 export const metric = (
   key: string,
@@ -165,6 +183,15 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
     const summary = summariseThresholds(analysis.results);
     const metrics: Metric[] = [];
 
+    // LT2 är ModDmax när den går att räkna ut. Medianen av fyra metoder
+    // jämnar ut enskilda metoders egenheter, men den är ingen metod man kan
+    // hänvisa till eller jämföra med en annan testares rapport. ModDmax är
+    // det, och den tar hänsyn till var kurvan faktiskt börjar stiga.
+    const modDmax =
+      analysis.results.find((r) => r.method === "ModDmax" && r.intensity !== null)?.intensity ??
+      null;
+    const lt2 = modDmax ?? summary.lt2;
+
     if (summary.lt1 !== null) {
       metrics.push(
         metric("LT1", "LT1 – aerob tröskel", summary.lt1, unit, {
@@ -173,17 +200,24 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         }),
       );
     }
-    if (summary.lt2 !== null) {
+    if (lt2 !== null) {
       metrics.push(
-        metric("LT2", "LT2 – anaerob tröskel", summary.lt2, unit, {
-          method: `median av ${summary.lt2Methods.length} metoder`,
+        metric("LT2", "LT2 – anaerob tröskel", lt2, unit, {
+          method: modDmax !== null ? "ModDmax" : `median av ${summary.lt2Methods.length} metoder`,
           isPrimary: true,
+        }),
+      );
+    }
+    if (modDmax !== null && summary.lt2 !== null) {
+      metrics.push(
+        metric("LT2_median", "LT2 – median av metoderna", summary.lt2, unit, {
+          method: `median av ${summary.lt2Methods.length} metoder`,
         }),
       );
     }
 
     // Varje enskild metod sparas också, så att en coach som föredrar OBLA 4,0
-    // eller ModDmax kan följa just den över tid.
+    // eller Dmax kan följa just den över tid.
     for (const row of analysis.results) {
       if (row.intensity === null) continue;
       const key = row.method.startsWith("OBLA") || row.method.startsWith("Bsln")
@@ -198,17 +232,50 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       );
     }
 
-    if (weightKg && weightKg > 0 && unit === "W" && summary.lt2 !== null) {
-      metrics.push(
-        metric("LT2_per_kg", "LT2 per kg", summary.lt2 / weightKg, "W/kg"),
+    if (weightKg && weightKg > 0 && unit === "W" && lt2 !== null) {
+      metrics.push(metric("LT2_per_kg", "LT2 per kg", lt2 / weightKg, "W/kg"));
+    }
+
+    // --- Slutet på testet ---------------------------------------------------
+    const finish = args.finish;
+    const peak = finish?.peakIntensity ?? null;
+    const lastStep = steps.length > 0 ? Math.max(...steps.map((s) => s.intensity)) : null;
+
+    if (peak !== null && peak > 0) {
+      if (lastStep !== null && peak < lastStep) {
+        warnings.push(
+          `${peakLabel(unit)} (${peak}) är lägre än det högsta steget (${lastStep}). Toppen ska vara det atleten nådde i det all-out-slutet, inte ett av stegen.`,
+        );
+      } else {
+        metrics.push(
+          metric("Pmax", peakLabel(unit), peak, unit, { method: "all-out-slutet" }),
+        );
+        if (lt2 !== null) {
+          metrics.push(
+            metric("LT2_pct_peak", `LT2 i % av ${peakLabel(unit)}`, (lt2 / peak) * 100, "%"),
+          );
+        }
+      }
+    } else {
+      warnings.push(
+        `Inget all-out-slut angivet. Med en ramp till utmattning eller ett VO2max-test sist får testet ${peakLabel(unit)} – toppen som tröskeln mäts mot, och det som gör att VLamax kan räknas ur testet.`,
       );
+    }
+    if (finish?.vo2max) {
+      metrics.push(metric("VO2max", "VO2max", finish.vo2max, "ml/kg/min", { method: "uppmätt" }));
+    }
+    if (finish?.peakLactate) {
+      metrics.push(metric("La_peak", "Maxlaktat", finish.peakLactate, "mmol/l"));
+    }
+    if (finish?.peakHeartRate) {
+      metrics.push(metric("HR_peak", "Maxpuls", finish.peakHeartRate, "slag/min"));
     }
 
     return {
       metrics,
-      zones: summary.lt2 !== null ? thresholdZones(summary.lt2) : [],
+      zones: lt2 !== null ? thresholdZones(lt2) : [],
       zoneUnit: unit,
-      warnings: analysis.warnings,
+      warnings: [...analysis.warnings, ...warnings],
     };
   }
 

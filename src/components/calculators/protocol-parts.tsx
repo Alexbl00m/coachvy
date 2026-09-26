@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Lock, Plus, Trash2 } from "lucide-react";
 
 import { DataTable, ResultGrid } from "@/components/calculators/result-grid";
@@ -10,7 +11,11 @@ import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
 import type { SessionAnalysis } from "@/lib/tests/analysis";
 import type { Protocol, ProtocolKey } from "@/lib/tests/protocols";
-import type { EffortRow, ProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
+import {
+  peakFromRamp,
+  type EffortRow,
+  type ProtocolCalculator,
+} from "@/lib/tests/use-protocol-calculator";
 
 const SPORTS: { id: Sport; label: string }[] = [
   { id: "cykling", label: "Cykling" },
@@ -23,7 +28,11 @@ const sv = (value: number, digits: number) =>
 
 /** Watt och meter är heltal; farter och kvoter behöver decimaler. */
 const digitsFor = (unit: string) =>
-  unit === "W" || unit === "m" || unit === "%" || unit === "ml/kg/min" ? 0 : 2;
+  ["W", "m", "%", "ml/kg/min", "g/h", "slag/min"].includes(unit)
+    ? 0
+    : unit === "kJ" || unit === "mmol/l" || unit === "km/h"
+      ? 1
+      : 2;
 
 /** Gren och protokoll. Samma val i appen och på den publika sidan. */
 export function ProtocolPicker({
@@ -341,6 +350,105 @@ export function BodyFields({ calc }: { calc: ProtocolCalculator }) {
         </div>
       )}
     </>
+  );
+}
+
+/** "17,50" till "17,5" och "17,00" till "17" – men "380" förblir "380". */
+const trimDecimals = (text: string) =>
+  text.includes(",") ? text.replace(/0+$/, "").replace(/,$/, "") : text;
+
+/**
+ * Slutet på ett stegtest: all-out, antingen som en ramp till utmattning eller
+ * ett VO2max-test.
+ *
+ * Toppen kan skrivas in direkt eller räknas ur rampen. Räknehjälpen fyller
+ * bara i fältet – det som sparas är toppen, precis som om den skrivits in.
+ */
+export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
+  const [ramp, setRamp] = useState({ last: "", increment: "", seconds: "", onNext: "" });
+  if (!calc.spec?.hasFinish) return null;
+
+  const watts = calc.unit === "W";
+  const peakName = watts ? "Wmax" : "Vmax";
+  const num = (raw: string) => Number(raw.replace(",", "."));
+  const fromRamp = peakFromRamp(num(ramp.last), num(ramp.increment), num(ramp.seconds), num(ramp.onNext));
+  const setRampField = (patch: Partial<typeof ramp>) => setRamp((r) => ({ ...r, ...patch }));
+
+  return (
+    <Card className="min-w-0 print:hidden">
+      <CardTitle>Slutet på testet</CardTitle>
+      <p className="-mt-1 mb-4 text-[13px] leading-relaxed text-text-muted">
+        Avsluta all-out: en ramp till utmattning eller ett VO2max-test. Toppen
+        är det tröskeln mäts mot, och det som gör att VLamax kan räknas ur testet.
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Field label={peakName} htmlFor="finish_peak" hint={calc.unit} optional>
+          <Input
+            id="finish_peak"
+            inputMode="decimal"
+            value={calc.finish.peak}
+            onChange={(e) => calc.setFinish({ peak: e.target.value })}
+          />
+        </Field>
+        <Field label="VO2max" htmlFor="finish_vo2max" hint="uppmätt, ml/kg/min" optional>
+          <Input
+            id="finish_vo2max"
+            inputMode="decimal"
+            value={calc.finish.vo2max}
+            onChange={(e) => calc.setFinish({ vo2max: e.target.value })}
+          />
+        </Field>
+        <Field label="Maxlaktat" htmlFor="finish_lactate" hint="mmol/l" optional>
+          <Input
+            id="finish_lactate"
+            inputMode="decimal"
+            value={calc.finish.peakLactate}
+            onChange={(e) => calc.setFinish({ peakLactate: e.target.value })}
+          />
+        </Field>
+        <Field label="Maxpuls" htmlFor="finish_hr" hint="slag/min" optional>
+          <Input
+            id="finish_hr"
+            inputMode="decimal"
+            value={calc.finish.peakHeartRate}
+            onChange={(e) => calc.setFinish({ peakHeartRate: e.target.value })}
+          />
+        </Field>
+      </div>
+
+      <div className="mt-5 border-t border-line pt-4">
+        <p className="text-[13px] font-medium text-text">{peakName} ur rampen</p>
+        <p className="mt-1 text-[12px] leading-relaxed text-text-subtle">
+          Sista nivån atleten klarade helt, plus den del av nästa som hanns med.
+        </p>
+        <div className="mt-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          <Field label="Sista hela nivån" htmlFor="ramp_last" hint={calc.unit}>
+            <Input id="ramp_last" inputMode="decimal" value={ramp.last} onChange={(e) => setRampField({ last: e.target.value })} />
+          </Field>
+          <Field label="Ökning per nivå" htmlFor="ramp_inc" hint={calc.unit}>
+            <Input id="ramp_inc" inputMode="decimal" value={ramp.increment} onChange={(e) => setRampField({ increment: e.target.value })} />
+          </Field>
+          <Field label="Tid per nivå" htmlFor="ramp_sec" hint="sekunder">
+            <Input id="ramp_sec" inputMode="decimal" value={ramp.seconds} onChange={(e) => setRampField({ seconds: e.target.value })} />
+          </Field>
+          <Field label="Tid på nästa" htmlFor="ramp_next" hint="sekunder">
+            <Input id="ramp_next" inputMode="decimal" value={ramp.onNext} onChange={(e) => setRampField({ onNext: e.target.value })} />
+          </Field>
+          <button
+            type="button"
+            disabled={fromRamp === null}
+            onClick={() =>
+              fromRamp !== null &&
+              calc.setFinish({ peak: trimDecimals(sv(fromRamp, watts ? 0 : 2)) })
+            }
+            className="col-span-2 mb-[22px] rounded-md border border-line-strong px-3 py-2 text-[13px] text-text transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1"
+          >
+            {fromRamp !== null ? `Använd ${sv(fromRamp, watts ? 0 : 2)}` : "Använd"}
+          </button>
+        </div>
+      </div>
+    </Card>
   );
 }
 

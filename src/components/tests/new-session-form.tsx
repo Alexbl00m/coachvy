@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   BodyFields,
   EffortTable,
+  FinishCard,
   ProtocolPicker,
   ProtocolResults,
   UnitField,
@@ -21,6 +22,10 @@ import { saveTestSession } from "@/lib/tests/session-actions";
 import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
+const positive = (raw: string) => {
+  const value = decimal(raw);
+  return raw.trim() && Number.isFinite(value) && value > 0 ? value : null;
+};
 
 /**
  * Registrerar ett testtillfälle på en adept.
@@ -75,6 +80,14 @@ export function NewSessionForm({
         weightKg: calc.weight.trim() ? decimal(calc.weight) : null,
         bodyFatPct: calc.bodyFat.trim() ? decimal(calc.bodyFat) : null,
         sex: calc.sex || null,
+        finish: calc.spec?.hasFinish
+          ? {
+              peakIntensity: positive(calc.finish.peak),
+              vo2max: positive(calc.finish.vo2max),
+              peakLactate: positive(calc.finish.peakLactate),
+              peakHeartRate: positive(calc.finish.peakHeartRate),
+            }
+          : null,
         trainingPhase: trainingPhase || null,
         notes: notes.trim() || null,
         efforts: calc.filled,
@@ -168,6 +181,8 @@ export function NewSessionForm({
         onAdd={calc.addRow}
         onRemove={calc.removeRow}
       />
+
+      <FinishCard calc={calc} />
 
       <ProtocolResults analysis={calc.analysis} />
 

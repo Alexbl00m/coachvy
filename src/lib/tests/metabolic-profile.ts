@@ -17,6 +17,7 @@ import {
   analyseSession,
   anaerobicProfile,
   metric,
+  peakLabel,
   type AnalysisArgs,
   type Effort,
   type Metric,
@@ -25,10 +26,17 @@ import {
 import { ftpZones } from "./zones";
 
 /**
- * Samma som `analyseSession`, men med de protokoll som bara räknas på servern.
+ * Samma som `analyseSession`, men med det som bara räknas på servern.
  * Allt som sparar eller visar ett testtillfälle på servern går hit.
+ *
+ * `members` avgör om medlemsdelarna räknas: VLamax ur ett stegtest. Själva
+ * protokollet "metabol profil" är helt och hållet en medlemsfunktion och
+ * spärras innan det når hit.
  */
-export function analyseSessionOnServer(args: AnalysisArgs): SessionAnalysis {
+export function analyseSessionOnServer(
+  args: AnalysisArgs,
+  options: { members?: boolean } = {},
+): SessionAnalysis {
   if (args.protocol === "metabol-profil") {
     return metabolicProfile(
       args.efforts,
@@ -37,7 +45,183 @@ export function analyseSessionOnServer(args: AnalysisArgs): SessionAnalysis {
       args.sex ?? null,
     );
   }
-  return analyseSession(args);
+  const base = analyseSession(args);
+  if (args.protocol === "laktat-steg" && options.members) {
+    return withStepTestProfile(args, base);
+  }
+  return base;
+}
+
+// ---------------------------------------------------------------------------
+// VLamax ur ett stegtest
+// ---------------------------------------------------------------------------
+
+const sv = (n: number, digits: number) => n.toFixed(digits).replace(".", ",");
+
+/** Mader-tröskeln för en VLamax, med toppen som skalans ände. */
+function thresholdAt(vo2max: number, vlamax: number, peak: number, weightKg: number) {
+  return (
+    calculateMetabolicProfile({ vo2max, vlamax, vo2maxPower: peak, weightKg }).thresholds
+      .anaerobicThreshold?.power ?? null
+  );
+}
+
+/**
+ * Den VLamax som lägger Mader-tröskeln på `target`.
+ *
+ * Tröskeln sjunker när VLamax stiger, så en halveringssökning räcker. Null när
+ * målet ligger utanför vad någon rimlig VLamax kan ge – oftast för att toppen
+ * inte var all-out och tröskeln därför hamnar nära den.
+ */
+function solveVlamax(target: number, vo2max: number, peak: number, weightKg: number) {
+  const LOW = 0.03;
+  const HIGH = 1.5;
+  // Ingen tröskel alls betyder att den ligger ovanför toppen: vid mycket låg
+  // VLamax hinner produktionen aldrig ikapp förbränningen. Det räknas som en
+  // tröskel högre än målet, inte som ett fel.
+  const above = (vlamax: number) => {
+    const at = thresholdAt(vo2max, vlamax, peak, weightKg);
+    return at === null || at > target;
+  };
+  if (!above(LOW) || above(HIGH)) return null;
+
+  let lo = LOW;
+  let hi = HIGH;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (above(mid)) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/** VO2max ur toppen när den inte är uppmätt: ACSM:s ekvationer. */
+function estimateVo2max(
+  peak: number,
+  unit: AnalysisArgs["unit"],
+  weightKg: number,
+): number | null {
+  if (unit === "W") return (10.8 * peak) / weightKg + 7;
+  // Löpning på plan mark: 0,2 ml/kg/min per m/min plus vila.
+  const metresPerMinute = unit === "km/h" ? (peak * 1000) / 60 : peak * 60;
+  return 0.2 * metresPerMinute + 3.5;
+}
+
+/**
+ * VLamax, FatMax och CarbMax ur ett laktatstegtest med all-out-slut.
+ *
+ * Mader-modellen ger en tröskel ur VO2max och VLamax. Här går räkningen åt
+ * andra hållet: tröskeln är uppmätt (ModDmax), toppen också (Vmax eller Wmax),
+ * och frågan är vilken VLamax som får modellens tröskel att hamna där. Med
+ * VLamax på plats ger samma modell FatMax och CarbMax.
+ *
+ * Det modellen egentligen bestämmer är VLamax i förhållande till VO2max – ett
+ * lägre VO2max ger en proportionellt lägre VLamax för samma tröskel. Ett
+ * uppmätt VO2max gör därför siffran säkrare; utan det skattas VO2max ur toppen.
+ *
+ * Prövat på ett löpbandstest med fjorton steg och rapportens VO2max 55,4: med
+ * Dmax som ankare gav metoden 0,27 mot rapportens 0,26. Med ModDmax, som är
+ * coachens val av tröskel och det som används här, 0,18. Ett test räcker inte
+ * för att säga vilket ankare som stämmer bäst, och därför visas båda.
+ */
+function withStepTestProfile(args: AnalysisArgs, base: SessionAnalysis): SessionAnalysis {
+  const peak = args.finish?.peakIntensity ?? null;
+  const weightKg = args.weightKg;
+  const modDmax = base.metrics.find((m) => m.key === "LT2:ModDmax")?.value ?? null;
+  const dmax = base.metrics.find((m) => m.key === "LT2:Dmax")?.value ?? null;
+  const pmax = base.metrics.find((m) => m.key === "Pmax")?.value ?? null;
+
+  if (args.sport === "simning") return base;
+  if (peak === null || pmax === null || modDmax === null || !(weightKg && weightKg > 0)) {
+    const missing = [
+      peak === null || pmax === null ? `${peakLabel(args.unit)} från ett all-out-slut` : null,
+      modDmax === null ? "en ModDmax-tröskel" : null,
+      !(weightKg && weightKg > 0) ? "vikt" : null,
+    ].filter(Boolean);
+    return {
+      ...base,
+      warnings: [
+        ...base.warnings,
+        `VLamax ur testet kräver ${missing.join(", ")}.`,
+      ],
+    };
+  }
+
+  const measured = args.finish?.vo2max ?? null;
+  const vo2max = measured ?? estimateVo2max(peak, args.unit, weightKg);
+  if (vo2max === null || !(vo2max > 0)) return base;
+
+  const vlamax = solveVlamax(modDmax, vo2max, peak, weightKg);
+  if (vlamax === null) {
+    return {
+      ...base,
+      warnings: [
+        ...base.warnings,
+        `Modellen når inte ModDmax (${sv(modDmax, 1)}) med någon rimlig VLamax när toppen är ${sv(peak, 1)}. Oftast betyder det att slutet inte var all-out, så att tröskeln hamnar för nära toppen.`,
+      ],
+    };
+  }
+
+  // Känslighet: det som inte är uppmätt varieras, och spannet visas.
+  const vo2Spread = measured ? 0.03 : 0.1;
+  const candidates = [
+    solveVlamax(modDmax, vo2max * (1 - vo2Spread), peak, weightKg),
+    solveVlamax(modDmax, vo2max * (1 + vo2Spread), peak, weightKg),
+    solveVlamax(modDmax, vo2max, peak * 0.98, weightKg),
+    solveVlamax(modDmax, vo2max, peak * 1.02, weightKg),
+  ].filter((v): v is number => v !== null);
+  const low = Math.min(vlamax, ...candidates);
+  const high = Math.max(vlamax, ...candidates);
+  const viaDmax = dmax !== null ? solveVlamax(dmax, vo2max, peak, weightKg) : null;
+
+  const profile = calculateMetabolicProfile({
+    vo2max,
+    vlamax,
+    vo2maxPower: peak,
+    weightKg,
+  });
+  const { fatMax, carbMax, anaerobicThreshold } = profile.thresholds;
+
+  const metrics: Metric[] = [
+    ...base.metrics.filter((m) => !(m.key === "VO2max" && measured === null)),
+    metric("VLamax", "VLamax", vlamax, "mmol/l/s", {
+      method: `ur ModDmax och ${peakLabel(args.unit)}`,
+      isPrimary: true,
+    }),
+  ];
+  if (fatMax) {
+    metrics.push(
+      metric("FatMax", "FatMax", fatMax.power, args.unit, { method: "Mader", isPrimary: true }),
+      metric("Fat_g_h", "Fett vid FatMax", fatMax.fatPerHour, "g/h"),
+    );
+  }
+  if (carbMax) {
+    metrics.push(metric("CarbMax", "CarbMax 90 g/h", carbMax.power, args.unit, { method: "Mader" }));
+  }
+  if (anaerobicThreshold) {
+    metrics.push(
+      metric("CHO_at_LT2", "Kolhydrat vid tröskeln", anaerobicThreshold.carbsPerHour, "g/h"),
+    );
+  }
+  if (measured === null) {
+    metrics.push(
+      metric("VO2max", "VO2max (skattad)", vo2max, "ml/kg/min", {
+        method: `ACSM på ${peakLabel(args.unit)}`,
+      }),
+    );
+  }
+
+  const warnings = [
+    ...base.warnings,
+    `VLamax är den som får Mader-modellens tröskel att hamna på ModDmax, med ${peakLabel(args.unit)} som toppen. Spann ${sv(low, 2)}–${sv(high, 2)} när ${measured ? "det uppmätta VO2max varieras ±3 %" : "det skattade VO2max varieras ±10 %"} och ${peakLabel(args.unit)} ±2 %.${viaDmax !== null ? ` Med Dmax som ankare i stället: ${sv(viaDmax, 2)}.` : ""}`,
+  ];
+  if (measured === null) {
+    warnings.push(
+      `VO2max är skattat ur ${peakLabel(args.unit)} (${sv(vo2max, 1)} ml/kg/min). Det modellen bestämmer är VLamax i förhållande till VO2max, så ett uppmätt VO2max – ett VO2max-test som slut på testet – gör VLamax säkrare.`,
+    );
+  }
+
+  return { ...base, metrics, warnings };
 }
 
 const sv1 = (n: number, digits = 0) => n.toFixed(digits).replace(".", ",");

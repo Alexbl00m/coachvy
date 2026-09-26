@@ -66,6 +66,13 @@ export type Protocol = {
    * servern och kräver ett medlemskonto för att förhandsvisas och sparas.
    */
   membersOnly?: boolean;
+  /**
+   * Protokollet går att använda för alla, men medlemmar får mer ur det –
+   * räknat på servern. Laktatstegtestet ger VLamax ur tröskeln och Vmax.
+   */
+  memberExtras?: boolean;
+  /** Protokollet slutar all-out, med Vmax/Wmax eller ett VO2max-test. */
+  hasFinish?: boolean;
 };
 
 const STEP_SHAPE: EffortShape = {
@@ -100,13 +107,15 @@ export const PROTOCOLS: Protocol[] = [
     purpose:
       "Guldstandarden när atleten kan komma till dig. Ger båda trösklarna och hela kurvan mellan dem.",
     howTo:
-      "Stegvis ökande belastning, oftast 3–5 minuter per steg, med laktatprov efter varje steg.",
+      "Stegvis ökande belastning, 3–5 minuter per steg, med laktatprov efter varje steg. Avsluta all-out: en ramp till utmattning som ger Vmax eller Wmax, eller ett VO2max-test. Utan ett maximalt slut finns ingen topp att mäta tröskeln mot.",
     remote: false,
     minEfforts: 4,
     maxEfforts: null,
     shape: STEP_SHAPE,
-    produces: ["LT1", "LT2", "Zoner"],
+    produces: ["LT1", "LT2 (ModDmax)", "Vmax", "Zoner"],
     zoneScheme: "tröskel",
+    memberExtras: true,
+    hasFinish: true,
   },
   {
     key: "metabol-profil",

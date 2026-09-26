@@ -339,6 +339,47 @@ egna VO2max och VLamax hamnade löpmodellens tröskel på 14,6 km/h, samma som
 Coachvys Dmax på stegen och 4–5 % under deras LT2 (15,3). Det är samma riktning
 och storlek som på cykel.
 
+## Stegtestet med all-out-slut
+
+Laktatstegtestet är huvudmetoden för trösklar. **LT2 är ModDmax** (Bishop m.fl.
+1998) när den går att räkna ut, och det är den zonerna byggs på. Medianen av
+LT2-metoderna sparas bredvid, liksom varje enskild metod.
+
+Testet ska sluta all-out, antingen med en ramp till utmattning eller med ett
+VO2max-test. Slutet sparas på testtillfället (`peak_intensity`, `vo2max`,
+`peak_lactate`, `peak_heart_rate`):
+
+- **Vmax/Wmax** skrivs in direkt eller räknas ur rampen: sista fullföljda nivån
+  plus den andel av nästa som hanns med (Kuipers m.fl. 1985).
+- **Uppmätt VO2max**, när testet slutade med ett VO2max-test.
+- LT2 i procent av toppen, maxlaktat och maxpuls.
+
+### VLamax ur tröskeln (medlemskap)
+
+Mader-modellen ger en tröskel ur VO2max och VLamax. Här går räkningen åt andra
+hållet: tröskeln är uppmätt (ModDmax), toppen också, och frågan är vilken
+VLamax som får modellens tröskel att hamna där. Med VLamax på plats ger samma
+modell FatMax och CarbMax. Allt räknas på servern och bara för medlemmar.
+
+Det modellen egentligen bestämmer är **VLamax i förhållande till VO2max**. Ett
+lägre VO2max ger en proportionellt lägre VLamax för samma tröskel, så ett
+uppmätt VO2max gör siffran säkrare. Utan det skattas VO2max ur toppen med
+ACSM:s ekvationer, och resultatet visas med ett spann (VO2max ±10 %, toppen
+±2 %) och med vad Dmax som ankare hade gett.
+
+Prövat på ett löpbandstest med fjorton steg à fyra minuter, där rapporten från
+ett annat analysprogram angav VLamax 0,26 och VO2max 55,4:
+
+| Ankare | VLamax |
+|---|---|
+| Dmax (14,6 km/h) | 0,27 |
+| ModDmax (15,2 km/h) | 0,18 (spann 0,16–0,22) |
+
+Dmax återger rapportens värde, ModDmax ger lägre. Ett test räcker inte för att
+avgöra vilket ankare som stämmer bäst mot en labbmätning av VLamax. Därför
+används coachens val av tröskel, ModDmax, och Dmax-värdet visas bredvid tills
+fler tester har avgjort frågan.
+
 ## Medlemskap
 
 Den metabola profilen – testprotokollet, VLamax-kalkylen och den metabola
