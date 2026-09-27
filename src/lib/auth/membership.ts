@@ -8,5 +8,6 @@ import type { SessionUser } from "./session";
  * då finns heller inget medlemskap.
  */
 export function isMember(user: SessionUser | null): boolean {
-  return user?.coach?.plan === "medlem";
+  // Den som administrerar medlemskapen har tillgång till allt de ger.
+  return user?.isAdmin === true || user?.coach?.plan === "medlem";
 }

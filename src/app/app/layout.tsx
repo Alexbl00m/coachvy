@@ -24,7 +24,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         name: user.profile?.full_name ?? user.email,
         email: user.email,
         role: user.profile?.role ?? null,
-        roleLabel: user.profile?.role === "coach" ? "Coach" : "Adept",
+        roleLabel: user.isAdmin
+          ? "Admin"
+          : user.profile?.role === "coach"
+            ? "Coach"
+            : "Adept",
+        isAdmin: user.isAdmin,
       }
     : {
         name: "Demoläge",

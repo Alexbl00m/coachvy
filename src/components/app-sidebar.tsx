@@ -13,13 +13,15 @@ function isActive(pathname: string, href: string) {
 
 export function AppSidebar({
   role,
+  isAdmin = false,
   onNavigate,
 }: {
   role: AccountRole | null;
+  isAdmin?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const navSections = getNavSections(role);
+  const navSections = getNavSections(role, isAdmin);
 
   return (
     <nav

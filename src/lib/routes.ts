@@ -34,6 +34,7 @@ export const routes = {
   aiCoach: "/app/ai-coach",
   community: "/app/community",
   settings: "/app/installningar",
+  admin: "/app/admin",
 } as const;
 
 /** The prefix that requires a session. */

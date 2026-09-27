@@ -18,6 +18,7 @@ export type AppShellUser = {
   email: string;
   role: AccountRole | null;
   roleLabel: string;
+  isAdmin?: boolean;
 };
 
 export function AppShell({
@@ -119,7 +120,7 @@ export function AppShell({
 
       <div className="flex flex-1">
         <aside className="sticky top-15 hidden h-[calc(100vh-3.75rem)] w-64 shrink-0 border-r border-ink-800 lg:block">
-          <AppSidebar role={user.role} />
+          <AppSidebar role={user.role} isAdmin={user.isAdmin} />
         </aside>
 
         {mobileNavOpen && (
@@ -132,7 +133,11 @@ export function AppShell({
             />
             <aside className="relative h-full w-64 border-r border-ink-800 bg-ink-900">
               {/* Closing on navigation keeps the drawer off the next page. */}
-              <AppSidebar role={user.role} onNavigate={() => setMobileNavOpen(false)} />
+              <AppSidebar
+                role={user.role}
+                isAdmin={user.isAdmin}
+                onNavigate={() => setMobileNavOpen(false)}
+              />
             </aside>
           </div>
         )}

@@ -372,6 +372,27 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      admin_coach_overview: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          full_name: string;
+          email: string;
+          company_name: string | null;
+          plan: "bas" | "medlem";
+          created_at: string;
+          adept_count: number;
+          is_admin: boolean;
+        }[];
+      };
+      admin_set_plan: {
+        Args: { coach: string; new_plan: "bas" | "medlem" };
+        Returns: string;
+      };
       mark_messages_read: {
         Args: { adept: string };
         Returns: number;

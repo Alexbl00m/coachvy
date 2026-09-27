@@ -9,6 +9,7 @@ import {
   MessagesSquare,
   Settings,
   ShieldCheck,
+  UserCog,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -24,7 +25,7 @@ export type NavItem = {
   audience?: Audience;
 };
 
-type Audience = "coach" | "adept" | "all";
+type Audience = "coach" | "adept" | "all" | "admin";
 
 export type NavSection = {
   /** Rendered above the group; omit for the primary group. */
@@ -75,6 +76,7 @@ const allSections: NavSection[] = [
         icon: ShieldCheck,
       },
       { label: "Inställningar", href: routes.settings, icon: Settings },
+      { label: "Admin", href: routes.admin, icon: UserCog, audience: "admin" },
     ],
   },
 ];
@@ -83,13 +85,19 @@ const allSections: NavSection[] = [
  * The menu an account should see. An adept has no roster of their own, so the
  * Adepter entry is a coach-only item rather than a link into an empty page.
  */
-export function getNavSections(role: AccountRole | null): NavSection[] {
+export function getNavSections(
+  role: AccountRole | null,
+  isAdmin = false,
+): NavSection[] {
   return allSections
     .map((section) => ({
       ...section,
       items: section.items.filter(
         (item) =>
-          !item.audience || item.audience === "all" || item.audience === role,
+          !item.audience ||
+          item.audience === "all" ||
+          item.audience === role ||
+          (item.audience === "admin" && isAdmin),
       ),
     }))
     .filter((section) => section.items.length > 0);

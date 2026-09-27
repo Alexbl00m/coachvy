@@ -425,6 +425,26 @@ ett betalande.
 Gamla testtillfällen visas och räknas om för alla som får se dem, också om
 coachens medlemskap har gått ut – det är deras data.
 
+### Admin
+
+En admin ser alla coacher på `/app/admin` och slår på eller av deras
+medlemskap där, utan SQL. En admin räknas själv alltid som medlem.
+
+Adminrollen ges bara i SQL-editorn – det finns ingen väg att bli admin från
+appen eller API:t:
+
+```sql
+insert into public.admins (profile_id)
+select id from public.profiles where email = 'din@adress';
+```
+
+Sidan läser och skriver via två funktioner i databasen,
+`admin_coach_overview()` och `admin_set_plan()`, som båda kontrollerar
+`is_admin()` själva. Admin får alltså antal adepter per coach, men aldrig
+läsrätt till adepternas rader. Prövat mot API:t: en vanlig coach får en tom
+lista, nekas att ändra medlemskap och kan inte lägga till sig själv som admin;
+utloggade nekas helt.
+
 ## Passbyggare
 
 `/app/pass` bygger ett enskilt pass ur en mening: *"en timme som tar ordentligt

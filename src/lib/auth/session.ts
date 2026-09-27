@@ -11,6 +11,8 @@ export type SessionUser = {
   profile: Profile | null;
   coach: Coach | null;
   adept: Adept | null;
+  /** Administrerar medlemskap. Ges bara i databasen – se migrationen för admins. */
+  isAdmin: boolean;
 };
 
 /** The signed-in user plus their role row, or `null` when signed out. */
@@ -49,12 +51,16 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     adept = data ?? null;
   }
 
+  // En enda boolesk fråga; tabellen själv läses aldrig av appen.
+  const { data: admin } = await supabase.rpc("is_admin");
+
   return {
     id: user.id,
     email: user.email ?? profile?.email ?? "",
     profile: profile ?? null,
     coach,
     adept,
+    isAdmin: admin === true,
   };
 }
 
@@ -72,6 +78,13 @@ export async function requireSessionUser(): Promise<SessionUser> {
 export async function requireCoach(): Promise<SessionUser> {
   const user = await requireSessionUser();
   if (user.profile?.role !== "coach") redirect(routes.dashboard);
+  return user;
+}
+
+/** Inloggad admin, annars till översikten. */
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await requireSessionUser();
+  if (!user.isAdmin) redirect(routes.dashboard);
   return user;
 }
 
