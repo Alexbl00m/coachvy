@@ -46,7 +46,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     const { data } = await supabase
       .from("adepts")
       .select("*")
-      .eq("id", user.id)
+      // Sedan adepterna fick en egen nyckel pekar raden på kontot via
+      // profile_id, inte id. Med id hittades aldrig den inloggade adeptens rad.
+      .eq("profile_id", user.id)
       .maybeSingle();
     adept = data ?? null;
   }

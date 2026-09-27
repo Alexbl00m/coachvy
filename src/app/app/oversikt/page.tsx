@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { CoachInvitations } from "@/components/adepts/coach-invitations";
+import { listCoachInvitations } from "@/lib/adepts/invitations";
 import { listAdepts } from "@/lib/adepts/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
@@ -26,6 +28,8 @@ export default async function OversiktPage() {
   const user = await getSessionUser();
   const isCoach = user?.profile?.role === "coach";
   const adepts = isCoach ? await listAdepts() : [];
+  const invitations =
+    user?.profile?.role === "adept" && !user.adept?.coach_id ? await listCoachInvitations() : [];
 
   const firstName = user?.profile?.full_name?.split(" ")[0];
 
@@ -39,6 +43,8 @@ export default async function OversiktPage() {
             : "Din samlade vy över din träning, dina planer och dina tester."
         }
       />
+
+      <CoachInvitations invitations={invitations} />
 
       {!isSupabaseConfigured() && (
         <div className="mb-6 rounded-lg border border-accent/40 bg-accent-soft px-4 py-3 text-sm text-ink-100">

@@ -41,6 +41,8 @@ export type Adept = {
   goal: string | null;
   current_level: string | null;
   last_active_at: string | null;
+  /** Sätts av admin, aldrig av coachen eller adepten själv. */
+  plan: "bas" | "medlem";
   created_at: string;
   updated_at: string;
 };
@@ -206,6 +208,78 @@ export type AdeptCheckinRow = {
 };
 
 /** Ett meddelande i tråden mellan coach och adept. */
+export type CommunityChannel = "allmant" | "lopning" | "cykling" | "simning" | "triathlon";
+
+/** Ett delat pass eller testresultat, som en ögonblicksbild. */
+export type CommunityAttachment = {
+  kind: "workout" | "test";
+  title: string;
+  subtitle: string;
+  lines: { label: string; value: string }[];
+};
+
+export type CommunityPostRow = {
+  id: string;
+  author_id: string;
+  channel: CommunityChannel;
+  body: string;
+  attachment: CommunityAttachment | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CommunityCommentRow = {
+  id: string;
+  post_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+};
+
+export type CommunityLikeRow = {
+  post_id: string;
+  profile_id: string;
+  created_at: string;
+};
+
+export type CommunityFeedItem = {
+  id: string;
+  channel: CommunityChannel;
+  body: string;
+  attachment: CommunityAttachment | null;
+  created_at: string;
+  author_id: string;
+  author_name: string;
+  author_role: AccountRole;
+  author_is_admin: boolean;
+  likes: number;
+  liked: boolean;
+  comments: number;
+};
+
+export type CommunityComment = {
+  id: string;
+  body: string;
+  created_at: string;
+  author_id: string;
+  author_name: string;
+  author_role: AccountRole;
+  author_is_admin: boolean;
+};
+
+export type AdminMember = {
+  id: string;
+  role: AccountRole;
+  full_name: string;
+  email: string;
+  company_name: string | null;
+  coach_name: string | null;
+  plan: "bas" | "medlem";
+  created_at: string;
+  adept_count: number | null;
+  is_admin: boolean;
+};
+
 export type CoachMessageRow = {
   id: string;
   adept_id: string;
@@ -338,6 +412,25 @@ export type Database = {
         Update: Partial<AdeptCheckinRow>;
         Relationships: [];
       };
+      community_posts: {
+        Row: CommunityPostRow;
+        Insert: Pick<CommunityPostRow, "author_id" | "body"> & Partial<CommunityPostRow>;
+        Update: Partial<CommunityPostRow>;
+        Relationships: [];
+      };
+      community_comments: {
+        Row: CommunityCommentRow;
+        Insert: Pick<CommunityCommentRow, "post_id" | "author_id" | "body"> &
+          Partial<CommunityCommentRow>;
+        Update: Partial<CommunityCommentRow>;
+        Relationships: [];
+      };
+      community_likes: {
+        Row: CommunityLikeRow;
+        Insert: Pick<CommunityLikeRow, "post_id" | "profile_id"> & Partial<CommunityLikeRow>;
+        Update: Partial<CommunityLikeRow>;
+        Relationships: [];
+      };
       coach_messages: {
         Row: CoachMessageRow;
         Insert: Pick<CoachMessageRow, "adept_id" | "sender_id" | "body"> &
@@ -376,22 +469,29 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
-      admin_coach_overview: {
+      admin_member_overview: {
         Args: Record<string, never>;
-        Returns: {
-          id: string;
-          full_name: string;
-          email: string;
-          company_name: string | null;
-          plan: "bas" | "medlem";
-          created_at: string;
-          adept_count: number;
-          is_admin: boolean;
-        }[];
+        Returns: AdminMember[];
       };
-      admin_set_plan: {
-        Args: { coach: string; new_plan: "bas" | "medlem" };
+      admin_set_member_plan: {
+        Args: { member: string; new_plan: "bas" | "medlem" };
         Returns: string;
+      };
+      my_coach_invitations: {
+        Args: Record<string, never>;
+        Returns: { id: string; coach_name: string; company_name: string | null; created_at: string }[];
+      };
+      accept_coach_invitation: {
+        Args: { invitation: string };
+        Returns: string;
+      };
+      community_feed: {
+        Args: { p_channel?: CommunityChannel | null; p_before?: string | null; p_limit?: number };
+        Returns: CommunityFeedItem[];
+      };
+      community_post_comments: {
+        Args: { p_post: string };
+        Returns: CommunityComment[];
       };
       mark_messages_read: {
         Args: { adept: string };

@@ -427,8 +427,8 @@ coachens medlemskap har gått ut – det är deras data.
 
 ### Admin
 
-En admin ser alla coacher på `/app/admin` och slår på eller av deras
-medlemskap där, utan SQL. En admin räknas själv alltid som medlem.
+En admin ser alla konton – coacher och adepter – på `/app/admin` och slår på
+eller av deras medlemskap där, utan SQL. En admin räknas själv alltid som medlem.
 
 Adminrollen ges bara i SQL-editorn – det finns ingen väg att bli admin från
 appen eller API:t:
@@ -439,11 +439,47 @@ select id from public.profiles where email = 'din@adress';
 ```
 
 Sidan läser och skriver via två funktioner i databasen,
-`admin_coach_overview()` och `admin_set_plan()`, som båda kontrollerar
+`admin_member_overview()` och `admin_set_member_plan()`, som båda kontrollerar
 `is_admin()` själva. Admin får alltså antal adepter per coach, men aldrig
 läsrätt till adepternas rader. Prövat mot API:t: en vanlig coach får en tom
 lista, nekas att ändra medlemskap och kan inte lägga till sig själv som admin;
 utloggade nekas helt.
+
+## Community
+
+`/app/community` är ett slutet flöde för coacher och för adepter som är
+kopplade till en coach. Inlägg, kommentarer och gillningar, i kanalerna
+Allmänt, Löpning, Cykel, Simning och Triathlon. Författaren tar bort sina egna
+inlägg och kommentarer; admin tar bort vad som helst.
+
+**Delning.** Ett pass eller testresultat läggs i inlägget som en
+ögonblicksbild, byggd på servern ur det författaren själv får läsa. Andra ser
+exakt det som delades men får ingen läsrätt till passet eller testet. Pass
+visas i procent av tröskeln, inte i atletens watt eller tempo, så de går att
+använda för vem som helst. Testresultat delar bara adepten själv – coachen ser
+sina adepters tester, men att lägga ut dem är adeptens beslut.
+
+**Namn men inte e-post.** Medlemmarna läser inte varandras profiler; flödet
+och kommentarerna hämtas via `community_feed` och `community_post_comments`,
+som ger namn och roll och inget mer.
+
+### Adepter kopplas till sin coach
+
+1. Coachen lägger till adepten med e-post, och adepten registrerar sig sedan
+   med samma adress: kontot tar över coachens adeptrad direkt, med allt coachen
+   registrerat. Förutsätter att Supabase kräver e-postbekräftelse (standard),
+   annars kan den som registrerar sig med någon annans adress ta över raden.
+2. Adepten har redan ett konto: adepten ser en inbjudan på översikten och i
+   communityn och tackar ja själv. Det adepten loggat flyttas med.
+
+Kopplingen – vilken coach och vilket konto en adeptrad hör till – ändras bara
+av de här två vägarna. Tidigare fick en adept uppdatera hela sin egen rad,
+också vilken coach den pekar på, och en coach kunde peka en adeptrad mot vilket
+konto som helst. En trigger stoppar nu båda. Samma sak för `adepts.plan`:
+adepter kan ha medlemskap som coacher, och det sätts bara av admin.
+
+Rättat samtidigt: sessionen hämtade den inloggade adeptens rad med `id` i
+stället för `profile_id`, så inloggade adepter fick aldrig sin egen rad.
 
 ## Passbyggare
 

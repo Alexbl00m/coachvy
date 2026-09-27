@@ -9,5 +9,9 @@ import type { SessionUser } from "./session";
  */
 export function isMember(user: SessionUser | null): boolean {
   // Den som administrerar medlemskapen har tillgång till allt de ger.
-  return user?.isAdmin === true || user?.coach?.plan === "medlem";
+  return (
+    user?.isAdmin === true ||
+    user?.coach?.plan === "medlem" ||
+    user?.adept?.plan === "medlem"
+  );
 }
