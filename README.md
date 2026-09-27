@@ -64,12 +64,28 @@ skelettet går att bläddra igenom i "demoläge".
 ### Supabase
 
 1. Skapa ett projekt på [supabase.com](https://supabase.com).
-2. Kör `supabase/migrations/20260826000000_init.sql` i SQL Editor
-   (eller `supabase db push` om du länkat CLI:t).
-3. Kopiera **Project URL** och **anon public key** från Project Settings → API
-   till `.env.local`.
-4. Under Authentication → URL Configuration, lägg till
-   `http://localhost:3000/auth/callback` som redirect-URL.
+2. Kör migrationerna i SQL Editor, i ordning. För ett nytt projekt: först
+   `supabase/migrations/20260826000000_init.sql`, sedan hela
+   `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
+   `supabase db push` om du länkat CLI:t.
+3. Registrera dig i appen som coach och gör kontot till medlem:
+   ```sql
+   update public.coaches set plan = 'medlem'
+   where id = (select id from public.profiles where email = 'din@adress');
+   ```
+
+### Publicera på Vercel
+
+1. Importera repot på [vercel.com](https://vercel.com) (Add New → Project).
+2. Lägg in miljövariablerna från Supabase, Project Settings → API:
+   `NEXT_PUBLIC_SUPABASE_URL` och `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Valfritt
+   `ANTHROPIC_API_KEY` för passbyggaren och AI-coachen.
+3. Deploya. I Supabase, Authentication → URL Configuration: sätt **Site URL**
+   till Vercel-adressen och lägg till `https://<adressen>/auth/callback` som
+   redirect-URL. Utan den leder bekräftelsemejlet fel.
+
+Lokalt i stället: samma två variabler i `.env.local`, och
+`http://localhost:3000/auth/callback` som redirect-URL.
 
 ## Datamodell
 
