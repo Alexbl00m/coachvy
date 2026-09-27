@@ -246,6 +246,8 @@ export type SavedWorkout = {
   blocks: WorkoutBlock[];
   prompt: string | null;
   scheduled_for: string | null;
+  /** Vem som byggde passet – coachen, eller adepten själv som medlem. */
+  created_by: string | null;
   created_at: string;
 };
 

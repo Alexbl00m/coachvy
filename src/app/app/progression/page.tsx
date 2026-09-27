@@ -1,20 +1,96 @@
-import { BarChart3 } from "lucide-react";
-
-import { ModulePlaceholder } from "@/components/module-placeholder";
+import { PageHeader } from "@/components/page-header";
+import { AdeptPicker } from "@/components/progression/adept-picker";
+import { ProgressionView } from "@/components/progression/progression-view";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/card";
+import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
+import { requireSessionUser } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
+import { listFullSessions } from "@/lib/tests/session-queries";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const metadata = { title: "Progression" };
 
-export default function ProgressionPage() {
-  return (
-    <ModulePlaceholder
+/** Antal testtillfällen per adept, för väljaren. */
+async function countSessions(): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (!isSupabaseConfigured()) return counts;
+  const supabase = await createClient();
+  const { data } = await supabase.from("test_sessions").select("adept_id");
+  for (const row of data ?? []) {
+    counts.set(row.adept_id, (counts.get(row.adept_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export default async function ProgressionPage({
+  searchParams,
+}: PageProps<"/app/progression">) {
+  const user = await requireSessionUser();
+  const query = await searchParams;
+
+  const header = (
+    <PageHeader
       title="Progression"
-      description="Utveckling över tid för varje adept och för hela stallet."
-      icon={BarChart3}
-      planned={[
-        "Trendkurvor per testvariabel",
-        "Jämför perioder och planer mot utfall",
-        "Flaggor för avvikelser och stagnation",
-      ]}
+      description="Laktatkurvor mot varandra och varje testvärde över tid."
     />
+  );
+
+  if (user.profile?.role === "adept") {
+    const adept = await getMyAdeptRow(user.id);
+    if (!adept) {
+      return (
+        <>
+          {header}
+          <EmptyState
+            title="Ingen adeptprofil hittades"
+            description="Ditt konto är inte kopplat till någon coach ännu. Be din coach lägga upp dig."
+          />
+        </>
+      );
+    }
+    const sessions = await listFullSessions(adept.id);
+    return (
+      <>
+        {header}
+        <ProgressionView adeptId={adept.id} sessions={sessions} canEdit={false} />
+      </>
+    );
+  }
+
+  const [adepts, counts] = await Promise.all([listAdepts(), countSessions()]);
+  const own = adepts.filter((a) => a.coach_id === user.id);
+  if (own.length === 0) {
+    return (
+      <>
+        {header}
+        <EmptyState
+          title="Inga adepter ännu"
+          description="Lägg upp en adept och registrera ett test, så syns utvecklingen här."
+          action={<ButtonLink href={routes.adepts}>Till adepterna</ButtonLink>}
+        />
+      </>
+    );
+  }
+
+  const requested = typeof query.adept === "string" ? query.adept : null;
+  // Utan val: den adept som har flest tester – där finns mest att se.
+  const current =
+    own.find((a) => a.id === requested) ??
+    [...own].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))[0];
+  const sessions = await listFullSessions(current.id);
+
+  return (
+    <>
+      {header}
+      <div className="mb-6">
+        <AdeptPicker
+          current={current.id}
+          adepts={own.map((a) => ({ id: a.id, name: a.full_name, tests: counts.get(a.id) ?? 0 }))}
+        />
+      </div>
+      <ProgressionView adeptId={current.id} sessions={sessions} canEdit />
+    </>
   );
 }

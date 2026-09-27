@@ -36,8 +36,8 @@ const SPORTS: { id: Sport; label: string }[] = [
  */
 const EXAMPLES: Record<Sport, string[]> = {
   cykling: [
-    "En timme som tömmer W′ men går att genomföra",
     "Tröskelpass, 4×8 min, total tid under 75 min",
+    "En timme som tömmer W′ men går att genomföra",
     "Lugnt återhämtningspass på 45 min",
   ],
   löpning: [
@@ -63,6 +63,7 @@ export function WorkoutBuilder({
   serverContext,
   initialWorkout,
   configured,
+  selfService = false,
 }: {
   adepts: AdeptOption[];
   adeptId: string | null;
@@ -70,6 +71,11 @@ export function WorkoutBuilder({
   /** Ett sparat pass som öppnats för ändring. */
   initialWorkout: Workout | null;
   configured: boolean;
+  /**
+   * En medlemsadept som bygger åt sig själv. Adepten är given, och det finns
+   * inga tal att fylla i för hand – passet byggs mot de egna testerna.
+   */
+  selfService?: boolean;
 }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -81,6 +87,9 @@ export function WorkoutBuilder({
   const [reference, setReference] = useState("");
   const [critical, setCritical] = useState("");
   const [reserve, setReserve] = useState("");
+  // W′bal är ett val, inte en grind. Förvalt av: de flesta pass handlar inte
+  // om att tömma den anaeroba reserven.
+  const [useBalance, setUseBalance] = useState(false);
 
   const [workout, setWorkout] = useState<Workout | null>(initialWorkout);
   const [usedContext, setUsedContext] = useState<AthleteContext | null>(null);
@@ -110,9 +119,19 @@ export function WorkoutBuilder({
           ? (decimal(critical) ?? 0) / 3.6 || null
           : decimal(critical),
       // W′ skrivs i kilojoule eftersom det är så det redovisas överallt annars.
-      reserve: cycling ? (decimal(reserve) ?? 0) * 1000 || null : decimal(reserve),
+      reserve: cycling
+        ? (decimal(reserve) ?? 0) * 1000 || null
+        : decimal(reserve),
     });
-  }, [usedContext, serverContext, sport, reference, critical, reserve, cycling]);
+  }, [
+    usedContext,
+    serverContext,
+    sport,
+    reference,
+    critical,
+    reserve,
+    cycling,
+  ]);
 
   const chooseAdept = (next: string) =>
     startNavigation(() => {
@@ -137,6 +156,7 @@ export function WorkoutBuilder({
           reserve: context.balance?.reserve ?? null,
         },
         previous: workout,
+        useBalance,
       });
 
       if (!result.ok) {
@@ -158,8 +178,10 @@ export function WorkoutBuilder({
         adeptId,
         workout,
         reference: context.reference,
-        critical: context.balance?.critical ?? null,
-        reserve: context.balance?.reserve ?? null,
+        // Byggdes passet utan W′bal sparas det utan – annars skulle det visas
+        // med en reservkurva ingen bad om när det öppnas igen.
+        critical: useBalance ? (context.balance?.critical ?? null) : null,
+        reserve: useBalance ? (context.balance?.reserve ?? null) : null,
         prompt: usedPrompt || null,
         scheduledFor: null,
       });
@@ -168,7 +190,11 @@ export function WorkoutBuilder({
         setError(result.error);
         return;
       }
-      setSaved("Passet är sparat på adepten.");
+      setSaved(
+        selfService
+          ? "Passet är sparat i dina pass."
+          : "Passet är sparat på adepten.",
+      );
     });
 
   const busy = pending || navigating;
@@ -198,7 +224,10 @@ export function WorkoutBuilder({
                   <button
                     key={example}
                     type="button"
-                    onClick={() => setPrompt(example)}
+                    onClick={() => {
+                      setPrompt(example);
+                      if (/W′|D′/.test(example)) setUseBalance(true);
+                    }}
                     className="rounded-full border border-line-strong px-3 py-1 text-[12px] text-text-muted transition-colors hover:border-accent/60 hover:text-text"
                   >
                     {example}
@@ -206,6 +235,27 @@ export function WorkoutBuilder({
                 ))}
               </div>
             )}
+
+            <label className="flex items-start gap-3 rounded-md border border-line px-3 py-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={useBalance}
+                onChange={(e) => setUseBalance(e.target.checked)}
+                className="mt-0.5 size-4 accent-[var(--color-accent)]"
+              />
+              <span>
+                <span className="font-medium text-text">
+                  Bygg mot {cycling ? "W′bal" : "D′bal"}
+                </span>
+                <span className="block text-[12px] text-text-subtle">
+                  För pass som handlar om den anaeroba reserven –
+                  VO2max-intervaller, lopp med attacker, banan.{" "}
+                  {context.balance
+                    ? "Passet prövas mot reserven och grafen visar var den bottnar."
+                    : `Kräver ${cycling ? "CP och W′" : "CS och D′"} ur ett test.`}
+                </span>
+              </span>
+            </label>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button
@@ -239,10 +289,10 @@ export function WorkoutBuilder({
             {!configured && (
               <p className="text-[13px] text-text-muted">
                 Passbyggaren behöver en nyckel från Anthropic:{" "}
-                <code className="text-text">ANTHROPIC_API_KEY</code> som miljövariabel
-                – i Vercel under Settings → Environment Variables. Resten av sidan
-                fungerar ändå – ett sparat pass går att läsa och räkna på utan
-                nyckel.
+                <code className="text-text">ANTHROPIC_API_KEY</code> som
+                miljövariabel – i Vercel under Settings → Environment Variables.
+                Resten av sidan fungerar ändå – ett sparat pass går att läsa och
+                räkna på utan nyckel.
               </p>
             )}
           </div>
@@ -252,20 +302,26 @@ export function WorkoutBuilder({
           <CardTitle>Underlag</CardTitle>
 
           <div className="space-y-4">
-            <Field label="Adept" htmlFor="adept" hint="styr både gren och tröskelvärden">
-              <Select
-                id="adept"
-                value={adeptId ?? ""}
-                onChange={(e) => chooseAdept(e.target.value)}
+            {!selfService && (
+              <Field
+                label="Adept"
+                htmlFor="adept"
+                hint="styr både gren och tröskelvärden"
               >
-                <option value="">Ingen – fyll i talen själv</option>
-                {adepts.map((adept) => (
-                  <option key={adept.id} value={adept.id}>
-                    {adept.full_name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+                <Select
+                  id="adept"
+                  value={adeptId ?? ""}
+                  onChange={(e) => chooseAdept(e.target.value)}
+                >
+                  <option value="">Ingen – fyll i talen själv</option>
+                  {adepts.map((adept) => (
+                    <option key={adept.id} value={adept.id}>
+                      {adept.full_name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
 
             {adeptId === null && (
               <>
@@ -360,7 +416,7 @@ export function WorkoutBuilder({
           <WorkoutView
             workout={workout}
             reference={context.reference}
-            model={context.balance}
+            model={useBalance ? context.balance : null}
             onChange={(next) => {
               setWorkout(next);
               setSaved(null);
@@ -370,15 +426,21 @@ export function WorkoutBuilder({
           <div className="flex flex-wrap items-center gap-3 print:hidden">
             {adeptId !== null && (
               <Button type="button" onClick={store} disabled={saving}>
-                {saving ? "Sparar …" : "Spara på adepten"}
+                {saving
+                  ? "Sparar …"
+                  : selfService
+                    ? "Spara i mina pass"
+                    : "Spara på adepten"}
               </Button>
             )}
             <PrintButton />
             <span className="text-[13px] text-text-subtle">
               {saved ??
-                (adeptId === null
-                  ? "Välj en adept för att kunna spara passet."
-                  : "Sparas med de tröskelvärden det byggdes mot.")}
+                (selfService
+                  ? "Sparas med de värden det byggdes mot."
+                  : adeptId === null
+                    ? "Välj en adept för att kunna spara passet."
+                    : "Sparas med de tröskelvärden det byggdes mot.")}
             </span>
           </div>
         </>

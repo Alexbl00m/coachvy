@@ -13,6 +13,7 @@ import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { getAdept } from "@/lib/adepts/queries";
+import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
@@ -23,7 +24,13 @@ import {
   rollingCriticalPower,
   rollingCriticalSpeed,
 } from "@/lib/tests/rolling";
-import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
+import { lactateCurves } from "@/lib/tests/progression";
+import {
+  listFullSessions,
+  listMaximalEfforts,
+  listSessions,
+} from "@/lib/tests/session-queries";
+import { CompareToggle } from "@/components/progression/compare-toggle";
 import { countUnread, listMessages } from "@/lib/messages/queries";
 import { listCheckins } from "@/lib/training/queries";
 import { listWorkouts } from "@/lib/workouts/queries";
@@ -89,6 +96,12 @@ export default async function AdeptPage({
     listMessages(adept.id),
     countUnread(adept.id, user.id),
   ]);
+
+  // Kurvorna behöver rådatan, som bara hämtas på fliken där de visas.
+  const curves =
+    tab === "testtillfallen"
+      ? lactateCurves(await listFullSessions(adept.id))
+      : [];
 
   // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
   // flyttat kurvan sedan dess.
@@ -206,21 +219,41 @@ export default async function AdeptPage({
           <AdeptProfileForm adeptId={adept.id} profile={profile} />
         </div>
       ) : tab === "testtillfallen" ? (
-        <SessionPanel
-          adeptId={adept.id}
-          sessions={sessions}
-          rolling={rolling}
-          rollingLabel={sport === "cykling" ? "CP" : "CS"}
-          rollingUnit={sport === "cykling" ? "W" : speedUnit}
-          reserveLabel={sport === "cykling" ? "W′" : "D′"}
-          reserveUnit={sport === "cykling" ? "kJ" : "m"}
-          canEdit={canEdit}
-        />
+        <div className="space-y-6">
+          {curves.length >= 2 && (
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <CompareToggle curves={curves} />
+              <Link
+                href={
+                  isCoach
+                    ? `${routes.progression}?adept=${adept.id}`
+                    : routes.progression
+                }
+                className="text-sm font-medium text-accent hover:text-accent-strong"
+              >
+                Hela progressionen
+              </Link>
+            </div>
+          )}
+          <SessionPanel
+            adeptId={adept.id}
+            sessions={sessions}
+            rolling={rolling}
+            rollingLabel={sport === "cykling" ? "CP" : "CS"}
+            rollingUnit={sport === "cykling" ? "W" : speedUnit}
+            reserveLabel={sport === "cykling" ? "W′" : "D′"}
+            reserveUnit={sport === "cykling" ? "kJ" : "m"}
+            canEdit={canEdit}
+          />
+        </div>
       ) : tab === "pass" ? (
         <WorkoutPanel
           adeptId={adept.id}
           workouts={workouts}
           canEdit={canEdit}
+          selfBuilderId={
+            adept.profile_id === user.id && isMember(user) ? user.id : null
+          }
         />
       ) : tab === "maende" ? (
         <LoadPanel adeptId={adept.id} checkins={checkins} />

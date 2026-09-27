@@ -2,12 +2,14 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
-import { requireCoach } from "@/lib/auth/session";
 import type { Sport } from "@/lib/calculators/lactate";
 import { getAdept } from "@/lib/adepts/queries";
 import { getAdeptProfile, profileToPrompt } from "@/lib/adepts/profile";
 import { sportOf } from "@/lib/tests/protocols";
-import { rollingCriticalPower, rollingCriticalSpeed } from "@/lib/tests/rolling";
+import {
+  rollingCriticalPower,
+  rollingCriticalSpeed,
+} from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
@@ -18,6 +20,7 @@ import {
   manualAthleteContext,
   type AthleteContext,
 } from "./context";
+import { requireWorkoutAuthor } from "./access";
 import { isAnthropicConfigured } from "./env";
 import { parseWorkout, WORKOUT_JSON_SCHEMA } from "./parse";
 import { formatDuration, resolveWorkout, type Workout } from "./schema";
@@ -41,8 +44,8 @@ Så här fungerar passet du skriver:
 
 Så här tänker du om innehållet:
 
-- Bygg passet mot atletens mätta värden. Får du CP och W′ (eller CS och D′) ska upplägget gå att genomföra: arbetet över tröskeln får inte överstiga reserven om inte coachen uttryckligen bett om ett pass som tömmer den.
-- Modellen bakom är W′bal. Ett intervall över tröskeln tär på reserven med (mål − tröskel) × sekunder; vila under tröskeln fyller på den igen, snabbare ju lägre vilan ligger. Räkna igenom serien innan du svarar.
+- Bygg passet mot atletens mätta värden och mot det coachen ber om. Alla sorters pass är välkomna: distans, tröskel, tempo, teknik, backar, intervaller, återhämtning.
+- Pröva bara passet mot den anaeroba reserven (W′bal) när coachen ber om det – det står då uttryckligen längre ned. Annars är intensitet och längd coachens och atletens mål, inte reservens.
 - Saknas ett värde: bygg ändå passet, men säg i motiveringen vad som saknas och vad det gör osäkert. Hitta aldrig på ett tal.
 - Motiveringen ("rationale") ska hänga ihop med just de här siffrorna och just det coachen bad om. Skriv inte allmänna sanningar om träning.
 - Följ coachens begäran. Ber coachen om ett pass på en timme ska passet bli ungefär en timme, uppvärmning och nedvarvning inräknade.`;
@@ -60,7 +63,18 @@ export type GenerateInput = {
   };
   /** Ett tidigare pass som prompten ska ändra på. */
   previous: Workout | null;
+  /**
+   * Bygg passet kring den anaeroba reserven och pröva det mot W′bal. Ett val,
+   * inte en grind: för en maratonlöpare eller ett distanspass är reserven
+   * ointressant, för en banåkare eller ett VO2max-pass är den hela poängen.
+   */
+  useBalance?: boolean;
 };
+
+/** Det som skickas med när coachen valt att bygga mot W′bal. */
+const BALANCE_INSTRUCTIONS = `Passet ska byggas mot den anaeroba reserven och prövas mot W′bal:
+- Upplägget ska gå att genomföra: arbetet över tröskeln får inte överstiga reserven om inte coachen uttryckligen bett om ett pass som tömmer den.
+- Ett intervall över tröskeln tär på reserven med (mål − tröskel) × sekunder; vila under tröskeln fyller på den igen, snabbare ju lägre vilan ligger. Räkna igenom serien innan du svarar, och säg i motiveringen var reserven bottnar.`;
 
 export type GenerateResult =
   | { ok: true; workout: Workout; context: AthleteContext }
@@ -114,16 +128,15 @@ export async function contextForAdept(
 function previousToPrompt(
   workout: Workout,
   context: AthleteContext,
+  withBalance: boolean,
 ): string {
-  const lines = [
-    `Föregående pass: "${workout.title}" – ${workout.summary}`,
-  ];
+  const lines = [`Föregående pass: "${workout.title}" – ${workout.summary}`];
 
   if (context.reference !== null) {
     const resolved = resolveWorkout(workout, context.reference);
     lines.push(`Längd: ${formatDuration(resolved.totalSeconds)}.`);
 
-    if (context.balance) {
+    if (withBalance && context.balance) {
       const result = wPrimeBalance(resolved.steps, context.balance);
       if (result) {
         lines.push(
@@ -168,7 +181,8 @@ const fmtRange = (low: number, high: number) =>
 export async function generateWorkout(
   input: GenerateInput,
 ): Promise<GenerateResult> {
-  await requireCoach();
+  const access = await requireWorkoutAuthor(input.adeptId);
+  if (!access.ok) return access;
 
   const prompt = input.prompt.trim();
   if (prompt.length === 0) {
@@ -196,11 +210,20 @@ export async function generateWorkout(
     };
   }
 
+  // W′bal kräver både tröskel och reserv. Saknas de säger modellen det i
+  // motiveringen i stället för att hitta på en reserv.
+  const balance = input.useBalance
+    ? context.balance
+      ? BALANCE_INSTRUCTIONS
+      : `Coachen vill pröva passet mot W′bal, men ${context.sport === "cykling" ? "CP och W′" : "CS och D′"} saknas. Bygg passet ändå och skriv i motiveringen att det inte gått att pröva mot reserven.`
+    : null;
+
   const parts = [
     contextToPrompt(context),
     "",
+    ...(balance ? [balance, ""] : []),
     input.previous
-      ? `${previousToPrompt(input.previous, context)}\n\nCoachen vill ändra passet: ${prompt}`
+      ? `${previousToPrompt(input.previous, context, Boolean(input.useBalance))}\n\nCoachen vill ändra passet: ${prompt}`
       : `Coachen vill ha: ${prompt}`,
   ];
 

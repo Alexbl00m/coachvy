@@ -55,6 +55,8 @@
   --color-text-subtle: var(--text-subtle);
   --color-accent-soft: var(--accent-soft);
   --color-accent-on: var(--accent-on);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
 }
 
 /* Dark is the default: the app is the larger surface and never flips. */
@@ -69,6 +71,11 @@
   --text-subtle: #7a7a86;
   --accent-soft: #35211a;
   --accent-on: #121216;
+
+  /* Riktning i en jämförelse: framåt och bakåt. Visas alltid med en pil
+     bredvid, aldrig med färgen ensam. */
+  --good: #5cb87a;
+  --bad: #e36b6b;
 
   /* Diagrammens ram. Serierna själva är validerade mot båda ytorna och byts
      inte; det är rutnätet, axeltexten och ytan bakom som måste vända. */
@@ -89,6 +96,8 @@
   --text-subtle: #7a7a86;
   --accent-soft: #fdf1ec;
   --accent-on: #ffffff;
+  --good: #1f7f45;
+  --bad: #c23b3b;
 
   --chart-grid: #e8e2dc;
   --chart-axis-text: #6b6b75;
@@ -140,6 +149,8 @@ body {
     --text-subtle: #5c5c66;
     --accent-soft: #ffffff;
     --accent-on: #ffffff;
+    --good: #1f7f45;
+    --bad: #c23b3b;
     --chart-grid: #d5cbc1;
     --chart-axis-text: #44444c;
     --chart-surface: #ffffff;

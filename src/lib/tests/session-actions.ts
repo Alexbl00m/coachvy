@@ -198,3 +198,112 @@ export async function deleteTestSession(
   revalidatePath(`${routes.adepts}/${adeptId}`);
   return { ok: true };
 }
+
+/**
+ * Räknar om alla testtillfällen för en adept med dagens metoder.
+ *
+ * Värdena i `test_metrics` är facit för vad som räknades när testet sparades.
+ * När metoderna förbättras – ModDmax som LT2 i stället för medianen, 2 och 4
+ * mmol för tester med tre steg – blir gamla tester annars kvar på den gamla
+ * versionen, och då jämför progressionen två versioner av appen. Rådatan rörs
+ * inte; bara det som räknas ur den byts.
+ */
+export async function recomputeAdeptSessions(
+  adeptId: string,
+): Promise<{ ok: true; updated: number } | { ok: false; error: string }> {
+  const user = await requireCoach();
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("test_sessions")
+    .select(
+      "id, protocol, sport, intensity_unit, weight_kg, body_fat_pct, sex, peak_intensity, vo2max, peak_lactate, peak_heart_rate, test_metrics(key), test_efforts(ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate)",
+    )
+    .eq("adept_id", adeptId);
+
+  if (error) return { ok: false, error: `Kunde inte hämta testerna: ${error.message}` };
+
+  type Row = {
+    id: string;
+    protocol: ProtocolKey;
+    sport: Sport;
+    intensity_unit: IntensityUnit;
+    weight_kg: number | null;
+    body_fat_pct: number | null;
+    sex: "man" | "kvinna" | null;
+    peak_intensity: number | null;
+    vo2max: number | null;
+    peak_lactate: number | null;
+    peak_heart_rate: number | null;
+    test_metrics: { key: string }[];
+    test_efforts: {
+      ordinal: number;
+      intensity: number | null;
+      duration_seconds: number | null;
+      distance_m: number | null;
+      lactate: number | null;
+      heart_rate: number | null;
+    }[];
+  };
+
+  const n = (v: number | string | null) => (v === null ? null : Number(v));
+  let updated = 0;
+
+  for (const s of (data ?? []) as unknown as Row[]) {
+    const analysis = analyseSessionOnServer(
+      {
+        protocol: s.protocol,
+        sport: s.sport,
+        unit: s.intensity_unit,
+        efforts: [...s.test_efforts]
+          .sort((a, b) => a.ordinal - b.ordinal)
+          .map((e) => ({
+            ordinal: e.ordinal,
+            intensity: n(e.intensity),
+            durationSeconds: n(e.duration_seconds),
+            distanceM: n(e.distance_m),
+            lactate: n(e.lactate),
+            heartRate: n(e.heart_rate),
+          })),
+        weightKg: n(s.weight_kg),
+        bodyFatPct: n(s.body_fat_pct),
+        sex: s.sex,
+        finish: {
+          peakIntensity: n(s.peak_intensity),
+          vo2max: n(s.vo2max),
+          peakLactate: n(s.peak_lactate),
+          peakHeartRate: n(s.peak_heart_rate),
+        },
+      },
+      // Medlemsdelarna följer med om coachen är medlem nu, eller om testet
+      // redan hade dem – ett betalt resultat ska inte försvinna vid omräkning.
+      { members: isMember(user) || s.test_metrics.some((m) => m.key === "VLamax") },
+    );
+
+    // Ger dagens metoder ingenting behålls det som fanns.
+    if (analysis.metrics.length === 0) continue;
+
+    const { error: deleteError } = await supabase
+      .from("test_metrics")
+      .delete()
+      .eq("session_id", s.id);
+    if (deleteError) return { ok: false, error: `Kunde inte räkna om: ${deleteError.message}` };
+
+    const { error: insertError } = await supabase.from("test_metrics").insert(
+      analysis.metrics.map((m) => ({
+        session_id: s.id,
+        key: m.key,
+        value: m.value,
+        unit: m.unit,
+        method: m.method ?? null,
+        is_primary: m.isPrimary,
+      })),
+    );
+    if (insertError) return { ok: false, error: `Kunde inte spara värdena: ${insertError.message}` };
+    updated += 1;
+  }
+
+  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(routes.progression);
+  return { ok: true, updated };
+}

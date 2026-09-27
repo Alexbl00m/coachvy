@@ -295,6 +295,16 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
       reference = balance.critical * 0.95;
       referenceSource = `0,95 × CP (${balanceSource})`;
       push("FTP", "FTP", reference, "W", null, referenceSource);
+    } else {
+      // Bara laktattester: LT2 är då tröskeln passet räknas mot. En adept som
+      // testas med stegtest och aldrig gjort ett FTP- eller CP-test ska ändå
+      // kunna få pass.
+      const lt2 = latestMetric(sessions, "LT2");
+      if (lt2 && lt2.unit === "W" && lt2.value > 0) {
+        basis = "LT2";
+        reference = lt2.value;
+        referenceSource = `${lt2.protocol} ${lt2.performedOn}`;
+      }
     }
   } else {
     const csValue = balance?.critical ?? criticalValue;

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
+import { requireWorkoutAuthor } from "./access";
 import { sanitiseWorkout } from "./parse";
 import { resolveWorkout, type Workout } from "./schema";
 
@@ -34,7 +34,9 @@ export type SaveWorkoutResult =
 export async function saveWorkout(
   input: SaveWorkoutInput,
 ): Promise<SaveWorkoutResult> {
-  const user = await requireCoach();
+  const access = await requireWorkoutAuthor(input.adeptId);
+  if (!access.ok) return access;
+  const { user } = access;
 
   const workout = sanitiseWorkout(input.workout);
   if (!workout) {
@@ -86,7 +88,10 @@ export async function deleteWorkout(
   id: string,
   adeptId: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireCoach();
+  // En coach tar bort pass på sina adepter, en medlemsadept sina egna –
+  // raden ska dessutom vara skapad av adepten, vilket databasen kontrollerar.
+  const access = await requireWorkoutAuthor(adeptId);
+  if (!access.ok) return access;
 
   const supabase = await createClient();
   const { error } = await supabase.from("workouts").delete().eq("id", id);

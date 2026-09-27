@@ -28,6 +28,11 @@ import {
   thresholdZones,
   type ZoneRow,
 } from "./zones";
+import {
+  cleanPoints,
+  heartRateAtIntensity,
+  intensityAtLactate,
+} from "./lactate-points";
 
 export type Effort = {
   ordinal: number;
@@ -171,12 +176,40 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       unit,
     });
 
+    // 2 och 4 mmol läses linjärt mellan stegen. De kräver ingen kurva och
+    // fungerar därför också på äldre tester med tre steg – det gör dem till
+    // måttet som går att jämföra över alla tester en adept har gjort.
+    const points = steps.map((s) => ({
+      intensity: s.intensity,
+      lactate: s.lactate,
+      heartRate: s.heartRate,
+    }));
+    const linear: Metric[] = [];
+    const at2 = intensityAtLactate(points, 2);
+    const at4 = intensityAtLactate(points, 4);
+    if (at2 !== null) {
+      linear.push(metric("I_2mmol", "Vid 2 mmol", at2, unit, { method: "linjärt mellan stegen" }));
+    }
+    if (at4 !== null) {
+      linear.push(metric("I_4mmol", "Vid 4 mmol (OBLA)", at4, unit, { method: "linjärt mellan stegen" }));
+    }
+
     if (!analysis) {
+      if (cleanPoints(points).length >= 3 && linear.length > 0) {
+        return {
+          metrics: linear,
+          zones: [],
+          zoneUnit: unit,
+          warnings: [
+            "För få steg för att bestämma LT1 och LT2 – kurvanpassningen kräver minst fyra. Testet visas med 2 och 4 mmol, lästa linjärt mellan stegen, så att det ändå går att jämföra med senare tester.",
+          ],
+        };
+      }
       return {
         metrics: [],
         zones: [],
         zoneUnit: unit,
-        warnings: ["Minst fyra steg med belastning och laktat krävs."],
+        warnings: ["Minst fyra steg med belastning och laktat krävs för trösklarna (tre för att jämföra vid 2 och 4 mmol)."],
       };
     }
 
@@ -229,6 +262,25 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         metric(`${key}:${row.method}`, row.method, row.intensity, unit, {
           method: row.method,
         }),
+      );
+    }
+
+    metrics.push(...linear);
+
+    // Pulsen vid trösklarna, för pulszoner och för att se om samma puls ger
+    // mer fart eller watt från test till test.
+    for (const [key, label, value] of [
+      ["HR_LT1", "Puls vid LT1", summary.lt1],
+      ["HR_LT2", "Puls vid LT2", lt2],
+    ] as const) {
+      if (value === null) continue;
+      const hr = heartRateAtIntensity(points, value);
+      if (hr !== null) metrics.push(metric(key, label, hr, "slag/min"));
+    }
+
+    if (steps.length < 5) {
+      warnings.push(
+        `Testet har ${steps.length} steg. Med så få punkter hamnar ModDmax och de andra metoderna nära varandra av ren geometri – läs trösklarna som ungefärliga och jämför hellre 2 och 4 mmol mellan tester.`,
       );
     }
 

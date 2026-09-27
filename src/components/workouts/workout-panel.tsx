@@ -28,11 +28,24 @@ export function WorkoutPanel({
   adeptId,
   workouts,
   canEdit,
+  selfBuilderId = null,
 }: {
   adeptId: string;
   workouts: SavedWorkout[];
   canEdit: boolean;
+  /**
+   * Kontot, när det är en medlemsadept som tittar på sina egna pass. Adepten
+   * får då bygga nya och ta bort dem hen själv byggt – inte coachens.
+   */
+  selfBuilderId?: string | null;
 }) {
+  const canBuild = canEdit || selfBuilderId !== null;
+  const builderHref =
+    selfBuilderId !== null
+      ? routes.workoutBuilder
+      : `${routes.workoutBuilder}?adept=${adeptId}`;
+  const canRemove = (saved: SavedWorkout) =>
+    canEdit || (selfBuilderId !== null && saved.created_by === selfBuilderId);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [removing, setRemoving] = useState<string | null>(null);
@@ -50,13 +63,14 @@ export function WorkoutPanel({
     return (
       <EmptyState
         title="Inga pass ännu"
-        description="Byggda pass som du sparar på adepten hamnar här, med profilen och W′bal-prognosen kvar."
+        description={
+          selfBuilderId !== null
+            ? "Pass du bygger och sparar hamnar här, tillsammans med dem din coach lagt."
+            : "Byggda pass som du sparar på adepten hamnar här, med profilen kvar."
+        }
         action={
-          canEdit ? (
-            <Link
-              href={`${routes.workoutBuilder}?adept=${adeptId}`}
-              className={buttonClass()}
-            >
+          canBuild ? (
+            <Link href={builderHref} className={buttonClass()}>
               <Plus aria-hidden className="size-4" />
               Bygg ett pass
             </Link>
@@ -68,10 +82,10 @@ export function WorkoutPanel({
 
   return (
     <div className="space-y-4">
-      {canEdit && (
+      {canBuild && (
         <div className="flex justify-end">
           <Link
-            href={`${routes.workoutBuilder}?adept=${adeptId}`}
+            href={builderHref}
             className={buttonClass({ variant: "secondary", size: "sm" })}
           >
             <Plus aria-hidden className="size-4" />
@@ -100,7 +114,9 @@ export function WorkoutPanel({
                       {saved.title}
                     </Link>
                     {saved.summary && (
-                      <p className="text-[13px] text-text-muted">{saved.summary}</p>
+                      <p className="text-[13px] text-text-muted">
+                        {saved.summary}
+                      </p>
                     )}
                     <p className="text-[12px] text-text-subtle">
                       {formatDate(saved.created_at)} · {saved.sport} ·{" "}
@@ -112,7 +128,7 @@ export function WorkoutPanel({
                     </p>
                   </div>
 
-                  {canEdit && (
+                  {canRemove(saved) && (
                     <button
                       type="button"
                       aria-label={`Ta bort ${saved.title}`}

@@ -1,10 +1,10 @@
 import { CoachInvitations } from "@/components/adepts/coach-invitations";
 import { CommunityFeed } from "@/components/community/community-feed";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/ui/card";
 import { listCoachInvitations } from "@/lib/adepts/invitations";
 import { requireSessionUser } from "@/lib/auth/session";
 import { canUseCommunity } from "@/lib/community/access";
+import { MembersOnly } from "@/components/members-only";
 import { parseChannel } from "@/lib/community/channels";
 import { PAGE_SIZE, getFeed, getShareables } from "@/lib/community/queries";
 
@@ -21,9 +21,9 @@ export default async function CommunityPage({ searchParams }: PageProps<"/app/co
       <>
         <PageHeader title="Community" description="Coacher och adepter som tränar tillsammans." />
         <CoachInvitations invitations={invitations} />
-        <EmptyState
-          title="Communityn öppnar när du har en coach"
-          description="Communityn är för coacher och för adepter som är kopplade till en coach. När din coach har lagt till dig kommer du in här."
+        <MembersOnly
+          feature="Communityn"
+          description="Flödet, kanalerna per gren och att dela pass och tester med andra är en del av medlemskapet i Coachvy."
         />
       </>
     );

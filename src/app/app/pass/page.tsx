@@ -1,7 +1,11 @@
 import { PageHeader } from "@/components/page-header";
 import { WorkoutBuilder } from "@/components/workouts/workout-builder";
 import { listAdepts } from "@/lib/adepts/queries";
-import { requireCoach } from "@/lib/auth/session";
+import { isMember } from "@/lib/auth/membership";
+import { requireSessionUser } from "@/lib/auth/session";
+import { MembersOnly } from "@/components/members-only";
+import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { getWorkout } from "@/lib/workouts/queries";
@@ -19,14 +23,39 @@ export const metadata = { title: "Passbyggare" };
 export default async function PassPage({
   searchParams,
 }: PageProps<"/app/pass">) {
-  await requireCoach();
+  const user = await requireSessionUser();
+  const role = user.profile?.role;
+  if (role !== "coach" && role !== "adept") redirect(routes.dashboard);
+
+  // En adept bygger bara åt sig själv, och bara som medlem.
+  const selfService = role === "adept";
+  if (selfService && (!isMember(user) || !user.adept)) {
+    return (
+      <>
+        <PageHeader
+          title="Passbyggare"
+          description="Beskriv passet i en mening, så byggs det mot dina egna testvärden."
+        />
+        <MembersOnly
+          feature="Passbyggaren"
+          description="Som medlem bygger du egna pass mot dina uppmätta trösklar – distans, tröskel, intervaller eller pass som prövas mot din anaeroba reserv – och sparar dem bland dina pass."
+        />
+      </>
+    );
+  }
 
   const query = await searchParams;
-  const adeptId = typeof query.adept === "string" ? query.adept : null;
+  const adeptId = selfService
+    ? (user.adept?.id ?? null)
+    : typeof query.adept === "string"
+      ? query.adept
+      : null;
   const workoutId = typeof query.pass === "string" ? query.pass : null;
 
   const [adepts, context, saved] = await Promise.all([
-    listAdepts(),
+    selfService
+      ? Promise.resolve(user.adept ? [user.adept] : [])
+      : listAdepts(),
     adeptId ? contextForAdept(adeptId) : Promise.resolve(null),
     workoutId ? getWorkout(workoutId) : Promise.resolve(null),
   ]);
@@ -53,7 +82,11 @@ export default async function PassPage({
     <>
       <PageHeader
         title="Passbyggare"
-        description="Beskriv passet i en mening. Det byggs mot adeptens mätta tröskel och anaeroba reserv, och prövas mot W′bal innan du ser det."
+        description={
+          selfService
+            ? "Beskriv passet i en mening, så byggs det mot dina egna testvärden."
+            : "Beskriv passet i en mening. Det byggs mot adeptens mätta trösklar – och, om du vill, mot den anaeroba reserven med W′bal."
+        }
       />
 
       <WorkoutBuilder
@@ -65,6 +98,7 @@ export default async function PassPage({
         serverContext={context}
         initialWorkout={initialWorkout}
         configured={isAnthropicConfigured()}
+        selfService={selfService}
       />
     </>
   );

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SavedWorkout } from "./schema";
 
 const COLUMNS =
-  "id, adept_id, title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt, scheduled_for, created_at";
+  "id, adept_id, title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt, scheduled_for, created_by, created_at";
 
 /** numeric kommer tillbaka som sträng ur PostgREST när precisionen kräver det. */
 const num = (value: unknown): number => Number(value);

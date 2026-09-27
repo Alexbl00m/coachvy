@@ -398,10 +398,19 @@ fler tester har avgjort frågan.
 
 ## Medlemskap
 
-Den metabola profilen – testprotokollet, VLamax-kalkylen och den metabola
-kalkylen – ingår i medlemskapet. Vem som helst kan registrera ett coachkonto;
-`coaches.plan` (`bas` eller `medlem`) är det som skiljer ett gratiskonto från
-ett betalande.
+Tre nivåer: **admin**, **bas** och **medlem**. Bas är kontot – coachen har sina
+adepter, tester, planer och progression; adepten ser sina tester, pass och sin
+progression. Medlemskapet (`coaches.plan` / `adepts.plan`) lägger till
+verktygen:
+
+| | Bas | Medlem |
+|---|---|---|
+| Metabol profil, VLamax, metabol kalkyl | – | ✓ |
+| VLamax ur stegtestet | – | ✓ |
+| Passbyggaren för **adepter** (egna pass) | – | ✓ |
+| Community | – | ✓ |
+
+Coacher bygger pass åt sina adepter oavsett nivå.
 
 - **Publika sidan** visar aldrig protokollet, och ingen del av beräkningen
   följer med dit.
@@ -447,8 +456,9 @@ utloggade nekas helt.
 
 ## Community
 
-`/app/community` är ett slutet flöde för coacher och för adepter som är
-kopplade till en coach. Inlägg, kommentarer och gillningar, i kanalerna
+`/app/community` är ett slutet flöde för medlemmar – coacher och adepter med
+medlemskap – och admin. Den som inte är medlem ser vad communityn ger i stället
+för flödet; det hen skrivit tidigare ligger kvar. Inlägg, kommentarer och gillningar, i kanalerna
 Allmänt, Löpning, Cykel, Simning och Triathlon. Författaren tar bort sina egna
 inlägg och kommentarer; admin tar bort vad som helst.
 
@@ -481,11 +491,41 @@ adepter kan ha medlemskap som coacher, och det sätts bara av admin.
 Rättat samtidigt: sessionen hämtade den inloggade adeptens rad med `id` i
 stället för `profile_id`, så inloggade adepter fick aldrig sin egen rad.
 
+## Progression
+
+`/app/progression` visar en adepts tester över tid – coachen väljer adept,
+adepten ser sin egen.
+
+- **Laktatkurvor mot varandra.** Välj alla tester eller några. Det senaste
+  valda är utgångspunkten och det näst senaste vad det jämförs med: LT1, LT2
+  (ModDmax), belastning vid 2 och 4 mmol, och laktatet vid den tidigare
+  tröskeln – samma belastning, lägre laktat är framsteg. Samma jämförelse finns
+  bakom en knapp på adeptens flik Testtillfällen.
+- **Varje värde som egen tidslinje** – LT1, LT2, 4 mmol, CP, W′, CS, FTP,
+  Wmax, VO2max, VLamax, FatMax – med förändringen sedan första testet. Egen
+  skala per värde; VLamax visas utan bra/dåligt-färg eftersom rätt riktning
+  beror på målet.
+- **Samma metoder för alla tester.** Trösklarna räknas om ur rådatan vid
+  visning, så ett test från 2023 jämförs med samma metoder som ett från i dag.
+  Knappen *Räkna om med dagens metoder* skriver om de sparade värdena också.
+- **Äldre tester med få steg.** Ett stegtest med tre steg räcker inte för
+  kurvanpassningen, men sparas ändå och får 2 och 4 mmol lästa linjärt mellan
+  stegen. Testa gärna gamla rapporter från andra testare: skriv in watt,
+  laktat och puls med datumet testet gjordes.
+
 ## Passbyggare
 
-`/app/pass` bygger ett enskilt pass ur en mening: *"en timme som tar ordentligt
-på W′ men går att genomföra"*. Det som skiljer den från en chatt som skriver
-"4×8 min i tröskelfart" är att passet **räknas igenom** innan du ser det.
+`/app/pass` bygger ett enskilt pass ur en mening: *"tröskelpass, 4×8 min,
+under 75 minuter"*. Passet byggs mot adeptens mätta tröskel – FTP, CP eller,
+när bara laktattester finns, LT2.
+
+**W′bal är ett val.** Kryssa i *Bygg mot W′bal* för pass som handlar om den
+anaeroba reserven – VO2max-intervaller, lopp med attacker, banan. Då räknas
+passet igenom mot reserven och grafen visar var den bottnar. Annars byggs
+passet efter coachens och atletens mål utan att reserven styr.
+
+**Adepter som är medlemmar** bygger egna pass mot sina egna tester och sparar
+dem bland sina pass. De får ta bort de pass de själva byggt, inte coachens.
 
 **Målen är procent, aldrig watt.** Ett steg sparas som en andel av en referens
 — FTP för cykel, critical speed för löpning, CSS för simning. Ett pass på 105 %

@@ -94,6 +94,30 @@ export async function getSession(id: string): Promise<FullSession | null> {
 }
 
 /**
+ * Alla testtillfällen med rådata och värden, äldst först – underlaget för
+ * progressionen. Tyngre än `listSessions`, så den används bara där kurvorna
+ * ska ritas.
+ */
+export async function listFullSessions(adeptId: string): Promise<FullSession[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("test_sessions")
+    .select(
+      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, comment)",
+    )
+    .eq("adept_id", adeptId)
+    .order("performed_on", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(`Kunde inte hämta testtillfällen: ${error.message}`);
+  const sessions = (data ?? []) as unknown as FullSession[];
+  for (const s of sessions) s.test_efforts.sort((a, b) => a.ordinal - b.ordinal);
+  return sessions;
+}
+
+/**
  * Alla maximala insatser för en adept i en gren, som underlag för den
  * rullande modellen.
  *

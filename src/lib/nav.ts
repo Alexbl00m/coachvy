@@ -41,7 +41,8 @@ const allSections: NavSection[] = [
         label: "Passbyggare",
         href: routes.workoutBuilder,
         icon: Dumbbell,
-        audience: "coach",
+        // Adepter ser den också: som medlem bygger de egna pass, annars
+        // visar sidan vad medlemskapet ger.
       },
       { label: "Planer", href: routes.plans, icon: ClipboardList },
       { label: "Testresultat", href: routes.testResults, icon: FlaskConical },

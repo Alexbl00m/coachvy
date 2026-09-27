@@ -109,7 +109,9 @@ export const PROTOCOLS: Protocol[] = [
     howTo:
       "Stegvis ökande belastning, 3–5 minuter per steg, med laktatprov efter varje steg. Avsluta all-out: en ramp till utmattning som ger Vmax eller Wmax, eller ett VO2max-test. Utan ett maximalt slut finns ingen topp att mäta tröskeln mot.",
     remote: false,
-    minEfforts: 4,
+    // Tre steg räcker för att spara och jämföra vid 2 och 4 mmol – äldre
+    // tester från andra testare har ofta inte fler. Trösklarna kräver fyra.
+    minEfforts: 3,
     maxEfforts: null,
     shape: STEP_SHAPE,
     produces: ["LT1", "LT2 (ModDmax)", "Vmax", "Zoner"],
