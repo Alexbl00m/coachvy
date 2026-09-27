@@ -97,7 +97,7 @@ export async function askCoach(input: {
     return {
       ok: false,
       error:
-        "ANTHROPIC_API_KEY saknas. Lägg den i .env.local så kan AI-coachen användas.",
+        "ANTHROPIC_API_KEY saknas. Lägg in den som miljövariabel (i Vercel: Settings → Environment Variables) och deploya om, så kan AI-coachen användas.",
     };
   }
 

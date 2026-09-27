@@ -178,7 +178,7 @@ export async function generateWorkout(
     return {
       ok: false,
       error:
-        "ANTHROPIC_API_KEY saknas. Lägg den i .env.local så kan passbyggaren användas.",
+        "ANTHROPIC_API_KEY saknas. Lägg in den som miljövariabel (i Vercel: Settings → Environment Variables) och deploya om, så kan passbyggaren användas.",
     };
   }
 

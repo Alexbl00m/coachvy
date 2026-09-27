@@ -209,7 +209,7 @@ export function AiCoachChat({
             <span className="text-[13px] text-text-subtle">
               {configured
                 ? "Ctrl + Enter skickar. Adepten ser inte den här tråden."
-                : "ANTHROPIC_API_KEY saknas i .env.local."}
+                : "ANTHROPIC_API_KEY saknas – lägg in den som miljövariabel i Vercel."}
             </span>
           </div>
         </Card>

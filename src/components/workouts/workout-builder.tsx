@@ -238,8 +238,9 @@ export function WorkoutBuilder({
 
             {!configured && (
               <p className="text-[13px] text-text-muted">
-                Passbyggaren behöver <code className="text-text">ANTHROPIC_API_KEY</code> i{" "}
-                <code className="text-text">.env.local</code>. Resten av sidan
+                Passbyggaren behöver en nyckel från Anthropic:{" "}
+                <code className="text-text">ANTHROPIC_API_KEY</code> som miljövariabel
+                – i Vercel under Settings → Environment Variables. Resten av sidan
                 fungerar ändå – ett sparat pass går att läsa och räkna på utan
                 nyckel.
               </p>
