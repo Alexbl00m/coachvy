@@ -33,6 +33,13 @@ import {
   heartRateAtIntensity,
   intensityAtLactate,
 } from "./lactate-points";
+import {
+  vo2AtIntensity,
+  vo2maxFromEfforts,
+  vo2maxFromFiveMinutes,
+  vo2maxFromRampPeak,
+  vo2maxFromSixMinutes,
+} from "./vo2max";
 
 export type Effort = {
   ordinal: number;
@@ -135,6 +142,31 @@ function criticalSpeedFromDistances(
   }
 
   return { cs: fit.slope, dPrime: fit.intercept, rSquared };
+}
+
+/**
+ * Hur stor del av VO2max en tröskel utnyttjar: syreupptaget vid tröskeln
+ * (ACSM) delat med VO2max. Nyckeln blir t.ex. `LT2_pct_VO2max`.
+ */
+function utilisationMetrics(
+  thresholds: Record<string, number | null>,
+  unit: IntensityUnit,
+  weightKg: number | null,
+  vo2max: number | null,
+): Metric[] {
+  if (!weightKg || !(weightKg > 0) || !vo2max || !(vo2max > 0)) return [];
+  return Object.entries(thresholds).flatMap(([key, value]) =>
+    value === null || !(value > 0)
+      ? []
+      : [
+          metric(
+            `${key}_pct_VO2max`,
+            `${key} i % av VO2max`,
+            (vo2AtIntensity(value, unit, weightKg) / (vo2max * weightKg)) * 100,
+            "%",
+          ),
+        ],
+  );
 }
 
 /** m/s till testtillfällets enhet. */
@@ -313,8 +345,26 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         `Inget all-out-slut angivet. Med en ramp till utmattning eller ett VO2max-test sist får testet ${peakLabel(unit)} – toppen som tröskeln mäts mot, och det som gör att VLamax kan räknas ur testet.`,
       );
     }
+    // VO2max: uppmätt går före. Utan mätning skattas det ur rampens topp –
+    // Hawley & Noakes är framtagen just ur toppeffekten i ett ramptest.
+    let vo2max: number | null = null;
     if (finish?.vo2max) {
+      vo2max = finish.vo2max;
       metrics.push(metric("VO2max", "VO2max", finish.vo2max, "ml/kg/min", { method: "uppmätt" }));
+    } else if (peak !== null && peak > 0 && weightKg && weightKg > 0) {
+      vo2max =
+        unit === "W"
+          ? vo2maxFromRampPeak(peak, weightKg)
+          : vo2AtIntensity(peak, unit, 1);
+      metrics.push(
+        metric("VO2max", "VO2max (skattad)", vo2max, "ml/kg/min", {
+          method: unit === "W" ? `Hawley–Noakes ur ${peakLabel(unit)}` : `ACSM ur ${peakLabel(unit)}`,
+        }),
+      );
+    }
+    metrics.push(...utilisationMetrics({ LT1: summary.lt1, LT2: lt2 }, unit, weightKg, vo2max));
+    if (summary.lt1 !== null && lt2 !== null && lt2 > 0) {
+      metrics.push(metric("LT1_pct_LT2", "LT1 i % av LT2", (summary.lt1 / lt2) * 100, "%"));
     }
     if (finish?.peakLactate) {
       metrics.push(metric("La_peak", "Maxlaktat", finish.peakLactate, "mmol/l"));
@@ -352,13 +402,27 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       metric("W_prime", "W′ – anaerob kapacitet", result.wPrime, "kJ", { isPrimary: true }),
       metric("FTP", "FTP", result.ftp, "W", { method: "0,95 × CP" }),
     ];
-    if (result.vo2max !== null) {
-      metrics.push(metric("VO2max", "VO2max (skattad)", result.vo2max, "ml/kg/min"));
-    }
     if (weightKg && weightKg > 0) {
       metrics.push(
         metric("CP_per_kg", "CP per kg", result.criticalPower / weightKg, "W/kg"),
       );
+      // VO2max ur den insats som hör till ekvationen: 5 minuter, 6 minuter,
+      // eller hyperbolens 6-minut. Inte ur CP, som ligger långt under.
+      const estimate = vo2maxFromEfforts(
+        tests.map((t) => ({ seconds: t.minutes * 60, watts: t.watts })),
+        weightKg,
+        { cp: result.criticalPower, wPrimeJoules: result.wPrime * 1000 },
+      );
+      if (estimate) {
+        metrics.push(
+          metric("VO2max", "VO2max (skattad)", estimate.value, "ml/kg/min", {
+            method: `${estimate.method}, ${Math.round(estimate.watts)} W`,
+          }),
+        );
+        metrics.push(
+          ...utilisationMetrics({ CP: result.criticalPower, FTP: result.ftp }, "W", weightKg, estimate.value),
+        );
+      }
     }
     const profile = anaerobicProfile(result.criticalPower, result.wPrime * 1000);
     if (profile) {
@@ -492,9 +556,24 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
 
     if (weightKg && weightKg > 0) {
       metrics.push(metric("CP_per_kg", "CP per kg", cp / weightKg, "W/kg"));
+
+      // VO2max ur insatsen, inte ur CP. Varje protokoll har sin ekvation;
+      // de andra två sparas bredvid så att spridningen syns.
+      const all = [
+        { key: "Sitko 5 min", value: vo2maxFromFiveMinutes(power, weightKg) },
+        { key: "ACSM 6 min", value: vo2maxFromSixMinutes(power, weightKg) },
+        { key: "Hawley–Noakes", value: vo2maxFromRampPeak(power, weightKg) },
+      ];
+      const own = { "cp-5min": "Sitko 5 min", "cp-6min": "ACSM 6 min", "cp-ramp": "Hawley–Noakes" }[protocol];
+      const chosen = all.find((a) => a.key === own) as { key: string; value: number };
       metrics.push(
-        metric("VO2max", "VO2max (skattad)", (10.8 * cp) / weightKg + 7, "ml/kg/min"),
+        metric("VO2max", "VO2max (skattad)", chosen.value, "ml/kg/min", { method: chosen.key }),
       );
+      for (const alt of all) {
+        if (alt.key === own) continue;
+        metrics.push(metric(`VO2max:${alt.key}`, `VO2max – ${alt.key}`, alt.value, "ml/kg/min", { method: alt.key }));
+      }
+      metrics.push(...utilisationMetrics({ CP: cp, FTP: cp * 0.95 }, "W", weightKg, chosen.value));
     }
 
     warnings.push(

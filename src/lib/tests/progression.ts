@@ -22,6 +22,123 @@ import {
 } from "./lactate-points";
 import { protocolByKey } from "./protocols";
 import type { FullSession } from "./session-queries";
+import { vo2AtIntensity, vo2maxFromRampPeak } from "./vo2max";
+
+// ---------------------------------------------------------------------------
+// VO2max och utnyttjandegrad
+// ---------------------------------------------------------------------------
+
+/** Ett VO2max att räkna utnyttjandegraden mot, och var det kom ifrån. */
+export type Vo2Source = {
+  sessionId: string;
+  performedOn: string;
+  sport: Sport;
+  /** ml/kg/min */
+  value: number;
+  weightKg: number | null;
+  measured: boolean;
+  method: string;
+};
+
+/**
+ * Alla VO2max adepten har, uppmätta och skattade.
+ *
+ * Ett laktattest utan eget VO2max lånar det närmaste i tid från ett annat
+ * test i samma gren – ett 5-minuterstest, ett ramptest eller ett labbvärde.
+ */
+export function vo2maxSources(sessions: FullSession[]): Vo2Source[] {
+  const out: Vo2Source[] = [];
+  for (const s of sessions) {
+    const base = {
+      sessionId: s.id,
+      performedOn: s.performed_on,
+      sport: s.sport,
+      weightKg: num(s.weight_kg),
+    };
+    if (s.vo2max !== null && Number(s.vo2max) > 0) {
+      out.push({
+        ...base,
+        value: Number(s.vo2max),
+        measured: true,
+        method: "uppmätt",
+      });
+      continue;
+    }
+    const stored = s.test_metrics
+      .filter((m) => m.key === "VO2max" && Number(m.value) > 0)
+      .sort((a, b) => Number(b.is_primary) - Number(a.is_primary))[0];
+    if (stored) {
+      out.push({
+        ...base,
+        value: Number(stored.value),
+        measured: stored.method === "uppmätt",
+        method: stored.method ?? "skattad",
+      });
+      continue;
+    }
+    // Ett stegtest med ramp sist som sparades innan skattningen fanns.
+    const peak = num(s.peak_intensity);
+    if (
+      s.protocol === "laktat-steg" &&
+      s.intensity_unit === "W" &&
+      peak &&
+      base.weightKg
+    ) {
+      out.push({
+        ...base,
+        value: vo2maxFromRampPeak(peak, base.weightKg),
+        measured: false,
+        method: "Hawley–Noakes ur Wmax",
+      });
+    }
+  }
+  return out;
+}
+
+const DAY = 86_400_000;
+
+/** Det VO2max ett test ska räknas mot: testets eget, annars det närmaste i tid. */
+export function vo2maxFor(
+  sources: Vo2Source[],
+  session: { id: string; performed_on: string; sport: Sport },
+): Vo2Source | null {
+  const own = sources.find((v) => v.sessionId === session.id);
+  if (own) return own;
+  const at = Date.parse(session.performed_on);
+  return (
+    sources
+      .filter((v) => v.sport === session.sport)
+      .sort(
+        (a, b) =>
+          Math.abs(Date.parse(a.performedOn) - at) -
+            Math.abs(Date.parse(b.performedOn) - at) ||
+          Number(b.measured) - Number(a.measured),
+      )[0] ?? null
+  );
+}
+
+/**
+ * Tröskeln i procent av VO2max.
+ *
+ * Absoluta tal (ml/min), så att en tröskel vid 80 kg och ett VO2max mätt vid
+ * 79 kg jämförs rätt.
+ */
+export function utilisation(
+  intensity: number | null,
+  unit: IntensityUnit,
+  weightKg: number | null,
+  source: Vo2Source | null,
+): number | null {
+  if (intensity === null || !source) return null;
+  const kg = weightKg ?? source.weightKg;
+  if (!kg) return null;
+  const max = source.value * (source.weightKg ?? kg);
+  return (vo2AtIntensity(intensity, unit, kg) / max) * 100;
+}
+
+/** Hur långt från testet VO2max är lånat, i dagar. 0 när det är testets eget. */
+export const daysBetween = (a: string, b: string) =>
+  Math.round(Math.abs(Date.parse(a) - Date.parse(b)) / DAY);
 
 export type LactateCurve = {
   sessionId: string;
@@ -39,6 +156,10 @@ export type LactateCurve = {
   at4: number | null;
   /** Wmax/Vmax ur testets all-out-slut, när det finns. */
   peak: number | null;
+  /** VO2max tröskeln räknas mot – testets eget eller det närmaste i tid. */
+  vo2max: Vo2Source | null;
+  lt1PctVo2max: number | null;
+  lt2PctVo2max: number | null;
 };
 
 const num = (value: number | string | null | undefined) =>
@@ -46,6 +167,7 @@ const num = (value: number | string | null | undefined) =>
 
 /** Laktattesterna som kurvor, äldst först. */
 export function lactateCurves(sessions: FullSession[]): LactateCurve[] {
+  const sources = vo2maxSources(sessions);
   return sessions
     .filter((s) => s.protocol === "laktat-steg")
     .map((s) => {
@@ -78,6 +200,8 @@ export function lactateCurves(sessions: FullSession[]): LactateCurve[] {
 
       const lt1 = find("LT1")?.value ?? null;
       const lt2 = find("LT2");
+      const vo2max = vo2maxFor(sources, s);
+      const kg = num(s.weight_kg);
 
       return {
         sessionId: s.id,
@@ -94,6 +218,14 @@ export function lactateCurves(sessions: FullSession[]): LactateCurve[] {
         at2: intensityAtLactate(points, 2),
         at4: intensityAtLactate(points, 4),
         peak: num(s.peak_intensity),
+        vo2max,
+        lt1PctVo2max: utilisation(lt1, s.intensity_unit, kg, vo2max),
+        lt2PctVo2max: utilisation(
+          lt2?.value ?? null,
+          s.intensity_unit,
+          kg,
+          vo2max,
+        ),
       };
     })
     .filter((c) => c.points.length >= 2)
@@ -200,9 +332,13 @@ const TRACKED: {
   { key: "D_prime", label: "D′", higherIsBetter: true },
   { key: "FTP", label: "FTP", higherIsBetter: true },
   { key: "Pmax", label: "Wmax / Vmax", higherIsBetter: true },
-  { key: "VO2max", label: "VO2max", higherIsBetter: true },
+  { key: "VO2max", label: "VO2max – uppmätt", higherIsBetter: true },
+  { key: "VO2max_est", label: "VO2max – skattat", higherIsBetter: true },
   { key: "VLamax", label: "VLamax", higherIsBetter: null },
   { key: "FatMax", label: "FatMax", higherIsBetter: true },
+  { key: "U_LT2", label: "LT2 i % av VO2max", higherIsBetter: true },
+  { key: "U_LT1", label: "LT1 i % av VO2max", higherIsBetter: true },
+  { key: "U_CP", label: "CP i % av VO2max", higherIsBetter: true },
   { key: "LT2_per_kg", label: "LT2 per kg", higherIsBetter: true },
   { key: "CP_per_kg", label: "CP per kg", higherIsBetter: true },
 ];
@@ -219,6 +355,7 @@ export function metricTrends(
 ): Trend[] {
   const bySession = new Map(curves.map((c) => [c.sessionId, c]));
   const series = new Map<string, Trend>();
+  const sources = vo2maxSources(sessions);
 
   const add = (key: string, unit: string, point: TrendPoint) => {
     const tracked = TRACKED.find((t) => t.key === key);
@@ -252,6 +389,10 @@ export function metricTrends(
         add("LT2", curve.unit, { ...base, value: curve.lt2 });
       if (curve.at4 !== null)
         add("I_4mmol", curve.unit, { ...base, value: curve.at4 });
+      if (curve.lt1PctVo2max !== null)
+        add("U_LT1", "%", { ...base, value: curve.lt1PctVo2max });
+      if (curve.lt2PctVo2max !== null)
+        add("U_LT2", "%", { ...base, value: curve.lt2PctVo2max });
       if (curve.lt2 !== null && curve.weightKg && curve.unit === "W") {
         add("LT2_per_kg", "W/kg", {
           ...base,
@@ -272,7 +413,20 @@ export function metricTrends(
         continue;
       if (seen.has(m.key)) continue;
       seen.add(m.key);
-      add(m.key, m.unit, { ...base, value: Number(m.value) });
+      // Uppmätt och skattat VO2max är olika serier. I samma linje ser ett
+      // labbvärde följt av en 5-minutersskattning ut som en nedgång.
+      const key =
+        m.key === "VO2max" && m.method !== "uppmätt" ? "VO2max_est" : m.key;
+      add(key, m.unit, { ...base, value: Number(m.value) });
+      if (m.key === "CP" && m.unit === "W") {
+        const pct = utilisation(
+          Number(m.value),
+          "W",
+          num(s.weight_kg),
+          vo2maxFor(sources, s),
+        );
+        if (pct !== null) add("U_CP", "%", { ...base, value: pct });
+      }
     }
   }
 
@@ -292,3 +446,88 @@ export function metricTrends(
 
 /** Protokollets namn, för tooltips. */
 export const protocolLabel = (key: string) => protocolByKey(key)?.label ?? key;
+
+// ---------------------------------------------------------------------------
+// Utnyttjandegraden just nu
+// ---------------------------------------------------------------------------
+
+export type UtilisationRow = {
+  key: "LT1" | "LT2" | "CP";
+  intensity: number;
+  unit: IntensityUnit;
+  pct: number;
+  performedOn: string;
+};
+
+export type UtilisationSummary = {
+  rows: UtilisationRow[];
+  vo2max: Vo2Source;
+  /** LT1 i procent av LT2 ur samma test. */
+  lt1OfLt2: number | null;
+  sport: Sport;
+};
+
+/**
+ * Senaste trösklarna i procent av VO2max, räknade mot det VO2max som ligger
+ * närmast det senaste laktattestet.
+ */
+export function latestUtilisation(
+  sessions: FullSession[],
+  curves: LactateCurve[],
+): UtilisationSummary | null {
+  const sources = vo2maxSources(sessions);
+  const curve = [...curves]
+    .reverse()
+    .find((c) => c.vo2max && (c.lt1 !== null || c.lt2 !== null));
+  const cpSession = [...sessions]
+    .reverse()
+    .find((s) => s.test_metrics.some((m) => m.key === "CP" && m.unit === "W"));
+
+  const vo2max =
+    curve?.vo2max ?? (cpSession ? vo2maxFor(sources, cpSession) : null);
+  if (!vo2max) return null;
+
+  const rows: UtilisationRow[] = [];
+  if (curve) {
+    for (const [key, value, pct] of [
+      ["LT1", curve.lt1, curve.lt1PctVo2max],
+      ["LT2", curve.lt2, curve.lt2PctVo2max],
+    ] as const) {
+      if (value !== null && pct !== null) {
+        rows.push({
+          key,
+          intensity: value,
+          unit: curve.unit,
+          pct,
+          performedOn: curve.performedOn,
+        });
+      }
+    }
+  }
+  if (cpSession && vo2max.sport === "cykling") {
+    const cp = Number(
+      cpSession.test_metrics.find((m) => m.key === "CP")?.value,
+    );
+    const pct = utilisation(cp, "W", num(cpSession.weight_kg), vo2max);
+    if (pct !== null) {
+      rows.push({
+        key: "CP",
+        intensity: cp,
+        unit: "W",
+        pct,
+        performedOn: cpSession.performed_on,
+      });
+    }
+  }
+  if (rows.length === 0) return null;
+
+  return {
+    rows,
+    vo2max,
+    lt1OfLt2:
+      curve && curve.lt1 !== null && curve.lt2 !== null && curve.lt2 > 0
+        ? (curve.lt1 / curve.lt2) * 100
+        : null,
+    sport: curve?.sport ?? vo2max.sport,
+  };
+}

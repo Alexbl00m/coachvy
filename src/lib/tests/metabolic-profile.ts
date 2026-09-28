@@ -24,6 +24,7 @@ import {
   type SessionAnalysis,
 } from "./analysis";
 import { ftpZones } from "./zones";
+import { vo2maxFromRampPeak } from "./vo2max";
 
 /**
  * Samma som `analyseSession`, men med det som bara räknas på servern.
@@ -101,7 +102,10 @@ function estimateVo2max(
   unit: AnalysisArgs["unit"],
   weightKg: number,
 ): number | null {
-  if (unit === "W") return (10.8 * peak) / weightKg + 7;
+  // Rampens topp: Hawley & Noakes är framtagen just ur den. ACSM, som är
+  // gjord för stabilt arbete, hamnar lägre – mot ett uppmätt 77,0 gav den
+  // 71,3 och Hawley & Noakes 73,4.
+  if (unit === "W") return vo2maxFromRampPeak(peak, weightKg);
   // Löpning på plan mark: 0,2 ml/kg/min per m/min plus vila.
   const metresPerMinute = unit === "km/h" ? (peak * 1000) / 60 : peak * 60;
   return 0.2 * metresPerMinute + 3.5;

@@ -513,6 +513,28 @@ adepten ser sin egen.
   stegen. Testa gärna gamla rapporter från andra testare: skriv in watt,
   laktat och puls med datumet testet gjordes.
 
+### VO2max och utnyttjandegrad
+
+VO2max skattas med ekvationen som hör till insatsen:
+
+| Insats | Ekvation |
+|---|---|
+| 5 min all-out | Sitko m.fl. 2022: 16,6 + 8,87 · W/kg |
+| 6 min all-out (eller hyperbolens 6-minut) | ACSM: 10,8 · W/kg + 7 |
+| Rampens topp (Wmax) | Hawley & Noakes 1992: (0,01141 · W + 0,435) l/min |
+
+Uppmätt VO2max går alltid före. Tidigare skattades VO2max ur CP, som ligger
+långt under effekten vid VO2max – 5 min på 465 W vid 81 kg gav 57 i stället för
+67. Prövat mot ett uppmätt 77,0: Hawley & Noakes ur rampens topp gav 73,4,
+ACSM 71,3.
+
+**Utnyttjandegraden** är syreupptaget vid tröskeln (ACSM) i procent av VO2max,
+räknat i absoluta tal så att olika vikt vid olika tester inte stör. Ett
+laktattest utan eget VO2max lånar det närmaste i tid från ett annat test i
+samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
+referensspannen LT1 65–75 % och LT2 75–90 %, plus LT1 i procent av LT2 – och
+varje utnyttjandegrad som en egen tidslinje.
+
 ## Passbyggare
 
 `/app/pass` bygger ett enskilt pass ur en mening: *"tröskelpass, 4×8 min,

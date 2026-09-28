@@ -1,9 +1,14 @@
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
-import { lactateCurves, metricTrends } from "@/lib/tests/progression";
+import {
+  lactateCurves,
+  latestUtilisation,
+  metricTrends,
+} from "@/lib/tests/progression";
 import type { FullSession } from "@/lib/tests/session-queries";
 import { LactateCompare } from "./lactate-compare";
 import { MetricTrends } from "./metric-trends";
 import { RecomputeButton } from "./recompute-button";
+import { UtilisationCard } from "./utilisation-card";
 
 /**
  * En adepts progression: laktatkurvorna mot varandra överst, sedan varje
@@ -20,6 +25,7 @@ export function ProgressionView({
 }) {
   const curves = lactateCurves(sessions);
   const trends = metricTrends(sessions, curves);
+  const utilisationNow = latestUtilisation(sessions, curves);
 
   if (sessions.length === 0) {
     return (
@@ -38,6 +44,8 @@ export function ProgressionView({
           <LactateCompare curves={curves} />
         </Card>
       )}
+
+      {utilisationNow && <UtilisationCard summary={utilisationNow} />}
 
       {trends.length > 0 && (
         <section className="space-y-3">

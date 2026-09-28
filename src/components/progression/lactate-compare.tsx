@@ -317,9 +317,16 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
             hint={
               current.lt1 === null
                 ? "för få steg"
-                : current.hrAtLt1 !== null
-                  ? `${Math.round(current.hrAtLt1)} slag/min`
-                  : undefined
+                : [
+                    current.hrAtLt1 !== null
+                      ? `${Math.round(current.hrAtLt1)} slag/min`
+                      : null,
+                    current.lt1PctVo2max !== null
+                      ? `${Math.round(current.lt1PctVo2max)} % av VO2max`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || undefined
             }
           />
           <Stat
@@ -332,6 +339,9 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 : [
                     current.hrAtLt2 !== null
                       ? `${Math.round(current.hrAtLt2)} slag/min`
+                      : null,
+                    current.lt2PctVo2max !== null
+                      ? `${Math.round(current.lt2PctVo2max)} % av VO2max`
                       : null,
                     current.lt2Method,
                   ]

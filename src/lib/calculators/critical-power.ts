@@ -110,10 +110,14 @@ export function calculateCriticalPower(
   }
 
   const cp = Math.round(criticalPower);
-  const vo2maxPower = Math.round(cp * 1.15);
+  // Effekten vid VO2max: vad hyperbolen säger att atleten orkar i 6 minuter.
+  // Tidigare 1,15 × CP – en fast faktor som bortser från W′, så att två
+  // atleter med samma CP fick samma VO2max oavsett anaerob kapacitet.
+  const vo2maxPower = Math.round(criticalPower + wPrimeJoules / 360);
 
-  // ACSM:s cykelekvation: VO2 (ml/kg/min) = 10.8 · W / kg + 7. Originalet
-  // använde 0.2 · W/kg + 45, som i praktiken ger ~46 för varje tänkbar atlet.
+  // ACSM:s cykelekvation på 6-minuterseffekten: VO2 (ml/kg/min) =
+  // 10.8 · W / kg + 7. Originalet använde 0.2 · W/kg + 45, som i praktiken
+  // ger ~46 för varje tänkbar atlet.
   const vo2max =
     weightKg && weightKg > 0
       ? Math.round((10.8 * vo2maxPower) / weightKg + 7)
