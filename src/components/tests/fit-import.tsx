@@ -5,7 +5,12 @@ import { FileUp, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { bestEfforts, FIT_SLOTS, type FoundEffort } from "@/lib/tests/fit-efforts";
+import {
+  bestEfforts,
+  FIT_SLOTS,
+  kindFor,
+  type FoundEffort,
+} from "@/lib/tests/fit-efforts";
 import { readRides } from "@/lib/tests/fit-read";
 import {
   formatDuration,
@@ -14,8 +19,20 @@ import {
 
 type Patch = Partial<Omit<EffortRow, "id">>;
 
+/** m/s till "4:05 /km". */
+const pace = (metresPerSecond: number) => {
+  const secondsPerKm = 1000 / metresPerSecond;
+  return `${formatDuration(secondsPerKm)} /km`;
+};
+
+/** Effekten eller farten och sträckan, som den visas i tabellen. */
+const describe = (f: FoundEffort) =>
+  f.metres !== null
+    ? `${f.metres.toLocaleString("sv-SE")} m · ${pace(f.value)}`
+    : `${Math.round(f.value)} W`;
+
 /**
- * Hämtar insatserna ur cykeldatorns filer.
+ * Hämtar insatserna ur cykeldatorns eller löparklockans filer.
  *
  * Coachen väljer en eller flera .fit-filer – en per testdag – och ser vad som
  * hittades per längd innan något fylls i. Bara riktiga insatser är förvalda;
@@ -46,7 +63,10 @@ export function FitImport({
     setBusy(true);
     setProblems([]);
     try {
-      const { rides, problems: issues } = await readRides(files);
+      const { rides, problems: issues } = await readRides(
+        files,
+        kindFor(protocol),
+      );
       const result = rides.length > 0 ? bestEfforts(rides, slots) : null;
       setFound(result);
       setChosen(result ? result.map((f) => Boolean(f?.isolated)) : []);
@@ -65,9 +85,20 @@ export function FitImport({
     const rows: Patch[] = [];
     const dates: string[] = [];
     found.forEach((f, i) => {
-      if (f && chosen[i]) {
+      if (f && chosen[i] && f.splits) {
+        // 3 min all-out: en rad per delintervall, med sträckan hittills.
+        for (const split of f.splits) {
+          rows.push({
+            duration: formatDuration(split.seconds),
+            distance: String(split.metres),
+            date: f.date,
+          });
+        }
+        dates.push(f.date);
+      } else if (f && chosen[i]) {
         rows.push({
-          intensity: String(f.watts),
+          intensity: f.metres === null ? String(Math.round(f.value)) : "",
+          distance: f.metres === null ? "" : String(f.metres),
           duration: formatDuration(f.seconds),
           heartRate: f.heartRateAvg ? String(f.heartRateAvg) : "",
           heartRateMax: f.heartRateMax ? String(f.heartRateMax) : "",
@@ -100,7 +131,9 @@ export function FitImport({
         }}
         className={cn(
           "flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border border-dashed px-4 py-3 text-sm transition-colors",
-          dragging ? "border-accent bg-accent-soft" : "border-line-strong hover:border-accent/60",
+          dragging
+            ? "border-accent bg-accent-soft"
+            : "border-line-strong hover:border-accent/60",
         )}
       >
         <FileUp aria-hidden className="size-5 shrink-0 text-accent" />
@@ -109,8 +142,9 @@ export function FitImport({
             {busy ? "Läser filerna …" : "Hämta insatserna ur cykeldatorn"}
           </span>
           <span className="block text-[12px] text-text-subtle">
-            Välj eller släpp en .fit-fil per testdag – från Garmin, Wahoo, Hammerhead eller
-            Zwift. Filen läses här i webbläsaren och laddas aldrig upp.
+            Välj eller släpp en .fit-fil per testdag – från Garmin, Wahoo,
+            Hammerhead eller Zwift. Filen läses här i webbläsaren och laddas
+            aldrig upp.
           </span>
         </span>
         <input
@@ -137,13 +171,22 @@ export function FitImport({
       {found && (
         <div className="rounded-lg border border-line">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm" style={{ minWidth: 560 }}>
+            <table
+              className="w-full border-collapse text-sm"
+              style={{ minWidth: 560 }}
+            >
               <thead>
                 <tr className="border-b border-line text-left text-[12px] uppercase tracking-[0.08em] text-text-muted">
                   <th className="px-3 py-2 font-medium">Använd</th>
                   <th className="px-3 py-2 font-medium">Längd</th>
-                  <th className="px-3 py-2 text-right font-medium">Effekt</th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium">Puls snitt / max</th>
+                  <th className="px-3 py-2 text-right font-medium">
+                    {kindFor(protocol) === "speed"
+                      ? "Sträcka · tempo"
+                      : "Effekt"}
+                  </th>
+                  <th className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                    Puls snitt / max
+                  </th>
                   <th className="px-3 py-2 font-medium">Dag</th>
                 </tr>
               </thead>
@@ -151,7 +194,10 @@ export function FitImport({
                 {slots.map((slot, i) => {
                   const f = found[i];
                   return (
-                    <tr key={slot.label} className="border-b border-line align-top last:border-b-0">
+                    <tr
+                      key={slot.label}
+                      className="border-b border-line align-top last:border-b-0"
+                    >
                       <td className="px-3 py-2.5">
                         <input
                           type="checkbox"
@@ -159,13 +205,17 @@ export function FitImport({
                           disabled={!f}
                           checked={Boolean(chosen[i])}
                           onChange={(e) =>
-                            setChosen((c) => c.map((v, k) => (k === i ? e.target.checked : v)))
+                            setChosen((c) =>
+                              c.map((v, k) => (k === i ? e.target.checked : v)),
+                            )
                           }
                           className="size-4 accent-[var(--color-accent)]"
                         />
                       </td>
                       <td className="px-3 py-2.5">
-                        <span className="font-medium text-text">{slot.label}</span>
+                        <span className="font-medium text-text">
+                          {slot.label}
+                        </span>
                         {f && (
                           <span className="ml-2 text-[12px] text-text-subtle tabular-nums">
                             {formatDuration(f.seconds)}
@@ -173,20 +223,32 @@ export function FitImport({
                         )}
                         {f && !f.isolated && (
                           <span className="mt-1 flex items-start gap-1.5 text-[12px] text-text-muted">
-                            <TriangleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0 text-accent" />
-                            Ingen egen insats på den här längden – bästa fönstret i passet, troligen
-                            en del av en längre insats.
+                            <TriangleAlert
+                              aria-hidden
+                              className="mt-0.5 size-3.5 shrink-0 text-accent"
+                            />
+                            Ingen egen insats på den här längden – bästa
+                            fönstret i passet, troligen en del av en längre
+                            insats.
                           </span>
                         )}
-                        {!f && <span className="ml-2 text-[12px] text-text-subtle">hittades inte</span>}
+                        {!f && (
+                          <span className="ml-2 text-[12px] text-text-subtle">
+                            hittades inte
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums text-text">
-                        {f ? `${f.watts} W` : "–"}
+                        {f ? describe(f) : "–"}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums text-text-muted">
-                        {f?.heartRateAvg ? `${f.heartRateAvg} / ${f.heartRateMax}` : "–"}
+                        {f?.heartRateAvg
+                          ? `${f.heartRateAvg} / ${f.heartRateMax}`
+                          : "–"}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-text-muted">{f?.date ?? "–"}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums text-text-muted">
+                        {f?.date ?? "–"}
+                      </td>
                     </tr>
                   );
                 })}
@@ -194,7 +256,12 @@ export function FitImport({
             </table>
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-line px-3 py-2.5">
-            <Button type="button" size="sm" onClick={apply} disabled={count === 0}>
+            <Button
+              type="button"
+              size="sm"
+              onClick={apply}
+              disabled={count === 0}
+            >
               Fyll i {count} {count === 1 ? "insats" : "insatser"}
             </Button>
             <span className="text-[12px] text-text-subtle">

@@ -513,13 +513,24 @@ adepten ser sin egen.
   stegen. Testa gärna gamla rapporter från andra testare: skriv in watt,
   laktat och puls med datumet testet gjordes.
 
-### Insatser ur cykeldatorn
+### Insatser ur cykeldatorn och löparklockan
 
-CP-testet, den metabola profilen, 5- och 6-minuterstestet och FTP 20 minuter
-kan hämta insatserna ur passets **.fit-fil** – Garmin, Wahoo, Hammerhead,
-Zwift. Välj en fil per testdag. För varje längd (sprint 20 s, 3, 5–6, 12 och
-20 min) letas den insats upp som atleten faktiskt körde, med snitt- och
+Testerna kan hämta insatserna ur passets **.fit-fil** – Garmin, Wahoo, Coros,
+Polar, Suunto, Hammerhead, Zwift. Välj en fil per testdag. För varje längd
+letas den insats upp som atleten faktiskt körde eller sprang, med snitt- och
 maxpuls och dagen den gjordes.
+
+| Protokoll | Hittar |
+|---|---|
+| CP-test, metabol profil | sprint 20 s, 3, 5–6, 12 och 20 min – effekt |
+| 5 min, 6 min, FTP 20 | insatsen – effekt |
+| Critical speed, tidtagna distanser | hela insatser 2–5, 5–10 och 10–20 min – tid och sträcka (1 200/2 400/3 600 m eller 3/6/12 min) |
+| Critical speed, 3 och 5 min | 3- och 5-minuterslöpningen – sträcka |
+| Critical speed, 3 min all-out | insatsen, delad var 30:e sekund med sträckan hittills |
+
+I löpningen används klockans egen sträcka (farten summerad när sträcka
+saknas). Insatsen ska dessutom rymmas i spannet som helhet: en löpning på 3:40
+blir ingen "3-minutersinsats".
 
 - **Riktiga insatser, inte bara bästa fönstret.** De bästa 6 minuterna i ett
   pass med en 12-minutersinsats ligger mitt i 12-minuten. En insats räknas
@@ -536,7 +547,9 @@ maxpuls och dagen den gjordes.
 
 Prövat mot en Garmin-fil med 3- och 12-minutersinsats: 574 W (puls 174/184)
 och 404 W (177/185), samma som varven i Garmin Connect. 5–6 min, sprint och
-20 min hittades korrekt inte som egna insatser.
+20 min hittades korrekt inte som egna insatser. Löpningen är prövad på
+syntetiska klockfiler (1 200/2 400/3 600 m på bana, 3 + 5 min, 3 min
+all-out): rätt insatser, sträckor på metern, och rätt dag när filerna blandas.
 
 **Adepter som är medlemmar** registrerar egna tester, också ur filer. De tar
 bort de tester de själva registrerat, inte coachens.

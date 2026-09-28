@@ -20,7 +20,7 @@ import { routes } from "@/lib/routes";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import { previewOnServer } from "@/lib/tests/preview-actions";
 import { saveTestSession } from "@/lib/tests/session-actions";
-import { FIT_SLOTS } from "@/lib/tests/fit-efforts";
+import { FIT_SLOTS, kindFor } from "@/lib/tests/fit-efforts";
 import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
@@ -133,7 +133,11 @@ export function NewSessionForm({
               />
             </Field>
 
-            <UnitField sport={calc.sport} unit={calc.unit} onChange={calc.setUnit} />
+            <UnitField
+              sport={calc.sport}
+              unit={calc.unit}
+              onChange={calc.setUnit}
+            />
 
             <BodyFields calc={calc} />
 
@@ -184,17 +188,18 @@ export function NewSessionForm({
         onRemove={calc.removeRow}
         sessionDate={performedOn}
       >
-        {FIT_SLOTS[calc.protocol] && calc.unit === "W" && (
-          <FitImport
-            // Ny montering per protokoll, så att ett gammalt fynd inte ligger kvar.
-            key={calc.protocol}
-            protocol={calc.protocol}
-            onApply={(rows, lastDate) => {
-              calc.replaceRows(rows);
-              setPerformedOn(lastDate);
-            }}
-          />
-        )}
+        {FIT_SLOTS[calc.protocol] &&
+          (kindFor(calc.protocol) === "speed" || calc.unit === "W") && (
+            <FitImport
+              // Ny montering per protokoll, så att ett gammalt fynd inte ligger kvar.
+              key={calc.protocol}
+              protocol={calc.protocol}
+              onApply={(rows, lastDate) => {
+                calc.replaceRows(rows);
+                setPerformedOn(lastDate);
+              }}
+            />
+          )}
       </EffortTable>
 
       <FinishCard calc={calc} />
@@ -215,8 +220,8 @@ export function NewSessionForm({
           {calc.pending && calc.filled.length > 0
             ? "Räknar …"
             : calc.analysis.metrics.length === 0
-            ? `Fyll i minst ${calc.spec?.minEfforts ?? 2} rader så räknas testet ut.`
-            : `${calc.filled.length} ${stepwise ? "steg" : "insatser"} · ${calc.analysis.metrics.length} värden sparas`}
+              ? `Fyll i minst ${calc.spec?.minEfforts ?? 2} rader så räknas testet ut.`
+              : `${calc.filled.length} ${stepwise ? "steg" : "insatser"} · ${calc.analysis.metrics.length} värden sparas`}
         </span>
       </div>
     </div>
