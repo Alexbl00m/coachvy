@@ -513,6 +513,34 @@ adepten ser sin egen.
   stegen. Testa gärna gamla rapporter från andra testare: skriv in watt,
   laktat och puls med datumet testet gjordes.
 
+### Insatser ur cykeldatorn
+
+CP-testet, den metabola profilen, 5- och 6-minuterstestet och FTP 20 minuter
+kan hämta insatserna ur passets **.fit-fil** – Garmin, Wahoo, Hammerhead,
+Zwift. Välj en fil per testdag. För varje längd (sprint 20 s, 3, 5–6, 12 och
+20 min) letas den insats upp som atleten faktiskt körde, med snitt- och
+maxpuls och dagen den gjordes.
+
+- **Riktiga insatser, inte bara bästa fönstret.** De bästa 6 minuterna i ett
+  pass med en 12-minutersinsats ligger mitt i 12-minuten. En insats räknas
+  bara när effekten före och efter är klart lägre, kanterna ligger på
+  insatsens nivå, ingen minut i den faller under 75 % av snittet, och den är
+  minst 90 % av det bästa passet har på samma längd. Hittas ingen visas bästa
+  fönstret med en varning, ovalt.
+- **Filen lämnar aldrig webbläsaren.** Den tolkas i webbläsaren
+  (fit-file-parser, MIT) och bara tid, effekt och puls används – GPS-spåret
+  läses aldrig. Garmins egen FIT SDK används inte: dess licens förbjuder att
+  koden görs tillgänglig för tredje part, vilket en webbapp gör.
+- **Ett datum per insats.** Sprint och 6 min på torsdagen, 3 och 12 min på
+  tisdagen. Den rullande CP-modellen räknar med insatsens egen dag.
+
+Prövat mot en Garmin-fil med 3- och 12-minutersinsats: 574 W (puls 174/184)
+och 404 W (177/185), samma som varven i Garmin Connect. 5–6 min, sprint och
+20 min hittades korrekt inte som egna insatser.
+
+**Adepter som är medlemmar** registrerar egna tester, också ur filer. De tar
+bort de tester de själva registrerat, inte coachens.
+
 ### VO2max och utnyttjandegrad
 
 VO2max skattas med ekvationen som hör till insatsen:

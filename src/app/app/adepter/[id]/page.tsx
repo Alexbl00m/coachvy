@@ -243,7 +243,8 @@ export default async function AdeptPage({
             rollingUnit={sport === "cykling" ? "W" : speedUnit}
             reserveLabel={sport === "cykling" ? "W′" : "D′"}
             reserveUnit={sport === "cykling" ? "kJ" : "m"}
-            canEdit={canEdit}
+            // En medlemsadept registrerar egna tester, också ur cykeldatorns filer.
+            canEdit={canEdit || (adept.profile_id === user.id && isMember(user))}
           />
         </div>
       ) : tab === "pass" ? (

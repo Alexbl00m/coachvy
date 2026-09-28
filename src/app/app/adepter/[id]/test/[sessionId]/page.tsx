@@ -72,6 +72,11 @@ export default async function SessionPage({
     labels.get(key) ?? key.split(":")[0].replace("_prime", "′");
 
 
+  // Insatser från flera dagar, och maxpuls ur cykeldatorns fil, visas bara
+  // när testet har dem.
+  const hasDates = session.test_efforts.some((e) => e.performed_on !== null);
+  const hasMaxHr = session.test_efforts.some((e) => e.heart_rate_max !== null);
+
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
 
@@ -127,6 +132,8 @@ export default async function SessionPage({
               ...(shape?.distance ? ["Sträcka (m)"] : []),
               ...(shape?.lactate ? ["Laktat"] : []),
               ...(shape?.heartRate ? ["Puls"] : []),
+              ...(hasMaxHr ? ["Maxpuls"] : []),
+              ...(hasDates ? ["Datum"] : []),
             ]}
             minWidth={480}
             rows={session.test_efforts.map((e) => [
@@ -150,6 +157,8 @@ export default async function SessionPage({
                 ? [e.lactate === null ? "–" : sv(Number(e.lactate), 2)]
                 : []),
               ...(shape?.heartRate ? [e.heart_rate === null ? "–" : String(e.heart_rate)] : []),
+              ...(hasMaxHr ? [e.heart_rate_max === null ? "–" : String(e.heart_rate_max)] : []),
+              ...(hasDates ? [formatDate(e.performed_on ?? session.performed_on)] : []),
             ])}
           />
         </Card>

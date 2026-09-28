@@ -128,6 +128,10 @@ export type TestEffortRow = {
   distance_m: number | null;
   lactate: number | null;
   heart_rate: number | null;
+  /** Högsta puls i insatsen, när den kom ur en fil. */
+  heart_rate_max: number | null;
+  /** Insatsens egen dag, när den skiljer sig från testtillfällets. */
+  performed_on: string | null;
   rpe: number | null;
   comment: string | null;
   created_at: string;

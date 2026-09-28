@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/page-header";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { getAdept } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
-import { requireCoach } from "@/lib/auth/session";
+import { requireSessionUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import { listSessions } from "@/lib/tests/session-queries";
@@ -25,8 +26,15 @@ function sportOf(raw: string | null): Sport {
 export default async function NewSessionPage({
   params,
 }: PageProps<"/app/adepter/[id]/test/nytt">) {
-  const user = await requireCoach();
+  const user = await requireSessionUser();
   const { id } = await params;
+
+  // Coachen registrerar på sina adepter; en adept som är medlem på sig själv.
+  const selfService = user.profile?.role === "adept";
+  if (selfService && !(isMember(user) && user.adept?.id === id)) {
+    redirect(`${routes.adepts}/${id}?vy=testtillfallen`);
+  }
+  if (!selfService && user.profile?.role !== "coach") redirect(routes.dashboard);
 
   const [adept, profile, sessions] = await Promise.all([
     getAdept(id),

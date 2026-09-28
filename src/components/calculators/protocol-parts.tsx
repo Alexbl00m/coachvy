@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Lock, Plus, Trash2 } from "lucide-react";
 
 import { DataTable, ResultGrid } from "@/components/calculators/result-grid";
@@ -126,6 +126,8 @@ export function EffortTable({
   onChange,
   onAdd,
   onRemove,
+  sessionDate,
+  children,
 }: {
   rows: EffortRow[];
   spec: Protocol | null;
@@ -133,9 +135,18 @@ export function EffortTable({
   onChange: (id: number, patch: Partial<EffortRow>) => void;
   onAdd: () => void;
   onRemove: (id: number) => void;
+  /**
+   * Testtillfällets datum. Satt visar tabellen ett datum per insats – ett
+   * test med flera längder görs ofta över flera dagar. Tomt fält betyder
+   * testtillfällets dag.
+   */
+  sessionDate?: string;
+  /** Visas överst i kortet, t.ex. hämtning ur en fil. */
+  children?: ReactNode;
 }) {
   const shape = spec?.shape;
   const stepwise = Boolean(shape?.lactate);
+  const showDates = sessionDate !== undefined && Boolean(shape?.duration);
 
   return (
     <Card className="min-w-0">
@@ -156,10 +167,12 @@ export function EffortTable({
         {stepwise ? "Stegen" : "Insatserna"}
       </CardTitle>
 
+      {children}
+
       <div className="overflow-x-auto">
         <table
           className="w-full border-collapse text-sm"
-          style={{ minWidth: "480px" }}
+          style={{ minWidth: showDates ? "620px" : "480px" }}
         >
           <thead>
             <tr className="border-b border-line text-left">
@@ -189,6 +202,11 @@ export function EffortTable({
               {shape?.heartRate && (
                 <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
                   Puls
+                </th>
+              )}
+              {showDates && (
+                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  Datum
                 </th>
               )}
               <th className="pb-2 print:hidden" />
@@ -247,6 +265,21 @@ export function EffortTable({
                       inputMode="numeric"
                       value={row.heartRate}
                       onChange={(e) => onChange(row.id, { heartRate: e.target.value })}
+                    />
+                  </td>
+                )}
+                {showDates && (
+                  <td className="py-2 pr-3">
+                    <Input
+                      aria-label={`Datum ${index}`}
+                      type="date"
+                      value={row.date || sessionDate}
+                      onChange={(e) =>
+                        onChange(row.id, {
+                          date: e.target.value === sessionDate ? "" : e.target.value,
+                        })
+                      }
+                      className={row.date ? "" : "text-text-subtle"}
                     />
                   </td>
                 )}

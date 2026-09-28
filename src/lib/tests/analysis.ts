@@ -48,6 +48,10 @@ export type Effort = {
   distanceM: number | null;
   lactate: number | null;
   heartRate: number | null;
+  /** Högsta puls i insatsen, när den kom ur en fil. Används inte i beräkningen. */
+  heartRateMax?: number | null;
+  /** Dagen insatsen gjordes, när den skiljer sig från testtillfällets. */
+  performedOn?: string | null;
 };
 
 export type Metric = {

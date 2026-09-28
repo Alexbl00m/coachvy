@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import { isMember } from "@/lib/auth/membership";
-import { requireCoach } from "@/lib/auth/session";
+import {
+  requireCoach,
+  requireSessionUser,
+  type SessionUser,
+} from "@/lib/auth/session";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -39,10 +43,33 @@ export type SaveSessionResult =
  * Analysen körs här på servern i stället för att lita på det klienten skickar,
  * så att det som hamnar i databasen alltid stämmer med rådatan bredvid.
  */
+/**
+ * Vem får registrera tester på en adept: coachen, eller adepten själv om hen
+ * är medlem. Vilka adepter en coach äger avgör databasen.
+ */
+async function requireTestAuthor(
+  adeptId: string,
+): Promise<{ ok: true; user: SessionUser } | { ok: false; error: string }> {
+  const user = await requireSessionUser();
+  if (user.profile?.role === "coach") return { ok: true, user };
+  if (user.profile?.role === "adept" && isMember(user) && user.adept?.id === adeptId) {
+    return { ok: true, user };
+  }
+  return {
+    ok: false,
+    error:
+      user.profile?.role === "adept"
+        ? "Att registrera egna tester ingår i medlemskapet."
+        : "Bara coachen kan registrera tester här.",
+  };
+}
+
 export async function saveTestSession(
   input: SaveSessionInput,
 ): Promise<SaveSessionResult> {
-  const user = await requireCoach();
+  const access = await requireTestAuthor(input.adeptId);
+  if (!access.ok) return access;
+  const { user } = access;
 
   const spec = protocolByKey(input.protocol);
   if (!spec) return { ok: false, error: "Okänt protokoll." };
@@ -65,6 +92,10 @@ export async function saveTestSession(
   }
 
   if (!input.performedOn) return { ok: false, error: "Välj ett datum." };
+  const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+  if (efforts.some((e) => e.performedOn && !isDate(e.performedOn))) {
+    return { ok: false, error: "Ett av insatsernas datum går inte att läsa." };
+  }
 
   // Sparas bara där de används; ett CP-test ska inte bära ett kroppsfett som
   // ingen beräkning läst.
@@ -132,6 +163,7 @@ export async function saveTestSession(
       zone_scheme: spec.zoneScheme,
       training_phase: input.trainingPhase,
       notes: input.notes,
+      created_by: user.id,
     })
     .select("id")
     .single();
@@ -151,7 +183,14 @@ export async function saveTestSession(
       duration_seconds: e.durationSeconds,
       distance_m: e.distanceM,
       lactate: e.lactate,
-      heart_rate: e.heartRate,
+      heart_rate: e.heartRate === null ? null : Math.round(e.heartRate),
+      heart_rate_max:
+        e.heartRateMax === null || e.heartRateMax === undefined
+          ? null
+          : Math.round(e.heartRateMax),
+      // Samma dag som testtillfället sparas inte två gånger.
+      performed_on:
+        e.performedOn && e.performedOn !== input.performedOn ? e.performedOn : null,
     })),
   );
 
@@ -185,7 +224,10 @@ export async function deleteTestSession(
   sessionId: string,
   adeptId: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  await requireCoach();
+  // En medlemsadept tar bort de tester hen själv registrerat; databasen
+  // släpper inte igenom något annat.
+  const access = await requireTestAuthor(adeptId);
+  if (!access.ok) return access;
 
   const supabase = await createClient();
   const { error } = await supabase

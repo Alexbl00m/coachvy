@@ -11,6 +11,7 @@ import {
   ProtocolResults,
   UnitField,
 } from "@/components/calculators/protocol-parts";
+import { FitImport } from "@/components/tests/fit-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -19,6 +20,7 @@ import { routes } from "@/lib/routes";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import { previewOnServer } from "@/lib/tests/preview-actions";
 import { saveTestSession } from "@/lib/tests/session-actions";
+import { FIT_SLOTS } from "@/lib/tests/fit-efforts";
 import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
@@ -180,7 +182,20 @@ export function NewSessionForm({
         onChange={calc.setRow}
         onAdd={calc.addRow}
         onRemove={calc.removeRow}
-      />
+        sessionDate={performedOn}
+      >
+        {FIT_SLOTS[calc.protocol] && calc.unit === "W" && (
+          <FitImport
+            // Ny montering per protokoll, så att ett gammalt fynd inte ligger kvar.
+            key={calc.protocol}
+            protocol={calc.protocol}
+            onApply={(rows, lastDate) => {
+              calc.replaceRows(rows);
+              setPerformedOn(lastDate);
+            }}
+          />
+        )}
+      </EffortTable>
 
       <FinishCard calc={calc} />
 

@@ -42,6 +42,8 @@ export type SessionEffortRow = {
   distance_m: number | null;
   lactate: number | null;
   heart_rate: number | null;
+  heart_rate_max: number | null;
+  performed_on: string | null;
   comment: string | null;
 };
 
@@ -80,7 +82,7 @@ export async function getSession(id: string): Promise<FullSession | null> {
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, comment)",
+      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -105,7 +107,7 @@ export async function listFullSessions(adeptId: string): Promise<FullSession[]> 
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, comment)",
+      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment)",
     )
     .eq("adept_id", adeptId)
     .order("performed_on", { ascending: true })
@@ -134,7 +136,7 @@ export async function listMaximalEfforts(
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "id, performed_on, sport, intensity_unit, protocol, test_efforts(duration_seconds, intensity, distance_m)",
+      "id, performed_on, sport, intensity_unit, protocol, test_efforts(duration_seconds, intensity, distance_m, performed_on)",
     )
     .eq("adept_id", adeptId)
     .eq("sport", sport)
@@ -150,6 +152,7 @@ export async function listMaximalEfforts(
       duration_seconds: number | null;
       intensity: number | null;
       distance_m: number | null;
+      performed_on: string | null;
     }[];
   };
 
@@ -158,7 +161,8 @@ export async function listMaximalEfforts(
       .filter((e) => e.duration_seconds !== null && e.duration_seconds > 0)
       .map((e) => ({
         sessionId: session.id,
-        performedOn: session.performed_on,
+        // Insatsen kan vara gjord en annan dag än testtillfället.
+        performedOn: e.performed_on ?? session.performed_on,
         durationSeconds: e.duration_seconds as number,
         intensity: e.intensity,
         distanceM: e.distance_m,

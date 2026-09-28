@@ -24,6 +24,10 @@ export type EffortRow = {
   distance: string;
   lactate: string;
   heartRate: string;
+  /** Maxpuls ur en fil. Skrivs inte för hand, men följer med när den finns. */
+  heartRateMax: string;
+  /** YYYY-MM-DD, eller tomt för testtillfällets datum. */
+  date: string;
 };
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
@@ -64,6 +68,8 @@ const emptyRow = (id: number, seconds?: number): EffortRow => ({
   distance: "",
   lactate: "",
   heartRate: "",
+  heartRateMax: "",
+  date: "",
 });
 
 /** Rader med innehåll. En förifylld längd utan värde räknas inte. */
@@ -143,6 +149,7 @@ export type ProtocolCalculator = {
   setRow: (id: number, patch: Partial<EffortRow>) => void;
   addRow: () => void;
   removeRow: (id: number) => void;
+  replaceRows: (patches: Partial<Omit<EffortRow, "id">>[]) => void;
 
   spec: Protocol | null;
   available: Protocol[];
@@ -258,6 +265,16 @@ export function useProtocolCalculator(
     setNextId((n) => n + 1);
   };
 
+  /**
+   * Byter ut raderna, t.ex. mot insatserna ur en cykeldators fil. Varje rad
+   * får ett nytt id så att React inte återanvänder de gamla fälten.
+   */
+  const replaceRows = (patches: Partial<Omit<EffortRow, "id">>[]) => {
+    if (patches.length === 0) return;
+    setRows(patches.map((patch, i) => ({ ...emptyRow(nextId + i), ...patch })));
+    setNextId((n) => n + patches.length);
+  };
+
   const removeRow = (id: number) =>
     setRows((current) =>
       current.length > 1 ? current.filter((r) => r.id !== id) : current,
@@ -279,6 +296,8 @@ export function useProtocolCalculator(
         lactate: row.lactate.trim() && Number.isFinite(lactate) ? lactate : null,
         heartRate:
           row.heartRate.trim() && Number.isFinite(heartRate) ? heartRate : null,
+        heartRateMax: positive(row.heartRateMax),
+        performedOn: /^\d{4}-\d{2}-\d{2}$/.test(row.date) ? row.date : null,
       };
     });
 
@@ -388,6 +407,7 @@ export function useProtocolCalculator(
     setRow,
     addRow,
     removeRow,
+    replaceRows,
     spec: protocolByKey(protocol),
     available: listFor(sport),
     isLocked,
