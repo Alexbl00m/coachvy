@@ -23,6 +23,12 @@ import {
 import type { IntensityUnit } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import {
+  formatPace,
+  paceUnit,
+  showsPace,
+  toMetresPerSecond,
+} from "@/lib/tests/pace";
 import { compareCurves, type LactateCurve } from "@/lib/tests/progression";
 
 const sv = (value: number, digits: number) =>
@@ -222,7 +228,17 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
   const names = new Map(
     group.map((c) => [c.sessionId, formatDate(c.performedOn)]),
   );
-  const fmt = (v: number | null) => (v === null ? "–" : sv(v, digits));
+  // Löpning och simning i tempo: trösklarna som tid per km eller per 100 m.
+  const sport = group[0].sport;
+  const paced = showsPace(sport, unit);
+  const fmt = (v: number | null) =>
+    v === null
+      ? "–"
+      : paced
+        ? formatPace(toMetresPerSecond(v, unit) as number, sport)
+        : sv(v, digits);
+  const shownUnit = paced ? paceUnit(sport) : unit;
+  const columnUnit = paced ? `min${paceUnit(sport)}` : unit;
 
   return (
     <div className="space-y-5">
@@ -313,7 +329,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
           <Stat
             label="LT1 · aerob tröskel"
             value={fmt(current.lt1)}
-            unit={current.lt1 !== null ? unit : undefined}
+            unit={current.lt1 !== null ? shownUnit : undefined}
             hint={
               current.lt1 === null
                 ? "för få steg"
@@ -332,7 +348,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
           <Stat
             label="LT2 · anaerob tröskel"
             value={fmt(current.lt2)}
-            unit={current.lt2 !== null ? unit : undefined}
+            unit={current.lt2 !== null ? shownUnit : undefined}
             hint={
               current.lt2 === null
                 ? "för få steg"
@@ -352,12 +368,12 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
           <Stat
             label="Vid 2 mmol"
             value={fmt(current.at2)}
-            unit={current.at2 !== null ? unit : undefined}
+            unit={current.at2 !== null ? shownUnit : undefined}
           />
           <Stat
             label="Vid 4 mmol (OBLA)"
             value={fmt(current.at4)}
-            unit={current.at4 !== null ? unit : undefined}
+            unit={current.at4 !== null ? shownUnit : undefined}
           />
         </div>
       )}
@@ -512,7 +528,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
             <Stat
               label="LT2"
               value={fmt(current.lt2)}
-              unit={current.lt2 !== null ? unit : undefined}
+              unit={current.lt2 !== null ? shownUnit : undefined}
             >
               <Delta value={comparison.lt2Pct} />{" "}
               <span className="text-text-subtle">från {fmt(previous.lt2)}</span>
@@ -520,7 +536,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
             <Stat
               label="LT1"
               value={fmt(current.lt1)}
-              unit={current.lt1 !== null ? unit : undefined}
+              unit={current.lt1 !== null ? shownUnit : undefined}
             >
               <Delta value={comparison.lt1Pct} />{" "}
               <span className="text-text-subtle">från {fmt(previous.lt1)}</span>
@@ -528,7 +544,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
             <Stat
               label="Vid 4 mmol"
               value={fmt(current.at4)}
-              unit={current.at4 !== null ? unit : undefined}
+              unit={current.at4 !== null ? shownUnit : undefined}
             >
               <Delta value={comparison.at4Pct} />{" "}
               <span className="text-text-subtle">från {fmt(previous.at4)}</span>
@@ -568,11 +584,11 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
         <DataTable
           headers={[
             "Datum",
-            `LT1 (${unit})`,
-            `LT2 (${unit})`,
+            `LT1 (${columnUnit})`,
+            `LT2 (${columnUnit})`,
             "Puls LT2",
-            `2 mmol (${unit})`,
-            `4 mmol (${unit})`,
+            `2 mmol (${columnUnit})`,
+            `4 mmol (${columnUnit})`,
             "Steg",
           ]}
           minWidth={620}

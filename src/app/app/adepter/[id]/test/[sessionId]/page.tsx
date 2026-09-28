@@ -14,8 +14,11 @@ import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
 import { RacePredictionsCard } from "@/components/tests/race-predictions";
+import { ZonesCard } from "@/components/tests/zones-card";
+import { bikeThresholds } from "@/lib/calculators/bike-speed";
+import { displayValue } from "@/lib/tests/pace";
 import { formatDuration } from "@/lib/calculators/time";
-import { LAP_PROTOCOLS, protocolByKey } from "@/lib/tests/protocols";
+import { protocolByKey } from "@/lib/tests/protocols";
 import { getSession, toEfforts } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Testtillfälle" };
@@ -75,7 +78,6 @@ export default async function SessionPage({
   const hasDates = session.test_efforts.some((e) => e.performed_on !== null);
   const hasMaxHr = session.test_efforts.some((e) => e.heart_rate_max !== null);
   const hasComments = session.test_efforts.some((e) => e.comment);
-  const lapTest = LAP_PROTOCOLS.includes(session.protocol);
   // Tempo per rad för tester med tid och sträcka – löpning och simning.
   const showPace = Boolean(shape?.duration && shape?.distance);
 
@@ -113,6 +115,13 @@ export default async function SessionPage({
         ).map((r) => ({ ...r, uncertain: r.beyondModel }))
       : [];
 
+  const shown = (m: { key: string; value: number | string; unit: string }) =>
+    displayValue(
+      Number(m.value),
+      m.unit,
+      session.sport,
+      digitsForMetric(m.key, m.unit),
+    );
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
 
@@ -140,12 +149,16 @@ export default async function SessionPage({
       {primary.length > 0 && (
         <div className="mb-6">
           <ResultGrid
-            items={primary.slice(0, 4).map((m) => ({
-              label: labelFor(m.key),
-              value: sv(Number(m.value), digitsForMetric(m.key, m.unit)),
-              unit: m.unit,
-              hint: m.method ?? undefined,
-            }))}
+            items={primary.slice(0, 4).map((m) => {
+              const d = shown(m);
+              return {
+                label: labelFor(m.key),
+                value: d.value,
+                unit: d.unit,
+                hint:
+                  [d.speed, m.method].filter(Boolean).join(" · ") || undefined,
+              };
+            })}
           />
         </div>
       )}
@@ -187,8 +200,8 @@ export default async function SessionPage({
             ]}
             minWidth={480}
             rows={session.test_efforts.map((e, index) => [
-              // Varven räknas från 1; i ett stegtest är steg 0 vilovärdet.
-              lapTest ? String(index + 1) : String(e.ordinal),
+              // Raderna räknas från 1; i ett stegtest är steg 0 vilovärdet.
+              shape?.lactate ? String(e.ordinal) : String(index + 1),
               ...(shape?.intensity
                 ? [e.intensity === null ? "–" : sv(Number(e.intensity), 1)]
                 : []),
@@ -229,29 +242,14 @@ export default async function SessionPage({
           />
         </Card>
 
-        {recomputed.zones.length > 0 && (
-          <Card className="min-w-0">
-            <CardTitle>Zoner</CardTitle>
-            <DataTable
-              headers={["Zon", `Spann (${recomputed.zoneUnit})`, "Vad den gör"]}
-              minWidth={520}
-              rows={recomputed.zones.map((z) => [
-                z.zone,
-                z.min === null
-                  ? `< ${sv(z.max as number, 1)}`
-                  : z.max === null
-                    ? `> ${sv(z.min, 1)}`
-                    : `${sv(z.min, 1)}–${sv(z.max, 1)}`,
-                z.description,
-              ])}
-            />
-            <p className="mt-3 text-[12px] text-text-subtle">
-              Zonerna räknas om ur rådatan varje gång sidan visas. Förbättras
-              modellen får det här testet bättre zoner utan att någon rör
-              databasen.
-            </p>
-          </Card>
-        )}
+        <ZonesCard
+          zones={recomputed.zones}
+          zoneUnit={recomputed.zoneUnit}
+          sport={session.sport}
+          weightKg={session.weight_kg === null ? null : Number(session.weight_kg)}
+          thresholds={bikeThresholds(session.test_metrics)}
+          note="Zonerna räknas om ur rådatan varje gång sidan visas. Förbättras modellen får det här testet bättre zoner utan att någon rör databasen."
+        />
 
         {vdotRows.length > 0 && (
           <RacePredictionsCard
@@ -292,7 +290,12 @@ export default async function SessionPage({
               rows={secondary.map((m) => [
                 labelFor(m.key),
                 m.method ?? "–",
-                `${sv(Number(m.value), digitsForMetric(m.key, m.unit))} ${m.unit}`,
+                (() => {
+                  const d = shown(m);
+                  return d.speed
+                    ? `${d.value} ${d.unit} (${d.speed})`
+                    : `${d.value} ${d.unit}`;
+                })(),
               ])}
             />
           </Card>

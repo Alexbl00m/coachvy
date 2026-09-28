@@ -6,6 +6,8 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
 import { formatDate, digitsForMetric, digitsForUnit } from "@/lib/format";
 import { routes } from "@/lib/routes";
+import type { Sport } from "@/lib/calculators/lactate";
+import { displayValue } from "@/lib/tests/pace";
 import { phaseLabel } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
 import type { RollingResult } from "@/lib/tests/rolling";
@@ -30,6 +32,7 @@ export function SessionPanel({
   rolling,
   rollingLabel,
   rollingUnit,
+  sport,
   reserveLabel,
   reserveUnit,
   canEdit,
@@ -39,6 +42,8 @@ export function SessionPanel({
   rolling: RollingResult | null;
   rollingLabel: string;
   rollingUnit: string;
+  /** Grenen, så att CS kan visas som tempo i löpning och simning. */
+  sport: Sport;
   reserveLabel: string;
   reserveUnit: string;
   canEdit: boolean;
@@ -49,12 +54,25 @@ export function SessionPanel({
         <>
           <ResultGrid
             items={[
-              {
-                label: `${rollingLabel} · rullande`,
-                value: sv(rolling.primary, digitsForUnit(rollingUnit)),
-                unit: rollingUnit,
-                hint: `senaste insats ${formatDate(rolling.latestEffort)}`,
-              },
+              (() => {
+                const d = displayValue(
+                  rolling.primary,
+                  rollingUnit,
+                  sport,
+                  digitsForUnit(rollingUnit),
+                );
+                return {
+                  label: `${rollingLabel} · rullande`,
+                  value: d.value,
+                  unit: d.unit,
+                  hint: [
+                    d.speed,
+                    `senaste insats ${formatDate(rolling.latestEffort)}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                };
+              })(),
               {
                 label: reserveLabel,
                 value:
@@ -173,21 +191,26 @@ export function SessionPanel({
                           inga värden
                         </span>
                       ) : (
-                        primary.map((m) => (
-                          <span
-                            key={m.id}
-                            className="text-[13px] text-text-muted"
-                          >
-                            {shortLabel(m.key)}{" "}
-                            <span className="font-medium text-text">
-                              {sv(
-                                Number(m.value),
-                                digitsForMetric(m.key, m.unit),
-                              )}
-                            </span>{" "}
-                            {m.unit}
-                          </span>
-                        ))
+                        primary.map((m) => {
+                          const d = displayValue(
+                            Number(m.value),
+                            m.unit,
+                            session.sport,
+                            digitsForMetric(m.key, m.unit),
+                          );
+                          return (
+                            <span
+                              key={m.id}
+                              className="text-[13px] text-text-muted"
+                            >
+                              {shortLabel(m.key)}{" "}
+                              <span className="font-medium text-text">
+                                {d.value}
+                              </span>{" "}
+                              {d.unit}
+                            </span>
+                          );
+                        })
                       )}
                     </span>
                   </Link>

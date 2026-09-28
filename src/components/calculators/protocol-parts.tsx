@@ -9,13 +9,12 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
-import { digitsForMetric, digitsForUnit } from "@/lib/format";
+import { digitsForMetric } from "@/lib/format";
+import { displayValue } from "@/lib/tests/pace";
+import { ZonesCard } from "@/components/tests/zones-card";
+import { bikeThresholds } from "@/lib/calculators/bike-speed";
 import type { SessionAnalysis } from "@/lib/tests/analysis";
-import {
-  LAP_PROTOCOLS,
-  type Protocol,
-  type ProtocolKey,
-} from "@/lib/tests/protocols";
+import type { Protocol, ProtocolKey } from "@/lib/tests/protocols";
 import {
   peakFromRamp,
   type EffortRow,
@@ -144,8 +143,8 @@ export function EffortTable({
   const shape = spec?.shape;
   const stepwise = Boolean(shape?.lactate);
   const showDates = sessionDate !== undefined && Boolean(shape?.duration);
-  // Varven räknas från 1; i ett stegtest är rad 0 vilovärdet.
-  const firstRow = spec && LAP_PROTOCOLS.includes(spec.key) ? 1 : 0;
+  // Raderna räknas från 1; i ett stegtest är rad 0 vilovärdet.
+  const firstRow = shape?.lactate ? 0 : 1;
 
   return (
     <Card className="min-w-0">
@@ -485,8 +484,18 @@ export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
 }
 
 /** Nyckeltal, zoner och varningar. */
-export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
+export function ProtocolResults({
+  analysis,
+  sport,
+  weightKg = null,
+}: {
+  analysis: SessionAnalysis;
+  sport: Sport;
+  weightKg?: number | null;
+}) {
   if (analysis.metrics.length === 0 && analysis.warnings.length === 0) return null;
+  const shown = (m: SessionAnalysis["metrics"][number]) =>
+    displayValue(m.value, m.unit, sport, digitsForMetric(m.key, m.unit));
 
   return (
     <>
@@ -495,12 +504,15 @@ export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
           items={analysis.metrics
             .filter((m) => m.isPrimary)
             .slice(0, 4)
-            .map((m) => ({
-              label: m.label,
-              value: sv(m.value, digitsForMetric(m.key, m.unit)),
-              unit: m.unit,
-              hint: m.method,
-            }))}
+            .map((m) => {
+              const d = shown(m);
+              return {
+                label: m.label,
+                value: d.value,
+                unit: d.unit,
+                hint: [d.speed, m.method].filter(Boolean).join(" · "),
+              };
+            })}
         />
       )}
 
@@ -513,33 +525,24 @@ export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
             rows={analysis.metrics.map((m) => [
               m.label,
               m.method ?? "–",
-              `${sv(m.value, digitsForMetric(m.key, m.unit))} ${m.unit}`,
+              (() => {
+                const d = shown(m);
+                return d.speed
+                  ? `${d.value} ${d.unit} (${d.speed})`
+                  : `${d.value} ${d.unit}`;
+              })(),
             ])}
           />
         </Card>
       )}
 
-      {analysis.zones.length > 0 && (
-        <Card className="min-w-0">
-          <CardTitle>Zoner</CardTitle>
-          <DataTable
-            headers={["Zon", `Spann (${analysis.zoneUnit})`, "Vad den gör"]}
-            minWidth={520}
-            rows={analysis.zones.map((z) => {
-              const d = digitsForUnit(analysis.zoneUnit);
-              return [
-                z.zone,
-                z.min === null
-                  ? `< ${sv(z.max as number, d)}`
-                  : z.max === null
-                    ? `> ${sv(z.min, d)}`
-                    : `${sv(z.min, d)}–${sv(z.max, d)}`,
-                z.description,
-              ];
-            })}
-          />
-        </Card>
-      )}
+      <ZonesCard
+        zones={analysis.zones}
+        zoneUnit={analysis.zoneUnit}
+        sport={sport}
+        weightKg={weightKg}
+        thresholds={bikeThresholds(analysis.metrics)}
+      />
 
       {analysis.warnings.length > 0 && (
         <Card>

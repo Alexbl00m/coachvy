@@ -50,7 +50,13 @@ export function PublicTestCalculator() {
         </p>
       </div>
 
-      <ProtocolResults analysis={calc.analysis} />
+      <ProtocolResults
+        analysis={calc.analysis}
+        sport={calc.sport}
+        weightKg={
+          calc.weight.trim() ? Number(calc.weight.replace(",", ".")) || null : null
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] print:hidden">
         <Card className="min-w-0">

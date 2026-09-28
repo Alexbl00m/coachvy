@@ -1,6 +1,7 @@
 import { Card, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import { displayValue } from "@/lib/tests/pace";
 import { daysBetween, type UtilisationSummary } from "@/lib/tests/progression";
 import { UTILISATION_RANGES } from "@/lib/tests/vo2max";
 
@@ -130,7 +131,15 @@ export function UtilisationCard({ summary }: { summary: UtilisationSummary }) {
                   ? "LT1 – aerob tröskel"
                   : "LT2 – anaerob tröskel"
             }
-            detail={`${sv(row.intensity, unitDigits(row.unit))} ${row.unit} · ${formatDate(row.performedOn)}`}
+            detail={`${(() => {
+              const d = displayValue(
+                row.intensity,
+                row.unit,
+                summary.sport,
+                unitDigits(row.unit),
+              );
+              return `${d.value} ${d.unit}`;
+            })()} · ${formatDate(row.performedOn)}`}
             pct={row.pct}
             range={
               row.key === "CP"

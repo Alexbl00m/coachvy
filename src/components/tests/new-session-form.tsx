@@ -204,7 +204,13 @@ export function NewSessionForm({
 
       <FinishCard calc={calc} />
 
-      <ProtocolResults analysis={calc.analysis} />
+      <ProtocolResults
+        analysis={calc.analysis}
+        sport={calc.sport}
+        weightKg={
+          calc.weight.trim() ? Number(calc.weight.replace(",", ".")) || null : null
+        }
+      />
 
       {error && (
         <Card>

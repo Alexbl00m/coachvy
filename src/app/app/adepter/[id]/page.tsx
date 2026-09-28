@@ -241,6 +241,7 @@ export default async function AdeptPage({
             rolling={rolling}
             rollingLabel={sport === "cykling" ? "CP" : "CS"}
             rollingUnit={sport === "cykling" ? "W" : speedUnit}
+            sport={sport}
             reserveLabel={sport === "cykling" ? "W′" : "D′"}
             reserveUnit={sport === "cykling" ? "kJ" : "m"}
             // En medlemsadept registrerar egna tester, också ur cykeldatorns filer.

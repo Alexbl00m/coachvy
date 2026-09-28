@@ -494,7 +494,12 @@ stället för `profile_id`, så inloggade adepter fick aldrig sin egen rad.
 ## Progression
 
 `/app/progression` visar en adepts tester över tid – coachen väljer adept,
-adepten ser sin egen.
+adepten ser sin egen. En gren i taget: flikarna överst visar cykel, löpning
+och simning med antalet tester, och under dem vad som finns att se i den
+valda grenen – **Översikt** (fyra nyckeltal med förändringen sedan
+föregående testdag, och trösklarna över tid), **Laktatkurvor**, **Fartprofil
+och lopp** (löpning), **Syreupptag** och **Alla värden** i grupper. Valet
+ligger i adressen (`?gren=lopning&vy=fart`), så varje vy går att länka.
 
 - **Laktatkurvor mot varandra.** Välj alla tester eller några. Det senaste
   valda är utgångspunkten och det näst senaste vad det jämförs med: LT1, LT2
@@ -575,6 +580,22 @@ laktattest utan eget VO2max lånar det närmaste i tid från ett annat test i
 samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
 referensspannen LT1 65–75 % och LT2 75–90 %, plus LT1 i procent av LT2 – och
 varje utnyttjandegrad som en egen tidslinje.
+
+## Tempo och fart i resultat och zoner
+
+Testerna räknar i fart, men visar det atleten känner igen:
+
+- **Löpning** – tempo per km, med farten i km/h bredvid.
+- **Simning** – tid per 100 m. CS heter CSS, och zonerna står i tempo.
+- **Cykel** – fart på plan väg ur watten, för trösklarna och varje zon.
+  Position (CdA 0,23–0,40), däck (Crr 0,0025–0,0070), atletens vikt och
+  cykelns vikt går att välja; position och däck minns webbläsaren.
+
+Cykelfarten är portad från Bike-Power-Speed-Calculator-App: effekten vid
+hjulet (97,5 %) mot rull- och luftmotstånd, löst med bisektion. Originalet
+räknade lufttätheten som 1,225 · 273/(273 + T), men 1,225 kg/m³ gäller vid
+15 °C – vid 20 °C blev luften 5 % för tunn. Här är det 1,225 ·
+288,15/(273,15 + T). 250 W i nedre styret vid 75 kg blir 37,5 km/h.
 
 ## Löptester och fartprofil
 

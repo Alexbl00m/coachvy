@@ -19,6 +19,8 @@ import {
 } from "@/lib/calculators/chart-colors";
 import { cn } from "@/lib/cn";
 import { formatDate, digitsForMetric } from "@/lib/format";
+import type { Sport } from "@/lib/calculators/lactate";
+import { displayValue } from "@/lib/tests/pace";
 import { protocolLabel, type Trend } from "@/lib/tests/progression";
 
 const DAY = 86_400_000;
@@ -28,34 +30,44 @@ const sv = (value: number, digits: number) =>
 
 type Point = { t: number; value: number; date: string; protocol: string };
 
+type Show = (value: number) => {
+  value: string;
+  unit: string;
+  speed: string | null;
+};
+
 function TrendTooltip({
   active,
   payload,
-  unit,
-  digits,
+  show,
 }: {
   active?: boolean;
   payload?: Array<{ payload: Point }>;
-  unit: string;
-  digits: number;
+  show: Show;
 }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
+  const d = show(point.value);
   return (
     <div className="rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg">
       <p className="text-text-subtle">
         {point.date} · {protocolLabel(point.protocol)}
       </p>
       <p className="mt-0.5 font-medium text-text tabular-nums">
-        {sv(point.value, digits)}{" "}
-        <span className="font-normal text-text-muted">{unit}</span>
+        {d.value} <span className="font-normal text-text-muted">{d.unit}</span>
+        {d.speed && (
+          <span className="font-normal text-text-subtle"> · {d.speed}</span>
+        )}
       </p>
     </div>
   );
 }
 
-function TrendCard({ trend }: { trend: Trend }) {
+function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
   const digits = digitsForMetric(trend.key, trend.unit);
+  // Farter i löpning och simning visas som tempo; grafen står kvar i fart, så
+  // att uppåt alltid är snabbare.
+  const show: Show = (value) => displayValue(value, trend.unit, sport, digits);
   const points: Point[] = trend.points.map((p) => ({
     t: Date.parse(p.performedOn),
     value: p.value,
@@ -109,9 +121,9 @@ function TrendCard({ trend }: { trend: Trend }) {
             {trend.label}
           </p>
           <p className="mt-1 text-xl font-semibold tracking-tight text-text tabular-nums">
-            {sv(last.value, digits)}
+            {show(last.value).value}
             <span className="ml-1 text-sm font-normal text-text-muted">
-              {trend.unit}
+              {show(last.value).unit}
             </span>
           </p>
         </div>
@@ -125,7 +137,7 @@ function TrendCard({ trend }: { trend: Trend }) {
                   ? "text-bad"
                   : "text-text-muted",
             )}
-            title={`Från ${sv(first.value, digits)} ${trend.unit} ${first.date}`}
+            title={`Från ${show(first.value).value} ${show(first.value).unit} ${first.date}`}
           >
             <Icon aria-hidden className="size-3.5" />
             {change > 0 ? "+" : ""}
@@ -163,14 +175,14 @@ function TrendCard({ trend }: { trend: Trend }) {
             <YAxis
               domain={[lo - pad, hi + pad]}
               tick={{ fill: CHART_AXIS_TEXT, fontSize: 10 }}
-              tickFormatter={(v: number) => sv(v, digits)}
+              tickFormatter={(v: number) => show(v).value}
               tickLine={false}
               axisLine={false}
               width={40}
               tickCount={3}
             />
             <Tooltip
-              content={<TrendTooltip unit={trend.unit} digits={digits} />}
+              content={<TrendTooltip show={show} />}
               cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
             />
             <Line
@@ -203,12 +215,18 @@ function TrendCard({ trend }: { trend: Trend }) {
  * En liten graf per storhet. Varje storhet får sin egen skala – CP i watt och
  * VO2max i ml/kg/min hör inte hemma på samma axel.
  */
-export function MetricTrends({ trends }: { trends: Trend[] }) {
+export function MetricTrends({
+  trends,
+  sport,
+}: {
+  trends: Trend[];
+  sport: Sport;
+}) {
   if (trends.length === 0) return null;
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {trends.map((trend) => (
-        <TrendCard key={trend.id} trend={trend} />
+        <TrendCard key={trend.id} trend={trend} sport={sport} />
       ))}
     </div>
   );

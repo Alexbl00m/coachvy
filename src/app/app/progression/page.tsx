@@ -1,6 +1,9 @@
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
-import { ProgressionView } from "@/components/progression/progression-view";
+import {
+  ProgressionView,
+  sportFromSlug,
+} from "@/components/progression/progression-view";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
@@ -29,11 +32,13 @@ export default async function ProgressionPage({
 }: PageProps<"/app/progression">) {
   const user = await requireSessionUser();
   const query = await searchParams;
+  const gren = typeof query.gren === "string" ? query.gren : undefined;
+  const vy = typeof query.vy === "string" ? query.vy : undefined;
 
   const header = (
     <PageHeader
       title="Progression"
-      description="Laktatkurvor mot varandra och varje testvärde över tid."
+      description="Testerna över tid, en gren i taget."
     />
   );
 
@@ -54,7 +59,13 @@ export default async function ProgressionPage({
     return (
       <>
         {header}
-        <ProgressionView adeptId={adept.id} sessions={sessions} canEdit={false} />
+        <ProgressionView
+          adeptId={adept.id}
+          sessions={sessions}
+          canEdit={false}
+          sport={sportFromSlug(gren)}
+          view={vy}
+        />
       </>
     );
   }
@@ -90,7 +101,14 @@ export default async function ProgressionPage({
           adepts={own.map((a) => ({ id: a.id, name: a.full_name, tests: counts.get(a.id) ?? 0 }))}
         />
       </div>
-      <ProgressionView adeptId={current.id} sessions={sessions} canEdit />
+      <ProgressionView
+        adeptId={current.id}
+        sessions={sessions}
+        canEdit
+        sport={sportFromSlug(gren)}
+        view={vy}
+        query={{ adept: current.id }}
+      />
     </>
   );
 }
