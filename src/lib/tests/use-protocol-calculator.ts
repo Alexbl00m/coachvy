@@ -28,6 +28,8 @@ export type EffortRow = {
   heartRateMax: string;
   /** YYYY-MM-DD, eller tomt för testtillfällets datum. */
   date: string;
+  /** Fritext som följer med raden, t.ex. pacingen ur en klockfil. */
+  comment: string;
 };
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
@@ -39,26 +41,29 @@ const positive = (raw: string) => {
 /** Innan servern svarat första gången finns inget att visa. */
 const NOTHING_YET: SessionAnalysis = { metrics: [], zones: [], zoneUnit: "W", warnings: [] };
 
-/** "3:30" eller "210" till sekunder. */
+/** "3:30", "1:32:10" eller "210" till sekunder. */
 export function parseDuration(raw: string): number | null {
   const trimmed = raw.trim().replace(",", ".");
   if (!trimmed) return null;
   if (trimmed.includes(":")) {
-    const [m, s = "0"] = trimmed.split(":");
-    const minutes = Number(m);
-    const seconds = Number(s);
-    if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) return null;
-    return minutes * 60 + seconds;
+    // h:mm:ss för lopp över en timme, annars m:ss.
+    const parts = trimmed.split(":").map(Number);
+    if (parts.length > 3 || parts.some((p) => !Number.isFinite(p))) return null;
+    return parts.reduce((total, part) => total * 60 + part, 0);
   }
   const value = Number(trimmed);
   return Number.isFinite(value) ? value : null;
 }
 
-/** Sekunder till "0:20" eller "12:00" – samma form som fältet läser in. */
+/** Sekunder till "0:20", "12:00" eller "1:32:10" – samma form som fältet läser in. */
 export function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const rest = Math.round(seconds - minutes * 60);
-  return `${minutes}:${String(rest).padStart(2, "0")}`;
+  const whole = Math.round(seconds);
+  const hours = Math.floor(whole / 3600);
+  const minutes = Math.floor((whole % 3600) / 60);
+  const rest = whole % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`
+    : `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
 const emptyRow = (id: number, seconds?: number): EffortRow => ({
@@ -70,6 +75,7 @@ const emptyRow = (id: number, seconds?: number): EffortRow => ({
   heartRate: "",
   heartRateMax: "",
   date: "",
+  comment: "",
 });
 
 /** Rader med innehåll. En förifylld längd utan värde räknas inte. */
@@ -298,6 +304,7 @@ export function useProtocolCalculator(
           row.heartRate.trim() && Number.isFinite(heartRate) ? heartRate : null,
         heartRateMax: positive(row.heartRateMax),
         performedOn: /^\d{4}-\d{2}-\d{2}$/.test(row.date) ? row.date : null,
+        comment: row.comment.trim() || null,
       };
     });
 

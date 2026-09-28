@@ -9,6 +9,13 @@
 import { formatDuration, formatPacePer100m, formatPacePerKm } from "./time";
 import type { CalculationError } from "./critical-power";
 
+/**
+ * Där modellen gäller, i sekunder: ungefär 2–20 minuter. Kortare än så
+ * dominerar D′, längre än så håller ingen CS – och ett 5 km-test på 18–20
+ * minuter, det vanligaste fälttestet, ska rymmas.
+ */
+export const CS_RANGE_SECONDS = [120, 1200] as const;
+
 export type DistanceTest = {
   /** Testets tid i minuter. */
   minutes: number;

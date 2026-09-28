@@ -18,17 +18,10 @@ import {
   SERIES,
 } from "@/lib/calculators/chart-colors";
 import { cn } from "@/lib/cn";
-import { formatDate } from "@/lib/format";
+import { formatDate, digitsForMetric } from "@/lib/format";
 import { protocolLabel, type Trend } from "@/lib/tests/progression";
 
 const DAY = 86_400_000;
-
-const digitsFor = (unit: string) =>
-  ["W", "m", "%", "ml/kg/min", "slag/min", "J/W"].includes(unit)
-    ? 0
-    : ["kJ", "km/h", "W/kg", "g/h"].includes(unit)
-      ? 1
-      : 2;
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
@@ -39,10 +32,12 @@ function TrendTooltip({
   active,
   payload,
   unit,
+  digits,
 }: {
   active?: boolean;
   payload?: Array<{ payload: Point }>;
   unit: string;
+  digits: number;
 }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
@@ -52,7 +47,7 @@ function TrendTooltip({
         {point.date} · {protocolLabel(point.protocol)}
       </p>
       <p className="mt-0.5 font-medium text-text tabular-nums">
-        {sv(point.value, digitsFor(unit))}{" "}
+        {sv(point.value, digits)}{" "}
         <span className="font-normal text-text-muted">{unit}</span>
       </p>
     </div>
@@ -60,7 +55,7 @@ function TrendTooltip({
 }
 
 function TrendCard({ trend }: { trend: Trend }) {
-  const digits = digitsFor(trend.unit);
+  const digits = digitsForMetric(trend.key, trend.unit);
   const points: Point[] = trend.points.map((p) => ({
     t: Date.parse(p.performedOn),
     value: p.value,
@@ -69,10 +64,18 @@ function TrendCard({ trend }: { trend: Trend }) {
   }));
   const first = points[0];
   const last = points[points.length - 1];
+  // Storheter som redan är procent – utnyttjandegrad, fartvariation – ändras
+  // i procentenheter. "−88 %" för en variation som gick från 1,3 till 0,2 %
+  // säger ingenting; "−1,1 %-enheter" gör det.
+  const inPoints = trend.unit === "%";
   const change =
-    points.length > 1 && first.value !== 0
-      ? ((last.value - first.value) / first.value) * 100
-      : null;
+    points.length < 2
+      ? null
+      : inPoints
+        ? last.value - first.value
+        : first.value !== 0
+          ? ((last.value - first.value) / first.value) * 100
+          : null;
 
   // Riktningen säger om förändringen är bra. VLamax har ingen – en lägre är
   // rätt för en maratonlöpare och fel för en banåkare – och visas neutralt.
@@ -126,7 +129,7 @@ function TrendCard({ trend }: { trend: Trend }) {
           >
             <Icon aria-hidden className="size-3.5" />
             {change > 0 ? "+" : ""}
-            {sv(change, 1)} %
+            {sv(change, 1)} {inPoints ? "%-enh." : "%"}
           </span>
         )}
       </div>
@@ -167,7 +170,7 @@ function TrendCard({ trend }: { trend: Trend }) {
               tickCount={3}
             />
             <Tooltip
-              content={<TrendTooltip unit={trend.unit} />}
+              content={<TrendTooltip unit={trend.unit} digits={digits} />}
               cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
             />
             <Line
@@ -205,7 +208,7 @@ export function MetricTrends({ trends }: { trends: Trend[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {trends.map((trend) => (
-        <TrendCard key={`${trend.key}|${trend.unit}`} trend={trend} />
+        <TrendCard key={trend.id} trend={trend} />
       ))}
     </div>
   );

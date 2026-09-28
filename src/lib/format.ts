@@ -29,3 +29,27 @@ export function formatLastActive(value: string | null): string {
 export function formatValue(value: number): string {
   return String(Number(value)).replace(".", ",");
 }
+
+/**
+ * Hur många decimaler ett värde tål, efter enhet.
+ *
+ * Watt, meter, procent och puls är heltal; farter och kvoter behöver
+ * decimaler, W/kg två som i cyklingens rapporter. VDOT saknar enhet och visas
+ * med en decimal, som i Daniels tabeller. Samlad här – fyra egna varianter
+ * hade glidit isär.
+ */
+export function digitsForUnit(unit: string): number {
+  if (["W", "m", "%", "ml/kg/min", "g/h", "slag/min", "J/W"].includes(unit))
+    return 0;
+  if (["kJ", "km/h", "mmol/l", ""].includes(unit)) return 1;
+  return 2;
+}
+
+/**
+ * Decimaler för ett värde, när storheten kräver mer än enheten säger.
+ * Pacingen är procent men små tal – 1,3 % variation är inte 1 %.
+ */
+export function digitsForMetric(key: string, unit: string): number {
+  if (key.startsWith("PACE_")) return 1;
+  return digitsForUnit(unit);
+}

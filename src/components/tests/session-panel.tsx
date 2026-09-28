@@ -4,7 +4,7 @@ import { FlaskConical, Plus, TrendingUp } from "lucide-react";
 import { ResultGrid } from "@/components/calculators/result-grid";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
-import { formatDate } from "@/lib/format";
+import { formatDate, digitsForMetric, digitsForUnit } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { phaseLabel } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
@@ -14,12 +14,15 @@ import type { SessionWithMetrics } from "@/lib/tests/session-queries";
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
 
-/** Hur många decimaler ett värde tål, efter enhet. */
-function digitsFor(unit: string): number {
-  if (unit === "W" || unit === "m" || unit === "%" || unit === "ml/kg/min") return 0;
-  if (unit === "kJ" || unit === "km/h" || unit === "W/kg") return 1;
-  return 2;
-}
+/** Kort namn för listan. Nycklarna är databasens, inte coachens. */
+const SHORT_LABELS: Record<string, string> = {
+  T_speed: "Tröskel",
+  LTHR: "Tröskelpuls",
+  W_prime: "W′",
+  D_prime: "D′",
+};
+const shortLabel = (key: string) =>
+  SHORT_LABELS[key] ?? key.replace("_prime", "′");
 
 export function SessionPanel({
   adeptId,
@@ -48,7 +51,7 @@ export function SessionPanel({
             items={[
               {
                 label: `${rollingLabel} · rullande`,
-                value: sv(rolling.primary, digitsFor(rollingUnit)),
+                value: sv(rolling.primary, digitsForUnit(rollingUnit)),
                 unit: rollingUnit,
                 hint: `senaste insats ${formatDate(rolling.latestEffort)}`,
               },
@@ -171,10 +174,16 @@ export function SessionPanel({
                         </span>
                       ) : (
                         primary.map((m) => (
-                          <span key={m.id} className="text-[13px] text-text-muted">
-                            {m.key.replace("_prime", "′")}{" "}
+                          <span
+                            key={m.id}
+                            className="text-[13px] text-text-muted"
+                          >
+                            {shortLabel(m.key)}{" "}
                             <span className="font-medium text-text">
-                              {sv(Number(m.value), digitsFor(m.unit))}
+                              {sv(
+                                Number(m.value),
+                                digitsForMetric(m.key, m.unit),
+                              )}
                             </span>{" "}
                             {m.unit}
                           </span>

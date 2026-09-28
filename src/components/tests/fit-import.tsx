@@ -19,10 +19,10 @@ import {
 
 type Patch = Partial<Omit<EffortRow, "id">>;
 
-/** m/s till "4:05 /km". */
+/** m/s till "4:05/km". */
 const pace = (metresPerSecond: number) => {
   const secondsPerKm = 1000 / metresPerSecond;
-  return `${formatDuration(secondsPerKm)} /km`;
+  return `${formatDuration(secondsPerKm)}/km`;
 };
 
 /** Effekten eller farten och sträckan, som den visas i tabellen. */
@@ -85,7 +85,18 @@ export function FitImport({
     const rows: Patch[] = [];
     const dates: string[] = [];
     found.forEach((f, i) => {
-      if (f && chosen[i] && f.splits) {
+      if (f && chosen[i] && f.laps) {
+        // Varvtesterna: en rad per km-varv, med pulsen för varvet.
+        for (const lap of f.laps) {
+          rows.push({
+            duration: formatDuration(lap.seconds),
+            distance: String(Math.round(lap.metres)),
+            heartRate: lap.heartRate ? String(lap.heartRate) : "",
+            date: f.date,
+          });
+        }
+        dates.push(f.date);
+      } else if (f && chosen[i] && f.splits) {
         // 3 min all-out: en rad per delintervall, med sträckan hittills.
         for (const split of f.splits) {
           rows.push({
@@ -103,6 +114,7 @@ export function FitImport({
           heartRate: f.heartRateAvg ? String(f.heartRateAvg) : "",
           heartRateMax: f.heartRateMax ? String(f.heartRateMax) : "",
           date: f.date,
+          comment: f.pacing ?? "",
         });
         dates.push(f.date);
       } else if (keepAll) {
@@ -235,6 +247,19 @@ export function FitImport({
                         {!f && (
                           <span className="ml-2 text-[12px] text-text-subtle">
                             hittades inte
+                          </span>
+                        )}
+                        {f?.laps && (
+                          <span className="mt-1 block text-[12px] text-text-subtle tabular-nums">
+                            {f.laps.length} varv:{" "}
+                            {f.laps
+                              .map((l) => formatDuration(l.seconds))
+                              .join(" · ")}
+                          </span>
+                        )}
+                        {f?.pacing && (
+                          <span className="mt-1 block text-[12px] text-text-muted">
+                            {f.pacing}
                           </span>
                         )}
                       </td>

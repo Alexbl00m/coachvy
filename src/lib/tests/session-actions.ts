@@ -190,7 +190,10 @@ export async function saveTestSession(
           : Math.round(e.heartRateMax),
       // Samma dag som testtillfället sparas inte två gånger.
       performed_on:
-        e.performedOn && e.performedOn !== input.performedOn ? e.performedOn : null,
+        e.performedOn && e.performedOn !== input.performedOn
+          ? e.performedOn
+          : null,
+      comment: e.comment ? e.comment.slice(0, 500) : null,
     })),
   );
 

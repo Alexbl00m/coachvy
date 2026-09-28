@@ -7,23 +7,21 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
-import { formatDate } from "@/lib/format";
+import { formatDate, digitsForMetric } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
-import { protocolByKey } from "@/lib/tests/protocols";
+import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
+import { timeFromVdot } from "@/lib/calculators/daniels";
+import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
+import { RacePredictionsCard } from "@/components/tests/race-predictions";
+import { formatDuration } from "@/lib/calculators/time";
+import { LAP_PROTOCOLS, protocolByKey } from "@/lib/tests/protocols";
 import { getSession, toEfforts } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Testtillfälle" };
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
-
-const digitsFor = (unit: string) =>
-  ["W", "m", "%", "ml/kg/min", "g/h", "slag/min"].includes(unit)
-    ? 0
-    : unit === "kJ" || unit === "mmol/l" || unit === "km/h"
-      ? 1
-      : 2;
 
 export default async function SessionPage({
   params,
@@ -76,6 +74,44 @@ export default async function SessionPage({
   // när testet har dem.
   const hasDates = session.test_efforts.some((e) => e.performed_on !== null);
   const hasMaxHr = session.test_efforts.some((e) => e.heart_rate_max !== null);
+  const hasComments = session.test_efforts.some((e) => e.comment);
+  const lapTest = LAP_PROTOCOLS.includes(session.protocol);
+  // Tempo per rad för tester med tid och sträcka – löpning och simning.
+  const showPace = Boolean(shape?.duration && shape?.distance);
+
+  // Loppprognoser: ur VDOT för löptesterna, ur CS och D′ för CS-testerna.
+  const valueOf = (key: string) => {
+    const found = session.test_metrics.find((m) => m.key === key);
+    return found ? Number(found.value) : null;
+  };
+  const vdot = valueOf("VDOT");
+  const cs = valueOf("CS");
+  const dPrime = valueOf("D_prime");
+  const vdotRows =
+    session.sport === "löpning" && vdot
+      ? STANDARD_DISTANCES.flatMap((d) => {
+          const seconds = timeFromVdot(vdot, d.metres);
+          // Daniels ekvationer gäller från ungefär 3,5 minuter.
+          return seconds
+            ? [
+                {
+                  label: d.label,
+                  metres: d.metres,
+                  seconds,
+                  uncertain: seconds < 210,
+                },
+              ]
+            : [];
+        })
+      : [];
+  const csRows =
+    session.sport === "löpning" && cs && dPrime !== null
+      ? racePredictions(
+          toMetresPerSecond(cs, session.intensity_unit),
+          dPrime,
+          STANDARD_DISTANCES.filter((d) => d.metres <= 10000),
+        ).map((r) => ({ ...r, uncertain: r.beyondModel }))
+      : [];
 
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
@@ -106,7 +142,7 @@ export default async function SessionPage({
           <ResultGrid
             items={primary.slice(0, 4).map((m) => ({
               label: labelFor(m.key),
-              value: sv(Number(m.value), digitsFor(m.unit)),
+              value: sv(Number(m.value), digitsForMetric(m.key, m.unit)),
               unit: m.unit,
               hint: m.method ?? undefined,
             }))}
@@ -127,17 +163,32 @@ export default async function SessionPage({
           <DataTable
             headers={[
               "#",
-              ...(shape?.intensity ? [`Belastning (${session.intensity_unit})`] : []),
-              ...(shape?.duration ? ["Längd"] : []),
-              ...(shape?.distance ? ["Sträcka (m)"] : []),
+              ...(shape?.intensity
+                ? [`Belastning (${session.intensity_unit})`]
+                : []),
+              ...(shape?.duration
+                ? [
+                    // Formatet i parentes hör till inmatningen, inte visningen.
+                    spec?.columnLabels?.duration?.replace(/\s*\(.*\)$/, "") ??
+                      "Längd",
+                  ]
+                : []),
+              ...(shape?.distance
+                ? [spec?.columnLabels?.distance ?? "Sträcka (m)"]
+                : []),
+              ...(showPace
+                ? [session.sport === "simning" ? "Tempo /100 m" : "Tempo /km"]
+                : []),
               ...(shape?.lactate ? ["Laktat"] : []),
               ...(shape?.heartRate ? ["Puls"] : []),
               ...(hasMaxHr ? ["Maxpuls"] : []),
               ...(hasDates ? ["Datum"] : []),
+              ...(hasComments ? ["Kommentar"] : []),
             ]}
             minWidth={480}
-            rows={session.test_efforts.map((e) => [
-              String(e.ordinal),
+            rows={session.test_efforts.map((e, index) => [
+              // Varven räknas från 1; i ett stegtest är steg 0 vilovärdet.
+              lapTest ? String(index + 1) : String(e.ordinal),
               ...(shape?.intensity
                 ? [e.intensity === null ? "–" : sv(Number(e.intensity), 1)]
                 : []),
@@ -145,20 +196,35 @@ export default async function SessionPage({
                 ? [
                     e.duration_seconds === null
                       ? "–"
-                      : `${Math.floor(Number(e.duration_seconds) / 60)}:${String(
-                          Math.round(Number(e.duration_seconds) % 60),
-                        ).padStart(2, "0")}`,
+                      : formatDuration(Number(e.duration_seconds)),
                   ]
                 : []),
               ...(shape?.distance
                 ? [e.distance_m === null ? "–" : sv(Number(e.distance_m), 0)]
                 : []),
+              ...(showPace
+                ? [
+                    e.duration_seconds && e.distance_m
+                      ? formatDuration(
+                          (Number(e.duration_seconds) / Number(e.distance_m)) *
+                            (session.sport === "simning" ? 100 : 1000),
+                        )
+                      : "–",
+                  ]
+                : []),
               ...(shape?.lactate
                 ? [e.lactate === null ? "–" : sv(Number(e.lactate), 2)]
                 : []),
-              ...(shape?.heartRate ? [e.heart_rate === null ? "–" : String(e.heart_rate)] : []),
-              ...(hasMaxHr ? [e.heart_rate_max === null ? "–" : String(e.heart_rate_max)] : []),
-              ...(hasDates ? [formatDate(e.performed_on ?? session.performed_on)] : []),
+              ...(shape?.heartRate
+                ? [e.heart_rate === null ? "–" : String(e.heart_rate)]
+                : []),
+              ...(hasMaxHr
+                ? [e.heart_rate_max === null ? "–" : String(e.heart_rate_max)]
+                : []),
+              ...(hasDates
+                ? [formatDate(e.performed_on ?? session.performed_on)]
+                : []),
+              ...(hasComments ? [e.comment ?? ""] : []),
             ])}
           />
         </Card>
@@ -187,6 +253,22 @@ export default async function SessionPage({
           </Card>
         )}
 
+        {vdotRows.length > 0 && (
+          <RacePredictionsCard
+            title="Loppprognos"
+            source={`Ur VDOT ${sv(vdot as number, 1)} med Daniels ekvationer – vad testet motsvarar på andra distanser, med samma träningsstatus och jämn fart.`}
+            rows={vdotRows}
+            note="Längre lopp förutsätter att distansen är tränad. Den egna fartprofilen i Progression tar hänsyn till hur atleten faktiskt tappar fart."
+          />
+        )}
+        {csRows.length > 0 && (
+          <RacePredictionsCard
+            title="Loppprognos ur CS och D′"
+            source="t = (d − D′) / CS. Modellen gäller ungefär 2–20 minuter."
+            rows={csRows}
+          />
+        )}
+
         {/* Varningarna räknas om som zonerna. Ett test med en för lugn
             6-minut eller en VLamax utanför referensdatan ska säga det också
             när det öppnas om en månad, inte bara medan det skrevs in. */}
@@ -210,7 +292,7 @@ export default async function SessionPage({
               rows={secondary.map((m) => [
                 labelFor(m.key),
                 m.method ?? "–",
-                `${sv(Number(m.value), digitsFor(m.unit))} ${m.unit}`,
+                `${sv(Number(m.value), digitsForMetric(m.key, m.unit))} ${m.unit}`,
               ])}
             />
           </Card>

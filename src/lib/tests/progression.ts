@@ -306,6 +306,8 @@ export type TrendPoint = {
 };
 
 export type Trend = {
+  /** Unik per serie: storhet, enhet och – för VDOT och fartvariation – test. */
+  id: string;
   key: string;
   label: string;
   unit: string;
@@ -322,6 +324,12 @@ const TRACKED: {
   key: string;
   label: string;
   higherIsBetter: boolean | null;
+  /**
+   * En serie per test. VDOT ur ett 5 km-test och ur ett halvmaraton skiljer
+   * sig med atletens fartprofil, inte med formen: i samma linje ser en löpare
+   * som tappar mycket fart på långa distanser ut att gå bakåt.
+   */
+  byProtocol?: boolean;
 }[] = [
   { key: "LT2", label: "LT2 – anaerob tröskel", higherIsBetter: true },
   { key: "LT1", label: "LT1 – aerob tröskel", higherIsBetter: true },
@@ -336,6 +344,14 @@ const TRACKED: {
   { key: "VO2max_est", label: "VO2max – skattat", higherIsBetter: true },
   { key: "VLamax", label: "VLamax", higherIsBetter: null },
   { key: "FatMax", label: "FatMax", higherIsBetter: true },
+  // Tröskelfarten ur löptesterna är 88 % av VDOT – samma kurva en gång till.
+  { key: "VDOT", label: "VDOT", higherIsBetter: true, byProtocol: true },
+  {
+    key: "PACE_cv",
+    label: "Fartvariation",
+    higherIsBetter: false,
+    byProtocol: true,
+  },
   { key: "U_LT2", label: "LT2 i % av VO2max", higherIsBetter: true },
   { key: "U_LT1", label: "LT1 i % av VO2max", higherIsBetter: true },
   { key: "U_CP", label: "CP i % av VO2max", higherIsBetter: true },
@@ -349,6 +365,13 @@ const TRACKED: {
  * enheter (LT2 i watt på cykeln, km/h i löpningen) blir olika serier – en
  * linje som hoppar mellan watt och km/h betyder ingenting.
  */
+/** Seriernas namn när en storhet delas per test. */
+const SERIES_NAMES: Record<string, string> = {
+  "lopp-5km": "5 km-test",
+  "lopp-20min": "20 min-test",
+  lopp: "lopp",
+};
+
 export function metricTrends(
   sessions: FullSession[],
   curves: LactateCurve[],
@@ -360,12 +383,16 @@ export function metricTrends(
   const add = (key: string, unit: string, point: TrendPoint) => {
     const tracked = TRACKED.find((t) => t.key === key);
     if (!tracked || !Number.isFinite(point.value)) return;
-    const id = `${key}|${unit}`;
+    const test = tracked.byProtocol ? point.protocol : "";
+    const id = `${key}|${unit}|${test}`;
     const trend =
       series.get(id) ??
       ({
+        id,
         key,
-        label: tracked.label,
+        label: test
+          ? `${tracked.label} – ${SERIES_NAMES[test] ?? protocolLabel(test)}`
+          : tracked.label,
         unit,
         higherIsBetter: tracked.higherIsBetter,
         points: [],

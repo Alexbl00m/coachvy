@@ -20,8 +20,9 @@ import {
   type LactateStep,
   type Sport,
 } from "@/lib/calculators/lactate";
+import { CS_RANGE_SECONDS } from "@/lib/calculators/critical-speed";
 import { linearFit } from "@/lib/calculators/regression";
-import { protocolByKey, type ProtocolKey } from "./protocols";
+import { LAP_PROTOCOLS, protocolByKey, type ProtocolKey } from "./protocols";
 import {
   criticalSpeedZones,
   ftpZones,
@@ -29,10 +30,15 @@ import {
   type ZoneRow,
 } from "./zones";
 import {
+  thresholdSpeedFromVdot,
+  vdotFromPerformance,
+} from "@/lib/calculators/daniels";
+import {
   cleanPoints,
   heartRateAtIntensity,
   intensityAtLactate,
 } from "./lactate-points";
+import { analysePacing } from "./pacing";
 import {
   vo2AtIntensity,
   vo2maxFromEfforts,
@@ -52,6 +58,8 @@ export type Effort = {
   heartRateMax?: number | null;
   /** Dagen insatsen gjordes, när den skiljer sig från testtillfällets. */
   performedOn?: string | null;
+  /** Fritext som följer med raden. Används inte i beräkningen. */
+  comment?: string | null;
 };
 
 export type Metric = {
@@ -694,9 +702,9 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
 
     const shortest = Math.min(...points.map((p) => p.seconds));
     const longest = Math.max(...points.map((p) => p.seconds));
-    if (shortest < 120 || longest > 1200) {
+    if (shortest < CS_RANGE_SECONDS[0] || longest > CS_RANGE_SECONDS[1]) {
       warnings.push(
-        "Modellen gäller ungefär 2–15 minuter. Insatser utanför det spannet drar CS åt fel håll.",
+        "Modellen gäller ungefär 2–20 minuter. Insatser utanför det spannet drar CS åt fel håll.",
       );
     }
 
@@ -706,6 +714,13 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       zoneUnit: unit,
       warnings,
     };
+  }
+
+  // -------------------------------------------------------------------------
+  // Löptester varv för varv: 5 km, 20 minuter, lopp
+  // -------------------------------------------------------------------------
+  if (LAP_PROTOCOLS.includes(protocol)) {
+    return analyseRunTrial(protocol, unit, efforts);
   }
 
   // -------------------------------------------------------------------------
@@ -803,6 +818,141 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
 }
 
 /**
+ * 5 km-test, 20-minuterstest och lopp.
+ *
+ * Raderna är varv; summan är testet. Ur summan kommer VDOT (Daniels &
+ * Gilbert) och ur VDOT tröskelfarten, Daniels T-tempo. Ur varven kommer
+ * pacingen – hur jämnt det sprangs – som både är ett svar i sig och en
+ * brasklapp för resten: ett lopp som gick för hårt ut underskattar atleten.
+ */
+function analyseRunTrial(
+  protocol: ProtocolKey,
+  unit: IntensityUnit,
+  efforts: Effort[],
+): SessionAnalysis {
+  const warnings: string[] = [];
+  const laps = efforts
+    .filter((e) => e.durationSeconds !== null && e.distanceM !== null)
+    .map((e) => ({
+      seconds: e.durationSeconds as number,
+      metres: e.distanceM as number,
+      heartRate: e.heartRate,
+    }))
+    .filter((l) => l.seconds > 0 && l.metres > 0);
+
+  if (laps.length === 0) {
+    return {
+      metrics: [],
+      zones: [],
+      zoneUnit: unit,
+      warnings: [
+        "Ange minst en rad med tid och sträcka – ett varv, eller hela testet på en rad.",
+      ],
+    };
+  }
+
+  const totalSeconds = laps.reduce((sum, l) => sum + l.seconds, 0);
+  const totalMetres = laps.reduce((sum, l) => sum + l.metres, 0);
+
+  if (protocol === "lopp-5km" && Math.abs(totalMetres - 5000) > 100) {
+    warnings.push(
+      `Varven blir ${Math.round(totalMetres)} m, inte 5 000. Testet räknas på det som står – kontrollera sträckorna om det inte var meningen.`,
+    );
+  }
+  if (protocol === "lopp-20min" && Math.abs(totalSeconds - 1200) > 30) {
+    warnings.push(
+      `Varven blir ${Math.floor(totalSeconds / 60)}:${String(Math.round(totalSeconds % 60)).padStart(2, "0")}, inte 20:00. Testet räknas på det som står.`,
+    );
+  }
+  if (totalSeconds < 210 || totalSeconds > 4 * 3600) {
+    warnings.push(
+      "Daniels ekvationer gäller lopp på ungefär 3,5 minuter till 4 timmar. Utanför det blir VDOT och prognoserna osäkra.",
+    );
+  }
+
+  const vdot = vdotFromPerformance(totalMetres, totalSeconds);
+  if (vdot === null || !(vdot > 10)) {
+    return {
+      metrics: [],
+      zones: [],
+      zoneUnit: unit,
+      warnings: [
+        ...warnings,
+        "Tiden och sträckan ger inget rimligt VDOT. Kontrollera varven.",
+      ],
+    };
+  }
+
+  const speed = totalMetres / totalSeconds;
+  const threshold = thresholdSpeedFromVdot(vdot);
+  const metrics: Metric[] = [
+    metric("VDOT", "VDOT", vdot, "", {
+      method: "Daniels & Gilbert",
+      isPrimary: true,
+    }),
+    metric("T_speed", "Tröskelfart", toUnit(threshold, unit), unit, {
+      method: "Daniels T-tempo, 88 % av VDOT",
+      isPrimary: true,
+    }),
+    metric("v_test", "Snittfart i testet", toUnit(speed, unit), unit),
+  ];
+
+  // Puls: snittet viktat med varvens tid. Tröskelpulsen skattas som 95 % av
+  // snittet i ett test på 15–30 minuter – samma faktor som FTP ur 20 minuter.
+  const withHr = laps.filter((l) => l.heartRate !== null && l.heartRate > 0);
+  if (withHr.length > 0) {
+    const hrSeconds = withHr.reduce((sum, l) => sum + l.seconds, 0);
+    const hrAvg =
+      withHr.reduce((sum, l) => sum + (l.heartRate as number) * l.seconds, 0) /
+      hrSeconds;
+    metrics.push(metric("HR_avg", "Snittpuls", hrAvg, "slag/min"));
+    if (totalSeconds >= 900 && totalSeconds <= 1800) {
+      metrics.push(
+        metric("LTHR", "Tröskelpuls (skattad)", hrAvg * 0.95, "slag/min", {
+          method: "95 % av snittpulsen",
+          isPrimary: true,
+        }),
+      );
+    }
+  }
+
+  const pacing = analysePacing(laps);
+  if (pacing) {
+    metrics.push(
+      metric(
+        "PACE_split",
+        "Split, andra halvan mot första",
+        pacing.splitPct,
+        "%",
+        {
+          method: pacing.label,
+        },
+      ),
+      metric("PACE_cv", "Fartvariation mellan varven", pacing.cvPct, "%", {
+        method: pacing.label,
+      }),
+    );
+    warnings.unshift(pacing.text);
+    if (pacing.label === "För hård start" || pacing.cvPct > 5) {
+      warnings.push(
+        "Ett ojämnt sprunget test underskattar vad atleten klarar. VDOT och tröskelfarten ovan är därför snarare ett golv än ett tak.",
+      );
+    }
+  } else if (protocol !== "lopp") {
+    warnings.push(
+      "Med varven – en rad per kilometer – visas också hur jämnt testet sprangs.",
+    );
+  }
+
+  return {
+    metrics,
+    zones: thresholdZones(toUnit(threshold, unit)),
+    zoneUnit: unit,
+    warnings,
+  };
+}
+
+/**
  * Loppprognos ur CS och D′.
  *
  * Den linjära modellen är d = CS·t + D′, alltså t = (d − D′) / CS. Originalets
@@ -810,7 +960,7 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
  * ytterligare ett CS i den anaeroba termen. För CS 4,0 m/s och D′ 200 m på
  * 5 km blir skillnaden 37 sekunder.
  *
- * Modellen gäller ungefär 2–15 minuter, så prognoser utanför det spannet
+ * Modellen gäller ungefär 2–20 minuter, så prognoser utanför det spannet
  * markeras i stället för att presenteras som svar.
  */
 export function racePredictions(
@@ -823,7 +973,15 @@ export function racePredictions(
   return distances.flatMap(({ label, metres }) => {
     const seconds = (metres - dPrimeM) / criticalSpeedMs;
     if (!(seconds > 0)) return [];
-    return [{ label, metres, seconds, beyondModel: seconds < 120 || seconds > 900 }];
+    return [
+      {
+        label,
+        metres,
+        seconds,
+        beyondModel:
+          seconds < CS_RANGE_SECONDS[0] || seconds > CS_RANGE_SECONDS[1],
+      },
+    ];
   });
 }
 

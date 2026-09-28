@@ -502,7 +502,7 @@ adepten ser sin egen.
   tröskeln – samma belastning, lägre laktat är framsteg. Samma jämförelse finns
   bakom en knapp på adeptens flik Testtillfällen.
 - **Varje värde som egen tidslinje** – LT1, LT2, 4 mmol, CP, W′, CS, FTP,
-  Wmax, VO2max, VLamax, FatMax – med förändringen sedan första testet. Egen
+  Wmax, VO2max, VLamax, FatMax, VDOT – med förändringen sedan första testet. Egen
   skala per värde; VLamax visas utan bra/dåligt-färg eftersom rätt riktning
   beror på målet.
 - **Samma metoder för alla tester.** Trösklarna räknas om ur rådatan vid
@@ -575,6 +575,100 @@ laktattest utan eget VO2max lånar det närmaste i tid från ett annat test i
 samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
 referensspannen LT1 65–75 % och LT2 75–90 %, plus LT1 i procent av LT2 – och
 varje utnyttjandegrad som en egen tidslinje.
+
+## Löptester och fartprofil
+
+Tre löptester som registreras varv för varv – en rad per kilometer eller
+varv, med tid, sträcka och puls. Summan av varven är testet; varven är
+underlaget för pacinganalysen.
+
+| Test | Genomförande | Ger |
+|---|---|---|
+| 5 km-test | 5 km så fort som möjligt, bana eller plan väg | VDOT, tröskelfart, tröskelpuls, zoner, prognoser, pacing |
+| 20 minuters löptest | Så långt som möjligt på 20 minuter | samma |
+| Lopp eller tidlopp | Ett lopp på valfri distans; en rad med sträcka och sluttid (h:mm:ss) räcker | samma – pacing bara med varv |
+
+- **VDOT** (Daniels & Gilbert): loppets syrekostnad delad med den andel av
+  VO2max som går att hålla så länge. Ett prestationsmått, inte ett uppmätt
+  VO2max. Gäller för insatser på 3:30 till 4 timmar.
+- **Tröskelfart** är Daniels T-tempo: farten som kostar 88 % av VDOT. Zonerna
+  räknas ur den, och passbyggaren använder den när det saknas CS och LT2.
+- **Tröskelpuls**: 95 % av snittpulsen när testet tar 15–30 minuter.
+- **Prognoser** ur VDOT, och ur CS och D′ när adepten har ett CS-test. CS-
+  modellen gäller ungefär 2–20 minuter; prognoser utanför markeras.
+- **Pacing** ur varven: halvornas tider, fartvariationen mellan varven och
+  första och sista varvet mot snittet. Utfallet blir Jämn, Negativ split,
+  Positiv split, För hård start eller Ojämn. Gick starten för hårt säger
+  texten det – resultatet är då snarare ett golv än ett tak.
+
+Ur klockfilen hittar 5 km-testet de snabbaste 5 km i passet och delar dem i
+kilometervarv där klockans sträcka passerar varje kilometer. 20-minuterstestet
+tar 20-minutersinsatsen med kilometervarv och sista biten. Varven och
+pacingen syns i förhandsvisningen innan något fylls i. Prövat på syntetiska
+klockfiler: ett 5 km på 19:18 med stigande puls blev fem kilometervarv och
+positiv split på 2,3 %; ett långpass snabbaste 5 km flaggades som att det
+inte var någon insats; 20 minuter gav 5 220 m i fem varv plus 220 m.
+
+Kontrollerat mot Daniels tabeller: 5 km på 20:00 ger VDOT 49,8, och VDOT 50
+ger 10 km på 41:20 (tabell 41:21), maraton på 3:10:40 (3:10:49) och
+tröskelfart 4:15/km.
+
+### Fartprofilen
+
+Progressionen visar löpares egen kurva: varje maximal insats – CS-test, 5 km,
+20 minuter, lopp – är en punkt, och bästa insatsen per durationsband det
+senaste året (räknat från den senaste insatsen) bygger kurvan.
+
+- **Utmattningsexponenten** b i T = a·D^b. Riegel satte 1,06 ur tiotusentals
+  lopp. Som ett tal en adept förstår: **fart-tapp per dubblad distans**,
+  1 − 2^(1−b) – med 1,06 ungefär 4 %. Under 1,04 är profilen *uthållig*,
+  över 1,08 *snabbhetsbetonad*, däremellan *balanserad*. Med bara en distans
+  används Riegels 1,06.
+- **CS och D′** ur punkterna på 2–20 minuter, och **bästa VDOT**.
+- **Prognoser i tre kolumner** – egen kurva, VDOT, CS och D′. Där de skiljer
+  sig mycket saknas oftast ett test på en distans nära loppet.
+- Diagrammet visar fart mot tid på logaritmisk tidsaxel, med CS-kurvan över
+  2–20 minuter och de insatser kurvan bygger på.
+
+### Tävlingsplan
+
+Distans, måltid (tomt = den egna kurvans prognos), varvlängd och strategi –
+jämn, negativ eller positiv split på 1–6 %. Planen ger tid, tempo och
+sammanlagd tid per varv.
+
+- **Sluttiden ligger fast.** Det är halvornas tider som skiljer x %:
+  T₁ = T / (2 + s), T₂ = T₁·(1 + s).
+- **D′ som budget.** Allt över CS kostar (v − CS)·t, och varvtabellen visar
+  D′ kvar. Återhämtning under CS räknas inte – i ett lopp är den liten, och en
+  plan som bara håller tack vare den är för tunn.
+- Utan återhämtning är den snabbaste sluttid som håller (D − D′) / CS, hur
+  farten än fördelas, och jämn fart är den fördelning som når den. Tömmer en
+  plan D′ säger noten därför vilket det är: måltiden är för snabb (och vilken
+  tid som håller), eller fördelningen för ojämn.
+- På maraton jämförs snittfarten med CS: maratonlöpare håller i snitt 85 %
+  av sin CS, snabbare löpare en högre andel (Smyth & Muniz-Pumares 2020).
+
+Prövat i webbläsaren på en testadept med 3- och 12-minutersinsats, 5 km,
+20 minuter och ett halvmaraton: exponent 1,094 (6,3 % per dubblad distans),
+CS 4:01/km och D′ 180 m. Ett 5 km på 19:00 tömmer D′ efter 3,3 km, och 19:22
+är den snabbaste tiden som håller.
+
+I tidslinjerna följs VDOT och fartvariationen **per test** – 5 km-test mot
+5 km-test, lopp mot lopp. I samma linje skulle en snabbhetsbetonad löpare som
+springer ett halvmaraton efter ett 5 km-test se ut att gå bakåt, fast det är
+profilen som syns. Tröskelfarten får ingen egen tidslinje: den är 88 % av
+VDOT.
+
+### Ur de tidigare projekten
+
+| Projekt | Taget | Rättat |
+|---|---|---|
+| runner-performance-calculator | Utmattningsexponenten ur flera lopp och tolkningen kring 1,06 | `GPT_APP.py` räknade Daniels ekvation med km/h i stället för m/min och utan andelen av VO2max – 5 km på 20:00 gav VO2max −1,8 |
+| running-calculators | CS och D′ ur tidlopp och 3 min all-out | Rättat redan när testprotokollen byggdes: loppprognosen var t = d/CS − D′/CS² (fel enhet; rätt är (d − D′)/CS) – 5 km 36 s för långsamt vid CS 4,2 m/s och D′ 200 m – och 3-minuterstestets D′ räknades som (toppfart − slutfart)·180 s i stället för sträckan över CS |
+| runner-metrics-calculator | VDOT, prognoser, splits | Tempoformlerna ur VDOT (`vdot^−0,71` med flera) ger 0,4 s/km och anropades aldrig – inte portade. Splitsens progression flyttade sluttiden när start och slut skilde olika mycket |
+
+`lindblom-performance-hub` är marknadssajten och hade inga löptester att
+porta.
 
 ## Passbyggare
 
@@ -755,6 +849,8 @@ Kända luckor:
   automatiskt när en adept registrerar sig med samma adress.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.
 - Testresultat kan skapas och tas bort, men inte redigeras.
+- **Löptesternas klockimport är prövad på syntetiska filer.** En riktig
+  klockfil från ett 5 km- eller 20-minuterstest är nästa prov.
 - **Passbyggarens modellanrop är inte körd mot skarpt API.** Miljön jag byggde
   i har ingen `ANTHROPIC_API_KEY`, så allt utom själva HTTP-anropet är verifierat
   — schemat, tolkningen, W′bal, sparandet, RLS och vyerna. Första riktiga

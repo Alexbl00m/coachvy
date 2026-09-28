@@ -9,6 +9,8 @@ import { LactateCompare } from "./lactate-compare";
 import { MetricTrends } from "./metric-trends";
 import { RecomputeButton } from "./recompute-button";
 import { UtilisationCard } from "./utilisation-card";
+import { RunningProfile } from "./running-profile";
+import { speedProfile } from "@/lib/tests/speed-profile";
 
 /**
  * En adepts progression: laktatkurvorna mot varandra överst, sedan varje
@@ -26,6 +28,7 @@ export function ProgressionView({
   const curves = lactateCurves(sessions);
   const trends = metricTrends(sessions, curves);
   const utilisationNow = latestUtilisation(sessions, curves);
+  const running = speedProfile(sessions);
 
   if (sessions.length === 0) {
     return (
@@ -46,6 +49,8 @@ export function ProgressionView({
       )}
 
       {utilisationNow && <UtilisationCard summary={utilisationNow} />}
+
+      {running && <RunningProfile profile={running} />}
 
       {trends.length > 0 && (
         <section className="space-y-3">

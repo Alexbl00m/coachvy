@@ -20,6 +20,9 @@ export type ProtocolKey =
   | "cs-3min"
   | "cs-3-5min"
   | "cs-simning"
+  | "lopp-5km"
+  | "lopp-20min"
+  | "lopp"
   | "metabol-profil";
 
 /** Vad ett steg i protokollet bär för fält. */
@@ -73,6 +76,24 @@ export type Protocol = {
   memberExtras?: boolean;
   /** Protokollet slutar all-out, med Vmax/Wmax eller ett VO2max-test. */
   hasFinish?: boolean;
+  /**
+   * Radernas rubriker, när protokollets rader betyder något annat än en
+   * insats var. I de varvbaserade löptesterna är en rad ett varv.
+   */
+  columnLabels?: { duration?: string; distance?: string; heartRate?: string };
+};
+
+/**
+ * Löptester som registreras varv för varv. Summan av varven är testet;
+ * varven i sig är underlaget för pacinganalysen. De räknas därför aldrig
+ * som egna maxinsatser i den rullande CS-modellen.
+ */
+export const LAP_PROTOCOLS: ProtocolKey[] = ["lopp-5km", "lopp-20min", "lopp"];
+
+const LAP_COLUMNS = {
+  duration: "Varvtid (m:ss)",
+  distance: "Varvets sträcka (m)",
+  heartRate: "Puls (snitt)",
 };
 
 const STEP_SHAPE: EffortShape = {
@@ -273,6 +294,73 @@ export const PROTOCOLS: Protocol[] = [
     shape: DISTANCE_SHAPE,
     produces: ["CS", "D'", "Zoner"],
     zoneScheme: "critical-speed",
+  },
+  {
+    key: "lopp-5km",
+    label: "5 km-test",
+    sports: ["löpning"],
+    purpose:
+      "Enkelt och ofta bra nog. En uppmätt 5 km på bana eller plan väg ger VDOT, tröskelfart, zoner och loppprognoser – och med km-tiderna även hur jämnt det sprangs.",
+    howTo:
+      "Värm upp ordentligt och spring 5 km så fort du kan, helst på bana. En rad per kilometer (km-tiden och 1 000 m) ger pacinganalysen; en enda rad med sluttiden och 5 000 m räcker för resten.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: null,
+    shape: DISTANCE_SHAPE,
+    produces: [
+      "VDOT",
+      "Tröskelfart",
+      "Tröskelpuls",
+      "Pacing",
+      "Loppprognos",
+      "Zoner",
+    ],
+    zoneScheme: "tröskel",
+    columnLabels: LAP_COLUMNS,
+  },
+  {
+    key: "lopp-20min",
+    label: "20 minuters löptest",
+    sports: ["löpning"],
+    purpose:
+      "Så långt som möjligt på 20 minuter. Samma svar som 5 km-testet utan uppmätt sträcka – klockan räcker – och snittpulsen ger tröskelpulsen.",
+    howTo:
+      "Värm upp och spring så långt du kan på exakt 20 minuter, jämnt fördelat. Registrera varven – per kilometer eller per 5 minuter – med tid och sträcka; det sista varvet är det som hanns före 20:00.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: null,
+    shape: DISTANCE_SHAPE,
+    produces: [
+      "VDOT",
+      "Tröskelfart",
+      "Tröskelpuls",
+      "Pacing",
+      "Loppprognos",
+      "Zoner",
+    ],
+    zoneScheme: "tröskel",
+    columnLabels: LAP_COLUMNS,
+  },
+  {
+    key: "lopp",
+    label: "Lopp eller tidlopp",
+    sports: ["löpning"],
+    purpose:
+      "Ett tävlingsresultat på valfri distans. Ger samma svar som testerna, och flera lopp på olika distanser ger atletens egen fartprofil.",
+    howTo:
+      "Ett lopp där atleten gav allt, på känd distans. En rad per kilometer eller per varv ger pacinganalysen; en enda rad med distans och sluttid (h:mm:ss) räcker annars.",
+    remote: true,
+    minEfforts: 1,
+    maxEfforts: null,
+    shape: DISTANCE_SHAPE,
+    produces: ["VDOT", "Tröskelfart", "Pacing", "Loppprognos", "Zoner"],
+    zoneScheme: "tröskel",
+    // En rad kan vara hela loppet, så tiden kan ha timmar.
+    columnLabels: {
+      ...LAP_COLUMNS,
+      duration: "Tid (m:ss eller h:mm:ss)",
+      distance: "Sträcka (m)",
+    },
   },
   {
     key: "cs-simning",

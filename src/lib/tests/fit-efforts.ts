@@ -18,6 +18,8 @@
  * av; det enda som används är effekt, fart, sträcka och puls per sekund.
  */
 
+import { analysePacing } from "./pacing";
+
 /** Vad serien mäter: effekt på cykeln, fart i löpningen. */
 export type RideKind = "power" | "speed";
 
@@ -53,6 +55,19 @@ export type Slot = {
   whole?: boolean;
   /** Dela insatsen i delintervall om så här många sekunder (3 min all-out). */
   splitEvery?: number;
+  /**
+   * Leta på sträcka i stället för tid: den snabbaste sträckan om så här
+   * många meter (5 km-testet). `min` och `max` är då tiden den får ta.
+   */
+  distance?: number;
+  /** Dela insatsen i varv om så här många meter – km-tiderna. */
+  lapMetres?: number;
+};
+
+export type FoundLap = {
+  seconds: number;
+  metres: number;
+  heartRate: number | null;
 };
 
 export type FoundEffort = {
@@ -64,6 +79,10 @@ export type FoundEffort = {
   metres: number | null;
   /** Kumulativ sträcka vid varje delintervall, när protokollet vill ha det. */
   splits: { seconds: number; metres: number }[] | null;
+  /** Varven, när protokollet registreras varv för varv. */
+  laps: FoundLap[] | null;
+  /** Hur jämnt insatsen sprangs, i en mening – för löpinsatser. */
+  pacing: string | null;
   heartRateAvg: number | null;
   heartRateMax: number | null;
   date: string;
@@ -110,11 +129,29 @@ export const FIT_SLOTS: Partial<Record<string, Slot[]>> = {
   "cs-3min": [
     { label: "3 min all-out", target: 180, min: 165, max: 195, splitEvery: 30 },
   ],
+
+  // 5 km-testet: snabbaste 5 000 m på 12–60 minuter, i km-varv.
+  "lopp-5km": [
+    {
+      label: "5 km",
+      target: 1200,
+      min: 720,
+      max: 3600,
+      distance: 5000,
+      lapMetres: 1000,
+    },
+  ],
+  // 20 minuter: bästa 20 minuterna, i km-varv med ett kortare sista varv.
+  "lopp-20min": [
+    { label: "20 min", target: 1200, min: 1140, max: 1260, lapMetres: 1000 },
+  ],
 };
 
 /** Vilken serie protokollet letar i. */
 export const kindFor = (protocol: string): RideKind =>
-  protocol.startsWith("cs-") || protocol === "critical-speed"
+  protocol.startsWith("cs-") ||
+  protocol === "critical-speed" ||
+  protocol.startsWith("lopp")
     ? "speed"
     : "power";
 
@@ -217,6 +254,174 @@ function heartRateIn(ride: Ride, from: number, length: number) {
     : { avg: Math.round(sum / count), max: Math.round(max) };
 }
 
+/** Sträckan vid varje sekund: klockans egen, annars farten summerad. */
+function distanceFn(ride: Ride): (i: number) => number {
+  if (ride.distance) {
+    const d = ride.distance;
+    return (i: number) => d[Math.max(0, Math.min(d.length - 1, i))];
+  }
+  const cum = new Float64Array(ride.value.length + 1);
+  for (let i = 0; i < ride.value.length; i += 1)
+    cum[i + 1] = cum[i] + ride.value[i];
+  return (i: number) => cum[Math.max(0, Math.min(cum.length - 1, i))];
+}
+
+/** Sekunden (med decimaler) då sträckan `metres` från `start` passerades. */
+function crossing(
+  at: (i: number) => number,
+  start: number,
+  end: number,
+  metres: number,
+): number | null {
+  const base = at(start);
+  for (let k = start + 1; k <= end; k += 1) {
+    const covered = at(k) - base;
+    if (covered >= metres) {
+      const before = at(k - 1) - base;
+      const step = covered - before;
+      return k - 1 + (step > 0 ? (metres - before) / step : 0);
+    }
+  }
+  return null;
+}
+
+/** Insatsen delad i varv om `lapMetres`, med ett kortare sista varv. */
+function lapsWithin(
+  ride: Ride,
+  at: (i: number) => number,
+  start: number,
+  seconds: number,
+  lapMetres: number,
+): FoundLap[] {
+  const end = start + seconds;
+  const total = at(end) - at(start);
+  const laps: FoundLap[] = [];
+  let lapStart = start;
+  let lapStartMetres = 0;
+  for (let k = 1; k * lapMetres < total - 1; k += 1) {
+    const t = crossing(at, start, end, k * lapMetres);
+    if (t === null) break;
+    laps.push({ seconds: t - lapStart, metres: lapMetres, heartRate: null });
+    lapStart = t;
+    lapStartMetres = k * lapMetres;
+  }
+  if (end - lapStart > 1 && total - lapStartMetres > 1) {
+    laps.push({
+      seconds: end - lapStart,
+      metres: total - lapStartMetres,
+      heartRate: null,
+    });
+  }
+  // Snittpuls per varv, på hela sekunder.
+  let t0 = start;
+  for (const lap of laps) {
+    const from = Math.floor(t0);
+    const length = Math.max(1, Math.round(t0 + lap.seconds) - from);
+    lap.heartRate = heartRateIn(ride, from, length).avg;
+    t0 += lap.seconds;
+  }
+  return laps;
+}
+
+/** Pacingen i en mening, för förhandsvisningen och radens kommentar. */
+function pacingSentence(
+  laps: { seconds: number; metres: number }[],
+): string | null {
+  const pacing = analysePacing(laps);
+  if (!pacing) return null;
+  const sign = (v: number) =>
+    `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(1).replace(".", ",")}`;
+  return `Pacing: ${pacing.label.toLowerCase()} – andra halvan ${sign(pacing.splitPct)} % i tid, fartvariation ${pacing.cvPct.toFixed(1).replace(".", ",")} %.`;
+}
+
+/** Pacingen inom en löpinsats, i en mening: fyra lika långa delar. */
+function pacingNote(
+  ride: Ride,
+  at: (i: number) => number,
+  start: number,
+  seconds: number,
+): string | null {
+  const total = at(start + seconds) - at(start);
+  if (!(total > 0)) return null;
+  const quarter = total / 4;
+  const times = [0, 1, 2, 3].map((k) =>
+    crossing(at, start, start + seconds, (k + 1) * quarter - 0.001),
+  );
+  if (times.some((t) => t === null)) return null;
+  const marks = [start, ...(times as number[])];
+  marks[4] = start + seconds;
+  return pacingSentence(
+    [0, 1, 2, 3].map((k) => ({
+      seconds: marks[k + 1] - marks[k],
+      metres: quarter,
+    })),
+  );
+}
+
+/**
+ * Den snabbaste sträckan om `slot.distance` meter – 5 km-testet.
+ *
+ * Två pekare över den kumulativa sträckan: för varje start den första
+ * sekund då sträckan är avklarad, med passagen interpolerad inom sekunden.
+ * Är farten precis före och efter klart lägre är det en egen insats; annars
+ * är det bara den snabbaste biten av ett längre pass, och markeras så.
+ */
+function findDistanceEffort(ride: Ride, slot: Slot): FoundEffort | null {
+  const target = slot.distance as number;
+  const n = ride.value.length;
+  const at = distanceFn(ride);
+  if (at(n) - at(0) < target) return null;
+
+  let best: { start: number; seconds: number } | null = null;
+  let j = 0;
+  for (let i = 0; i < n; i += 1) {
+    if (j < i) j = i;
+    while (j < n && at(j) - at(i) < target) j += 1;
+    if (j >= n) break;
+    const before = at(j - 1) - at(i);
+    const step = at(j) - at(j - 1);
+    const seconds = j - 1 - i + (step > 0 ? (target - before) / step : 0);
+    if (
+      seconds >= slot.min &&
+      seconds <= slot.max &&
+      (!best || seconds < best.seconds)
+    ) {
+      best = { start: i, seconds };
+    }
+  }
+  if (!best) return null;
+
+  const whole = Math.max(1, Math.round(best.seconds));
+  const speed = target / best.seconds;
+  const around = (from: number, length: number) =>
+    length > 0
+      ? (at(Math.min(n, from + length)) - at(Math.max(0, from))) / length
+      : 0;
+  const isolated =
+    around(best.start - 30, 30) < 0.85 * speed &&
+    around(best.start + whole, 30) < 0.85 * speed;
+
+  const hr = heartRateIn(ride, best.start, whole);
+  const laps = slot.lapMetres
+    ? lapsWithin(ride, at, best.start, whole, slot.lapMetres)
+    : null;
+  return {
+    slot,
+    seconds: best.seconds,
+    value: speed,
+    metres: target,
+    splits: null,
+    laps,
+    pacing: laps ? pacingSentence(laps) : null,
+    heartRateAvg: hr.avg,
+    heartRateMax: hr.max,
+    date: ride.date,
+    startsAt: best.start,
+    rideLabel: ride.label,
+    isolated,
+  };
+}
+
 /**
  * Den bästa insatsen i ett spann, ur ett pass.
  *
@@ -233,6 +438,9 @@ function heartRateIn(ride: Ride, from: number, length: number) {
  * annars är den en uppvärmningsdel med vila runt, inte ett test.
  */
 export function findEffort(ride: Ride, slot: Slot): FoundEffort | null {
+  if (slot.distance)
+    return ride.kind === "speed" ? findDistanceEffort(ride, slot) : null;
+
   const power = ride.value;
   const n = power.length;
   if (n < slot.min) return null;
@@ -350,12 +558,30 @@ export function findEffort(ride: Ride, slot: Slot): FoundEffort | null {
           ),
         }))
       : null;
+  const running = ride.kind === "speed";
+  const distanceAt = distanceFn(ride);
+  const foundLaps =
+    running && slot.lapMetres
+      ? lapsWithin(
+          ride,
+          distanceAt,
+          chosen.start,
+          chosen.seconds,
+          slot.lapMetres,
+        )
+      : null;
   return {
     slot,
     seconds: chosen.seconds,
     value: ride.kind === "power" ? Math.round(chosen.watts) : chosen.watts,
     metres: metres === null ? null : Math.round(metres),
     splits,
+    laps: foundLaps,
+    pacing: foundLaps
+      ? pacingSentence(foundLaps)
+      : running && !slot.splitEvery
+        ? pacingNote(ride, distanceAt, chosen.start, chosen.seconds)
+        : null,
     heartRateAvg: hr.avg,
     heartRateMax: hr.max,
     date: ride.date,

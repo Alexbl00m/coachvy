@@ -320,6 +320,17 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
         reference = lt2Speed;
         referenceSource = `${lt2.protocol} ${lt2.performedOn}`;
         push("LT2", "LT2 – anaerob tröskel", lt2Speed, "m/s", lt2);
+      } else {
+        // Tröskelfarten ur ett 5 km-test, ett 20-minuterstest eller ett lopp
+        // (Daniels T-tempo). Enklast att testa, och ofta det enda som finns.
+        const tSpeed = latestMetric(sessions, "T_speed");
+        const tValue = tSpeed ? toMetresPerSecond(tSpeed.value, tSpeed.unit) : null;
+        if (tSpeed && tValue !== null && tValue > 0) {
+          basis = "LT2";
+          reference = tValue;
+          referenceSource = `${tSpeed.protocol} ${tSpeed.performedOn}`;
+          push("T_speed", "Tröskelfart (Daniels T)", tValue, "m/s", tSpeed);
+        }
       }
     }
   }

@@ -9,8 +9,13 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
+import { digitsForMetric, digitsForUnit } from "@/lib/format";
 import type { SessionAnalysis } from "@/lib/tests/analysis";
-import type { Protocol, ProtocolKey } from "@/lib/tests/protocols";
+import {
+  LAP_PROTOCOLS,
+  type Protocol,
+  type ProtocolKey,
+} from "@/lib/tests/protocols";
 import {
   peakFromRamp,
   type EffortRow,
@@ -25,14 +30,6 @@ const SPORTS: { id: Sport; label: string }[] = [
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
-
-/** Watt och meter är heltal; farter och kvoter behöver decimaler. */
-const digitsFor = (unit: string) =>
-  ["W", "m", "%", "ml/kg/min", "g/h", "slag/min"].includes(unit)
-    ? 0
-    : unit === "kJ" || unit === "mmol/l" || unit === "km/h"
-      ? 1
-      : 2;
 
 /** Gren och protokoll. Samma val i appen och på den publika sidan. */
 export function ProtocolPicker({
@@ -147,6 +144,8 @@ export function EffortTable({
   const shape = spec?.shape;
   const stepwise = Boolean(shape?.lactate);
   const showDates = sessionDate !== undefined && Boolean(shape?.duration);
+  // Varven räknas från 1; i ett stegtest är rad 0 vilovärdet.
+  const firstRow = spec && LAP_PROTOCOLS.includes(spec.key) ? 1 : 0;
 
   return (
     <Card className="min-w-0">
@@ -186,12 +185,12 @@ export function EffortTable({
               )}
               {shape?.duration && (
                 <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-                  Längd (m:ss)
+                  {spec?.columnLabels?.duration ?? "Längd (m:ss)"}
                 </th>
               )}
               {shape?.distance && (
                 <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-                  Sträcka (m)
+                  {spec?.columnLabels?.distance ?? "Sträcka (m)"}
                 </th>
               )}
               {shape?.lactate && (
@@ -201,7 +200,7 @@ export function EffortTable({
               )}
               {shape?.heartRate && (
                 <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-                  Puls
+                  {spec?.columnLabels?.heartRate ?? "Puls"}
                 </th>
               )}
               {showDates && (
@@ -216,12 +215,12 @@ export function EffortTable({
             {rows.map((row, index) => (
               <tr key={row.id} className="border-b border-line last:border-b-0">
                 <td className="py-2 pr-3 text-[13px] text-text-subtle tabular-nums">
-                  {index}
+                  {index + firstRow}
                 </td>
                 {shape?.intensity && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Belastning ${index}`}
+                      aria-label={`Belastning ${index + firstRow}`}
                       inputMode="decimal"
                       value={row.intensity}
                       onChange={(e) => onChange(row.id, { intensity: e.target.value })}
@@ -231,7 +230,7 @@ export function EffortTable({
                 {shape?.duration && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Längd ${index}`}
+                      aria-label={`Längd ${index + firstRow}`}
                       value={row.duration}
                       placeholder="3:00"
                       onChange={(e) => onChange(row.id, { duration: e.target.value })}
@@ -241,7 +240,7 @@ export function EffortTable({
                 {shape?.distance && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Sträcka ${index}`}
+                      aria-label={`Sträcka ${index + firstRow}`}
                       inputMode="decimal"
                       value={row.distance}
                       onChange={(e) => onChange(row.id, { distance: e.target.value })}
@@ -251,7 +250,7 @@ export function EffortTable({
                 {shape?.lactate && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Laktat ${index}`}
+                      aria-label={`Laktat ${index + firstRow}`}
                       inputMode="decimal"
                       value={row.lactate}
                       onChange={(e) => onChange(row.id, { lactate: e.target.value })}
@@ -261,7 +260,7 @@ export function EffortTable({
                 {shape?.heartRate && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Puls ${index}`}
+                      aria-label={`Puls ${index + firstRow}`}
                       inputMode="numeric"
                       value={row.heartRate}
                       onChange={(e) => onChange(row.id, { heartRate: e.target.value })}
@@ -271,7 +270,7 @@ export function EffortTable({
                 {showDates && (
                   <td className="py-2 pr-3">
                     <Input
-                      aria-label={`Datum ${index}`}
+                      aria-label={`Datum ${index + firstRow}`}
                       type="date"
                       value={row.date || sessionDate}
                       onChange={(e) =>
@@ -286,7 +285,7 @@ export function EffortTable({
                 <td className="py-2 print:hidden">
                   <button
                     type="button"
-                    aria-label={`Ta bort rad ${index}`}
+                    aria-label={`Ta bort rad ${index + firstRow}`}
                     onClick={() => onRemove(row.id)}
                     disabled={rows.length <= 1}
                     className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-30"
@@ -498,7 +497,7 @@ export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
             .slice(0, 4)
             .map((m) => ({
               label: m.label,
-              value: sv(m.value, digitsFor(m.unit)),
+              value: sv(m.value, digitsForMetric(m.key, m.unit)),
               unit: m.unit,
               hint: m.method,
             }))}
@@ -514,7 +513,7 @@ export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
             rows={analysis.metrics.map((m) => [
               m.label,
               m.method ?? "–",
-              `${sv(m.value, digitsFor(m.unit))} ${m.unit}`,
+              `${sv(m.value, digitsForMetric(m.key, m.unit))} ${m.unit}`,
             ])}
           />
         </Card>
@@ -527,7 +526,7 @@ export function ProtocolResults({ analysis }: { analysis: SessionAnalysis }) {
             headers={["Zon", `Spann (${analysis.zoneUnit})`, "Vad den gör"]}
             minWidth={520}
             rows={analysis.zones.map((z) => {
-              const d = digitsFor(analysis.zoneUnit);
+              const d = digitsForUnit(analysis.zoneUnit);
               return [
                 z.zone,
                 z.min === null
