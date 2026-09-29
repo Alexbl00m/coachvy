@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -18,7 +20,13 @@ import {
   CHART_SURFACE,
   SERIES,
 } from "@/lib/calculators/chart-colors";
-import { paceFromSpeed, type MetabolicPoint } from "@/lib/calculators/metabolic";
+import {
+  KCAL_PER_G_CARB,
+  KCAL_PER_G_FAT,
+  paceFromSpeed,
+  type MetabolicPoint,
+} from "@/lib/calculators/metabolic";
+import type { FuelBand } from "@/lib/calculators/metabolic-zones";
 
 type Mode = "cykling" | "löpning";
 
@@ -67,7 +75,7 @@ function ChartTooltip({
         {mode === "cykling"
           ? `${Math.round(point.power)} W`
           : `${paceFromSpeed(point.power)}/km · ${(point.power * 3.6).toFixed(1).replace(".", ",")} km/h`}{" "}
-        · {point.percentOfMax}%
+        · {String(point.percentOfMax).replace(".", ",")} %
       </p>
       {payload?.map((entry) => (
         <p key={entry.name} className="mt-1 flex items-center gap-2 text-sm">
@@ -78,7 +86,9 @@ function ChartTooltip({
           />
           <span className="text-text-muted">{entry.name}</span>
           <span className="ml-auto font-semibold text-text tabular-nums">
-            {entry.value.toFixed(1).replace(".", ",")}
+            {entry.name === "Syreupptag"
+              ? `${Math.round(entry.value)} ml/min`
+              : entry.value.toFixed(entry.value < 10 ? 2 : 1).replace(".", ",")}
           </span>
         </p>
       ))}
@@ -97,6 +107,8 @@ export function MetabolicChart({
   series,
   thresholdPower,
   markers = [],
+  band,
+  weightKg = null,
   mode = "cykling",
 }: {
   points: MetabolicPoint[];
@@ -104,6 +116,10 @@ export function MetabolicChart({
   thresholdPower: number | null;
   /** Fler lodräta markeringar, t.ex. FatMax och CarbMax. */
   markers?: { power: number; label: string }[];
+  /** Osäkerhetsbandet runt bränslet, samma index som `points`. */
+  band?: FuelBand[];
+  /** Ger syreupptaget i ml/min på vänster axel i laktatdiagrammet. */
+  weightKg?: number | null;
   /** I löpning är punkternas `power` fart i m/s; axeln visar km/h. */
   mode?: Mode;
 }) {
@@ -152,10 +168,17 @@ export function MetabolicChart({
         )
       : undefined;
 
+  // Syreupptaget i ml/min på en egen axel, när vikten är känd.
+  const withVo2 = series === "lactate" && weightKg !== null && weightKg > 0;
+  const data = withVo2
+    ? points.map((p) => ({ ...p, vo2Absolute: p.vo2 * (weightKg as number) }))
+    : points;
+
   if (series === "fuel") {
     return (
-      <FuelPanels
+      <FuelChart
         points={points}
+        band={band}
         thresholdPower={thresholdPower}
         markers={markers}
         mode={mode}
@@ -168,7 +191,7 @@ export function MetabolicChart({
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 4 }}>
           <CartesianGrid stroke={CHART_GRID} vertical={false} />
           <XAxis
             dataKey="power"
@@ -191,7 +214,27 @@ export function MetabolicChart({
               fontSize: 11,
             }}
           />
+          {withVo2 && (
+            <YAxis
+              yAxisId="vo2"
+              domain={[0, "auto"]}
+              tickFormatter={(v: number) => String(Math.round(v))}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={56}
+              label={{
+                value: "VO2 ml/min",
+                angle: -90,
+                position: "insideLeft",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 11,
+              }}
+            />
+          )}
           <YAxis
+            yAxisId="la"
+            orientation={withVo2 ? "right" : "left"}
             domain={yMax ? [0, yMax] : undefined}
             allowDataOverflow
             tickFormatter={(v: number) =>
@@ -205,8 +248,8 @@ export function MetabolicChart({
             width={52}
             label={{
               value: config.unit,
-              angle: -90,
-              position: "insideLeft",
+              angle: withVo2 ? 90 : -90,
+              position: withVo2 ? "insideRight" : "insideLeft",
               fill: CHART_AXIS_TEXT,
               fontSize: 11,
             }}
@@ -225,6 +268,7 @@ export function MetabolicChart({
 
           {thresholdPower !== null && (
             <ReferenceLine
+              yAxisId="la"
               x={thresholdPower}
               stroke={CHART_AXIS_TEXT}
               strokeDasharray="4 4"
@@ -240,6 +284,7 @@ export function MetabolicChart({
           {markers.map((m) => (
             <ReferenceLine
               key={m.label}
+              yAxisId="la"
               x={m.power}
               stroke={CHART_AXIS_TEXT}
               strokeDasharray="2 4"
@@ -253,8 +298,28 @@ export function MetabolicChart({
             />
           ))}
 
+          {withVo2 && (
+            <Line
+              yAxisId="vo2"
+              type="monotone"
+              dataKey="vo2Absolute"
+              name="Syreupptag"
+              stroke={SERIES.tertiary}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{
+                r: 5,
+                fill: SERIES.tertiary,
+                stroke: CHART_SURFACE,
+                strokeWidth: 2,
+              }}
+              isAnimationActive={false}
+            />
+          )}
+
           {config.lines.map((line) => (
             <Line
+              yAxisId="la"
               key={line.key}
               type="monotone"
               dataKey={line.key}
@@ -277,17 +342,84 @@ export function MetabolicChart({
   );
 }
 
+type FuelRow = MetabolicPoint & {
+  fatRange?: [number, number];
+  carbRange?: [number, number];
+};
+
+function FuelTooltip({
+  active,
+  payload,
+  mode,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: FuelRow }>;
+  mode: Mode;
+}) {
+  const p = payload?.[0]?.payload;
+  if (!active || !p) return null;
+  const row = (
+    label: string,
+    color: string,
+    grams: number,
+    kcalPerGram: number,
+    range?: [number, number],
+  ) => (
+    <p className="mt-1 flex items-center gap-2 text-sm">
+      <span
+        aria-hidden
+        className="size-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span className="text-text-muted">{label}</span>
+      <span className="ml-auto pl-3 font-semibold text-text tabular-nums">
+        {grams.toFixed(1).replace(".", ",")} g/h
+      </span>
+      <span className="text-text-subtle tabular-nums">
+        ⇔ {Math.round(grams * kcalPerGram)} kcal/h
+      </span>
+      {range && (
+        <span className="text-[11px] text-text-subtle tabular-nums">
+          ({Math.round(range[0])}–{Math.round(range[1])})
+        </span>
+      )}
+    </p>
+  );
+  return (
+    <div className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg">
+      <p className="text-[11px] text-text-muted">
+        {mode === "cykling"
+          ? `${Math.round(p.power)} W`
+          : `${paceFromSpeed(p.power)}/km · ${(p.power * 3.6).toFixed(1).replace(".", ",")} km/h`}{" "}
+        · {String(p.percentOfMax).replace(".", ",")} %
+      </p>
+      {row("Fett", SERIES.secondary, p.fatPerHour, KCAL_PER_G_FAT, p.fatRange)}
+      {row(
+        "Kolhydrat",
+        SERIES.primary,
+        p.carbsPerHour,
+        KCAL_PER_G_CARB,
+        p.carbRange,
+      )}
+    </div>
+  );
+}
+
 /**
- * Fett och kolhydrat i var sin panel med egen skala och gemensam x-axel.
+ * Fett och kolhydrat i samma diagram, med var sin y-axel: kolhydraten till
+ * vänster, fettet till höger. Fettet ligger på tiotals gram i timmen och
+ * kolhydraten på hundratals – med en gemensam axel blir fettet en platt rand.
  *
- * Fettet ligger på några tiotal gram i timmen, kolhydraten på hundratals. På
- * samma axel blir fettkurvan en platt rand längst ned. Två y-axlar i samma
- * diagram vore det andra sättet, men då ser linjernas korsning ut som en
- * "crossover" som i själva verket bara beror på hur skalorna råkar ligga –
- * så de får var sin panel, och markören följer med i båda.
+ * Med två skalor säger linjernas korsning ingenting; den flyttar sig med
+ * skalorna. Den verkliga crossover-punkten – där fett och kolhydrat ger lika
+ * mycket energi – räknas därför fram och markeras för sig.
+ *
+ * Banden runt kurvorna är samma modell med VLamax ±0,04, referensmodellens
+ * typiska fel.
  */
-function FuelPanels({
+function FuelChart({
   points,
+  band,
   thresholdPower,
   markers,
   mode,
@@ -295,162 +427,232 @@ function FuelPanels({
   carbMax,
 }: {
   points: MetabolicPoint[];
+  band?: FuelBand[];
   thresholdPower: number | null;
   markers: { power: number; label: string }[];
   mode: Mode;
   ticks: number[] | undefined;
   carbMax: number | undefined;
 }) {
-  const fatTop = Math.max(...points.map((p) => p.fatPerHour), 1);
-  // Jämna steg om 20 g/h, så att översta markeringen inte blir 70 efter 60.
-  const fatMax = Math.ceil((fatTop * 1.2) / 20) * 20;
+  const data: FuelRow[] = points.map((p, i) => ({
+    ...p,
+    ...(band?.[i]
+      ? { fatRange: band[i].fat, carbRange: band[i].carbs }
+      : {}),
+  }));
+  const fatTop = Math.max(
+    ...data.map((p) => p.fatRange?.[1] ?? p.fatPerHour),
+    1,
+  );
+  const fatMax = Math.ceil((fatTop * 1.15) / 20) * 20;
   const fatTicks = Array.from({ length: fatMax / 20 + 1 }, (_, i) => i * 20);
-  const domain: [number | "dataMin", "dataMax"] =
-    mode === "cykling" ? [0, "dataMax"] : ["dataMin", "dataMax"];
+  const carbTop = carbMax ?? Math.max(...points.map((p) => p.carbsPerHour));
+  const carbStep = carbTop > 400 ? 100 : 50;
+  const carbCeil = Math.ceil(carbTop / carbStep) * carbStep;
+  const carbTicks = Array.from(
+    { length: carbCeil / carbStep + 1 },
+    (_, i) => i * carbStep,
+  );
+
+  // Crossover: första punkten där kolhydraten ger mer energi än fettet.
+  const crossover =
+    points.find(
+      (p) =>
+        p.carbsPerHour * KCAL_PER_G_CARB > p.fatPerHour * KCAL_PER_G_FAT &&
+        p.fatPerHour > 0,
+    ) ?? null;
+
   const format = (v: number) =>
     mode === "cykling" ? String(Math.round(v)) : (v * 3.6).toFixed(0);
+  const lines = [
+    ...markers,
+    ...(crossover ? [{ power: crossover.power, label: "Crossover" }] : []),
+  ];
 
-  const panel = (
-    key: "fatPerHour" | "carbsPerHour",
-    name: string,
-    color: string,
-    yMax: number | undefined,
-    showAxis: boolean,
-    panelMarkers: { power: number; label: string }[],
-    height: string,
-  ) => (
-    <div className="w-full">
-      <p className="mb-1 flex items-center gap-2 text-[12px] text-text-muted">
-        <span
-          aria-hidden
-          className="h-0.5 w-4 rounded"
-          style={{ backgroundColor: color }}
-        />
-        {name}, g/h
-      </p>
-      <div className={height}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={points}
-          syncId="bransle"
-          margin={{ top: 8, right: 16, bottom: 4, left: 4 }}
-        >
-          <CartesianGrid stroke={CHART_GRID} vertical={false} />
-          <XAxis
-            dataKey="power"
-            type="number"
-            domain={domain}
-            ticks={ticks}
-            tickFormatter={format}
-            tick={showAxis ? { fill: CHART_AXIS_TEXT, fontSize: 11 } : false}
-            tickLine={false}
-            axisLine={{ stroke: CHART_GRID }}
-            height={showAxis ? 28 : 4}
-            tickMargin={8}
-            label={
-              showAxis
-                ? {
-                    value: mode === "cykling" ? "Effekt (W)" : "Fart (km/h)",
-                    position: "insideBottomRight",
-                    offset: -4,
-                    fill: CHART_AXIS_TEXT,
-                    fontSize: 11,
-                  }
-                : undefined
-            }
+  return (
+    <div className="space-y-2">
+      <ul className="flex flex-wrap justify-end gap-x-5 gap-y-1 text-[12px] text-text-muted">
+        <li className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="h-0.5 w-5 rounded"
+            style={{ backgroundColor: SERIES.primary }}
           />
-          <YAxis
-            domain={yMax ? [0, yMax] : [0, "auto"]}
-            ticks={key === "fatPerHour" ? fatTicks : undefined}
-            allowDataOverflow
-            tickFormatter={(v: number) => String(Math.round(v))}
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            width={44}
+          Kolhydrat, g/h (vänster axel)
+        </li>
+        <li className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className="h-0.5 w-5 rounded"
+            style={{ backgroundColor: SERIES.secondary }}
           />
-          <Tooltip
-            cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
-            content={<ChartTooltip unit="g/h" mode={mode} />}
-          />
-          {thresholdPower !== null && (
-            <ReferenceLine
-              x={thresholdPower}
-              stroke={CHART_AXIS_TEXT}
-              strokeDasharray="4 4"
+          Fett, g/h (höger axel)
+        </li>
+        {band && (
+          <li className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="h-2.5 w-5 rounded-sm bg-text-subtle/25"
+            />
+            VLamax ±0,04
+          </li>
+        )}
+      </ul>
+      <div className="h-96 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            data={data}
+            margin={{ top: 8, right: 8, bottom: 4, left: 4 }}
+          >
+            <CartesianGrid stroke={CHART_GRID} vertical={false} />
+            <XAxis
+              dataKey="power"
+              type="number"
+              domain={mode === "cykling" ? [0, "dataMax"] : ["dataMin", "dataMax"]}
+              ticks={ticks}
+              tickFormatter={format}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tickLine={false}
+              axisLine={{ stroke: CHART_GRID }}
+              height={28}
+              tickMargin={8}
               label={{
-                value: "Tröskel",
-                position: "insideTopRight",
+                value: mode === "cykling" ? "Effekt (W)" : "Fart (km/h)",
+                position: "insideBottomRight",
+                offset: -4,
                 fill: CHART_AXIS_TEXT,
                 fontSize: 11,
               }}
             />
-          )}
-          {panelMarkers.map((m) => (
-            <ReferenceLine
-              key={m.label}
-              x={m.power}
-              stroke={CHART_AXIS_TEXT}
-              strokeDasharray="2 4"
-              strokeOpacity={0.7}
+            <YAxis
+              yAxisId="carbs"
+              domain={[0, carbCeil]}
+              ticks={carbTicks}
+              allowDataOverflow
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={48}
               label={{
-                value: m.label,
-                position: "insideTopLeft",
+                value: "Kolhydrat g/h",
+                angle: -90,
+                position: "insideLeft",
                 fill: CHART_AXIS_TEXT,
                 fontSize: 11,
               }}
             />
-          ))}
-          {key === "carbsPerHour" && (
+            <YAxis
+              yAxisId="fat"
+              orientation="right"
+              domain={[0, fatMax]}
+              ticks={fatTicks}
+              allowDataOverflow
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={48}
+              label={{
+                value: "Fett g/h",
+                angle: 90,
+                position: "insideRight",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 11,
+              }}
+            />
+            <Tooltip
+              cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
+              content={<FuelTooltip mode={mode} />}
+            />
+            {thresholdPower !== null && (
+              <ReferenceLine
+                yAxisId="carbs"
+                x={thresholdPower}
+                stroke={CHART_AXIS_TEXT}
+                strokeDasharray="4 4"
+                label={{
+                  value: "Tröskel",
+                  position: "insideTopRight",
+                  fill: CHART_AXIS_TEXT,
+                  fontSize: 11,
+                }}
+              />
+            )}
+            {lines.map((m) => (
+              <ReferenceLine
+                key={m.label}
+                yAxisId="carbs"
+                x={m.power}
+                stroke={CHART_AXIS_TEXT}
+                strokeDasharray="2 4"
+                strokeOpacity={0.7}
+                label={{
+                  value: m.label,
+                  position: m.label === "CarbMax" ? "insideBottomLeft" : "insideTopLeft",
+                  fill: CHART_AXIS_TEXT,
+                  fontSize: 11,
+                }}
+              />
+            ))}
             <ReferenceLine
+              yAxisId="carbs"
               y={90}
               stroke={CHART_AXIS_TEXT}
               strokeDasharray="2 4"
-              strokeOpacity={0.6}
+              strokeOpacity={0.5}
               label={{
                 value: "90 g/h",
-                position: "insideBottomLeft",
+                position: "insideTopLeft",
                 fill: CHART_AXIS_TEXT,
                 fontSize: 10,
               }}
             />
-          )}
-          <Line
-            type="monotone"
-            dataKey={key}
-            name={name}
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 5, fill: color, stroke: CHART_SURFACE, strokeWidth: 2 }}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+            {band && (
+              <>
+                <Area
+                  yAxisId="carbs"
+                  dataKey="carbRange"
+                  stroke="none"
+                  fill={SERIES.primary}
+                  fillOpacity={0.14}
+                  isAnimationActive={false}
+                  activeDot={false}
+                />
+                <Area
+                  yAxisId="fat"
+                  dataKey="fatRange"
+                  stroke="none"
+                  fill={SERIES.secondary}
+                  fillOpacity={0.16}
+                  isAnimationActive={false}
+                  activeDot={false}
+                />
+              </>
+            )}
+            <Line
+              yAxisId="carbs"
+              type="monotone"
+              dataKey="carbsPerHour"
+              name="Kolhydrat"
+              stroke={SERIES.primary}
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, fill: SERIES.primary, stroke: CHART_SURFACE, strokeWidth: 2 }}
+              isAnimationActive={false}
+            />
+            <Line
+              yAxisId="fat"
+              type="monotone"
+              dataKey="fatPerHour"
+              name="Fett"
+              stroke={SERIES.secondary}
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5, fill: SERIES.secondary, stroke: CHART_SURFACE, strokeWidth: 2 }}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      {panel(
-        "fatPerHour",
-        "Fett",
-        SERIES.secondary,
-        fatMax,
-        false,
-        markers.filter((m) => m.label === "FatMax"),
-        "h-48",
-      )}
-      {panel(
-        "carbsPerHour",
-        "Kolhydrat",
-        SERIES.primary,
-        carbMax,
-        true,
-        markers.filter((m) => m.label !== "FatMax"),
-        "h-60",
-      )}
     </div>
   );
 }

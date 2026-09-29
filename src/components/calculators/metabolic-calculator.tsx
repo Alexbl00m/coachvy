@@ -9,6 +9,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import {
+  fuelBand,
   fuelByZone,
   heartRateByZone,
 } from "@/lib/calculators/metabolic-zones";
@@ -82,15 +83,23 @@ export function MetabolicCalculator() {
       maxHeartRate: decimal(values.maxHeartRate) || null,
     };
 
-    return mode === "cykling"
-      ? calculateMetabolicProfile(
-          { ...shared, vo2maxPower: decimal(values.vo2maxPower) },
-          model,
-        )
-      : calculateRunningProfile(
-          { ...shared, runningEconomy: decimal(values.runningEconomy) },
-          model,
-        );
+    const run = (vlamax: number) =>
+      mode === "cykling"
+        ? calculateMetabolicProfile(
+            { ...shared, vlamax, vo2maxPower: decimal(values.vo2maxPower) },
+            model,
+          )
+        : calculateRunningProfile(
+            { ...shared, vlamax, runningEconomy: decimal(values.runningEconomy) },
+            model,
+          );
+    const result = run(shared.vlamax);
+    // Bandet runt bränslet: samma modell med VLamax ±0,04.
+    const band =
+      result.points.length > 0 && shared.vlamax > 0
+        ? fuelBand((v) => run(v).points, shared.vlamax)
+        : undefined;
+    return { ...result, band };
   }, [mode, values, constants]);
 
   const { anaerobicThreshold: at, fatMax, carbMax } = profile.thresholds;
@@ -370,6 +379,8 @@ export function MetabolicCalculator() {
             }
             mode={mode}
             showFacts={false}
+            band={profile.band}
+            weightKg={decimal(values.weightKg) || null}
           />
 
           {zones.length > 0 && (

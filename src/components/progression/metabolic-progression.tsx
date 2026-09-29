@@ -9,6 +9,7 @@ import type {
   MetabolicPoint,
   MetabolicThresholds,
 } from "@/lib/calculators/metabolic";
+import type { FuelBand } from "@/lib/calculators/metabolic-zones";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 
@@ -20,6 +21,8 @@ export type MetabolicEntry = {
   vlamax: number;
   points: MetabolicPoint[];
   thresholds: MetabolicThresholds;
+  band: FuelBand[];
+  weightKg: number;
 };
 
 const sv = (v: number, digits = 0) => v.toFixed(digits).replace(".", ",");
@@ -91,6 +94,8 @@ export function MetabolicProgression({
         points={selected.points}
         thresholds={selected.thresholds}
         map={map}
+        band={selected.band}
+        weightKg={selected.weightKg}
       />
 
       {now && then && previous && probe !== null && (

@@ -93,7 +93,9 @@ export type MetabolicProfile = {
 const GRAMS_PER_MOL_GLYCOSYL = 162.14;
 /** Två laktat bildas per glukosenhet. */
 const LACTATE_PER_GLUCOSE = 2;
-const KCAL_PER_G_FAT = 9.5;
+export const KCAL_PER_G_FAT = 9.5;
+/** Energi per gram kolhydrat (glykogen), kcal – för att visa kcal/h. */
+export const KCAL_PER_G_CARB = 4.1;
 /** Energiutbyte per liter syre vid fettoxidation, kcal. */
 const KCAL_PER_LITRE_O2_FAT = 4.65;
 

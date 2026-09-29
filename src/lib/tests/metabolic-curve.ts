@@ -15,7 +15,11 @@ import {
 } from "@/lib/calculators/metabolic";
 import { analyseSessionOnServer } from "./metabolic-profile";
 import { toEfforts, type FullSession } from "./session-queries";
-import { fuelByZone as fuelAtZones } from "@/lib/calculators/metabolic-zones";
+import {
+  fuelBand,
+  fuelByZone as fuelAtZones,
+  type FuelBand,
+} from "@/lib/calculators/metabolic-zones";
 import type { ZoneRow } from "./zones";
 
 export type MetabolicCurve = {
@@ -23,6 +27,9 @@ export type MetabolicCurve = {
   thresholds: MetabolicThresholds;
   vo2max: number;
   vlamax: number;
+  /** Bränslet med VLamax ±0,04, samma punkter som `points`. */
+  band: FuelBand[];
+  weightKg: number;
 };
 
 type StoredMetric = { key: string; value: number | string; unit: string };
@@ -55,6 +62,9 @@ export function metabolicCurve(
       : (valueOf(metrics, "Pmax") ?? (vo2max * weightKg - 7 * weightKg) / 10.8);
   if (!(vo2maxPower > 0)) return null;
 
+  const compute = (v: number) =>
+    calculateMetabolicProfile({ vo2max, vlamax: v, vo2maxPower, weightKg })
+      .points;
   const profile = calculateMetabolicProfile({
     vo2max,
     vlamax,
@@ -63,11 +73,14 @@ export function metabolicCurve(
   });
   if (profile.points.length === 0) return null;
   // Varannan punkt räcker för att rita – 100 i stället för 200.
+  const thin = <T,>(rows: T[]) => rows.filter((_, i) => i % 2 === 1);
   return {
-    points: profile.points.filter((_, i) => i % 2 === 1),
+    points: thin(profile.points),
     thresholds: profile.thresholds,
     vo2max,
     vlamax,
+    band: thin(fuelBand(compute, vlamax)),
+    weightKg,
   };
 }
 

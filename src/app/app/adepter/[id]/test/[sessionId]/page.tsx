@@ -370,6 +370,8 @@ export default async function SessionPage({
             points={curve.points}
             thresholds={curve.thresholds}
             map={mapPoints}
+            band={curve.band}
+            weightKg={curve.weightKg}
           />
         )}
 

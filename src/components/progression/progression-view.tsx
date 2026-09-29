@@ -303,6 +303,8 @@ export function ProgressionView({
           vlamax: e.curve.vlamax,
           points: e.curve.points,
           thresholds: e.curve.thresholds,
+          band: e.curve.band,
+          weightKg: e.curve.weightKg,
         }))
       : [];
 

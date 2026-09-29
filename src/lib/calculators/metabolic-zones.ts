@@ -45,3 +45,41 @@ export function heartRateByZone(
     power === null || power > top ? null : nearest(points, power).heartRate;
   return zones.map((z) => [at(z.min), at(z.max)]);
 }
+
+/** Spannet för fett och kolhydrat vid en punkt, g/h. */
+export type FuelBand = {
+  fat: [number, number];
+  carbs: [number, number];
+};
+
+/** VLamax typiska fel i referensmodellen, mmol/l/s. */
+export const VLAMAX_SPREAD = 0.04;
+
+/**
+ * Osäkerhetsbandet runt bränslekurvorna: samma modell med VLamax ± spread.
+ * `compute` räknar kurvan för en VLamax med allt annat lika, så att punkterna
+ * hamnar på samma effekter och kan läggas bredvid varandra index för index.
+ */
+export function fuelBand(
+  compute: (vlamax: number) => MetabolicPoint[],
+  vlamax: number,
+  spread = VLAMAX_SPREAD,
+): FuelBand[] {
+  const low = compute(Math.max(vlamax - spread, 0.05));
+  const high = compute(vlamax + spread);
+  const mid = compute(vlamax);
+  return mid.map((p, i) => {
+    const fats = [p.fatPerHour, low[i]?.fatPerHour, high[i]?.fatPerHour].filter(
+      (v): v is number => v !== undefined,
+    );
+    const carbs = [
+      p.carbsPerHour,
+      low[i]?.carbsPerHour,
+      high[i]?.carbsPerHour,
+    ].filter((v): v is number => v !== undefined);
+    return {
+      fat: [Math.min(...fats), Math.max(...fats)],
+      carbs: [Math.min(...carbs), Math.max(...carbs)],
+    };
+  });
+}

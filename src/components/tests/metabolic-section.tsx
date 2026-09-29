@@ -29,6 +29,7 @@ import {
   type MetabolicPoint,
   type MetabolicThresholds,
 } from "@/lib/calculators/metabolic";
+import type { FuelBand } from "@/lib/calculators/metabolic-zones";
 import { cn } from "@/lib/cn";
 
 const sv = (v: number, digits = 0) => v.toFixed(digits).replace(".", ",");
@@ -205,6 +206,8 @@ export function MetabolicSection({
   map,
   mode = "cykling",
   showFacts = true,
+  band,
+  weightKg = null,
 }: {
   points: MetabolicPoint[];
   thresholds: MetabolicThresholds;
@@ -214,6 +217,10 @@ export function MetabolicSection({
   mode?: "cykling" | "löpning";
   /** Nyckeltalen överst – kalkylen visar dem redan själv. */
   showFacts?: boolean;
+  /** Bandet runt bränslet, VLamax ±0,04. */
+  band?: FuelBand[];
+  /** Ger syreupptaget i ml/min i laktatdiagrammet. */
+  weightKg?: number | null;
 }) {
   const [chosen, setView] = useState<SeriesKey | "karta">("lactate");
   const views = VIEWS.filter(
@@ -306,10 +313,12 @@ export function MetabolicSection({
             thresholdPower={at ? at.power : null}
             markers={markers}
             mode={mode}
+            band={band}
+            weightKg={weightKg}
           />
           <p className="mt-3 max-w-3xl text-[12px] leading-relaxed text-text-subtle">
             {view === "lactate"
-              ? "Laktatet som bildas mot det som förbränns, ur Mader-modellen med VO2max och VLamax. Där kurvorna korsar varandra ligger tröskeln – över den hopar sig laktatet."
+              ? "Laktatet som bildas mot det som förbränns, ur Mader-modellen med VO2max och VLamax, och syreupptaget. Där laktatkurvorna korsar varandra ligger tröskeln – över den hopar sig laktatet."
               : "Fett och kolhydrat i gram per timme. FatMax är där fettförbränningen toppar, CarbMax där kolhydratåtgången når 90 g/h – ungefär vad magen tar upp under ett lopp. Över den töms förråden fortare än de fylls på."}
           </p>
         </>

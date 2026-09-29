@@ -619,11 +619,15 @@ här ritas med Coachvys Mader-modell ur testets egna VO2max och VLamax.
   *Metabol karta* – VO2max mot VLamax med navigatorns cykeltyper som
   områden och adeptens tidigare tester som ett spår. Kurvan räknas på
   servern; webbläsaren får bara punkterna.
-- **Bränslet i två paneler** – fett och kolhydrat med var sin skala och
-  gemensam effektaxel. Fettet ligger på tiotals gram i timmen, kolhydraten på
-  hundratals; på samma axel blev fettet en platt rand. Två y-axlar i ett
-  diagram hade fått linjernas korsning att se ut som en "crossover" som bara
-  beror på skalorna.
+- **Bränslet i ett diagram med två axlar** – kolhydrat till vänster, fett
+  till höger, eftersom fettet ligger på tiotals gram i timmen och
+  kolhydraten på hundratals. Med två skalor säger linjernas korsning
+  ingenting, så den verkliga *crossover*-punkten – där fett och kolhydrat
+  ger lika mycket energi (9,5 respektive 4,1 kcal/g) – räknas fram och
+  markeras. Banden runt kurvorna är samma modell med VLamax ±0,04, och
+  tooltipen visar g/h och kcal/h.
+- **Syreupptaget i laktatdiagrammet** – VO2 i ml/min på vänster axel,
+  laktatproduktion och -förbränning till höger.
 - **Bränsle per zon** – fett och kolhydrat vid zonens mitt, i zontabellen.
 - **Samma sak i kalkylen** – Kalkyler → Metabol profil har samma sektion,
   karta (cykel) och zontabell med modellens puls, fett och kolhydrat per zon.
