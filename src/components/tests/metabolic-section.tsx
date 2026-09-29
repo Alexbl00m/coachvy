@@ -24,9 +24,10 @@ import {
   CHART_SURFACE,
   SERIES,
 } from "@/lib/calculators/chart-colors";
-import type {
-  MetabolicPoint,
-  MetabolicThresholds,
+import {
+  paceFromSpeed,
+  type MetabolicPoint,
+  type MetabolicThresholds,
 } from "@/lib/calculators/metabolic";
 import { cn } from "@/lib/cn";
 
@@ -77,6 +78,7 @@ function MapTooltip({
 }
 
 function MetabolicMap({ points }: { points: MapPoint[] }) {
+  if (points.length === 0) return null;
   const current = points.find((p) => p.current) ?? points[points.length - 1];
   const history = points.filter((p) => p !== current);
   const matches = TYPES.filter(
@@ -201,12 +203,28 @@ export function MetabolicSection({
   points,
   thresholds,
   map,
+  mode = "cykling",
+  showFacts = true,
 }: {
   points: MetabolicPoint[];
   thresholds: MetabolicThresholds;
+  /** Punkter på kartan. Tom, eller löpning, så visas ingen karta. */
   map: MapPoint[];
+  /** I löpning är punkternas `power` fart i m/s. */
+  mode?: "cykling" | "löpning";
+  /** Nyckeltalen överst – kalkylen visar dem redan själv. */
+  showFacts?: boolean;
 }) {
-  const [view, setView] = useState<SeriesKey | "karta">("lactate");
+  const [chosen, setView] = useState<SeriesKey | "karta">("lactate");
+  const views = VIEWS.filter(
+    (v) => v.key !== "karta" || (mode === "cykling" && map.length > 0),
+  );
+  // Byts grenen medan kartan är vald finns den inte längre – då laktatet.
+  const view = views.some((v) => v.key === chosen) ? chosen : "lactate";
+  const level = (p: MetabolicPoint) =>
+    mode === "cykling"
+      ? `${Math.round(p.power)} W`
+      : `${paceFromSpeed(p.power)}/km`;
   const { anaerobicThreshold: at, fatMax, carbMax } = thresholds;
   const markers = [
     ...(fatMax ? [{ power: fatMax.power, label: "FatMax" }] : []),
@@ -216,17 +234,17 @@ export function MetabolicSection({
   const facts = [
     at && {
       label: "Anaerob tröskel",
-      value: `${Math.round(at.power)} W`,
+      value: level(at),
       hint: `${sv(at.carbsPerHour)} g kolhydrat/h`,
     },
     fatMax && {
       label: "FatMax",
-      value: `${Math.round(fatMax.power)} W`,
+      value: level(fatMax),
       hint: `${sv(fatMax.fatPerHour)} g fett/h`,
     },
     carbMax && {
       label: "CarbMax",
-      value: `${Math.round(carbMax.power)} W`,
+      value: level(carbMax),
       hint: "90 g kolhydrat/h – vad magen tar upp",
     },
   ].filter(Boolean) as { label: string; value: string; hint: string }[];
@@ -240,7 +258,7 @@ export function MetabolicSection({
           aria-label="Diagram"
           className="inline-flex rounded-md border border-line-strong p-0.5"
         >
-          {VIEWS.map((v) => (
+          {views.map((v) => (
             <button
               key={v.key}
               type="button"
@@ -259,7 +277,7 @@ export function MetabolicSection({
         </div>
       </div>
 
-      {facts.length > 0 && view !== "karta" && (
+      {showFacts && facts.length > 0 && view !== "karta" && (
         <dl className="mb-4 grid gap-3 sm:grid-cols-3">
           {facts.map((f) => (
             <div
@@ -287,10 +305,11 @@ export function MetabolicSection({
             series={view}
             thresholdPower={at ? at.power : null}
             markers={markers}
+            mode={mode}
           />
           <p className="mt-3 max-w-3xl text-[12px] leading-relaxed text-text-subtle">
             {view === "lactate"
-              ? "Laktatet som bildas mot det som förbränns, ur Mader-modellen med testets VO2max och VLamax. Där kurvorna korsar varandra ligger tröskeln – över den hopar sig laktatet."
+              ? "Laktatet som bildas mot det som förbränns, ur Mader-modellen med VO2max och VLamax. Där kurvorna korsar varandra ligger tröskeln – över den hopar sig laktatet."
               : "Fett och kolhydrat i gram per timme. FatMax är där fettförbränningen toppar, CarbMax där kolhydratåtgången når 90 g/h – ungefär vad magen tar upp under ett lopp. Över den töms förråden fortare än de fylls på."}
           </p>
         </>

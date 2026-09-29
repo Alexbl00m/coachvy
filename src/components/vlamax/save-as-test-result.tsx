@@ -63,7 +63,7 @@ export function SaveAsTestResult({
         </Field>
 
         <Button type="submit" disabled={pending} className="w-full font-semibold">
-          {pending ? "Sparar…" : `Spara ${value.toFixed(2)} mmol/l/s`}
+          {pending ? "Sparar…" : `Spara ${value.toFixed(2).replace(".", ",")} mmol/l/s`}
         </Button>
 
         <p className="text-[12px] text-text-subtle">

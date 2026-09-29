@@ -152,6 +152,19 @@ export function MetabolicChart({
         )
       : undefined;
 
+  if (series === "fuel") {
+    return (
+      <FuelPanels
+        points={points}
+        thresholdPower={thresholdPower}
+        markers={markers}
+        mode={mode}
+        ticks={runningTicks ?? cyclingTicks}
+        carbMax={yMax}
+      />
+    );
+  }
+
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -260,6 +273,184 @@ export function MetabolicChart({
           ))}
         </LineChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+/**
+ * Fett och kolhydrat i var sin panel med egen skala och gemensam x-axel.
+ *
+ * Fettet ligger på några tiotal gram i timmen, kolhydraten på hundratals. På
+ * samma axel blir fettkurvan en platt rand längst ned. Två y-axlar i samma
+ * diagram vore det andra sättet, men då ser linjernas korsning ut som en
+ * "crossover" som i själva verket bara beror på hur skalorna råkar ligga –
+ * så de får var sin panel, och markören följer med i båda.
+ */
+function FuelPanels({
+  points,
+  thresholdPower,
+  markers,
+  mode,
+  ticks,
+  carbMax,
+}: {
+  points: MetabolicPoint[];
+  thresholdPower: number | null;
+  markers: { power: number; label: string }[];
+  mode: Mode;
+  ticks: number[] | undefined;
+  carbMax: number | undefined;
+}) {
+  const fatTop = Math.max(...points.map((p) => p.fatPerHour), 1);
+  // Jämna steg om 20 g/h, så att översta markeringen inte blir 70 efter 60.
+  const fatMax = Math.ceil((fatTop * 1.2) / 20) * 20;
+  const fatTicks = Array.from({ length: fatMax / 20 + 1 }, (_, i) => i * 20);
+  const domain: [number | "dataMin", "dataMax"] =
+    mode === "cykling" ? [0, "dataMax"] : ["dataMin", "dataMax"];
+  const format = (v: number) =>
+    mode === "cykling" ? String(Math.round(v)) : (v * 3.6).toFixed(0);
+
+  const panel = (
+    key: "fatPerHour" | "carbsPerHour",
+    name: string,
+    color: string,
+    yMax: number | undefined,
+    showAxis: boolean,
+    panelMarkers: { power: number; label: string }[],
+    height: string,
+  ) => (
+    <div className="w-full">
+      <p className="mb-1 flex items-center gap-2 text-[12px] text-text-muted">
+        <span
+          aria-hidden
+          className="h-0.5 w-4 rounded"
+          style={{ backgroundColor: color }}
+        />
+        {name}, g/h
+      </p>
+      <div className={height}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={points}
+          syncId="bransle"
+          margin={{ top: 8, right: 16, bottom: 4, left: 4 }}
+        >
+          <CartesianGrid stroke={CHART_GRID} vertical={false} />
+          <XAxis
+            dataKey="power"
+            type="number"
+            domain={domain}
+            ticks={ticks}
+            tickFormatter={format}
+            tick={showAxis ? { fill: CHART_AXIS_TEXT, fontSize: 11 } : false}
+            tickLine={false}
+            axisLine={{ stroke: CHART_GRID }}
+            height={showAxis ? 28 : 4}
+            tickMargin={8}
+            label={
+              showAxis
+                ? {
+                    value: mode === "cykling" ? "Effekt (W)" : "Fart (km/h)",
+                    position: "insideBottomRight",
+                    offset: -4,
+                    fill: CHART_AXIS_TEXT,
+                    fontSize: 11,
+                  }
+                : undefined
+            }
+          />
+          <YAxis
+            domain={yMax ? [0, yMax] : [0, "auto"]}
+            ticks={key === "fatPerHour" ? fatTicks : undefined}
+            allowDataOverflow
+            tickFormatter={(v: number) => String(Math.round(v))}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            width={44}
+          />
+          <Tooltip
+            cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
+            content={<ChartTooltip unit="g/h" mode={mode} />}
+          />
+          {thresholdPower !== null && (
+            <ReferenceLine
+              x={thresholdPower}
+              stroke={CHART_AXIS_TEXT}
+              strokeDasharray="4 4"
+              label={{
+                value: "Tröskel",
+                position: "insideTopRight",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 11,
+              }}
+            />
+          )}
+          {panelMarkers.map((m) => (
+            <ReferenceLine
+              key={m.label}
+              x={m.power}
+              stroke={CHART_AXIS_TEXT}
+              strokeDasharray="2 4"
+              strokeOpacity={0.7}
+              label={{
+                value: m.label,
+                position: "insideTopLeft",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 11,
+              }}
+            />
+          ))}
+          {key === "carbsPerHour" && (
+            <ReferenceLine
+              y={90}
+              stroke={CHART_AXIS_TEXT}
+              strokeDasharray="2 4"
+              strokeOpacity={0.6}
+              label={{
+                value: "90 g/h",
+                position: "insideBottomLeft",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 10,
+              }}
+            />
+          )}
+          <Line
+            type="monotone"
+            dataKey={key}
+            name={name}
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 5, fill: color, stroke: CHART_SURFACE, strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {panel(
+        "fatPerHour",
+        "Fett",
+        SERIES.secondary,
+        fatMax,
+        false,
+        markers.filter((m) => m.label === "FatMax"),
+        "h-48",
+      )}
+      {panel(
+        "carbsPerHour",
+        "Kolhydrat",
+        SERIES.primary,
+        carbMax,
+        true,
+        markers.filter((m) => m.label !== "FatMax"),
+        "h-60",
+      )}
     </div>
   );
 }

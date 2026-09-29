@@ -2,11 +2,17 @@
 
 import { useMemo, useState } from "react";
 
-import { MetabolicChart } from "@/components/calculators/metabolic-chart";
 import { ResultGrid } from "@/components/calculators/result-grid";
+import { MetabolicSection } from "@/components/tests/metabolic-section";
+import { ZonesCard } from "@/components/tests/zones-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import {
+  fuelByZone,
+  heartRateByZone,
+} from "@/lib/calculators/metabolic-zones";
+import { ftpZones, thresholdZones } from "@/lib/tests/zones";
 import {
   CARB_MAX_GRAMS_PER_HOUR,
   MADER_DEFAULTS,
@@ -53,7 +59,6 @@ export function MetabolicCalculator() {
     volRel: String(MADER_DEFAULTS.volRel),
   });
   const [showConstants, setShowConstants] = useState(false);
-  const [series, setSeries] = useState<"lactate" | "fuel">("lactate");
 
   const set = (patch: Partial<typeof values>) =>
     setValues((current) => ({ ...current, ...patch }));
@@ -89,6 +94,13 @@ export function MetabolicCalculator() {
   }, [mode, values, constants]);
 
   const { anaerobicThreshold: at, fatMax, carbMax } = profile.thresholds;
+  // Zonerna ur tröskeln: Coggans på cykeln med tröskeln som FTP, tröskel-
+  // schemat i löpning – samma som testerna använder.
+  const zones = !at
+    ? []
+    : mode === "cykling"
+      ? ftpZones(at.power)
+      : thresholdZones(at.power);
   const top =
     mode === "cykling"
       ? decimal(values.vo2maxPower)
@@ -295,7 +307,7 @@ export function MetabolicCalculator() {
                 hint: at
                   ? [
                       intensity(at, mode).extra,
-                      `${at.percentOfMax} % av ${mode === "cykling" ? "effekten" : "farten"} vid VO2max`,
+                      `${sv(at.percentOfMax, 1)} % av ${mode === "cykling" ? "effekten" : "farten"} vid VO2max`,
                       at.heartRate ? `puls ${at.heartRate}` : "",
                     ]
                       .filter(Boolean)
@@ -341,64 +353,45 @@ export function MetabolicCalculator() {
             ]}
           />
 
-          <Card>
-            <CardTitle
-              action={
-                <div className="flex gap-1.5">
-                  {(
-                    [
-                      ["lactate", "Laktat"],
-                      ["fuel", "Bränsle"],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      aria-pressed={series === key}
-                      onClick={() => setSeries(key)}
-                      className={cn(
-                        "rounded-md border px-2.5 py-1 text-[12px] transition-colors",
-                        series === key
-                          ? "border-accent bg-accent-soft font-medium text-text"
-                          : "border-line-strong text-text-muted hover:border-accent hover:text-text",
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+          <MetabolicSection
+            points={profile.points}
+            thresholds={profile.thresholds}
+            map={
+              mode === "cykling"
+                ? [
+                    {
+                      vo2max: decimal(values.vo2max),
+                      vlamax: decimal(values.vlamax),
+                      date: "Profilen",
+                      current: true,
+                    },
+                  ]
+                : []
+            }
+            mode={mode}
+            showFacts={false}
+          />
+
+          {zones.length > 0 && (
+            <ZonesCard
+              zones={zones}
+              zoneUnit={mode === "cykling" ? "W" : "m/s"}
+              sport={mode}
+              weightKg={decimal(values.weightKg) || null}
+              thresholds={
+                mode === "cykling" && at
+                  ? [{ label: "Tröskel", watts: at.power }]
+                  : []
               }
-            >
-              {series === "lactate"
-                ? "Laktatproduktion mot förbränning"
-                : "Substratomsättning"}
-            </CardTitle>
-
-            <MetabolicChart
-              points={profile.points}
-              series={series}
-              thresholdPower={at ? at.power : null}
-              mode={mode}
+              fuel={fuelByZone(zones, profile.points)}
+              heartRates={heartRateByZone(zones, profile.points)}
+              note={
+                mode === "cykling"
+                  ? "Zonerna utgår från den anaeroba tröskeln som FTP (Coggans indelning). Pulsen är modellens, ur maxpulsen."
+                  : "Zonerna utgår från farten vid den anaeroba tröskeln. Pulsen är modellens, ur maxpulsen."
+              }
             />
-
-            <p className="mt-4 border-t border-line pt-4 text-[13px] leading-relaxed text-text-muted">
-              {series === "lactate" ? (
-                <>
-                  Under tröskeln hinner kroppen förbränna allt laktat som bildas.
-                  Där kurvorna korsar varandra börjar det ackumuleras — det är
-                  den anaeroba tröskeln.
-                </>
-              ) : (
-                <>
-                  Fettförbränningen toppar långt under tröskeln och faller mot
-                  noll när glykolysen tar över. Kolhydratsiffran är den takt
-                  kroppen förbrukar dem i, inte vad som går att tillföra – över
-                  CarbMax går det åt mer än de {CARB_MAX_GRAMS_PER_HOUR} g/h som
-                  magen normalt klarar att ta upp under ett lopp.
-                </>
-              )}
-            </p>
-          </Card>
+          )}
 
           <p className="text-[13px] leading-relaxed text-text-subtle">
             Modellen räknar upp till{" "}

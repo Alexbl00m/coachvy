@@ -619,7 +619,20 @@ här ritas med Coachvys Mader-modell ur testets egna VO2max och VLamax.
   *Metabol karta* – VO2max mot VLamax med navigatorns cykeltyper som
   områden och adeptens tidigare tester som ett spår. Kurvan räknas på
   servern; webbläsaren får bara punkterna.
+- **Bränslet i två paneler** – fett och kolhydrat med var sin skala och
+  gemensam effektaxel. Fettet ligger på tiotals gram i timmen, kolhydraten på
+  hundratals; på samma axel blev fettet en platt rand. Två y-axlar i ett
+  diagram hade fått linjernas korsning att se ut som en "crossover" som bara
+  beror på skalorna.
 - **Bränsle per zon** – fett och kolhydrat vid zonens mitt, i zontabellen.
+- **Samma sak i kalkylen** – Kalkyler → Metabol profil har samma sektion,
+  karta (cykel) och zontabell med modellens puls, fett och kolhydrat per zon.
+- **Kroppsfett ur BMI** – i VLamax-kalkylen och testformuläret, hopfällt:
+  Deurenberg m.fl. (1991), 1,20 · BMI + 0,23 · ålder − 10,8 · kön − 5,4, med
+  fettfri massa och ett spann på ±4 procentenheter. BMI skiljer inte muskler
+  från fett, så för tränade atleter blir det för högt. Känsligheten är låg:
+  94 kg och 780 W ger VLamax 0,45 vid 18 % och 0,48 vid 22 % – mindre än
+  modellens eget fel, ±0,04.
 - **Puls per zon** – ur stegtestets egen pulskurva vid zonernas gränser,
   förlängd linjärt högst 30 % utanför stegen och aldrig över maxpulsen.
   Utan stegtest: Friels zoner ur tröskelpulsen (5 km, 20 minuter, lopp och

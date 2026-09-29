@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
+import { BodyFatEstimate } from "@/components/calculators/body-fat-estimate";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { predictVlamax, sprintPerFfm, type VlamaxInput } from "@/lib/vlamax/model";
@@ -31,6 +32,8 @@ export function VlamaxCalculator({
   adepts: Adept[];
 }) {
   const [input, setInput] = useState<VlamaxInput>(DEFAULTS);
+  // Styrt fält, så att en uppskattning ur BMI kan fyllas i.
+  const [fatText, setFatText] = useState(String(DEFAULTS.bodyFatPct));
 
   // Modellen är liten nog att räknas om vid varje tangenttryck.
   const prediction = useMemo(
@@ -76,14 +79,27 @@ export function VlamaxCalculator({
             />
           </Field>
 
-          <Field label="Kroppsfett" htmlFor="fat" hint="%">
-            <Input
-              id="fat"
-              inputMode="decimal"
-              defaultValue={String(DEFAULTS.bodyFatPct)}
-              onChange={(e) => set({ bodyFatPct: decimal(e.target.value) })}
+          <div className="space-y-2">
+            <Field label="Kroppsfett" htmlFor="fat" hint="%">
+              <Input
+                id="fat"
+                inputMode="decimal"
+                value={fatText}
+                onChange={(e) => {
+                  setFatText(e.target.value);
+                  set({ bodyFatPct: decimal(e.target.value) });
+                }}
+              />
+            </Field>
+            <BodyFatEstimate
+              weightKg={input.weightKg}
+              sex={input.sex}
+              onUse={(pct) => {
+                setFatText(String(pct).replace(".", ","));
+                set({ bodyFatPct: pct });
+              }}
             />
-          </Field>
+          </div>
 
           <Field label="Sprintlängd" htmlFor="duration" hint="sekunder">
             <Input
@@ -128,13 +144,13 @@ export function VlamaxCalculator({
           {valid && prediction ? (
             <>
               <p className="text-4xl font-semibold tracking-tight text-text tabular-nums">
-                {prediction.value.toFixed(2)}
+                {prediction.value.toFixed(2).replace(".", ",")}
                 <span className="ml-2 text-base font-normal text-text-muted">
                   mmol/l/s
                 </span>
               </p>
               <p className="mt-2 text-[13px] text-text-muted">
-                Typiskt fel ±{prediction.rmse.toFixed(2)} på en atlet modellen
+                Typiskt fel ±{prediction.rmse.toFixed(2).replace(".", ",")} på en atlet modellen
                 inte sett.
               </p>
               <p className="mt-1 text-[12px] text-text-subtle">

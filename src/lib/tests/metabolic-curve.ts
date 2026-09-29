@@ -15,6 +15,7 @@ import {
 } from "@/lib/calculators/metabolic";
 import { analyseSessionOnServer } from "./metabolic-profile";
 import { toEfforts, type FullSession } from "./session-queries";
+import { fuelByZone as fuelAtZones } from "@/lib/calculators/metabolic-zones";
 import type { ZoneRow } from "./zones";
 
 export type MetabolicCurve = {
@@ -70,28 +71,9 @@ export function metabolicCurve(
   };
 }
 
-/**
- * Bränslet i varje zon, vid zonens mitt. Den översta zonen saknar övre gräns
- * och läses vid sin undre plus hälften av zonen under.
- */
-export function fuelByZone(
-  zones: ZoneRow[],
-  curve: MetabolicCurve,
-): ({ fat: number; carbs: number } | null)[] {
-  const at = (power: number) =>
-    curve.points.reduce((best, p) =>
-      Math.abs(p.power - power) < Math.abs(best.power - power) ? p : best,
-    );
-  const top = curve.points[curve.points.length - 1].power;
-  return zones.map((z) => {
-    const low = z.min ?? 0;
-    const high = z.max ?? low * 1.1;
-    const mid = (low + high) / 2;
-    if (!(mid > 0) || mid > top) return null;
-    const p = at(mid);
-    return { fat: p.fatPerHour, carbs: p.carbsPerHour };
-  });
-}
+/** Bränslet i varje zon, vid zonens mitt. */
+export const fuelByZone = (zones: ZoneRow[], curve: MetabolicCurve) =>
+  fuelAtZones(zones, curve.points);
 
 export type MetabolicHistoryEntry = {
   sessionId: string;

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
+import { BodyFatEstimate } from "@/components/calculators/body-fat-estimate";
 import { cn } from "@/lib/cn";
 import { digitsForMetric } from "@/lib/format";
 import { displayValue } from "@/lib/tests/pace";
@@ -359,14 +360,27 @@ export function BodyFields({ calc }: { calc: ProtocolCalculator }) {
 
       {needsBody && (
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Kroppsfett" htmlFor="body_fat" hint="%">
-            <Input
-              id="body_fat"
-              inputMode="decimal"
-              value={calc.bodyFat}
-              onChange={(e) => calc.setBodyFat(e.target.value)}
-            />
-          </Field>
+          <div className="space-y-2">
+            <Field label="Kroppsfett" htmlFor="body_fat" hint="%">
+              <Input
+                id="body_fat"
+                inputMode="decimal"
+                value={calc.bodyFat}
+                onChange={(e) => calc.setBodyFat(e.target.value)}
+              />
+            </Field>
+            {calc.sex ? (
+              <BodyFatEstimate
+                weightKg={Number(calc.weight.replace(",", "."))}
+                sex={calc.sex}
+                onUse={(pct) => calc.setBodyFat(String(pct).replace(".", ","))}
+              />
+            ) : (
+              <p className="text-[12px] text-text-subtle">
+                Inget mätt värde? Välj kön, så går det att uppskatta ur BMI.
+              </p>
+            )}
+          </div>
           <Field label="Kön" htmlFor="sex">
             <Select
               id="sex"
