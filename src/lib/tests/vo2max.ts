@@ -114,6 +114,8 @@ export const UTILISATION_RANGES = {
     note: "tävlande motionär 65–70 %, proffs runt 75 %",
   },
   LT2: { from: 75, to: 90, note: "tävlande motionär 75–85 %, proffs 80–90 %" },
+  /** Achten & Jeukendrup: tränade cyklister runt 60–65 %, otränade lägre. */
+  FatMax: { from: 50, to: 70, note: "tränade runt 60–65 %, otränade lägre" },
   LT1_of_LT2: {
     cykling: { from: 55, to: 75 },
     löpning: { from: 75, to: 85 },

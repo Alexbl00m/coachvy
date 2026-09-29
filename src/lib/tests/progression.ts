@@ -22,7 +22,11 @@ import {
 } from "./lactate-points";
 import { protocolByKey } from "./protocols";
 import type { FullSession } from "./session-queries";
-import { vo2AtIntensity, vo2maxFromRampPeak } from "./vo2max";
+import {
+  UTILISATION_RANGES,
+  vo2AtIntensity,
+  vo2maxFromRampPeak,
+} from "./vo2max";
 
 // ---------------------------------------------------------------------------
 // VO2max och utnyttjandegrad
@@ -478,16 +482,24 @@ export const protocolLabel = (key: string) => protocolByKey(key)?.label ?? key;
 // Utnyttjandegraden just nu
 // ---------------------------------------------------------------------------
 
+export type UtilisationRange = { from: number; to: number; note?: string };
+
 export type UtilisationRow = {
-  key: "LT1" | "LT2" | "CP";
+  key: string;
+  label: string;
   intensity: number;
   unit: IntensityUnit;
   pct: number;
   performedOn: string;
+  protocol: string;
+  /** Det VO2max raden räknas mot – det närmaste i tid. */
+  vo2max: Vo2Source;
+  range: UtilisationRange | null;
 };
 
 export type UtilisationSummary = {
   rows: UtilisationRow[];
+  /** VO2max för det senaste testet – det kortet räknar mot i första hand. */
   vo2max: Vo2Source;
   /** LT1 i procent av LT2 ur samma test. */
   lt1OfLt2: number | null;
@@ -495,66 +507,121 @@ export type UtilisationSummary = {
 };
 
 /**
- * Senaste trösklarna i procent av VO2max, räknade mot det VO2max som ligger
- * närmast det senaste laktattestet.
+ * Trösklarna som går att räkna utnyttjandegrad på, i den ordning de brukar
+ * ligga. Olika tester ger olika markörer – ett laktattest LT1 och LT2, den
+ * metabola profilen anaerob tröskel och FatMax, ett CP-test CP och FTP – och
+ * alla tas med, så att ingen försvinner för att den heter något annat.
+ */
+const MARKERS: {
+  key: string;
+  label: string;
+  range: UtilisationRange | null;
+}[] = [
+  { key: "FatMax", label: "FatMax", range: UTILISATION_RANGES.FatMax },
+  { key: "LT1", label: "LT1 – aerob tröskel", range: UTILISATION_RANGES.LT1 },
+  { key: "CarbMax", label: "CarbMax 90 g/h", range: null },
+  { key: "LT2", label: "LT2 – anaerob tröskel", range: UTILISATION_RANGES.LT2 },
+  { key: "AT", label: "Anaerob tröskel (Mader)", range: UTILISATION_RANGES.LT2 },
+  { key: "T_speed", label: "Tröskelfart (Daniels)", range: UTILISATION_RANGES.LT2 },
+  { key: "FTP", label: "FTP", range: UTILISATION_RANGES.LT2 },
+  { key: "I_4mmol", label: "4 mmol (OBLA)", range: UTILISATION_RANGES.LT2 },
+  { key: "CP", label: "Critical power", range: UTILISATION_RANGES.LT2 },
+  { key: "CS", label: "Critical speed", range: UTILISATION_RANGES.LT2 },
+];
+
+/**
+ * Varje tröskel i procent av VO2max, från det senaste testet som har den och
+ * räknad mot det VO2max som ligger närmast det testet i tid. Laktattestets
+ * trösklar tas ur omräkningen, resten ur de sparade värdena.
  */
 export function latestUtilisation(
   sessions: FullSession[],
   curves: LactateCurve[],
 ): UtilisationSummary | null {
   const sources = vo2maxSources(sessions);
-  const curve = [...curves]
-    .reverse()
-    .find((c) => c.vo2max && (c.lt1 !== null || c.lt2 !== null));
-  const cpSession = [...sessions]
-    .reverse()
-    .find((s) => s.test_metrics.some((m) => m.key === "CP" && m.unit === "W"));
+  const found = new Map<
+    string,
+    {
+      intensity: number;
+      unit: IntensityUnit;
+      performedOn: string;
+      protocol: string;
+      session: FullSession;
+    }
+  >();
+  const offer = (
+    key: string,
+    intensity: number | null,
+    unit: string,
+    session: FullSession,
+  ) => {
+    if (intensity === null || !(intensity > 0)) return;
+    if (unit !== "W" && unit !== "km/h" && unit !== "m/s") return;
+    const current = found.get(key);
+    if (current && current.performedOn >= session.performed_on) return;
+    found.set(key, {
+      intensity,
+      unit: unit as IntensityUnit,
+      performedOn: session.performed_on,
+      protocol: session.protocol,
+      session,
+    });
+  };
 
-  const vo2max =
-    curve?.vo2max ?? (cpSession ? vo2maxFor(sources, cpSession) : null);
-  if (!vo2max) return null;
-
-  const rows: UtilisationRow[] = [];
-  if (curve) {
-    for (const [key, value, pct] of [
-      ["LT1", curve.lt1, curve.lt1PctVo2max],
-      ["LT2", curve.lt2, curve.lt2PctVo2max],
-    ] as const) {
-      if (value !== null && pct !== null) {
-        rows.push({
-          key,
-          intensity: value,
-          unit: curve.unit,
-          pct,
-          performedOn: curve.performedOn,
-        });
+  const bySession = new Map(curves.map((c) => [c.sessionId, c]));
+  for (const s of sessions) {
+    const curve = bySession.get(s.id);
+    if (curve) {
+      offer("LT1", curve.lt1, curve.unit, s);
+      offer("LT2", curve.lt2, curve.unit, s);
+      offer("I_4mmol", curve.at4, curve.unit, s);
+    }
+    for (const m of s.test_metrics) {
+      if (curve && ["LT1", "LT2", "I_4mmol"].includes(m.key)) continue;
+      if (MARKERS.some((k) => k.key === m.key)) {
+        offer(m.key, Number(m.value), m.unit, s);
       }
     }
   }
-  if (cpSession && vo2max.sport === "cykling") {
-    const cp = Number(
-      cpSession.test_metrics.find((m) => m.key === "CP")?.value,
+
+  const rows: UtilisationRow[] = [];
+  for (const marker of MARKERS) {
+    const hit = found.get(marker.key);
+    if (!hit) continue;
+    const vo2max = vo2maxFor(sources, hit.session);
+    const pct = utilisation(
+      hit.intensity,
+      hit.unit,
+      num(hit.session.weight_kg),
+      vo2max,
     );
-    const pct = utilisation(cp, "W", num(cpSession.weight_kg), vo2max);
-    if (pct !== null) {
-      rows.push({
-        key: "CP",
-        intensity: cp,
-        unit: "W",
-        pct,
-        performedOn: cpSession.performed_on,
-      });
-    }
+    if (pct === null || !vo2max) continue;
+    rows.push({
+      key: marker.key,
+      label: marker.label,
+      intensity: hit.intensity,
+      unit: hit.unit,
+      pct,
+      performedOn: hit.performedOn,
+      protocol: hit.protocol,
+      vo2max,
+      range: marker.range,
+    });
   }
   if (rows.length === 0) return null;
 
+  const newest = rows.reduce((a, b) => (a.performedOn > b.performedOn ? a : b));
+  const curve = [...curves]
+    .reverse()
+    .find((c) => c.lt1 !== null && c.lt2 !== null && c.lt2 > 0);
+
   return {
-    rows,
-    vo2max,
+    rows: rows.sort((a, b) => a.pct - b.pct),
+    vo2max: newest.vo2max,
     lt1OfLt2:
-      curve && curve.lt1 !== null && curve.lt2 !== null && curve.lt2 > 0
+      curve && curve.lt1 !== null && curve.lt2 !== null
         ? (curve.lt1 / curve.lt2) * 100
         : null,
-    sport: curve?.sport ?? vo2max.sport,
+    sport: newest.vo2max.sport,
   };
 }

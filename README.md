@@ -583,7 +583,15 @@ långt under effekten vid VO2max – 5 min på 465 W vid 81 kg gav 57 i stället
 67. Prövat mot ett uppmätt 77,0: Hawley & Noakes ur rampens topp gav 73,4,
 ACSM 71,3.
 
-**Utnyttjandegraden** är syreupptaget vid tröskeln (ACSM) i procent av VO2max,
+**Utnyttjandegraden** samlar alla trösklar adepten har, oavsett vilket test
+de kom ur: FatMax, LT1, CarbMax, LT2, anaerob tröskel (Mader), tröskelfart,
+FTP, 4 mmol, CP och CS. Varje markör tas ur det senaste testet som har den och
+räknas mot det VO2max som ligger närmast det testet i tid. Överst står alla på
+en gemensam skala; chips slår av markörer som inte är relevanta, och valet
+sparas i webbläsaren. FatMax jämförs med 50–70 %, LT1 med 65–75 %, och LT2,
+anaerob tröskel, FTP, 4 mmol och CP med 75–90 %.
+
+Den är syreupptaget vid tröskeln (ACSM) i procent av VO2max,
 räknat i absoluta tal så att olika vikt vid olika tester inte stör. Ett
 laktattest utan eget VO2max lånar det närmaste i tid från ett annat test i
 samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
