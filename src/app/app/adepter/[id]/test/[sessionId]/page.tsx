@@ -14,6 +14,7 @@ import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
 import { RacePredictionsCard } from "@/components/tests/race-predictions";
+import { RedMistCard, SwimPredictionsCard } from "@/components/tests/swim-cards";
 import { ZonesCard } from "@/components/tests/zones-card";
 import { bikeThresholds } from "@/lib/calculators/bike-speed";
 import { displayValue } from "@/lib/tests/pace";
@@ -115,6 +116,17 @@ export default async function SessionPage({
         ).map((r) => ({ ...r, uncertain: r.beyondModel }))
       : [];
 
+  // Simningen: CSS i m/s och testerna som punkter för simprofilen.
+  const swimCs =
+    session.sport === "simning" && cs !== null
+      ? toMetresPerSecond(cs, session.intensity_unit)
+      : null;
+  const swimPoints = session.test_efforts
+    .filter((e) => Number(e.duration_seconds) > 0 && Number(e.distance_m) > 0)
+    .map((e) => ({
+      metres: Number(e.distance_m),
+      seconds: Number(e.duration_seconds),
+    }));
   const shown = (m: { key: string; value: number | string; unit: string }) =>
     displayValue(
       Number(m.value),
@@ -258,6 +270,16 @@ export default async function SessionPage({
             rows={vdotRows}
             note="Längre lopp förutsätter att distansen är tränad. Den egna fartprofilen i Progression tar hänsyn till hur atleten faktiskt tappar fart."
           />
+        )}
+        {swimCs !== null && (
+          <>
+            <SwimPredictionsCard
+              points={swimPoints}
+              cs={swimCs}
+              dPrime={dPrime}
+            />
+            <RedMistCard cs={swimCs} />
+          </>
         )}
         {csRows.length > 0 && (
           <RacePredictionsCard

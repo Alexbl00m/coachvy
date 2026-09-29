@@ -15,11 +15,8 @@ import {
 } from "@/lib/calculators/bike-speed";
 import type { Sport } from "@/lib/calculators/lactate";
 import { digitsForUnit } from "@/lib/format";
-import {
-  formatPace,
-  showsPace,
-  toMetresPerSecond,
-} from "@/lib/tests/pace";
+import { formatDuration } from "@/lib/calculators/time";
+import { showsPace, toMetresPerSecond } from "@/lib/tests/pace";
 import type { ZoneRow } from "@/lib/tests/zones";
 
 const sv = (value: number, digits: number) =>
@@ -151,10 +148,17 @@ export function ZonesCard({
 
   const digits = digitsForUnit(zoneUnit);
   const value = (v: number | null) => (v === null ? null : sv(v, digits));
-  const paceOf = (v: number | null) => {
+  const swim = sport === "simning";
+  /** Tiden för `metres` meter i farten v. */
+  const paceOf = (v: number | null, metres: number) => {
     if (v === null) return null;
     const mps = toMetresPerSecond(v, zoneUnit);
-    return mps === null ? null : formatPace(mps, sport);
+    if (mps === null || !(mps > 0)) return null;
+    const seconds = metres / mps;
+    // Korta längder i sekunder med en decimal, t.ex. "22,5".
+    return seconds < 60 && metres < 100
+      ? seconds.toFixed(1).replace(".", ",")
+      : formatDuration(seconds);
   };
 
   const headers = bike
@@ -162,7 +166,9 @@ export function ZonesCard({
     : pace
       ? [
           "Zon",
-          `Tempo per ${sport === "simning" ? "100 m" : "km"}`,
+          `Tempo per ${swim ? "100 m" : "km"}`,
+          // Simmare räknar i 50 och 25 m också – bassängens längder.
+          ...(swim ? ["Per 50 m", "Per 25 m"] : []),
           `Fart (${zoneUnit})`,
           "Vad den gör",
         ]
@@ -180,9 +186,17 @@ export function ZonesCard({
     }
     if (pace) {
       // Lägre fart är långsammare tempo: spannet skrivs långsamt–snabbt.
+      const paces = (metres: number) =>
+        span(
+          paceOf(z.min, metres),
+          paceOf(z.max, metres),
+          "långsammare än",
+          "snabbare än",
+        );
       return [
         z.zone,
-        span(paceOf(z.min), paceOf(z.max), "långsammare än", "snabbare än"),
+        paces(swim ? 100 : 1000),
+        ...(swim ? [paces(50), paces(25)] : []),
         range,
         z.description,
       ];

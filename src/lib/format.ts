@@ -50,6 +50,7 @@ export function digitsForUnit(unit: string): number {
  * Pacingen är procent men små tal – 1,3 % variation är inte 1 %.
  */
 export function digitsForMetric(key: string, unit: string): number {
-  if (key.startsWith("PACE_")) return 1;
+  if (key.startsWith("PACE_") || key === "LOSS_doubling") return 1;
+  if (key === "FATIGUE_exp") return 3;
   return digitsForUnit(unit);
 }

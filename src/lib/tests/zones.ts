@@ -104,3 +104,26 @@ export function ftpZones(ftp: number): ZoneRow[] {
     description,
   }));
 }
+
+/**
+ * Simningens zoner, som andel av CSS. Ur swim-speed-calculator-pro:
+ * tröskelzonen ligger runt CSS (97–102 %) och resten trappas åt båda håll.
+ */
+const CSS_SPEC: { zone: string; range: [number, number]; description: string }[] = [
+  { zone: "Zon 1 – Återhämtning", range: [0.82, 0.91], description: "Teknik, uppvärmning och nedvarvning" },
+  { zone: "Zon 2 – Extensiv uthållighet", range: [0.91, 0.935], description: "Lång, lugn distans" },
+  { zone: "Zon 3 – Intensiv uthållighet", range: [0.935, 0.97], description: "Distans i högre fart" },
+  { zone: "Zon 4 – Tröskel/CSS", range: [0.97, 1.02], description: "CSS-serier och tröskelarbete" },
+  { zone: "Zon 5 – VO2max", range: [1.02, 1.07], description: "Syreupptagsintervaller" },
+  { zone: "Zon 6 – Sprint", range: [1.07, 1.2], description: "Korta maximala insatser" },
+];
+
+export function cssZones(css: number): ZoneRow[] {
+  if (!(css > 0)) return [];
+  return CSS_SPEC.map(({ zone, range, description }) => ({
+    zone,
+    min: css * range[0],
+    max: css * range[1],
+    description,
+  }));
+}

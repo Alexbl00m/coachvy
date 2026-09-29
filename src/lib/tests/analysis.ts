@@ -25,6 +25,7 @@ import { linearFit } from "@/lib/calculators/regression";
 import { LAP_PROTOCOLS, protocolByKey, type ProtocolKey } from "./protocols";
 import {
   criticalSpeedZones,
+  cssZones,
   ftpZones,
   thresholdZones,
   type ZoneRow,
@@ -39,6 +40,7 @@ import {
   intensityAtLactate,
 } from "./lactate-points";
 import { analysePacing } from "./pacing";
+import { swimProfile } from "./swim";
 import {
   vo2AtIntensity,
   vo2maxFromEfforts,
@@ -708,9 +710,30 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       );
     }
 
+    // Simningen: simprofilen ur testerna och simzonerna runt CSS.
+    const swimming = sport === "simning";
+    if (swimming) {
+      const profile = swimProfile(points);
+      if (profile) {
+        metrics.push(
+          metric("FATIGUE_exp", "Utmattningsexponent", profile.exponent, "", {
+            method: profile.type,
+          }),
+          metric(
+            "LOSS_doubling",
+            "Fart-tapp per dubblad distans",
+            profile.lossPerDoubling,
+            "%",
+            { method: profile.type },
+          ),
+        );
+        warnings.unshift(profile.reading);
+      }
+    }
+
     return {
       metrics,
-      zones: criticalSpeedZones(csInUnit),
+      zones: swimming ? cssZones(csInUnit) : criticalSpeedZones(csInUnit),
       zoneUnit: unit,
       warnings,
     };

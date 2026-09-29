@@ -597,6 +597,31 @@ räknade lufttätheten som 1,225 · 273/(273 + T), men 1,225 kg/m³ gäller vid
 15 °C – vid 20 °C blev luften 5 % för tunn. Här är det 1,225 ·
 288,15/(273,15 + T). 250 W i nedre styret vid 75 kg blir 37,5 km/h.
 
+## Simning
+
+CSS-testet (två eller fler distanser, t.ex. 200, 400 och 800 m) ger CSS i
+tempo per 100 m, D′, simprofilen och simzonerna. Portat från
+`swim-speed-calculator-pro`:
+
+- **Zonerna** som andel av CSS – zon 4, tröskel/CSS, på 97–102 % – med tempo
+  per 100, 50 och 25 m.
+- **Simprofilen**: utmattningsexponenten ur testerna och fart-tapp per
+  dubblad distans. Under 1,05 *dieselmotor*, över 1,09 *bensinmotor*,
+  däremellan balanserad – originalets gränser.
+- **Loppprognos** för supersprint till maraton sim, från det längsta testet
+  med simmarens egen exponent, med referenserna 1,03, 1,04 och 1,06 och med
+  CSS-modellen där den gäller.
+- **Red Mist-cykler**: tiden per 50 m från CSS och uppåt, en sekund i taget.
+
+Tre saker rättades. **D′** räknades som (snittfart − CSS) · snittid, vilket
+inte är linjens skärning: 200/400/800 m på 2:30, 5:15 och 11:00 gav 36,7 m i
+stället för 26,5. **SDI** var snabbaste farten delad med den långsammaste och
+användes som exponent i prognosen, men en fartkvot beror på vilka distanser
+som simmats – samma simmare fick 1,05 med 200 + 400 m och 1,10 med 200 +
+800 m. Den anpassade exponenten blir 1,070 respektive 1,069. **Drop-off** i
+procent berodde på samma sätt på distanserna; fart-tapp per dubblad distans
+gör det inte.
+
 ## Löptester och fartprofil
 
 Tre löptester som registreras varv för varv – en rad per kilometer eller
