@@ -11,11 +11,14 @@ import {
   lactateCurves,
   latestUtilisation,
   metricTrends,
+  protocolLabel,
   type Trend,
 } from "@/lib/tests/progression";
 import type { FullSession } from "@/lib/tests/session-queries";
+import { metabolicHistory } from "@/lib/tests/metabolic-curve";
 import { speedProfile } from "@/lib/tests/speed-profile";
 import { LactateCompare } from "./lactate-compare";
+import { MetabolicProgression } from "./metabolic-progression";
 import { MetricTrends } from "./metric-trends";
 import { RecomputeButton } from "./recompute-button";
 import { RunningProfile } from "./running-profile";
@@ -40,6 +43,7 @@ export type ProgressionViewKey =
   | "oversikt"
   | "laktat"
   | "fart"
+  | "metabol"
   | "syre"
   | "varden";
 
@@ -89,9 +93,8 @@ function Headline({ trend, sport }: { trend: Trend; sport: Sport }) {
   const last = trend.points[trend.points.length - 1];
   // Jämför med ett tidigare test, inte med ett annat protokoll samma dag.
   const previous =
-    [...trend.points]
-      .reverse()
-      .find((p) => p.performedOn < last.performedOn) ?? null;
+    [...trend.points].reverse().find((p) => p.performedOn < last.performedOn) ??
+    null;
   const shown = displayValue(last.value, trend.unit, sport, digits);
   const change =
     previous && previous.value !== 0
@@ -290,6 +293,18 @@ export function ProgressionView({
   const trends = metricTrends(inSport, curves);
   const utilisationNow = latestUtilisation(inSport, curves);
   const running = sport === "löpning" ? speedProfile(inSport) : null;
+  const metabolic =
+    sport === "cykling"
+      ? metabolicHistory(inSport).map((e) => ({
+          sessionId: e.sessionId,
+          performedOn: e.performedOn,
+          protocolLabel: protocolLabel(e.protocol),
+          vo2max: e.curve.vo2max,
+          vlamax: e.curve.vlamax,
+          points: e.curve.points,
+          thresholds: e.curve.thresholds,
+        }))
+      : [];
 
   const views: { key: ProgressionViewKey; label: string }[] = [
     { key: "oversikt", label: "Översikt" },
@@ -298,6 +313,9 @@ export function ProgressionView({
       : []),
     ...(running
       ? [{ key: "fart" as const, label: "Fartprofil och lopp" }]
+      : []),
+    ...(metabolic.length > 0
+      ? [{ key: "metabol" as const, label: "Metabol profil" }]
       : []),
     ...(utilisationNow || trends.some((t) => GROUPS[2].keys.includes(t.key))
       ? [{ key: "syre" as const, label: "Syreupptag" }]
@@ -399,6 +417,10 @@ export function ProgressionView({
       )}
 
       {view === "fart" && running && <RunningProfile profile={running} />}
+
+      {view === "metabol" && metabolic.length > 0 && (
+        <MetabolicProgression entries={metabolic} />
+      )}
 
       {view === "syre" && (
         <div className="space-y-8">

@@ -498,7 +498,16 @@ adepten ser sin egen. En gren i taget: flikarna överst visar cykel, löpning
 och simning med antalet tester, och under dem vad som finns att se i den
 valda grenen – **Översikt** (fyra nyckeltal med förändringen sedan
 föregående testdag, och trösklarna över tid), **Laktatkurvor**, **Fartprofil
-och lopp** (löpning), **Syreupptag** och **Alla värden** i grupper. Valet
+och lopp** (löpning), **Metabol profil** (cykel), **Syreupptag** och **Alla
+värden** i grupper.
+
+**Metabol profil** samlar varje cykeltest som ger VO2max och VLamax – den
+metabola profilen och stegtestet med medlemsdelen – omräknade ur rådatan med
+dagens modell. Välj ett test för dess laktatbalans, bränsle och karta; kartan
+visar hela spåret. En tabell visar VO2max, VLamax, tröskel, FatMax, fett vid
+FatMax och CarbMax per test, och *Samma effekt, två tester* läser båda
+kurvorna vid det förra testets FatMax: där syns en bättre fettförbränning även
+när FatMax inte flyttat sig. Valet
 ligger i adressen (`?gren=lopning&vy=fart`), så varje vy går att länka.
 
 - **Laktatkurvor mot varandra.** Välj alla tester eller några. Det senaste

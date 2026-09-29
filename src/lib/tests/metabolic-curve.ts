@@ -13,6 +13,8 @@ import {
   type MetabolicPoint,
   type MetabolicThresholds,
 } from "@/lib/calculators/metabolic";
+import { analyseSessionOnServer } from "./metabolic-profile";
+import { toEfforts, type FullSession } from "./session-queries";
 import type { ZoneRow } from "./zones";
 
 export type MetabolicCurve = {
@@ -89,4 +91,68 @@ export function fuelByZone(
     const p = at(mid);
     return { fat: p.fatPerHour, carbs: p.carbsPerHour };
   });
+}
+
+export type MetabolicHistoryEntry = {
+  sessionId: string;
+  performedOn: string;
+  protocol: string;
+  curve: MetabolicCurve;
+};
+
+/**
+ * Adeptens metabola profiler över tid: varje cykeltest som ger VO2max och
+ * VLamax – den metabola profilen, och stegtestet när det sparades med
+ * medlemsdelen. Räknas om ur rådatan precis som testsidan, så att en profil
+ * från i fjol räknas med samma modell som den från i dag.
+ */
+export function metabolicHistory(
+  sessions: FullSession[],
+): MetabolicHistoryEntry[] {
+  const n = (v: number | string | null) => (v === null ? null : Number(v));
+  return sessions
+    .filter(
+      (s) =>
+        s.sport === "cykling" &&
+        (s.protocol === "metabol-profil" ||
+          (s.protocol === "laktat-steg" &&
+            s.test_metrics.some((m) => m.key === "VLamax"))),
+    )
+    .flatMap((s) => {
+      const analysis = analyseSessionOnServer(
+        {
+          protocol: s.protocol,
+          sport: s.sport,
+          unit: s.intensity_unit,
+          efforts: toEfforts(s.test_efforts),
+          weightKg: n(s.weight_kg),
+          bodyFatPct: n(s.body_fat_pct),
+          sex: s.sex ?? null,
+          finish: {
+            peakIntensity: n(s.peak_intensity),
+            vo2max: n(s.vo2max),
+            peakLactate: n(s.peak_lactate),
+            peakHeartRate: n(s.peak_heart_rate),
+          },
+        },
+        { members: true },
+      );
+      const curve = metabolicCurve(
+        analysis.metrics,
+        s.intensity_unit,
+        n(s.weight_kg),
+        s.protocol === "laktat-steg" ? n(s.peak_intensity) : null,
+      );
+      return curve
+        ? [
+            {
+              sessionId: s.id,
+              performedOn: s.performed_on,
+              protocol: s.protocol,
+              curve,
+            },
+          ]
+        : [];
+    })
+    .sort((a, b) => a.performedOn.localeCompare(b.performedOn));
 }
