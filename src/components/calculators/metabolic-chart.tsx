@@ -22,7 +22,7 @@ import { paceFromSpeed, type MetabolicPoint } from "@/lib/calculators/metabolic"
 
 type Mode = "cykling" | "löpning";
 
-type SeriesKey = "lactate" | "fuel";
+export type SeriesKey = "lactate" | "fuel";
 
 const CONFIG: Record<
   SeriesKey,
@@ -96,11 +96,14 @@ export function MetabolicChart({
   points,
   series,
   thresholdPower,
+  markers = [],
   mode = "cykling",
 }: {
   points: MetabolicPoint[];
   series: SeriesKey;
   thresholdPower: number | null;
+  /** Fler lodräta markeringar, t.ex. FatMax och CarbMax. */
+  markers?: { power: number; label: string }[];
   /** I löpning är punkternas `power` fart i m/s; axeln visar km/h. */
   mode?: Mode;
 }) {
@@ -122,7 +125,13 @@ export function MetabolicChart({
       : atPoint.carbsPerHour
     : null;
 
-  const yMax = anchor && anchor > 0 ? Number((anchor * headroom).toFixed(2)) : undefined;
+  // Taket avrundas uppåt till ett jämnt steg, så att översta markeringen blir
+  // ett läsbart tal och inte 412,02.
+  const step = series === "lactate" ? 0.5 : 50;
+  const yMax =
+    anchor && anchor > 0
+      ? Math.ceil((anchor * headroom) / step) * step
+      : undefined;
 
   // I löpning ligger punkterna i m/s men axeln visas i km/h. Utan egna
   // markeringar hamnar de på jämna m/s – 0, 7, 14, 17 km/h. Här blir de
@@ -131,6 +140,16 @@ export function MetabolicChart({
   const runningTicks =
     mode === "löpning" && top > 0
       ? Array.from({ length: Math.floor(top / 4) + 1 }, (_, i) => (i * 4) / 3.6)
+      : undefined;
+  // På cykeln jämna 100 W (50 W för låga effekter) i stället för 4, 154, 304.
+  const topWatts = points.length > 0 ? points[points.length - 1].power : 0;
+  const wattStep = topWatts > 300 ? 100 : 50;
+  const cyclingTicks =
+    mode === "cykling" && topWatts > 0
+      ? Array.from(
+          { length: Math.floor(topWatts / wattStep) + 1 },
+          (_, i) => i * wattStep,
+        )
       : undefined;
 
   return (
@@ -141,8 +160,8 @@ export function MetabolicChart({
           <XAxis
             dataKey="power"
             type="number"
-            domain={["dataMin", "dataMax"]}
-            ticks={runningTicks}
+            domain={mode === "cykling" ? [0, "dataMax"] : ["dataMin", "dataMax"]}
+            ticks={runningTicks ?? cyclingTicks}
             tickFormatter={(v: number) =>
               mode === "cykling" ? String(Math.round(v)) : (v * 3.6).toFixed(0)
             }
@@ -162,6 +181,11 @@ export function MetabolicChart({
           <YAxis
             domain={yMax ? [0, yMax] : undefined}
             allowDataOverflow
+            tickFormatter={(v: number) =>
+              series === "lactate"
+                ? v.toFixed(1).replace(".", ",")
+                : String(Math.round(v))
+            }
             tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
             tickLine={false}
             axisLine={false}
@@ -199,6 +223,22 @@ export function MetabolicChart({
               }}
             />
           )}
+
+          {markers.map((m) => (
+            <ReferenceLine
+              key={m.label}
+              x={m.power}
+              stroke={CHART_AXIS_TEXT}
+              strokeDasharray="2 4"
+              strokeOpacity={0.7}
+              label={{
+                value: m.label,
+                position: "insideTopLeft",
+                fill: CHART_AXIS_TEXT,
+                fontSize: 11,
+              }}
+            />
+          ))}
 
           {config.lines.map((line) => (
             <Line

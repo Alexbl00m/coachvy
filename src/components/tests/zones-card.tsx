@@ -29,6 +29,7 @@ function span(
   lower = "<",
   upper = ">",
 ): string {
+  if (min === null && max === null) return "–";
   if (min === null && max !== null) return `${lower} ${max}`;
   if (max === null && min !== null) return `${upper} ${min}`;
   return `${min}–${max}`;
@@ -115,6 +116,8 @@ export function ZonesCard({
   sport,
   weightKg,
   thresholds = [],
+  heartRates,
+  fuel,
   note,
 }: {
   zones: ZoneRow[];
@@ -123,6 +126,13 @@ export function ZonesCard({
   weightKg: number | null;
   /** Nyckelvärden i watt att översätta till fart, t.ex. LT2 och FTP. */
   thresholds?: { label: string; watts: number }[];
+  /**
+   * Pulsen vid zonernas gränser, ur testets egen pulskurva. Samma ordning som
+   * zonerna; null där kurvan inte räcker.
+   */
+  heartRates?: [number | null, number | null][];
+  /** Fett och kolhydrat i g/h vid zonens mitt, ur Mader-modellen. */
+  fuel?: ({ fat: number; carbs: number } | null)[];
   note?: string;
 }) {
   const ids = useId();
@@ -161,7 +171,7 @@ export function ZonesCard({
       : formatDuration(seconds);
   };
 
-  const headers = bike
+  const baseHeaders = bike
     ? ["Zon", "Watt", "Fart på plan väg (km/h)", "Vad den gör"]
     : pace
       ? [
@@ -174,7 +184,7 @@ export function ZonesCard({
         ]
       : ["Zon", `Spann (${zoneUnit})`, "Vad den gör"];
 
-  const rows = zones.map((z) => {
+  const baseRows = zones.map((z) => {
     const range = span(value(z.min), value(z.max));
     if (bike) {
       return [
@@ -202,6 +212,41 @@ export function ZonesCard({
       ];
     }
     return [z.zone, range, z.description];
+  });
+
+  // Puls och bränsle läggs före beskrivningen, som sista kolumnerna med tal.
+  const hasHr = heartRates?.some(([a, b]) => a !== null || b !== null) ?? false;
+  const hasFuel = fuel?.some((f) => f !== null) ?? false;
+  const extraHeaders = [
+    ...(hasHr ? ["Puls"] : []),
+    ...(hasFuel ? ["Fett g/h", "Kolhydrat g/h"] : []),
+  ];
+  const headers = [
+    ...baseHeaders.slice(0, -1),
+    ...extraHeaders,
+    baseHeaders[baseHeaders.length - 1],
+  ];
+  const rows = baseRows.map((row, i) => {
+    const hr = heartRates?.[i];
+    const f = fuel?.[i];
+    const extra = [
+      ...(hasHr
+        ? [
+            hr
+              ? span(
+                  hr[0] === null ? null : String(Math.round(hr[0])),
+                  hr[1] === null ? null : String(Math.round(hr[1])),
+                )
+              : "–",
+          ]
+        : []),
+      ...(hasFuel
+        ? f
+          ? [String(Math.round(f.fat)), String(Math.round(f.carbs))]
+          : ["–", "–"]
+        : []),
+    ];
+    return [...row.slice(0, -1), ...extra, row[row.length - 1]];
   });
 
   return (
@@ -303,12 +348,16 @@ export function ZonesCard({
       {zones.length > 0 && (
         <DataTable
           headers={headers}
-          minWidth={bike || pace ? 600 : 520}
+          minWidth={(bike || pace ? 600 : 520) + extraHeaders.length * 90}
           rows={rows}
         />
       )}
 
       <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+        {hasHr &&
+          "Pulsen är den testet gav vid zonens gränser – ur atletens egen pulskurva, inte ur procent av maxpuls. "}
+        {hasFuel &&
+          "Fett och kolhydrat gäller zonens mitt, ur Mader-modellen. "}
         {bike &&
           "Farten gäller plan väg utan vind vid 20 °C. Position och däck avgör mer än några procent effekt – se farten som en översättning av watten, inte som ett mål. "}
         {note}

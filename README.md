@@ -597,6 +597,33 @@ räknade lufttätheten som 1,225 · 273/(273 + T), men 1,225 kg/m³ gäller vid
 15 °C – vid 20 °C blev luften 5 % för tunn. Här är det 1,225 ·
 288,15/(273,15 + T). 250 W i nedre styret vid 75 kg blir 37,5 km/h.
 
+## Diagram, pulszoner och intervallzoner på testsidan
+
+Ur `metabolic-navigator` kom idéerna, inte räkningen: dess motor är ingen
+Mader-modell utan kurvanpassning på tre atleter (tröskeln som 92 − 24 ·
+VLamax procent av VO2max-effekten, W′ som 28 000 · VLamax joule). Diagrammen
+här ritas med Coachvys Mader-modell ur testets egna VO2max och VLamax.
+
+- **Metabol profil** – för den metabola profilen och stegtestet med VLamax:
+  *Laktatbalans* (produktion mot förbränning, tröskeln där de möts),
+  *Bränsle* (fett och kolhydrat i g/h, med FatMax och CarbMax markerade) och
+  *Metabol karta* – VO2max mot VLamax med navigatorns cykeltyper som
+  områden och adeptens tidigare tester som ett spår. Kurvan räknas på
+  servern; webbläsaren får bara punkterna.
+- **Bränsle per zon** – fett och kolhydrat vid zonens mitt, i zontabellen.
+- **Puls per zon** – ur stegtestets egen pulskurva vid zonernas gränser,
+  förlängd linjärt högst 30 % utanför stegen och aldrig över maxpulsen.
+  Utan stegtest: Friels zoner ur tröskelpulsen (5 km, 20 minuter, lopp och
+  nu också FTP-testet med puls). Procent av maxpuls används inte.
+- **Intervallzoner** – mål för åtta vanliga serier, från 10 × 30 s till
+  3 × 12 min, ur CP och W′ (CS och D′ i löpning och simning). Målet är den
+  högsta nivå där W′bal aldrig går under 10 % genom serien, med Skibas
+  återhämtning från 2012 på cykeln – differentialformen återhämtar för fort
+  (Bartram 2018). CP 280 W och W′ 18 kJ ger 10 × 30 s på 126 %, 5 × 3 min
+  på 110 % och 3 × 12 min på 104 % av CP.
+- **Effekt och tid** – CP-modellen över 2–20 minuter med testets insatser
+  som punkter; en punkt under linjen är en insats som inte var maximal.
+
 ## Simning
 
 CSS-testet (två eller fler distanser, t.ex. 200, 400 och 800 m) ger CSS i

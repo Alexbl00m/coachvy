@@ -506,6 +506,14 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
     if (weightKg && weightKg > 0) {
       metrics.push(metric("FTP_per_kg", "FTP per kg", ftp / weightKg, "W/kg"));
     }
+    // Tröskelpulsen på samma sätt som effekten: 95 % av snittet över 20 min.
+    if (effort.heartRate !== null && effort.heartRate > 0) {
+      metrics.push(
+        metric("LTHR", "Tröskelpuls (skattad)", effort.heartRate * 0.95, "slag/min", {
+          method: "95 % av snittpulsen",
+        }),
+      );
+    }
 
     warnings.push(
       "Ett 20-minuterstest ger inget mått på anaerob kapacitet. Behöver du W′ krävs minst två insatser av olika längd.",

@@ -15,12 +15,25 @@ import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
 import { RacePredictionsCard } from "@/components/tests/race-predictions";
 import { RedMistCard, SwimPredictionsCard } from "@/components/tests/swim-cards";
+import { MetabolicSection } from "@/components/tests/metabolic-section";
+import { PowerDurationChart } from "@/components/tests/power-duration-chart";
+import {
+  HeartRateZonesCard,
+  IntervalZonesCard,
+} from "@/components/tests/training-zone-cards";
 import { ZonesCard } from "@/components/tests/zones-card";
+import { linearFit } from "@/lib/calculators/regression";
+import { heartRateAtIntensity } from "@/lib/tests/lactate-points";
+import { fuelByZone, metabolicCurve } from "@/lib/tests/metabolic-curve";
 import { bikeThresholds } from "@/lib/calculators/bike-speed";
 import { displayValue } from "@/lib/tests/pace";
 import { formatDuration } from "@/lib/calculators/time";
 import { protocolByKey } from "@/lib/tests/protocols";
-import { getSession, toEfforts } from "@/lib/tests/session-queries";
+import {
+  getSession,
+  listFullSessions,
+  toEfforts,
+} from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Testtillfälle" };
 
@@ -70,6 +83,104 @@ export default async function SessionPage({
    * kvar som nödfallsutväg för värden en nyare modell inte längre räknar ut.
    */
   const labels = new Map(recomputed.metrics.map((m) => [m.key, m.label]));
+
+  // --- Metabola diagram, puls och bränsle per zon ---------------------------
+  const weightKg = session.weight_kg === null ? null : Number(session.weight_kg);
+  const recomputedValue = (key: string) => {
+    const m = recomputed.metrics.find((x) => x.key === key);
+    return m && m.value > 0 ? m.value : null;
+  };
+  const curve = metabolicCurve(
+    recomputed.metrics,
+    session.intensity_unit,
+    weightKg,
+    session.protocol === "laktat-steg" && session.peak_intensity != null
+      ? Number(session.peak_intensity)
+      : null,
+  );
+  // Kartan visar också adeptens tidigare tester med VO2max och VLamax.
+  const mapPoints = curve
+    ? (await listFullSessions(adept.id))
+        .filter((s) => s.sport === "cykling" && s.id !== session.id)
+        .flatMap((s) => {
+          const v = (key: string) =>
+            Number(s.test_metrics.find((m) => m.key === key)?.value ?? 0);
+          return v("VO2max") > 0 && v("VLamax") > 0
+            ? [{ vo2max: v("VO2max"), vlamax: v("VLamax"), date: s.performed_on }]
+            : [];
+        })
+        .concat({
+          vo2max: curve.vo2max,
+          vlamax: curve.vlamax,
+          date: session.performed_on,
+        })
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((p) => ({ ...p, current: p.date === session.performed_on }))
+    : [];
+  const zoneFuel =
+    curve && recomputed.zoneUnit === "W"
+      ? fuelByZone(recomputed.zones, curve)
+      : undefined;
+  // Puls per zon ur stegtestets egen pulskurva.
+  const stepPoints = shape?.lactate
+    ? session.test_efforts
+        .filter((e) => e.intensity !== null && e.lactate !== null)
+        .map((e) => ({
+          intensity: Number(e.intensity),
+          lactate: Number(e.lactate),
+          heartRate: e.heart_rate === null ? null : Number(e.heart_rate),
+        }))
+    : [];
+  // Utanför stegen förlängs pulsen linjärt – puls mot belastning är nästan
+  // rak – men högst 30 % av testets spann och aldrig över maxpulsen.
+  const withHr = stepPoints
+    .filter((p) => p.heartRate !== null && p.intensity > 0)
+    .sort((a, b) => a.intensity - b.intensity);
+  const hrFit =
+    withHr.length >= 3
+      ? linearFit(
+          withHr.map((p) => p.intensity),
+          withHr.map((p) => p.heartRate as number),
+        )
+      : null;
+  const peakHr =
+    session.peak_heart_rate != null ? Number(session.peak_heart_rate) : null;
+  const hrAt = (intensity: number): number | null => {
+    const inside = heartRateAtIntensity(stepPoints, intensity);
+    if (inside !== null) return inside;
+    if (!hrFit || !(hrFit.slope > 0)) return null;
+    const lo = withHr[0].intensity;
+    const hi = withHr[withHr.length - 1].intensity;
+    const margin = (hi - lo) * 0.3;
+    if (intensity < lo - margin || intensity > hi + margin) return null;
+    const value = hrFit.intercept + hrFit.slope * intensity;
+    return peakHr ? Math.min(value, peakHr) : value;
+  };
+  const zoneHeartRates =
+    withHr.length > 0
+      ? recomputed.zones.map(
+          (z) =>
+            [
+              z.min === null ? null : hrAt(z.min),
+              z.max === null ? null : hrAt(z.max),
+            ] as [number | null, number | null],
+        )
+      : undefined;
+  const lthr = recomputedValue("LTHR");
+  // Effekt–tid och intervallzoner ur CP och W′, eller CS och D′.
+  const cpNow = recomputedValue("CP");
+  const wPrimeKj = recomputedValue("W_prime");
+  const csNow = recomputedValue("CS");
+  const dPrimeNow = recomputedValue("D_prime");
+  const interval =
+    session.sport === "cykling" && cpNow && wPrimeKj
+      ? { critical: cpNow, reserve: wPrimeKj * 1000 }
+      : session.sport !== "cykling" && csNow && dPrimeNow
+        ? {
+            critical: toMetresPerSecond(csNow, session.intensity_unit),
+            reserve: dPrimeNow,
+          }
+        : null;
   const labelFor = (key: string) =>
     labels.get(key) ?? key.split(":")[0].replace("_prime", "′");
 
@@ -254,14 +365,55 @@ export default async function SessionPage({
           />
         </Card>
 
+        {curve && (
+          <MetabolicSection
+            points={curve.points}
+            thresholds={curve.thresholds}
+            map={mapPoints}
+          />
+        )}
+
         <ZonesCard
           zones={recomputed.zones}
           zoneUnit={recomputed.zoneUnit}
           sport={session.sport}
-          weightKg={session.weight_kg === null ? null : Number(session.weight_kg)}
+          weightKg={weightKg}
           thresholds={bikeThresholds(session.test_metrics)}
+          heartRates={zoneHeartRates}
+          fuel={zoneFuel}
           note="Zonerna räknas om ur rådatan varje gång sidan visas. Förbättras modellen får det här testet bättre zoner utan att någon rör databasen."
         />
+
+        {lthr !== null && !zoneHeartRates && (
+          <HeartRateZonesCard
+            lthr={lthr}
+            sport={session.sport}
+            source={spec?.label ?? "testet"}
+          />
+        )}
+
+        {interval && (
+          <IntervalZonesCard
+            sport={session.sport}
+            critical={interval.critical}
+            reserve={interval.reserve}
+          />
+        )}
+
+        {session.sport === "cykling" && cpNow && wPrimeKj && (
+          <PowerDurationChart
+            cp={cpNow}
+            wPrime={wPrimeKj * 1000}
+            efforts={session.test_efforts
+              .filter(
+                (e) => Number(e.duration_seconds) > 0 && Number(e.intensity) > 0,
+              )
+              .map((e) => ({
+                seconds: Number(e.duration_seconds),
+                watts: Number(e.intensity),
+              }))}
+          />
+        )}
 
         {vdotRows.length > 0 && (
           <RacePredictionsCard
