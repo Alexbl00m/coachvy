@@ -166,6 +166,25 @@ export function SignUpForm() {
         </>
       )}
 
+      {role === "adept" && (
+        <div className="flex items-start gap-2.5 pt-1 text-[13px] text-ink-300">
+          <input
+            id="health_consent"
+            name="health_consent"
+            type="checkbox"
+            required
+            defaultChecked={state.values?.health_consent ?? false}
+            className="mt-0.5 size-4 shrink-0 accent-[#e6754e]"
+          />
+          <label htmlFor="health_consent" className="cursor-pointer">
+            Jag samtycker till att mina hälsouppgifter – som laktat, puls,
+            syreupptag, kroppssammansättning, sömn och skador – behandlas för
+            att följa och planera min träning. Samtycket kan tas tillbaka under
+            Inställningar.
+          </label>
+        </div>
+      )}
+
       {/* The link stays outside the <label> so clicking it does not toggle the box. */}
       <div className="flex items-start gap-2.5 pt-1 text-[13px] text-ink-300">
         <input

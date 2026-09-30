@@ -54,6 +54,13 @@ export type AthleteContext = {
    * och modellen kan bara ta hänsyn till det om den får veta det.
    */
   loadSummary: string | null;
+  /**
+   * Säsongen ur planen: fasen atleten är i och tävlingarna framför.
+   *
+   * Samma pass är rätt mitt i en grundperiod och fel tio dagar före
+   * säsongens mål. Utan planen kan modellen inte veta vilket.
+   */
+  season: string | null;
   /** Vad som saknas och vad det betyder. */
   gaps: string[];
 };
@@ -151,6 +158,7 @@ export function manualAthleteContext(
     known: [],
     background: null,
     loadSummary: null,
+    season: null,
     gaps:
       balance === null
         ? [
@@ -173,6 +181,8 @@ export type ContextInput = {
   background?: string | null;
   /** Belastningsläget ur incheckningarna, redan formaterat. */
   loadSummary?: string | null;
+  /** Säsongen ur planen, redan formaterad. */
+  season?: string | null;
 };
 
 export function buildAthleteContext(input: ContextInput): AthleteContext {
@@ -384,6 +394,7 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
     known,
     background: input.background ?? null,
     loadSummary: input.loadSummary ?? null,
+    season: input.season ?? null,
     gaps,
   };
 }
@@ -432,6 +443,10 @@ export function contextToPrompt(context: AthleteContext): string {
 
   if (context.loadSummary) {
     lines.push("", context.loadSummary);
+  }
+
+  if (context.season) {
+    lines.push("", context.season);
   }
 
   if (context.gaps.length > 0) {

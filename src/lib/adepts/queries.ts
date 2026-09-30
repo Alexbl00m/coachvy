@@ -49,3 +49,26 @@ export async function getMyAdeptRow(profileId: string): Promise<Adept | null> {
   if (error) throw new Error(`Kunde inte hämta din adeptprofil: ${error.message}`);
   return data ?? null;
 }
+
+/**
+ * När ett adeptkonto samtyckte till behandling av hälsouppgifter.
+ *
+ * `null` betyder att samtycket saknas eller har tagits tillbaka. `undefined`
+ * betyder att profilen inte gick att läsa – då visas ingenting hellre än en
+ * felaktig varning.
+ */
+export async function getHealthConsent(
+  profileId: string,
+): Promise<string | null | undefined> {
+  if (!isSupabaseConfigured()) return undefined;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("health_consent_at")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error || !data) return undefined;
+  return data.health_consent_at;
+}

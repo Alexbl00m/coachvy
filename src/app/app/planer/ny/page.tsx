@@ -1,20 +1,11 @@
-import { ClipboardList } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { ModulePlaceholder } from "@/components/module-placeholder";
+import { routes } from "@/lib/routes";
 
-export const metadata = { title: "Skapa ny plan" };
-
+/**
+ * "Skapa ny plan" i sidhuvudet. Planen byggs i säsongsplanen, så knappen
+ * leder dit med formuläret för en ny period öppet.
+ */
 export default function NyPlanPage() {
-  return (
-    <ModulePlaceholder
-      title="Skapa ny plan"
-      description="Här byggs planeditorn – välj adept, period och struktur."
-      icon={ClipboardList}
-      planned={[
-        "Välj adept och planperiod",
-        "Bygg veckor och pass med mallar",
-        "Koppla zoner från senaste testresultat",
-      ]}
-    />
-  );
+  redirect(`${routes.plans}?ny=period`);
 }

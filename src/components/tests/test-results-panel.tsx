@@ -148,7 +148,9 @@ export function TestResultsPanel({
           </Card>
 
           <Card className="p-0 sm:p-0">
-            <div className="overflow-x-auto">
+            {/* relative: skärmläsartexten i en rubrik är absolut positionerad och
+                skulle annars räknas mot hela sidans bredd på en telefon. */}
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[620px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-ink-800 text-left">

@@ -43,7 +43,7 @@ export function ContextSummary({ context }: { context: AthleteContext }) {
 
       {/* Vad mer som följer med i prompten. Coachen ska kunna se att skadan
           och veckans belastning faktiskt går med, inte behöva lita på det. */}
-      {(context.background || context.loadSummary) && (
+      {(context.background || context.loadSummary || context.season) && (
         <details className="mt-2">
           <summary className="cursor-pointer text-text-muted hover:text-text">
             Går också med i prompten
@@ -51,6 +51,7 @@ export function ContextSummary({ context }: { context: AthleteContext }) {
           <div className="mt-1.5 space-y-1.5 whitespace-pre-line">
             {context.background && <p>{context.background}</p>}
             {context.loadSummary && <p>{context.loadSummary}</p>}
+            {context.season && <p>{context.season}</p>}
           </div>
         </details>
       )}

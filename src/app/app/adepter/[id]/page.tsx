@@ -12,7 +12,7 @@ import { LoadPanel } from "@/components/training/load-panel";
 import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
-import { getAdept } from "@/lib/adepts/queries";
+import { getAdept, getHealthConsent } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
@@ -85,6 +85,7 @@ export default async function AdeptPage({
     profile,
     messages,
     unread,
+    consent,
   ] = await Promise.all([
     listTestResults(adept.id),
     canEdit ? listTestTypes() : Promise.resolve([]),
@@ -95,6 +96,10 @@ export default async function AdeptPage({
     getAdeptProfile(adept.id),
     listMessages(adept.id),
     countUnread(adept.id, user.id),
+    // Samtycket gäller bara ett kopplat konto; utan konto ansvarar coachen.
+    isCoach && adept.profile_id
+      ? getHealthConsent(adept.profile_id)
+      : Promise.resolve(undefined),
   ]);
 
   // Kurvorna behöver rådatan, som bara hämtas på fliken där de visas.
@@ -135,6 +140,15 @@ export default async function AdeptPage({
           .filter(Boolean)
           .join(" · ")}
       />
+
+      {consent === null && (
+        <p className="mb-5 rounded-md border border-line-strong bg-surface-2 px-4 py-3 text-sm text-text-muted">
+          {adept.full_name.split(" ")[0]} har inte samtyckt till att
+          hälsouppgifter behandlas i appen. Be hen godkänna det under
+          Inställningar – eller registrera inga nya tester och incheckningar så
+          länge.
+        </p>
+      )}
 
       <div
         role="tablist"

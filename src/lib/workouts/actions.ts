@@ -101,3 +101,39 @@ export async function deleteWorkout(
   revalidatePath(routes.workoutBuilder);
   return { ok: true };
 }
+
+/**
+ * Lägger ett sparat pass på ett datum i kalendern, eller tar bort datumet.
+ *
+ * Coachen flyttar sina adepters pass; en medlemsadept de pass hen byggt
+ * själv. RLS avgör – blir ingen rad ändrad fanns ingen behörighet.
+ */
+export async function scheduleWorkout(
+  id: string,
+  adeptId: string,
+  date: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const access = await requireWorkoutAuthor(adeptId);
+  if (!access.ok) return access;
+
+  if (date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { ok: false, error: "Välj ett datum." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("workouts")
+    .update({ scheduled_for: date })
+    .eq("id", id)
+    .eq("adept_id", adeptId)
+    .select("id");
+  if (error) return { ok: false, error: error.message };
+  if (!data || data.length === 0) {
+    return { ok: false, error: "Passet går inte att flytta härifrån." };
+  }
+
+  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(routes.calendar);
+  revalidatePath(routes.dashboard);
+  return { ok: true };
+}

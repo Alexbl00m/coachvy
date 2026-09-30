@@ -26,6 +26,7 @@ export type AuthFormState = {
     goal?: string;
     current_level?: string;
     accepted_terms?: boolean;
+    health_consent?: boolean;
   };
 };
 
@@ -97,6 +98,7 @@ export async function signUp(
   const email = text(formData, "email");
   const password = text(formData, "password");
   const acceptedTerms = formData.get("accepted_terms") === "on";
+  const healthConsent = formData.get("health_consent") === "on";
 
   const values: AuthFormState["values"] = {
     full_name: fullName,
@@ -106,6 +108,7 @@ export async function signUp(
     goal: text(formData, "goal"),
     current_level: text(formData, "current_level"),
     accepted_terms: acceptedTerms,
+    health_consent: healthConsent,
   };
 
   if (!isSupabaseConfigured()) {
@@ -129,6 +132,16 @@ export async function signUp(
       values,
     };
   }
+  // Hälsouppgifter får bara behandlas på uttryckligt samtycke (GDPR art.
+  // 9.2 a), och samtycket ska vara ett eget val – inte en del av villkoren.
+  // En adept utan det samtycket har ingenting appen kan göra för hen.
+  if (role === "adept" && !healthConsent) {
+    return {
+      error:
+        "Du behöver samtycka till att dina hälsouppgifter behandlas – utan dem går det inte att följa din träning.",
+      values,
+    };
+  }
 
   const supabase = await createClient();
   const origin = await siteOrigin();
@@ -138,6 +151,7 @@ export async function signUp(
     role,
     full_name: fullName,
     accepted_terms: true,
+    health_consent: role === "adept" && healthConsent,
   };
 
   if (role === "coach") {

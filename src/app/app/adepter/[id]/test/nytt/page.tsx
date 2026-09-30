@@ -11,6 +11,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
+import { listBlocks } from "@/lib/season/queries";
 import { listSessions } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Nytt testtillfälle" };
@@ -36,10 +37,11 @@ export default async function NewSessionPage({
   }
   if (!selfService && user.profile?.role !== "coach") redirect(routes.dashboard);
 
-  const [adept, profile, sessions] = await Promise.all([
+  const [adept, profile, sessions, season] = await Promise.all([
     getAdept(id),
     getAdeptProfile(id),
     listSessions(id),
+    listBlocks(id),
   ]);
   if (!adept) notFound();
 
@@ -74,6 +76,7 @@ export default async function NewSessionPage({
         adeptBodyFat={lastBodyFat === null ? null : Number(lastBodyFat)}
         adeptSex={sex}
         member={isMember(user)}
+        season={season}
       />
     </>
   );

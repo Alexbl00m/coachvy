@@ -7,6 +7,7 @@ import { Card, CardTitle, EmptyState } from "@/components/ui/card";
 import { formatDate, digitsForMetric, digitsForUnit } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import type { Sport } from "@/lib/calculators/lactate";
+import { shortMetricLabel } from "@/lib/tests/headline";
 import { displayValue } from "@/lib/tests/pace";
 import { phaseLabel } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
@@ -15,16 +16,6 @@ import type { SessionWithMetrics } from "@/lib/tests/session-queries";
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
-
-/** Kort namn för listan. Nycklarna är databasens, inte coachens. */
-const SHORT_LABELS: Record<string, string> = {
-  T_speed: "Tröskel",
-  LTHR: "Tröskelpuls",
-  W_prime: "W′",
-  D_prime: "D′",
-};
-const shortLabel = (key: string) =>
-  SHORT_LABELS[key] ?? key.replace("_prime", "′");
 
 export function SessionPanel({
   adeptId,
@@ -203,7 +194,7 @@ export function SessionPanel({
                               key={m.id}
                               className="text-[13px] text-text-muted"
                             >
-                              {shortLabel(m.key)}{" "}
+                              {shortMetricLabel(m.key)}{" "}
                               <span className="font-medium text-text">
                                 {d.value}
                               </span>{" "}

@@ -27,6 +27,7 @@ const EXAMPLES = [
   "Vad säger de senaste testerna om var hon står?",
   "Hon känns tung i benen – vad ser du i belastningen?",
   "Vad bör vi prioritera de närmaste fyra veckorna?",
+  "Hur bör veckorna fram till A-loppet se ut, med toppningen?",
   "Räcker den anaeroba kapaciteten för ett lopp med mycket backar?",
 ];
 

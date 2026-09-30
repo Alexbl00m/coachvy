@@ -17,7 +17,9 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
+import { blockOn } from "@/lib/season/season";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
+import type { TrainingBlockRow } from "@/lib/types/database";
 import { previewOnServer } from "@/lib/tests/preview-actions";
 import { saveTestSession } from "@/lib/tests/session-actions";
 import { FIT_SLOTS, kindFor } from "@/lib/tests/fit-efforts";
@@ -42,6 +44,7 @@ export function NewSessionForm({
   adeptBodyFat = null,
   adeptSex = null,
   member = false,
+  season = [],
 }: {
   adeptId: string;
   adeptSport: Sport;
@@ -50,6 +53,8 @@ export function NewSessionForm({
   adeptSex?: "man" | "kvinna" | null;
   /** Coachen har medlemskap – låser upp den metabola profilen. */
   member?: boolean;
+  /** Säsongens perioder, för att förvälja fasen testet togs i. */
+  season?: Pick<TrainingBlockRow, "phase" | "starts_on" | "ends_on">[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -66,7 +71,11 @@ export function NewSessionForm({
   const [performedOn, setPerformedOn] = useState(
     new Date().toISOString().slice(0, 10),
   );
-  const [trainingPhase, setTrainingPhase] = useState("");
+  // Fasen följer säsongsplanen för det valda datumet tills coachen väljer
+  // själv; då gäller valet, även om datumet ändras efteråt.
+  const [phaseChoice, setPhaseChoice] = useState<string | null>(null);
+  const planned = blockOn(season, performedOn)?.phase ?? "";
+  const trainingPhase = phaseChoice ?? planned;
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -144,13 +153,17 @@ export function NewSessionForm({
             <Field
               label="Träningsfas"
               htmlFor="training_phase"
-              hint="gör progressionskurvan läsbar"
+              hint={
+                phaseChoice === null && planned
+                  ? "ur säsongsplanen"
+                  : "gör progressionskurvan läsbar"
+              }
               optional
             >
               <Select
                 id="training_phase"
                 value={trainingPhase}
-                onChange={(e) => setTrainingPhase(e.target.value)}
+                onChange={(e) => setPhaseChoice(e.target.value)}
               >
                 <option value="">–</option>
                 {TRAINING_PHASES.map((phase) => (

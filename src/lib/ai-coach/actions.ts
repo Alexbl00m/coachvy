@@ -27,7 +27,7 @@ const SYSTEM_PROMPT = `Du är bollplank åt en uthållighetscoach som frågar om
 
 Vad du har att gå på:
 
-- Coachen ger dig atletens mätta värden: tröskel, anaerob kapacitet, zoner, bakgrund, belastning och mående de senaste veckorna, samt de senaste testerna och passen. Det är riktiga mätningar, inte antaganden.
+- Coachen ger dig atletens mätta värden: tröskel, anaerob kapacitet, zoner, bakgrund, belastning och mående de senaste veckorna, var i säsongsplanen atleten är och vilka tävlingar som kommer, samt de senaste testerna och passen. Det är riktiga mätningar, inte antaganden.
 - Svara utifrån just de talen. "Öka volymen gradvis" är sant om alla och hjälper ingen; "hennes W′ är 21 kJ och passet du beskriver tar 34 kJ ur den" är ett svar.
 - Saknas ett tal du behöver: säg vilket, och vad det skulle ändra. Hitta aldrig på ett värde och räkna aldrig vidare på ett du gissat.
 
@@ -137,8 +137,10 @@ export async function askCoach(input: {
     listAiMessages(conversationId),
   ]);
 
+  // Namnet skickas inte med: modellen behöver talen, inte vem de tillhör, och
+  // det som inte lämnar appen behöver inte skyddas någon annanstans.
   const briefing = [
-    `Adept: ${adept.full_name}${adept.current_level ? `, ${adept.current_level}` : ""}`,
+    `Adepten${adept.current_level ? `, nivå: ${adept.current_level}` : ""}`,
     context ? contextToPrompt(context) : "Inga mätta värden finns ännu.",
     history,
   ]

@@ -11,6 +11,8 @@ import {
   rollingCriticalSpeed,
 } from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
+import { listBlocks, listRaces } from "@/lib/season/queries";
+import { seasonToPrompt, todayIso } from "@/lib/season/season";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
 import { readBalance, wPrimeBalance } from "./balance";
@@ -48,6 +50,7 @@ Så här tänker du om innehållet:
 - Pröva bara passet mot den anaeroba reserven (W′bal) när coachen ber om det – det står då uttryckligen längre ned. Annars är intensitet och längd coachens och atletens mål, inte reservens.
 - Saknas ett värde: bygg ändå passet, men säg i motiveringen vad som saknas och vad det gör osäkert. Hitta aldrig på ett tal.
 - Motiveringen ("rationale") ska hänga ihop med just de här siffrorna och just det coachen bad om. Skriv inte allmänna sanningar om träning.
+- Står säsongen med – fasen atleten är i och tävlingarna framför – ska passet passa in i den: ett tröskelpass i toppningen före ett A-lopp är kortare och skarpare än samma pass i grundperioden. Säg i motiveringen hur fasen påverkade upplägget.
 - Följ coachens begäran. Ber coachen om ett pass på en timme ska passet bli ungefär en timme, uppvärmning och nedvarvning inräknade.`;
 
 export type GenerateInput = {
@@ -88,12 +91,15 @@ export async function contextForAdept(
   if (!adept) return null;
 
   const sport = sportOf(adept.sport);
-  const [sessions, efforts, profile, checkins] = await Promise.all([
-    listSessions(adeptId),
-    listMaximalEfforts(adeptId, sport),
-    getAdeptProfile(adeptId),
-    listCheckins(adeptId, 60),
-  ]);
+  const [sessions, efforts, profile, checkins, races, blocks] =
+    await Promise.all([
+      listSessions(adeptId),
+      listMaximalEfforts(adeptId, sport),
+      getAdeptProfile(adeptId),
+      listCheckins(adeptId, 60),
+      listRaces(adeptId),
+      listBlocks(adeptId),
+    ]);
 
   const lastFullTestOn = sessions[0]?.performed_on ?? null;
   const rolling =
@@ -115,6 +121,7 @@ export async function contextForAdept(
     loadSummary: loadToPrompt(
       buildLoadSeries(checkins.map(toCheckin), { days: 28 }),
     ),
+    season: seasonToPrompt(races, blocks, todayIso()),
   });
 }
 

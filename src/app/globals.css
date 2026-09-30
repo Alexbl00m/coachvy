@@ -82,6 +82,21 @@
   --chart-grid: #2f2f37;
   --chart-axis-text: #7a7a86;
   --chart-surface: #1f1f24;
+
+  /* Säsongens faser: en stege i accentens ton från grund till toppning, så
+     att ordningen syns i färgen, och vila som neutral grå utanför stegen.
+     Validerad som ordinal ramp mot ytan (dataviz-skillens validate_palette.js
+     --ordinal). Texten i bandet väljs efter fyllningens luminans. */
+  --phase-grund: #89452d;
+  --phase-grund-text: #ffffff;
+  --phase-uppbyggnad: #b25535;
+  --phase-uppbyggnad-text: #ffffff;
+  --phase-specifik: #d96a43;
+  --phase-specifik-text: #121216;
+  --phase-topp: #fb906b;
+  --phase-topp-text: #121216;
+  --phase-vila: #55555f;
+  --phase-vila-text: #ffffff;
 }
 
 /* The public marketing surface. */
@@ -102,6 +117,17 @@
   --chart-grid: #e8e2dc;
   --chart-axis-text: #6b6b75;
   --chart-surface: #ffffff;
+
+  --phase-grund: #e89b81;
+  --phase-grund-text: #121216;
+  --phase-uppbyggnad: #d87756;
+  --phase-uppbyggnad-text: #121216;
+  --phase-specifik: #c1542d;
+  --phase-specifik-text: #ffffff;
+  --phase-topp: #983d1c;
+  --phase-topp-text: #ffffff;
+  --phase-vila: #9a9aa5;
+  --phase-vila-text: #121216;
 }
 
 html,
@@ -154,6 +180,17 @@ body {
     --chart-grid: #d5cbc1;
     --chart-axis-text: #44444c;
     --chart-surface: #ffffff;
+
+    --phase-grund: #e89b81;
+    --phase-grund-text: #121216;
+    --phase-uppbyggnad: #d87756;
+    --phase-uppbyggnad-text: #121216;
+    --phase-specifik: #c1542d;
+    --phase-specifik-text: #ffffff;
+    --phase-topp: #983d1c;
+    --phase-topp-text: #ffffff;
+    --phase-vila: #9a9aa5;
+    --phase-vila-text: #121216;
   }
 
   /*

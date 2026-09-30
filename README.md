@@ -67,7 +67,9 @@ skelettet går att bläddra igenom i "demoläge".
 2. Kör migrationerna i SQL Editor, i ordning. För ett nytt projekt: först
    `supabase/migrations/20260826000000_init.sql`, sedan hela
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
-   `supabase db push` om du länkat CLI:t.
+   `supabase db push` om du länkat CLI:t. En databas som redan har de
+   tidigare migrationerna behöver bara de nya, i ordning – senast
+   `20260930090000_season_and_consent.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -92,7 +94,7 @@ Lokalt i stället: samma två variabler i `.env.local`, och
 ```
 auth.users
     └── profiles        id, role ('coach' | 'adept'), full_name, email,
-        │               accepted_terms_at
+        │               accepted_terms_at, health_consent_at
         ├── coaches     id, company_name
         │      ▲
         │      │ coach_id
@@ -108,6 +110,10 @@ auth.users
                         styrkor, svagheter, mål
           adept_checkins  en per dag: session_rpe, duration_minutes,
                         sleep, fatigue, soreness, stress
+          adept_races   tävlingarna: name, race_date, sport, distance,
+                        priority ('A' | 'B' | 'C'), target
+          training_blocks  säsongsplanens perioder: phase, starts_on,
+                        ends_on, focus
           coach_messages  tråden mellan coach och adept, med read_at
           ai_conversations  coachens AI-tråd per adept
               └── ai_messages
@@ -139,6 +145,8 @@ inte på `coach_id` för hand, utan litar på policyerna:
 | testresultat | läser och skriver för sina adepter | läser sina egna, skriver inga |
 | testtyper | ser inbyggda + sina egna, skapar egna | ser inbyggda + sin coachs |
 | profiler | sin egen + sina adepters | sin egen + sin coachs |
+| tävlingar | läser och skriver för sina adepter | läser och skriver sina egna |
+| perioder | läser och skriver för sina adepter | läser; skriver bara utan coach |
 
 Policyerna går via `security definer`-hjälpfunktioner (`is_coach_of`,
 `can_view_adept`, `is_adept_coach`, `current_coach_id`) så att de kan läsa
@@ -171,6 +179,10 @@ src/
     adepts/ tests/     appens moduler
     workouts/          passbyggarens vy, graf och stegtabell
     training/          incheckning, belastningsgraf och skala
+    season/            säsongens tidslinje, perioder och tävlingar
+    calendar/          månadsrutnätet och dagspanelen
+    overview/          översikten för coach och adept
+    settings/          namn, lösenord och samtycke
     messages/          tråden mellan coach och adept
     ai-coach/          chatten
     ui/                delade primitiver (button, field, card)
@@ -180,6 +192,10 @@ src/
     tests/             frågor och server actions för testmodulen
     workouts/          passmodellen, W′bal, underlaget och genereringen
     training/          sRPE-belastning och återhämtning
+    season/            tävlingar och perioder: frågor, åtgärder, beräkningar
+    calendar/          det som har ett datum, för kalendern
+    overview/          vem som är värd en titt, och frågorna bakom
+    settings/          kontots egna åtgärder
     messages/          frågor och server actions för tråden
     ai-coach/          trådar och modellanropet
     leads/             kontaktformulärets server action
@@ -480,7 +496,16 @@ som ger namn och roll och inget mer.
    registrerat. Förutsätter att Supabase kräver e-postbekräftelse (standard),
    annars kan den som registrerar sig med någon annans adress ta över raden.
 2. Adepten har redan ett konto: adepten ser en inbjudan på översikten och i
-   communityn och tackar ja själv. Det adepten loggat flyttas med.
+   communityn och tackar ja själv. Det adepten loggat flyttas med – också
+   tävlingarna, och säsongsplanen om coachen inte redan gjort en.
+
+Inbjudningarna matchas mot den **bekräftade** adressen i Supabase Auth, inte
+mot `profiles.email`. Tidigare gick profilens e-post att ändra från appen, så
+ett adeptkonto kunde byta den till någon annans adress och tacka ja till den
+personens inbjudan – och ta över adeptraden med allt coachen registrerat.
+Migrationen `20260930090000_season_and_consent.sql` stänger det: roll och
+e-post på profilen ändras bara av databasen, och e-posten följer kontots när
+den byts i Auth.
 
 Kopplingen – vilken coach och vilket konto en adeptrad hör till – ändras bara
 av de här två vägarna. Tidigare fick en adept uppdatera hela sin egen rad,
@@ -948,10 +973,104 @@ att lägga båda i samma diagram skulle kräva två y-axlar — den enskilt mest
 vilseledande diagramformen som finns. Serien har en egen färgnivå av
 accentfärgen (`#e07049`) som ligger i rätt ljushetsband för den mörka ytan.
 
-## Nästa steg
+## Säsongen: planer, kalender och översikt
 
-Planer står näst på tur, sedan Progression och Kalender. Varje kvarvarande
-undersida renderar i dag `ModulePlaceholder` och byts ut när modulen är klar.
+Idéerna kommer från tribeiq: tävlingar med prioritet och nedräkning,
+periodisering, en coachvy över vem som behöver uppmärksamhet, och en kalender.
+Där var allt demodata – beredskapen slumpades fram och korrelationerna var
+påhittade. Här räknas allt ur riktiga tester, incheckningar och planer.
+
+### Säsongsplanen
+
+`/app/planer` samlar en adepts säsong på en tidslinje: perioderna som band,
+tävlingarna som markörer och testerna som punkter, med dagens datum utritat.
+Tolv månader i taget, ett halvår framåt eller bakåt med pilarna.
+
+- **Tävlingar** har prioritet A, B eller C. A-loppet är säsongens mål; det är
+  det nedräkningen gäller även när ett C-lopp ligger närmare.
+- **Perioder** använder samma fem faser som testtillfällets: grund,
+  uppbyggnad, specifik, toppning och vila. De får inte överlappa – en dag ska
+  ligga i en fas, annars går det inte att säga vilken fas ett test togs i. En
+  ny period förifylls där planen slutar, med fasen som brukar komma sedan.
+- **Att se över** pekar ut det som ser ut som en lucka: ett A-lopp utan
+  toppning inom tre veckor före, eller dagar mellan perioderna. 8–14 dagars
+  nedtrappning, med volymen sänkt och intensiteten behållen, gav störst effekt
+  i Bosquet m.fl. (2007).
+
+Fasernas färger är en stege i accentens ton från grund till toppning – så att
+ordningen syns i färgen – och vila som neutral grå. Den är validerad som
+ordinal ramp mot både den mörka ytan och utskriftens vita.
+
+Coachen planerar perioderna; en adept utan coach planerar sin egen säsong.
+Tävlingarna skriver båda, eftersom atleten ofta vet först att ett lopp
+tillkommit. "Skapa ny plan" i sidhuvudet öppnar planen med formuläret för en
+ny period.
+
+### Planen följer med
+
+- Ett nytt testtillfälle får fasen ur planen förvald för testdatumet.
+- AI-coachen och passbyggaren får veta fasen atleten är i och vilka tävlingar
+  som kommer, och passbyggaren ombeds låta fasen styra upplägget.
+
+### Kalendern
+
+`/app/kalender` visar planerade pass, tester och tävlingar dag för dag, med
+veckonummer. Ett pass får sitt datum när det sparas i passbyggaren, eller
+senare på passets sida – en medlemsadept flyttar de pass hen byggt själv.
+Coachen ser alla adepter på en gång eller en i taget; med en
+adept vald färgas dagarna efter fasen och incheckningarna syns. Ett klick på
+en dag visar dagen med länkar vidare, och bredvid ligger de närmaste två
+veckorna. På en telefon blir innehållet i rutorna prickar och dagspanelen
+hamnar under rutnätet.
+
+### Översikten
+
+Coachens översikt börjar med **värt en titt**: det som skiljer sig tydligt hos
+någon adept.
+
+- Återhämtningen jämförs med adeptens **eget** snitt den senaste månaden –
+  12 av 20 är en dålig dag för den som brukar ligga på 17 och en vanlig dag
+  för den som brukar ligga på 12. Utan en månads underlag nämns bara riktigt
+  tunga dagar.
+- Belastningen nämns när veckan ligger minst 30 % från månaden före, med
+  samma formulering som på adeptsidan. Gränsen avgör bara vad som lyfts fram;
+  den är ingen riskgräns.
+- Olästa meddelanden, en vecka utan incheckning, B- och A-lopp inom två veckor
+  och ett A-lopp utan toppning i planen.
+
+Därefter kommande tävlingar, veckans pass och de senaste testerna. Adepten ser
+i stället var i säsongen hen är, nedräkningen, dagens incheckning, de närmaste
+passen och senaste testet.
+
+Adeptlistan har fått sök, grenfilter, ett filter för dem som är värda en titt,
+och kolumner för fas, återhämtning mot eget snitt, nästa tävling och olästa.
+
+## Samtycke och integritet
+
+Laktat, puls, syreupptag, kroppssammansättning, sömn och skador är
+hälsouppgifter, och sådana får behandlas på uttryckligt samtycke
+(dataskyddsförordningen artikel 9.2 a). Samtycket ska vara särskilt – inte en
+del av att godkänna villkoren – och gå att ta tillbaka lika lätt som det gavs.
+
+- **Vid registrering** kryssar en adept i samtycket separat från villkoren. Det
+  sparas i `profiles.health_consent_at`, tidsstämplat av databasen.
+- **Adepter som registrerade sig tidigare** får frågan på sin översikt, och
+  coachen ser på adeptsidan när samtycket saknas.
+- **Inställningar** visar kontot, byter namn och lösenord, ger eller tar
+  tillbaka samtycket och laddar ned allt appen har om en som en fil (artikel 15
+  och 20).
+- **Integritetspolicy & villkor** beskriver vad appen faktiskt gör: vilka
+  uppgifter, rättslig grund, vilka biträden som får del av dem, att det bara
+  finns nödvändiga cookies, och rättigheterna.
+- **AI-coachen skickar inte adeptens namn** till Anthropic. Modellen behöver
+  talen, inte vem de tillhör.
+
+Personuppgiftsansvarig, kontaktuppgifter och biträden står i
+`src/lib/site.ts` och på policysidan. Stäm av texten innan den gäller skarpt –
+till exempel vilken region Supabase-projektet ligger i och att
+biträdesavtalen med Supabase, Vercel och Anthropic finns på plats.
+
+## Nästa steg
 
 Kända luckor:
 
@@ -962,8 +1081,8 @@ Kända luckor:
   men det finns ingen vy i appen som visar dem ännu — läs dem i Supabase så
   länge. Ingen mailavisering heller.
 - Formuläret har en honeypot men ingen hastighetsbegränsning.
-- Ingen inbjudan av adepter via e-post ännu — `adepts.profile_id` kopplas inte
-  automatiskt när en adept registrerar sig med samma adress.
+- Ingen inbjudan skickas via e-post. En adept kopplas när hen registrerar sig
+  med adressen coachen lagt in, eller tackar ja till inbjudan i appen.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.
 - Testresultat kan skapas och tas bort, men inte redigeras.
 - **Löptesternas klockimport är prövad på syntetiska filer.** En riktig
@@ -972,8 +1091,13 @@ Kända luckor:
   i har ingen `ANTHROPIC_API_KEY`, så allt utom själva HTTP-anropet är verifierat
   — schemat, tolkningen, W′bal, sparandet, RLS och vyerna. Första riktiga
   körningen med nyckel är alltså också det första provet på prompten.
-- Ett pass kan sparas på en adept men inte läggas i kalendern —
-  `workouts.scheduled_for` finns i tabellen men används inte ännu.
+- **Planer är en säsongsplan**, inte en veckoplan: perioder och tävlingar.
+  Passen byggs fortfarande ett i taget i passbyggaren och läggs på ett datum.
+- **Konton raderas inte från appen.** Inställningarna pekar till e-post, och
+  raderingen görs för hand.
+- **Ett återtaget samtycke stoppar inte registreringen tekniskt.** Coachen ser
+  att samtycket saknas och ska sluta registrera; det som finns raderas på
+  begäran.
 - Inget passbibliotek över adepter: ett bra pass går att öppna och ändra, men
   bara från den adept det sparades på.
 - **AI-coachens modellanrop är inte kört mot skarpt API**, av samma skäl som

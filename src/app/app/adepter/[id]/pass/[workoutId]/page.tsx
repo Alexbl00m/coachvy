@@ -6,8 +6,10 @@ import { PageHeader } from "@/components/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { PrintButton } from "@/components/workouts/print-button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { ScheduleWorkout } from "@/components/workouts/schedule-workout";
 import { WorkoutView } from "@/components/workouts/workout-view";
 import { getAdept } from "@/lib/adepts/queries";
+import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
@@ -27,11 +29,18 @@ export const metadata = { title: "Pass" };
 export default async function WorkoutPage({
   params,
 }: PageProps<"/app/adepter/[id]/pass/[workoutId]">) {
-  await requireSessionUser();
+  const user = await requireSessionUser();
   const { id, workoutId } = await params;
 
   const [adept, saved] = await Promise.all([getAdept(id), getWorkout(workoutId)]);
   if (!adept || !saved || saved.adept_id !== adept.id) notFound();
+
+  // Coachen flyttar sina adepters pass; en medlemsadept de pass hen byggt.
+  const canSchedule =
+    (user.profile?.role === "coach" && adept.coach_id === user.id) ||
+    (adept.profile_id === user.id &&
+      isMember(user) &&
+      saved.created_by === user.id);
 
   const model =
     saved.critical !== null && saved.reserve !== null
@@ -71,6 +80,15 @@ export default async function WorkoutPage({
           </div>
         }
       />
+
+      <div className="mb-5">
+        <ScheduleWorkout
+          workoutId={saved.id}
+          adeptId={adept.id}
+          scheduledFor={saved.scheduled_for}
+          canEdit={canSchedule}
+        />
+      </div>
 
       <WorkoutView
         workout={toWorkout(saved)}

@@ -96,6 +96,8 @@ export function WorkoutBuilder({
   const [usedPrompt, setUsedPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  /** Datumet passet läggs på i kalendern när det sparas. Valfritt. */
+  const [scheduledFor, setScheduledFor] = useState("");
 
   const sport = serverContext?.sport ?? manualSport;
   const cycling = sport === "cykling";
@@ -183,7 +185,7 @@ export function WorkoutBuilder({
         critical: useBalance ? (context.balance?.critical ?? null) : null,
         reserve: useBalance ? (context.balance?.reserve ?? null) : null,
         prompt: usedPrompt || null,
-        scheduledFor: null,
+        scheduledFor: scheduledFor || null,
       });
 
       if (!result.ok) {
@@ -424,6 +426,20 @@ export function WorkoutBuilder({
           />
 
           <div className="flex flex-wrap items-center gap-3 print:hidden">
+            {adeptId !== null && (
+              <label className="flex items-center gap-2 text-[13px] text-text-muted">
+                Datum
+                <input
+                  type="date"
+                  value={scheduledFor}
+                  onChange={(e) => {
+                    setScheduledFor(e.target.value);
+                    setSaved(null);
+                  }}
+                  className="h-9 rounded-md border border-line-strong bg-surface px-2 text-sm text-text focus:border-accent focus:outline-none"
+                />
+              </label>
+            )}
             {adeptId !== null && (
               <Button type="button" onClick={store} disabled={saving}>
                 {saving

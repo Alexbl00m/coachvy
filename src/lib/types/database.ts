@@ -14,6 +14,11 @@ export type Profile = {
   full_name: string;
   email: string;
   accepted_terms_at: string | null;
+  /**
+   * Samtycke till behandling av hälsouppgifter (GDPR art. 9). Null betyder
+   * inget samtycke, eller att det tagits tillbaka. Tidsstämplas av databasen.
+   */
+  health_consent_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -194,6 +199,45 @@ export type AdeptProfileRow = {
   updated_at: string;
 };
 
+/** A: säsongens mål. B: viktigt men genomkört. C: träning med nummerlapp. */
+export type RacePriority = "A" | "B" | "C";
+
+export type RaceSport =
+  | "cykling"
+  | "löpning"
+  | "simning"
+  | "triathlon"
+  | "annat";
+
+/** En tävling i adeptens säsong. */
+export type AdeptRaceRow = {
+  id: string;
+  adept_id: string;
+  name: string;
+  race_date: string;
+  sport: RaceSport | null;
+  distance: string | null;
+  priority: RacePriority;
+  target: string | null;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** En period i säsongsplanen. Fasen är samma fem som testtillfällets. */
+export type TrainingBlockRow = {
+  id: string;
+  adept_id: string;
+  phase: "grund" | "uppbyggnad" | "specifik" | "topp" | "vila";
+  starts_on: string;
+  ends_on: string;
+  focus: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /** Den dagliga incheckningen: sessions-RPE och Hoopers fyra frågor. */
 export type AdeptCheckinRow = {
   id: string;
@@ -334,8 +378,16 @@ export type Database = {
     Tables: {
       profiles: {
         Row: Profile;
-        Insert: Omit<Profile, Timestamps | "accepted_terms_at"> &
-          Partial<Pick<Profile, Timestamps | "accepted_terms_at">>;
+        Insert: Omit<
+          Profile,
+          Timestamps | "accepted_terms_at" | "health_consent_at"
+        > &
+          Partial<
+            Pick<
+              Profile,
+              Timestamps | "accepted_terms_at" | "health_consent_at"
+            >
+          >;
         Update: Partial<Profile>;
         Relationships: [];
       };
@@ -408,6 +460,23 @@ export type Database = {
         Row: AdeptProfileRow;
         Insert: Pick<AdeptProfileRow, "adept_id"> & Partial<AdeptProfileRow>;
         Update: Partial<AdeptProfileRow>;
+        Relationships: [];
+      };
+      adept_races: {
+        Row: AdeptRaceRow;
+        Insert: Pick<AdeptRaceRow, "adept_id" | "name" | "race_date"> &
+          Partial<AdeptRaceRow>;
+        Update: Partial<AdeptRaceRow>;
+        Relationships: [];
+      };
+      training_blocks: {
+        Row: TrainingBlockRow;
+        Insert: Pick<
+          TrainingBlockRow,
+          "adept_id" | "phase" | "starts_on" | "ends_on"
+        > &
+          Partial<TrainingBlockRow>;
+        Update: Partial<TrainingBlockRow>;
         Relationships: [];
       };
       adept_checkins: {

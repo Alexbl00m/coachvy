@@ -119,6 +119,11 @@ export function WorkoutPanel({
                       </p>
                     )}
                     <p className="text-[12px] text-text-subtle">
+                      {saved.scheduled_for && (
+                        <span className="text-text-muted">
+                          I kalendern {formatDate(saved.scheduled_for)} ·{" "}
+                        </span>
+                      )}
                       {formatDate(saved.created_at)} · {saved.sport} ·{" "}
                       {formatDuration(resolved.totalSeconds)} · byggt mot{" "}
                       {saved.basis}{" "}
