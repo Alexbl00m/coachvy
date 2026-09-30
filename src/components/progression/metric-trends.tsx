@@ -22,6 +22,7 @@ import { formatDate, digitsForMetric } from "@/lib/format";
 import type { Sport } from "@/lib/calculators/lactate";
 import { displayValue } from "@/lib/tests/pace";
 import { protocolLabel, type Trend } from "@/lib/tests/progression";
+import { readTrend } from "@/lib/tests/trend-analysis";
 
 const DAY = 86_400_000;
 
@@ -80,6 +81,13 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
   // i procentenheter. "−88 %" för en variation som gick från 1,3 till 0,2 %
   // säger ingenting; "−1,1 %-enheter" gör det.
   const inPoints = trend.unit === "%";
+  // Trendlinjen och kommentaren. Linjen ritas först vid tre tester – två
+  // punkter är redan en linje.
+  const reading = readTrend(points, trend.higherIsBetter, inPoints);
+  const withTrend = points.length >= 3;
+  const rows = withTrend
+    ? points.map((p) => ({ ...p, trend: reading.at(p.t) }))
+    : points;
   const change =
     points.length < 2
       ? null
@@ -154,7 +162,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
       <div className="mt-3 h-32 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={points}
+            data={rows}
             margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
           >
             <CartesianGrid stroke={CHART_GRID} vertical={false} />
@@ -185,6 +193,19 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
               content={<TrendTooltip show={show} />}
               cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
             />
+            {withTrend && (
+              <Line
+                type="linear"
+                dataKey="trend"
+                stroke={CHART_AXIS_TEXT}
+                strokeOpacity={0.55}
+                strokeWidth={1.5}
+                strokeDasharray="4 4"
+                dot={false}
+                activeDot={false}
+                isAnimationActive={false}
+              />
+            )}
             <Line
               type="linear"
               dataKey="value"
@@ -207,6 +228,11 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      {reading.text && (
+        <p className="mt-2 text-[12px] leading-relaxed text-text-muted">
+          {reading.text}
+        </p>
+      )}
     </div>
   );
 }

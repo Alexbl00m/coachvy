@@ -17,6 +17,7 @@ import {
 import type { FullSession } from "@/lib/tests/session-queries";
 import { metabolicHistory } from "@/lib/tests/metabolic-curve";
 import { speedProfile } from "@/lib/tests/speed-profile";
+import { summariseProgress } from "@/lib/tests/trend-analysis";
 import { LactateCompare } from "./lactate-compare";
 import { MetabolicProgression } from "./metabolic-progression";
 import { MetricTrends } from "./metric-trends";
@@ -332,6 +333,7 @@ export function ProgressionView({
     return `${routes.progression}?${search.toString()}`;
   };
 
+  const analysis = summariseProgress(trends);
   const headline = HEADLINE[sport]
     .map(
       (key) =>
@@ -396,6 +398,20 @@ export function ProgressionView({
               title="Inga nyckeltal ännu"
               description="Testerna i den här grenen har inga värden att följa. Räkna om dem under Alla värden om de registrerades innan metoderna fanns."
             />
+          )}
+          {analysis.length > 0 && (
+            <Card>
+              <CardTitle>Kort analys</CardTitle>
+              <ul className="max-w-3xl space-y-2 text-sm leading-relaxed text-text-muted">
+                {analysis.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[12px] text-text-subtle">
+                Räknat ur tidslinjerna, första mot senaste test. Streckade
+                linjer i graferna är trenden över alla tester.
+              </p>
+            </Card>
           )}
           <TrendGroups trends={trends} sport={sport} only={["Trösklar"]} />
           {views.length > 2 && (

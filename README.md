@@ -510,6 +510,16 @@ kurvorna vid det förra testets FatMax: där syns en bättre fettförbränning �
 när FatMax inte flyttat sig. Valet
 ligger i adressen (`?gren=lopning&vy=fart`), så varje vy går att länka.
 
+Varje tidslinje har från tre tester en svag streckad **trendlinje** (minsta
+kvadrat över tid) och en kort kommentar: förändring per år, om det har planat
+ut (de tre senaste inom 2 %), om senaste testet ligger klart över eller under
+linjen, och om spridningen gör trenden osäker. Översikten får en **kort
+analys** ur tidslinjerna: tröskelns och VO2max förändring, vad kombinationen
+säger – tröskeln upp utan VO2max betyder utnyttjandegrad, VO2max upp utan
+tröskeln betyder att tröskelarbete har mest att ge – och VLamax och FatMax.
+Samspelet tolkas bara när serierna täcker ungefär samma period. Allt är
+regelbaserat, så samma tester ger alltid samma text.
+
 - **Laktatkurvor mot varandra.** Välj alla tester eller några. Det senaste
   valda är utgångspunkten och det näst senaste vad det jämförs med: LT1, LT2
   (ModDmax), belastning vid 2 och 4 mmol, och laktatet vid den tidigare
