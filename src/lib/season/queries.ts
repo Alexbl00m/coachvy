@@ -11,6 +11,19 @@ const BLOCK_COLUMNS =
 export type RaceWithAdept = AdeptRaceRow & { adept_name: string };
 export type BlockWithAdept = TrainingBlockRow & { adept_name: string };
 
+/**
+ * Tabellen finns inte ännu – migrationen för säsongen är inte körd. Då visas
+ * appen som innan, utan tävlingar och perioder, i stället för att sidor som
+ * översikten, passbyggaren och AI-coachen slutar fungera. PostgREST svarar
+ * PGRST205 när tabellen saknas i schemat (äldre versioner Postgres egen
+ * 42P01), och PGRST200 när frågan bäddar in adepten – relationen till en
+ * tabell som inte finns går inte heller att hitta.
+ */
+const notMigrated = (error: { code?: string } | null) =>
+  error?.code === "PGRST205" ||
+  error?.code === "42P01" ||
+  error?.code === "PGRST200";
+
 type Embedded = {
   adepts: { full_name: string } | { full_name: string }[] | null;
 };
@@ -31,6 +44,7 @@ export async function listRaces(adeptId: string): Promise<AdeptRaceRow[]> {
     .eq("adept_id", adeptId)
     .order("race_date", { ascending: true });
 
+  if (notMigrated(error)) return [];
   if (error) throw new Error(`Kunde inte hämta tävlingarna: ${error.message}`);
   return (data ?? []) as AdeptRaceRow[];
 }
@@ -46,6 +60,7 @@ export async function listBlocks(adeptId: string): Promise<TrainingBlockRow[]> {
     .eq("adept_id", adeptId)
     .order("starts_on", { ascending: true });
 
+  if (notMigrated(error)) return [];
   if (error) throw new Error(`Kunde inte hämta perioderna: ${error.message}`);
   return (data ?? []) as TrainingBlockRow[];
 }
@@ -70,6 +85,7 @@ export async function listRacesBetween(
     .lte("race_date", to)
     .order("race_date", { ascending: true });
 
+  if (notMigrated(error)) return [];
   if (error) throw new Error(`Kunde inte hämta tävlingarna: ${error.message}`);
   return ((data ?? []) as unknown as (AdeptRaceRow & Embedded)[]).map(
     ({ adepts, ...race }) => ({ ...race, adept_name: adeptName({ adepts }) }),
@@ -91,6 +107,7 @@ export async function listBlocksBetween(
     .gte("ends_on", from)
     .order("starts_on", { ascending: true });
 
+  if (notMigrated(error)) return [];
   if (error) throw new Error(`Kunde inte hämta perioderna: ${error.message}`);
   return ((data ?? []) as unknown as (TrainingBlockRow & Embedded)[]).map(
     ({ adepts, ...block }) => ({ ...block, adept_name: adeptName({ adepts }) }),
