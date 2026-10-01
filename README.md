@@ -1097,8 +1097,12 @@ bästa insats markeras både i graferna och på kartan. Effekten jämnas ut öve
 
 Kartbrickorna kommer från OpenStreetMap. Deras villkor tillåter inte tung
 trafik; byt leverantör med `NEXT_PUBLIC_MAP_TILE_URL` och
-`NEXT_PUBLIC_MAP_ATTRIBUTION` utan kodändring. Mörkläget är ett CSS-filter på
-brickorna.
+`NEXT_PUBLIC_MAP_ATTRIBUTION` utan kodändring, och deploya om – variablerna
+byggs in i sidan. Adressen ska vara en mall för rasterbrickor med `{z}`, `{x}`
+och `{y}`, med en ljus kartstil: mörkläget är ett CSS-filter på brickorna, så
+en mörk stil skulle bli ljus. MapTilers och Mapbox 512-pixelsbrickor känns
+igen. Saknar adressen `{z}`/`{x}`/`{y}`, eller nekar leverantören brickorna,
+används OpenStreetMap i stället och webbläsarkonsolen säger varför.
 
 Aktiviteterna syns också i kalendern, och en tävling i säsongsplanen som har
 ett uppladdat lopp länkar till analysen.

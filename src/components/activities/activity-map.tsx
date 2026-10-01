@@ -14,17 +14,39 @@ import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Streams } from "@/lib/activities/analysis";
 import type { HoverStore } from "./hover-store";
 
+const OSM = {
+  url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare',
+};
+
 /**
  * Kartbrickorna. OpenStreetMaps egna servrar räcker för en coach med adepter,
  * men deras användarvillkor tillåter inte tung trafik – byt då till en
  * leverantör med nyckel via miljövariablerna, utan kodändring.
+ *
+ * En adress utan {z}, {x} och {y} är ingen brickadress – oftast har man fått
+ * med leverantörens stilfil eller sidan man kopierade från. Den används inte,
+ * så att kartan inte blir grå av ett inklistringsfel.
  */
-const TILE_URL =
-  process.env.NEXT_PUBLIC_MAP_TILE_URL ??
-  "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILE_ATTRIBUTION =
-  process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ??
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare';
+const CONFIGURED = process.env.NEXT_PUBLIC_MAP_TILE_URL?.trim() ?? "";
+const USABLE = ["{z}", "{x}", "{y}"].every((part) => CONFIGURED.includes(part));
+const TILES = USABLE
+  ? {
+      url: CONFIGURED,
+      attribution:
+        process.env.NEXT_PUBLIC_MAP_ATTRIBUTION?.trim() ||
+        "&copy; kartleverantören &copy; OpenStreetMap-bidragsgivare",
+    }
+  : OSM;
+
+/**
+ * MapTiler och Mapbox levererar 512 pixlar stora brickor om adressen inte
+ * ber om 256. Leaflet räknar med 256 och skulle annars rita texten pytteliten.
+ */
+const LARGE_TILES =
+  /api\.maptiler\.com|api\.mapbox\.com\/styles/.test(TILES.url) &&
+  !TILES.url.includes("/256/");
 
 /**
  * Rutten på karta, med en markör som följer pekaren i graferna och en
@@ -72,10 +94,40 @@ export function ActivityMap({
         attributionControl: true,
       });
       map.current = m;
-      L.tileLayer(TILE_URL, {
-        attribution: TILE_ATTRIBUTION,
+      if (CONFIGURED && !USABLE) {
+        console.warn(
+          "NEXT_PUBLIC_MAP_TILE_URL saknar {z}, {x} och {y} – kartan använder OpenStreetMap.",
+        );
+      }
+      const tiles = L.tileLayer(TILES.url, {
+        attribution: TILES.attribution,
         maxZoom: 18,
+        ...(LARGE_TILES ? { tileSize: 512, zoomOffset: -1 } : {}),
       }).addTo(m);
+      // Nekar leverantören brickorna – fel nyckel, nyckeln låst till en annan
+      // adress, slut på gratisnivån – byts kartan till OpenStreetMap i stället
+      // för att bli grå.
+      if (TILES !== OSM) {
+        let loaded = false;
+        let failed = 0;
+        let switched = false;
+        tiles.on("tileload", () => {
+          loaded = true;
+        });
+        tiles.on("tileerror", () => {
+          failed += 1;
+          if (switched || loaded || failed < 2 || !map.current) return;
+          switched = true;
+          console.warn(
+            "Kartleverantören svarar inte på NEXT_PUBLIC_MAP_TILE_URL – kartan använder OpenStreetMap.",
+          );
+          // remove() tar också bort leverantörens rad i hörnet.
+          tiles.remove();
+          L.tileLayer(OSM.url, { attribution: OSM.attribution, maxZoom: 18 })
+            .addTo(map.current)
+            .bringToBack();
+        });
+      }
 
       // Ytan under linjen, så att rutten syns mot både skog och stad.
       L.polyline(route, { color: "#121216", weight: 6, opacity: 0.55 }).addTo(
