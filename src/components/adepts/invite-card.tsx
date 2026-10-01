@@ -6,6 +6,7 @@ import { Check, Copy, Mail } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { markInvited } from "@/lib/adepts/actions";
+import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
 
 const noop = () => () => {};
@@ -147,11 +148,26 @@ export function InviteCard({
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" onClick={() => copy("text")} disabled={!origin}>
-          {copied === "text" ? (
-            <Check aria-hidden className="size-3.5" />
-          ) : (
-            <Copy aria-hidden className="size-3.5" />
-          )}
+          {/* Ikonerna ligger på varandra och tonas över: bocken bekräftar
+              att texten kopierades utan att knappen hoppar. */}
+          <span aria-hidden className="relative size-3.5">
+            <Copy
+              className={cn(
+                "absolute inset-0 size-3.5 transition-[opacity,transform,filter] duration-150 ease-out motion-reduce:scale-100 motion-reduce:blur-none",
+                copied === "text"
+                  ? "scale-50 opacity-0 blur-[2px]"
+                  : "scale-100 opacity-100 blur-none",
+              )}
+            />
+            <Check
+              className={cn(
+                "absolute inset-0 size-3.5 transition-[opacity,transform,filter] duration-150 ease-out motion-reduce:scale-100 motion-reduce:blur-none",
+                copied === "text"
+                  ? "scale-100 opacity-100 blur-none"
+                  : "scale-50 opacity-0 blur-[2px]",
+              )}
+            />
+          </span>
           {copied === "text" ? "Kopierat" : "Kopiera texten"}
         </Button>
         {email && (

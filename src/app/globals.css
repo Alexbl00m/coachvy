@@ -49,6 +49,11 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+
+  /* Rörelse (DESIGN.md): `fast` 120 ms ease-out för tryck och färg, `base`
+     180 ms för det som dyker upp, `drawer` för menyn som glider in. */
+  --ease-base: cubic-bezier(0.2, 0, 0, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @theme inline {
@@ -188,6 +193,45 @@ body {
 /* Upphöjd panel: ytan bär djupet, kanten i överkanten ger det ljus. */
 .lift {
   box-shadow: inset 0 1px 0 0 var(--edge);
+}
+
+/*
+ * Det som dyker upp efter en handling – en förhandsvisning, ett formulär, ett
+ * svar – tonas in och lyfts några pixlar i stället för att rycka fram och
+ * trycka ned sidan. Bara in: att stänga är alltid svaret på ett klick.
+ * `@starting-style` gäller när elementet sätts in, så ingen JavaScript behövs.
+ */
+.enter,
+.enter-up {
+  transition:
+    opacity 180ms var(--ease-base),
+    transform 180ms var(--ease-base);
+}
+
+.enter-up {
+  transition-duration: 200ms;
+}
+
+@starting-style {
+  .enter {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  .enter-up {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Reducerad rörelse: bara toningen. */
+@media (prefers-reduced-motion: reduce) {
+  @starting-style {
+    .enter,
+    .enter-up {
+      transform: none;
+    }
+  }
 }
 
 /* Consistent focus treatment across both surfaces */

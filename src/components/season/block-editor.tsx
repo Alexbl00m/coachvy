@@ -236,7 +236,7 @@ export function BlockEditor({
       {draft && (
         <div
           ref={form}
-          className="mt-4 space-y-4 rounded-md border border-line-strong bg-surface-2/60 p-4"
+          className="enter mt-4 space-y-4 rounded-md border border-line-strong bg-surface-2/60 p-4"
         >
           <p className="text-sm font-medium text-text">
             {draft.id ? "Ändra perioden" : "Ny period"}

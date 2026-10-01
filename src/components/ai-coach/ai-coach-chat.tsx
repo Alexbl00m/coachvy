@@ -61,6 +61,16 @@ export function AiCoachChat({
   const [optimistic, setOptimistic] = useState<string | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
 
+  // Svaren som fanns när tråden öppnades. Bara de som kommer efteråt tonas
+  // in – en tråd man öppnar ska stå still. Byts adepten börjar listan om.
+  const [known, setKnown] = useState(() => ({
+    adeptId,
+    ids: new Set(messages.map((m) => m.id)),
+  }));
+  if (known.adeptId !== adeptId) {
+    setKnown({ adeptId, ids: new Set(messages.map((m) => m.id)) });
+  }
+
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "nearest" });
   }, [messages.length, optimistic]);
@@ -155,11 +165,15 @@ export function AiCoachChat({
                   key={message.id}
                   role={message.role}
                   content={message.content}
+                  // Frågan har redan tonats in som den väntande bubblan.
+                  fresh={
+                    message.role === "assistant" && !known.ids.has(message.id)
+                  }
                 />
               ))}
               {optimistic !== null && (
                 <>
-                  <Bubble role="user" content={optimistic} />
+                  <Bubble role="user" content={optimistic} fresh />
                   <li className="flex items-center gap-2 text-[13px] text-text-subtle">
                     <Bot aria-hidden className="size-4 animate-pulse text-accent" />
                     Räknar igenom talen …
@@ -251,10 +265,25 @@ export function AiCoachChat({
   );
 }
 
-function Bubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+function Bubble({
+  role,
+  content,
+  fresh = false,
+}: {
+  role: "user" | "assistant";
+  content: string;
+  /** Ny i tråden: tonas in i stället för att rycka fram. */
+  fresh?: boolean;
+}) {
   const mine = role === "user";
   return (
-    <li className={cn("flex", mine ? "justify-end" : "justify-start")}>
+    <li
+      className={cn(
+        "flex",
+        mine ? "justify-end" : "justify-start",
+        fresh && "enter-up",
+      )}
+    >
       <div
         className={cn(
           "max-w-[88%] rounded-lg border px-3.5 py-2.5",

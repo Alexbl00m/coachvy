@@ -93,9 +93,10 @@ spacing:      # 4px-rutnät
   "8": 32px
   "12": 48px
 
-motion:
-  fast: "120ms ease-out"        # hover, färg
-  base: "180ms cubic-bezier(0.2, 0, 0, 1)"   # öppna, fälla ut
+motion:                         # tokens i globals.css: --ease-base, --ease-drawer
+  fast: "120ms ease-out"        # hover, färg, tryck (knappar: scale 0.97)
+  base: "180ms cubic-bezier(0.2, 0, 0, 1)"   # det som dyker upp (.enter, .enter-up)
+  drawer: "240ms in / 200ms out cubic-bezier(0.32, 0.72, 0, 1)"   # mobilmenyn
 ---
 
 # Designsystem: Coachvy
@@ -229,7 +230,24 @@ Godkänt i `good` med en bock; "Ej inbjuden" i `text`; övriga i
 Rad över sidans innehåll: `surface-2`, kant `line-strong`, hörn `md`, `body` i
 `text-muted`, siffror och namn i `text`, en länk i `accent-text`.
 
-## 6. Gör och gör inte
+## 6. Rörelse
+
+Rörelse används där något flyttar sig eller dyker upp – aldrig för att piffa
+upp det man gör många gånger om dagen.
+
+- **Tryck**: knappar krymper till 0.97 medan de hålls nere, 120 ms ease-out.
+- **Det som dyker upp efter en handling** – en förhandsvisning, ett formulär,
+  ett jämförelsediagram – får klassen `enter`: tonas in och lyfts 4 px på
+  180 ms. Nya svar i AI-coachen får `enter-up` (6 px, 200 ms); en tråd man
+  öppnar står still. Bara in, aldrig ut.
+- **Mobilmenyn** glider in från vänster, samma kant som knappen, på 240 ms
+  och ut på 200 ms med `--ease-drawer`; bakgrunden tonas.
+- **Ikonbyten** (kopiera → bock) tonas över med skala och oskärpa, 150 ms.
+- **Reducerad rörelse**: allt blir toning, ingen förflyttning eller skala.
+- **Rör sig aldrig**: navigering, flikar, tooltips i tidslinjen, översiktens
+  rutor, diagram, kalenderns månadsbyte.
+
+## 7. Gör och gör inte
 
 ### Gör
 - Låt siffror stå i tabulära siffror och i Geist Mono när de bildar kolumn.

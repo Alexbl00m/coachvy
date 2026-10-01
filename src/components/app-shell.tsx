@@ -123,24 +123,30 @@ export function AppShell({
           <AppSidebar role={user.role} isAdmin={user.isAdmin} />
         </aside>
 
-        {mobileNavOpen && (
-          <div className="fixed inset-0 top-15 z-20 lg:hidden">
-            <button
-              type="button"
-              aria-label="Stäng meny"
-              className="absolute inset-0 bg-ink-950/70"
-              onClick={() => setMobileNavOpen(false)}
+        {/* Menyn ligger kvar i sidan, så att den kan glida både in och ut från
+            vänster – samma kant som knappen. Stängd är den `inert`: varken
+            klickbar, fokuserbar eller synlig för skärmläsare. */}
+        <div
+          data-open={mobileNavOpen}
+          inert={!mobileNavOpen}
+          className="group pointer-events-none fixed inset-0 top-15 z-20 data-[open=true]:pointer-events-auto lg:hidden"
+        >
+          <button
+            type="button"
+            aria-label="Stäng meny"
+            tabIndex={-1}
+            className="absolute inset-0 bg-ink-950/70 opacity-0 transition-opacity duration-200 ease-out group-data-[open=true]:opacity-100"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <aside className="relative h-full w-64 -translate-x-full border-r border-ink-800 bg-ink-900 transition-transform duration-200 ease-drawer group-data-[open=true]:translate-x-0 group-data-[open=true]:duration-240 motion-reduce:translate-x-0 motion-reduce:opacity-0 motion-reduce:transition-opacity motion-reduce:duration-150 motion-reduce:group-data-[open=true]:opacity-100">
+            {/* Closing on navigation keeps the drawer off the next page. */}
+            <AppSidebar
+              role={user.role}
+              isAdmin={user.isAdmin}
+              onNavigate={() => setMobileNavOpen(false)}
             />
-            <aside className="relative h-full w-64 border-r border-ink-800 bg-ink-900">
-              {/* Closing on navigation keeps the drawer off the next page. */}
-              <AppSidebar
-                role={user.role}
-                isAdmin={user.isAdmin}
-                onNavigate={() => setMobileNavOpen(false)}
-              />
-            </aside>
-          </div>
-        )}
+          </aside>
+        </div>
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>

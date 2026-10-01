@@ -181,7 +181,7 @@ export function FitImport({
       )}
 
       {found && (
-        <div className="rounded-lg border border-line">
+        <div className="enter rounded-lg border border-line">
           <div className="overflow-x-auto">
             <table
               className="w-full border-collapse text-sm"

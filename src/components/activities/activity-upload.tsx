@@ -211,7 +211,7 @@ export function ActivityUpload({
       )}
 
       {ready && s && ref && (
-        <div className="space-y-4 rounded-lg border border-line p-4">
+        <div className="enter space-y-4 rounded-lg border border-line p-4">
           <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
             {[
               ["Datum", ready.date],

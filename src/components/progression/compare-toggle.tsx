@@ -28,7 +28,11 @@ export function CompareToggle({ curves }: { curves: LactateCurve[] }) {
           ? "Dölj jämförelsen"
           : `Jämför laktatkurvor (${curves.length} tester)`}
       </Button>
-      {open && <LactateCompare curves={curves} />}
+      {open && (
+        <div className="enter">
+          <LactateCompare curves={curves} />
+        </div>
+      )}
     </div>
   );
 }
