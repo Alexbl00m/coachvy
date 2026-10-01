@@ -225,7 +225,8 @@ export default function IntegritetspolicyPage() {
                 <strong className="text-text">Anthropic</strong> – AI-coachen
                 och passbyggaren. När en coach ställer en fråga eller bygger ett
                 pass skickas adeptens mätta värden, träningsbakgrund och
-                belastning med för att svaret ska bygga på dem. Adeptens namn
+                belastning med för att svaret ska bygga på dem. Det görs bara
+                för adepter som har gett sitt samtycke, och adeptens namn
                 skickas inte.
               </>,
             ]}

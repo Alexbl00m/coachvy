@@ -64,6 +64,7 @@ export function WorkoutBuilder({
   initialWorkout,
   configured,
   selfService = false,
+  blocked = null,
 }: {
   adepts: AdeptOption[];
   adeptId: string | null;
@@ -76,6 +77,8 @@ export function WorkoutBuilder({
    * inga tal att fylla i för hand – passet byggs mot de egna testerna.
    */
   selfService?: boolean;
+  /** Varför passet inte kan byggas med AI för adepten – samtycket saknas. */
+  blocked?: string | null;
 }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -263,7 +266,12 @@ export function WorkoutBuilder({
               <Button
                 type="button"
                 onClick={build}
-                disabled={busy || prompt.trim().length === 0 || !configured}
+                disabled={
+                  busy ||
+                  prompt.trim().length === 0 ||
+                  !configured ||
+                  (adeptId !== null && blocked !== null)
+                }
               >
                 <Sparkles aria-hidden className="size-4" />
                 {pending
@@ -287,6 +295,10 @@ export function WorkoutBuilder({
                 </Button>
               )}
             </div>
+
+            {adeptId !== null && blocked && (
+              <p className="text-[13px] text-text-muted">{blocked}</p>
+            )}
 
             {!configured && (
               <p className="text-[13px] text-text-muted">

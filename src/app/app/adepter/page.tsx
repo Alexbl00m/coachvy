@@ -4,7 +4,8 @@ import { AdeptTable, type AdeptListRow } from "@/components/adepts/adept-table";
 import { PageHeader } from "@/components/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
-import { listAdepts } from "@/lib/adepts/queries";
+import { consentStateOf } from "@/lib/adepts/consent-state";
+import { consentByProfile, listAdepts } from "@/lib/adepts/queries";
 import { requireCoach } from "@/lib/auth/session";
 import { formatLastActive } from "@/lib/format";
 import {
@@ -27,7 +28,9 @@ import { toCheckin } from "@/lib/training/queries";
 
 export const metadata = { title: "Adepter" };
 
-export default async function AdepterPage() {
+export default async function AdepterPage({
+  searchParams,
+}: PageProps<"/app/adepter">) {
   // Adept accounts have no business on a coach's roster; they land here only
   // by typing the URL, and are sent back to their own overview.
   const user = await requireCoach();
@@ -39,6 +42,10 @@ export default async function AdepterPage() {
     listRacesBetween(today, addDays(today, 366)),
     listBlocksBetween(today, addDays(today, 60)),
   ]);
+
+  const consents = await consentByProfile(
+    adepts.map((a) => a.profile_id).filter((id): id is string => id !== null),
+  );
 
   const rows: AdeptListRow[] = adepts.map((adept) => {
     const own = checkins.filter((c) => c.adept_id === adept.id).map(toCheckin);
@@ -79,6 +86,10 @@ export default async function AdepterPage() {
         blocks: ownBlocks,
         today,
       }).map((a) => ({ text: a.text, weight: a.weight })),
+      consent: consentStateOf(
+        adept,
+        adept.profile_id ? (consents.get(adept.profile_id) ?? null) : null,
+      ),
     };
   });
 
@@ -107,7 +118,10 @@ export default async function AdepterPage() {
           }
         />
       ) : (
-        <AdeptTable rows={rows} />
+        <AdeptTable
+          rows={rows}
+          initialMissing={(await searchParams).samtycke === "saknas"}
+        />
       )}
     </>
   );

@@ -38,6 +38,7 @@ export function AiCoachChat({
   context,
   messages,
   configured,
+  blocked = null,
 }: {
   adepts: AdeptOption[];
   adeptId: string | null;
@@ -46,6 +47,8 @@ export function AiCoachChat({
   /** Äldst först. */
   messages: AiMessageRow[];
   configured: boolean;
+  /** Varför frågor om adepten inte går att ställa – samtycket saknas. */
+  blocked?: string | null;
 }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -182,7 +185,7 @@ export function AiCoachChat({
             placeholder={
               adeptId === null ? "Välj en adept först" : "Vad vill du veta?"
             }
-            disabled={adeptId === null}
+            disabled={adeptId === null || blocked !== null}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -201,14 +204,17 @@ export function AiCoachChat({
                 navigating ||
                 adeptId === null ||
                 question.trim().length === 0 ||
-                !configured
+                !configured ||
+                blocked !== null
               }
             >
               <Send aria-hidden className="size-4" />
               {pending ? "Frågar …" : "Fråga"}
             </Button>
             <span className="text-[13px] text-text-subtle">
-              {configured
+              {blocked
+                ? blocked
+                : configured
                 ? "Ctrl + Enter skickar. Adepten ser inte den här tråden."
                 : "ANTHROPIC_API_KEY saknas – lägg in den som miljövariabel i Vercel."}
             </span>

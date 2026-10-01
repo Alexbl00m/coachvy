@@ -100,3 +100,27 @@ export async function updateAdept(
   revalidatePath(routes.adepts);
   return { notice: "Ändringarna är sparade." };
 }
+
+/**
+ * Noterar att coachen skickat inbjudan – när texten kopieras eller mejlet
+ * öppnas. Appen kan inte veta att den faktiskt skickades, bara att coachen
+ * tog den med sig; det räcker för att se vem som inte fått någon.
+ */
+export async function markInvited(
+  adeptId: string,
+): Promise<{ at: string | null }> {
+  await requireCoach();
+  const at = new Date().toISOString();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("adepts")
+    .update({ invited_at: at })
+    .eq("id", adeptId)
+    .is("profile_id", null)
+    .select("id");
+  // Kolumnen saknas innan migrationen för inbjudningar körts: inbjudan
+  // fungerar ändå, den noteras bara inte.
+  if (error || !data || data.length === 0) return { at: null };
+  revalidatePath(routes.adepts);
+  return { at };
+}

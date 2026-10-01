@@ -69,8 +69,8 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20260930090000_season_and_consent.sql` och
-   `20260930150000_activities.sql`.
+   `20260930090000_season_and_consent.sql`,
+   `20260930150000_activities.sql` och `20261001090000_invitations.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -1130,6 +1130,16 @@ del av att godkänna villkoren – och gå att ta tillbaka lika lätt som det ga
   finns nödvändiga cookies, och rättigheterna.
 - **AI-coachen skickar inte adeptens namn** till Anthropic. Modellen behöver
   talen, inte vem de tillhör.
+- **AI-funktionerna kräver samtycket.** AI-coachen och passbyggaren vägrar
+  bygga på en adept som inte godkänt – på servern, inte bara i gränssnittet.
+  Passbyggaren fungerar fortfarande med värden coachen skriver in själv.
+- **Kontakten syns.** Adeptlistan har en kolumn för samtycket – godkänt,
+  konto utan godkännande, inbjuden (med datum) eller ej inbjuden – och ett
+  filter för dem som saknar det. Översikten säger hur många det gäller.
+  Adeptsidan har en färdig inbjudan för den som saknar konto och en
+  påminnelse för den som har konto men inte godkänt. När coachen kopierar
+  eller mejlar inbjudan sparas datumet (`adepts.invited_at`, migrationen
+  `20261001090000_invitations.sql`).
 
 Personuppgiftsansvarig, kontaktuppgifter och biträden står i
 `src/lib/site.ts` och på policysidan. Stäm av texten innan den gäller skarpt –

@@ -18,7 +18,7 @@ import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
 import { PriorityBadge } from "@/components/season/priority-badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
-import { listAdepts } from "@/lib/adepts/queries";
+import { consentByProfile, listAdepts } from "@/lib/adepts/queries";
 import {
   listScheduledWorkouts,
   listSessionsBetween,
@@ -89,14 +89,24 @@ export async function CoachOverview({
 
   const monday = mondayOf(today);
   const sunday = addDays(monday, 6);
-  const [checkins, unread, races, blocks, workouts, tests] = await Promise.all([
-    listCheckinsSince(addDays(today, -60)),
-    unreadByAdept(coachId),
-    listRacesBetween(today, addDays(today, 60)),
-    listBlocksBetween(today, addDays(today, 60)),
-    listScheduledWorkouts(monday, sunday, null),
-    listSessionsBetween(addDays(today, -90), today, null),
-  ]);
+  const [checkins, unread, races, blocks, workouts, tests, consents] =
+    await Promise.all([
+      listCheckinsSince(addDays(today, -60)),
+      unreadByAdept(coachId),
+      listRacesBetween(today, addDays(today, 60)),
+      listBlocksBetween(today, addDays(today, 60)),
+      listScheduledWorkouts(monday, sunday, null),
+      listSessionsBetween(addDays(today, -90), today, null),
+      consentByProfile(
+        adepts
+          .map((a) => a.profile_id)
+          .filter((id): id is string => id !== null),
+      ),
+    ]);
+  // Adepter som inte godkänt att hälsouppgifter behandlas – med eller utan konto.
+  const withoutConsent = adepts.filter(
+    (a) => !a.profile_id || !consents.get(a.profile_id),
+  );
 
   const own = new Set(adepts.map((a) => a.id));
   const ownRaces = races.filter((r) => own.has(r.adept_id));
@@ -146,6 +156,24 @@ export async function CoachOverview({
 
   return (
     <div className="space-y-6">
+      {withoutConsent.length > 0 && (
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-md border border-line-strong bg-surface-2 px-4 py-3 text-sm text-text-muted">
+          <span>
+            <span className="font-medium text-text">
+              {withoutConsent.length} av {adepts.length}
+            </span>{" "}
+            {adepts.length === 1 ? "adept" : "adepter"} har inte godkänt att
+            hälsouppgifter behandlas i appen. Bjud in dem, eller påminn dem som
+            redan har ett konto.
+          </span>
+          <Link
+            href={`${routes.adepts}?samtycke=saknas`}
+            className="font-medium text-accent hover:text-accent-strong"
+          >
+            Visa vilka
+          </Link>
+        </p>
+      )}
       <section
         aria-label="Nyckeltal"
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"

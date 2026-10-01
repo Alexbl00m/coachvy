@@ -3,7 +3,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import type { Sport } from "@/lib/calculators/lactate";
-import { getAdept } from "@/lib/adepts/queries";
+import { aiBlockedMessage } from "@/lib/adepts/consent-state";
+import { getAdept, getConsentState } from "@/lib/adepts/queries";
 import { getAdeptProfile, profileToPrompt } from "@/lib/adepts/profile";
 import { sportOf } from "@/lib/tests/protocols";
 import {
@@ -201,6 +202,24 @@ export async function generateWorkout(
       error:
         "ANTHROPIC_API_KEY saknas. Lägg in den som miljövariabel (i Vercel: Settings → Environment Variables) och deploya om, så kan passbyggaren användas.",
     };
+  }
+
+  // Med en adept skickas hens hälsouppgifter till Anthropic: bara med
+  // samtycke. Utan adept går bara de värden coachen själv skrivit in.
+  if (input.adeptId !== null) {
+    const adept = await getAdept(input.adeptId);
+    if (!adept) return { ok: false, error: "Adepten hittades inte." };
+    const consent = await getConsentState(adept);
+    if (consent.kind !== "godkänt") {
+      return {
+        ok: false,
+        error: aiBlockedMessage(
+          adept.full_name,
+          consent,
+          adept.profile_id === access.user.id,
+        ),
+      };
+    }
   }
 
   const context =

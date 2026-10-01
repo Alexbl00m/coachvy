@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { Adept } from "@/lib/types/database";
+import { consentStateOf, type ConsentState } from "./consent-state";
 
 /**
  * Every query here leans on Row Level Security rather than filtering by hand:
@@ -71,4 +72,31 @@ export async function getHealthConsent(
 
   if (error || !data) return undefined;
   return data.health_consent_at;
+}
+
+/**
+ * Samtycket för flera adepters konton på en gång, för listor. Nyckeln är
+ * profilens id; en profil som inte gick att läsa saknas i kartan.
+ */
+export async function consentByProfile(
+  profileIds: string[],
+): Promise<Map<string, string | null>> {
+  const map = new Map<string, string | null>();
+  if (!isSupabaseConfigured() || profileIds.length === 0) return map;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, health_consent_at")
+    .in("id", profileIds);
+  for (const row of data ?? []) map.set(row.id, row.health_consent_at);
+  return map;
+}
+
+/** Adeptens läge i kontakten och samtycket. */
+export async function getConsentState(adept: Adept): Promise<ConsentState> {
+  const consent = adept.profile_id
+    ? await getHealthConsent(adept.profile_id)
+    : null;
+  return consentStateOf(adept, consent);
 }

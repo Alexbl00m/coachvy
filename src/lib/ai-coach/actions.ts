@@ -3,7 +3,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { revalidatePath } from "next/cache";
 
-import { getAdept } from "@/lib/adepts/queries";
+import { aiBlockedMessage } from "@/lib/adepts/consent-state";
+import { getAdept, getConsentState } from "@/lib/adepts/queries";
 import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
@@ -103,6 +104,12 @@ export async function askCoach(input: {
 
   const adept = await getAdept(input.adeptId);
   if (!adept) return { ok: false, error: "Adepten hittades inte." };
+
+  // Frågan skickar adeptens hälsouppgifter till Anthropic: bara med samtycke.
+  const consent = await getConsentState(adept);
+  if (consent.kind !== "godkänt") {
+    return { ok: false, error: aiBlockedMessage(adept.full_name, consent) };
+  }
 
   const supabase = await createClient();
 

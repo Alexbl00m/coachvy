@@ -155,12 +155,27 @@ export default async function AdeptPage({
           .join(" · ")}
       />
 
-      {consent === null && (
+      {isCoach && (consent === null || !adept.profile_id) && (
         <p className="mb-5 rounded-md border border-line-strong bg-surface-2 px-4 py-3 text-sm text-text-muted">
-          {adept.full_name.split(" ")[0]} har inte samtyckt till att
-          hälsouppgifter behandlas i appen. Be hen godkänna det under
-          Inställningar – eller registrera inga nya tester och incheckningar så
-          länge.
+          {adept.full_name.split(" ")[0]}{" "}
+          {adept.profile_id
+            ? "har inte samtyckt till att hälsouppgifter behandlas i appen."
+            : "har inget konto i appen än, och har därför inte samtyckt till att hälsouppgifter behandlas."}{" "}
+          AI-funktionerna används inte för hen så länge.{" "}
+          {tab === "oversikt" ? (
+            adept.profile_id ? (
+              "Skicka en påminnelse med kortet Samtycke saknas."
+            ) : (
+              "Bjud in hen med kortet Bjud in till appen."
+            )
+          ) : (
+            <Link
+              href={`${routes.adepts}/${adept.id}`}
+              className="font-medium text-accent hover:text-accent-strong"
+            >
+              {adept.profile_id ? "Skicka en påminnelse" : "Bjud in till appen"}
+            </Link>
+          )}
         </p>
       )}
 
@@ -204,11 +219,14 @@ export default async function AdeptPage({
             <AdeptInfoCard adept={adept} canEdit={canEdit} />
 
             <div className="space-y-6">
-              {canEdit && !adept.profile_id && (
+              {canEdit && (!adept.profile_id || consent === null) && (
                 <InviteCard
+                  adeptId={adept.id}
                   adeptName={adept.full_name}
                   email={adept.email}
                   coachName={user.profile?.full_name ?? "din coach"}
+                  mode={adept.profile_id ? "samtycke" : "inbjudan"}
+                  invitedAt={adept.invited_at ?? null}
                 />
               )}
 

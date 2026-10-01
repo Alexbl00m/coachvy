@@ -51,6 +51,8 @@ export type Adept = {
   goal: string | null;
   current_level: string | null;
   last_active_at: string | null;
+  /** När coachen senast skickade inbjudan till appen. Saknas före migrationen. */
+  invited_at?: string | null;
   /** Sätts av admin, aldrig av coachen eller adepten själv. */
   plan: "bas" | "medlem";
   created_at: string;

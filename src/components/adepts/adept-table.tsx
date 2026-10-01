@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronRight, MessageSquare, Search } from "lucide-react";
+import { Check, ChevronRight, MessageSquare, Search } from "lucide-react";
 
 import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
 import { PriorityBadge } from "@/components/season/priority-badge";
+import { consentLabel, type ConsentState } from "@/lib/adepts/consent-state";
 import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
 import type { TrainingPhase } from "@/lib/tests/phases";
@@ -30,7 +31,11 @@ export type AdeptListRow = {
   unread: number;
   /** Det som gör adepten värd en titt, viktigast först. Tom när inget sticker ut. */
   attention: { text: string; weight: 1 | 2 | 3 }[];
+  /** Konto, inbjudan och samtycke till hälsouppgifter. */
+  consent: ConsentState;
 };
+
+const lacksConsent = (r: AdeptListRow) => r.consent.kind !== "godkänt";
 
 /** Värd en titt: något i listan över det som sticker ut, eller olästa. */
 const worthALook = (r: AdeptListRow) => r.attention.length > 0 || r.unread > 0;
@@ -43,10 +48,18 @@ const sv = (v: number) => v.toFixed(1).replace(".", ",").replace(",0", "");
  * Filtreringen sker i webbläsaren: en coach har tiotals adepter, inte
  * tusentals, och sökningen ska svara medan man skriver.
  */
-export function AdeptTable({ rows }: { rows: AdeptListRow[] }) {
+export function AdeptTable({
+  rows,
+  initialMissing = false,
+}: {
+  rows: AdeptListRow[];
+  /** Börja filtrerat på dem som saknar samtycke – länken från översikten. */
+  initialMissing?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [sport, setSport] = useState<string | null>(null);
   const [onlyAttention, setOnlyAttention] = useState(false);
+  const [onlyMissing, setOnlyMissing] = useState(initialMissing);
 
   const sports = useMemo(
     () =>
@@ -66,9 +79,11 @@ export function AdeptTable({ rows }: { rows: AdeptListRow[] }) {
           .filter(Boolean)
           .some((v) => (v as string).toLowerCase().includes(needle))) &&
       (!sport || r.sport?.trim() === sport) &&
-      (!onlyAttention || worthALook(r)),
+      (!onlyAttention || worthALook(r)) &&
+      (!onlyMissing || lacksConsent(r)),
   );
   const attentionCount = rows.filter(worthALook).length;
+  const missingCount = rows.filter(lacksConsent).length;
 
   return (
     <div className="space-y-3">
@@ -120,6 +135,22 @@ export function AdeptTable({ rows }: { rows: AdeptListRow[] }) {
             Värda en titt ({attentionCount})
           </button>
         )}
+        {missingCount > 0 && (
+          <button
+            type="button"
+            aria-pressed={onlyMissing}
+            onClick={() => setOnlyMissing((v) => !v)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-[12px] transition-colors",
+              attentionCount === 0 && "sm:ml-auto",
+              onlyMissing
+                ? "border-accent bg-accent-soft text-text"
+                : "border-line text-text-muted hover:text-text",
+            )}
+          >
+            Saknar samtycke ({missingCount})
+          </button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-lg border border-line">
@@ -139,7 +170,7 @@ export function AdeptTable({ rows }: { rows: AdeptListRow[] }) {
                   Nästa tävling
                 </th>
                 <th className="px-4 py-3 font-medium text-text-muted">
-                  Senast aktiv
+                  Samtycke
                 </th>
                 <th className="w-10 px-4 py-3">
                   <span className="sr-only">Öppna</span>
@@ -258,8 +289,25 @@ export function AdeptTable({ rows }: { rows: AdeptListRow[] }) {
                         <span className="text-text-muted">–</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-text-subtle">
-                      {r.lastActive}
+                    <td className="px-4 py-3">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1",
+                          r.consent.kind === "godkänt"
+                            ? "text-good"
+                            : r.consent.kind === "ej-inbjuden"
+                              ? "text-text"
+                              : "text-text-muted",
+                        )}
+                      >
+                        {r.consent.kind === "godkänt" && (
+                          <Check aria-hidden className="size-3.5" />
+                        )}
+                        {consentLabel(r.consent)}
+                      </span>
+                      <span className="block text-[12px] text-text-subtle">
+                        {r.lastActive}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link

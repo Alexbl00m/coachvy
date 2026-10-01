@@ -1,6 +1,7 @@
 import { AiCoachChat } from "@/components/ai-coach/ai-coach-chat";
 import { PageHeader } from "@/components/page-header";
-import { listAdepts, getAdept } from "@/lib/adepts/queries";
+import { aiBlockedMessage } from "@/lib/adepts/consent-state";
+import { listAdepts, getAdept, getConsentState } from "@/lib/adepts/queries";
 import { getConversation, listAiMessages } from "@/lib/ai-coach/queries";
 import { requireCoach } from "@/lib/auth/session";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
@@ -28,14 +29,19 @@ export default async function AiCoachPage({
     adeptId ? contextForAdept(adeptId) : Promise.resolve(null),
   ]);
 
-  const conversation = adept ? await getConversation(adept.id, user.id) : null;
+  const [conversation, consent] = adept
+    ? await Promise.all([
+        getConversation(adept.id, user.id),
+        getConsentState(adept),
+      ])
+    : [null, null];
   const messages = conversation ? await listAiMessages(conversation.id) : [];
 
   return (
     <>
       <PageHeader
         title="AI Coach Assistant"
-        description="Fråga om en adept och få svar som räknar på hennes egna mätta värden – inte på allmänna träningsråd."
+        description="Fråga om en adept och få svar som räknar på adeptens egna mätta värden – inte på allmänna träningsråd."
       />
 
       <AiCoachChat
@@ -45,6 +51,11 @@ export default async function AiCoachPage({
         context={context}
         messages={messages}
         configured={isAnthropicConfigured()}
+        blocked={
+          adept && consent?.kind !== "godkänt" && consent
+            ? aiBlockedMessage(adept.full_name, consent)
+            : null
+        }
       />
     </>
   );

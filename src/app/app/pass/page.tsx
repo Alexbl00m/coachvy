@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { WorkoutBuilder } from "@/components/workouts/workout-builder";
-import { listAdepts } from "@/lib/adepts/queries";
+import { aiBlockedMessage } from "@/lib/adepts/consent-state";
+import { getConsentState, listAdepts } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { MembersOnly } from "@/components/members-only";
@@ -60,6 +61,15 @@ export default async function PassPage({
     workoutId ? getWorkout(workoutId) : Promise.resolve(null),
   ]);
 
+  // AI-bygget skickar adeptens hälsouppgifter till Anthropic: bara med
+  // samtycke. Att räkna på ett sparat pass går ändå.
+  const adeptRow = adeptId ? adepts.find((a) => a.id === adeptId) : undefined;
+  const consent = adeptRow ? await getConsentState(adeptRow) : null;
+  const blocked =
+    adeptRow && consent && consent.kind !== "godkänt"
+      ? aiBlockedMessage(adeptRow.full_name, consent, selfService)
+      : null;
+
   /**
    * Ett pass som öppnas för ändring räknas mot adeptens *nuvarande* tröskel,
    * inte den det en gång sparades mot. Det är hela poängen med att målen är
@@ -99,6 +109,7 @@ export default async function PassPage({
         initialWorkout={initialWorkout}
         configured={isAnthropicConfigured()}
         selfService={selfService}
+        blocked={blocked}
       />
     </>
   );
