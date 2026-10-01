@@ -112,7 +112,7 @@ export function AdeptTable({
               className={cn(
                 "rounded-full border px-3 py-1 text-[12px] transition-colors",
                 sport === s
-                  ? "border-accent bg-accent-soft text-text"
+                  ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-muted hover:text-text",
               )}
             >
@@ -128,7 +128,7 @@ export function AdeptTable({
             className={cn(
               "rounded-full border px-3 py-1 text-[12px] transition-colors sm:ml-auto",
               onlyAttention
-                ? "border-accent bg-accent-soft text-text"
+                ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line text-text-muted hover:text-text",
             )}
           >
@@ -144,7 +144,7 @@ export function AdeptTable({
               "rounded-full border px-3 py-1 text-[12px] transition-colors",
               attentionCount === 0 && "sm:ml-auto",
               onlyMissing
-                ? "border-accent bg-accent-soft text-text"
+                ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line text-text-muted hover:text-text",
             )}
           >

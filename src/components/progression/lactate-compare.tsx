@@ -255,7 +255,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
               className={cn(
                 "rounded-md border px-3 py-1.5 text-[13px] transition-colors",
                 key === groupKey
-                  ? "border-accent bg-accent-soft text-text"
+                  ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-muted hover:text-text",
               )}
             >

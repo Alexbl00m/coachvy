@@ -253,7 +253,7 @@ export function UtilisationCard({ summary }: { summary: UtilisationSummary }) {
               className={cn(
                 "rounded-full border px-3 py-1 text-[12px] transition-colors",
                 on
-                  ? "border-accent bg-accent-soft text-text"
+                  ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-subtle line-through hover:text-text-muted",
               )}
             >

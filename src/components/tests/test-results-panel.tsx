@@ -121,7 +121,7 @@ export function TestResultsPanel({
                           onClick={() => setSelectedType(type.id)}
                           className={
                             active
-                              ? "rounded-md border border-accent bg-accent-soft px-2.5 py-1 text-[12px] font-medium text-ink-50"
+                              ? "rounded-md border border-text-subtle bg-surface-3 px-2.5 py-1 text-[12px] font-medium text-ink-50"
                               : "rounded-md border border-ink-600 px-2.5 py-1 text-[12px] text-ink-300 hover:border-ink-500 hover:text-ink-100"
                           }
                         >

@@ -373,7 +373,7 @@ export function CommunityFeed({
             className={cn(
               "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
               channel === c.key
-                ? "border-accent bg-accent-soft font-medium text-text"
+                ? "border-text-subtle bg-surface-3 font-medium text-text"
                 : "border-line-strong text-text-muted hover:border-accent hover:text-text",
             )}
           >

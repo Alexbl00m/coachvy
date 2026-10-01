@@ -249,7 +249,7 @@ export function RaceEditor({
                     className={cn(
                       "rounded-md border px-3 py-2 text-left transition-colors",
                       on
-                        ? "border-accent bg-accent-soft"
+                        ? "border-text-subtle bg-surface-3"
                         : "border-line-strong bg-surface hover:border-accent/60",
                     )}
                   >

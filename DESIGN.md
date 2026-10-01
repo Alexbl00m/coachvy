@@ -6,7 +6,7 @@ description: Ett arbetsverktyg för uthållighetscoacher. Mörk, sval och exakt 
 # här är den portabla exporten. Ändras en token där, ändra här också.
 colors:
   dark:                         # appen – förvalt, vänds aldrig
-    canvas: "#0b0c0f"           # sidans botten
+    canvas: "#08090b"           # sidans botten
     surface: "#111216"          # kort, paneler, tabeller
     surface-2: "#17181d"        # hover, vald rad, fält i fält
     surface-3: "#1e1f25"        # upphöjt inom en panel, menyer
@@ -16,10 +16,11 @@ colors:
     text: "#eceef2"             # rubriker, värden, brödtext
     text-muted: "#a0a3ad"       # etiketter, beskrivningar
     text-subtle: "#878a95"      # metadata, tidsstämplar, hjälptext
+    edge: "rgb(255 255 255 / 0.04)"  # ljus överkant på upphöjda paneler (.lift)
     accent: "#ec7a52"           # primärknapp, fokus, vald flik
     accent-hover: "#f48d68"     # hover på accent, länkhover
     accent-text: "#f39470"      # accentfärgad text på mörk yta
-    accent-soft: "#2a1811"      # vald filterbricka, dropzon
+    accent-soft: "#2a1811"      # dropzon under drag
     accent-on: "#170d08"        # text på accent
     good: "#4cb782"             # framåt, godkänt – alltid med pil eller bock
     bad: "#eb6b5f"              # bakåt, fel – alltid med pil eller ord
@@ -74,11 +75,12 @@ typography:
     eyebrow: "11 / 14 / 600 / 0.08em"     # versaler, sparsamt: sektionsetikett i sidomenyn
     data: "13 / 18 / 500 / 0"             # Geist Mono, tabulära siffror
 
-rounded:
-  xs: 4px     # brickor, faspillor
-  sm: 6px     # knappar, fält, flikar
-  md: 8px     # kort, paneler, tabellram
-  lg: 12px    # dialoger, kartan
+rounded:      # Tailwind-klassen inom parentes
+  xs: 4px     # brickor, faspillor (rounded)
+  sm: 6px     # inbäddade taggar (rounded-sm är 4px; använd rounded-[6px])
+  md: 8px     # knappar, fält, notiser (rounded-md)
+  lg: 12px    # kort, paneler, tabellram (rounded-lg)
+  xl: 16px    # dialoger, kartan, stora skärmbildspaneler (rounded-xl)
   full: 9999px
 
 spacing:      # 4px-rutnät
@@ -120,7 +122,15 @@ trångt, hårfina linjer i stället för skuggor, och en enda färg som betyder
 Fyra plan, mörkast längst ned: `canvas` → `surface` → `surface-2` →
 `surface-3`. Varje steg är en upphöjning. Ett kort är `surface` med kant
 `line` på `canvas`; en vald eller hovrad rad i kortet är `surface-2`; en meny
-som öppnas ovanpå är `surface-3`.
+som öppnas ovanpå är `surface-3`. Kort och nyckeltal har klassen `lift`: en
+1 px ljus kant i överkanten (`edge`), som ljus uppifrån. Den syns knappt och
+ska inte göra det mer.
+
+### Valt läge är en upphöjning
+Det valda – en filterbricka, ett alternativ, en insats – lyfts: `surface-3`
+med kanten `text-subtle` och texten `text`. Accenten används inte för valt
+läge; den är reserverad för det man gör. Enda undantaget är dropzonen medan
+en fil dras över den, som får `accent` och `accent-soft`.
 
 ### Linjer
 - `line` delar rader och ramar kort. Den ska knappt synas.
@@ -139,7 +149,7 @@ Ingen text under `text-subtle`.
 - Text på accent är `accent-on`, inte vit: mörk text på den ljusa orangen i
   mörkt läge, vit på den mörkare orangen i ljust.
 - Accentfärgad text – länkar, "Visa vilka" – är `accent-text`.
-- `accent-soft` är bakgrunden för valt läge: filterbricka, dropzon.
+- `accent-soft` är bakgrunden för en dropzon under drag, inget annat.
 - Bara ett accentelement per vy ska kännas fyllt. Två primärknappar bredvid
   varandra är en för många.
 
@@ -170,8 +180,10 @@ sajten.
 
 ## 4. Form och yta
 
-- Hörn: `sm` (6 px) på knappar, fält och flikar; `md` (8 px) på kort och
-  tabellramar; `lg` (12 px) på dialoger och kartan; `xs` (4 px) på brickor.
+- Hörn som hos Linear: `md` (8 px) på knappar, fält och notiser; `lg`
+  (12 px) på kort, paneler och tabellramar; `xl` (16 px) på dialoger och
+  kartan; `xs` (4 px) på brickor. Aldrig pillrundade knappar – pillor är för
+  filterbrickor och räknare.
 - Kort: `surface`, kant `line`, ingen skugga, inre luft 20–24 px.
 - Avstånd i 4 px-steg. Mellan kort 24 px, inom ett kort 12–16 px.
 - Täthet: en tabellrad är 44–48 px hög; en listrad med två textrader 56 px.
@@ -181,13 +193,13 @@ sajten.
 ### Knapp
 Tre varianter, två storlekar (32 och 40 px).
 - **Primär**: `accent`, text `accent-on`, hover `accent-hover`. En per vy.
-- **Sekundär**: `surface-2`, kant `line-strong`, text `text`; hover ger
-  kanten och texten accent.
+- **Sekundär**: `surface-2`, kant `line-strong`, text `text`; hover lyfter
+  till `surface-3` med kanten `text-subtle`.
 - **Spöke**: transparent, text `text-muted`; hover `surface-2` och `text`.
 Etiketten säger vad som händer: "Spara", "Bjud in", "Ta bort aktiviteten".
 
 ### Fält
-`surface`, kant `line-control`, hörn `sm`, 14 px text. Fokus: kanten blir
+`surface`, kant `line-control`, hörn `md`, 14 px text. Fokus: kanten blir
 `accent`. Etikett ovanför i `label`; "valfritt" till höger i `text-subtle`;
 hjälptext under i `text-subtle`.
 
@@ -204,8 +216,8 @@ Text i `body` `text-muted`; vald flik `text` med en 2 px underlinje i
 `accent`. Olästa som en liten pill i `accent` med `accent-on`.
 
 ### Brickor och filter
-Filterbricka: pill med kant `line`, text `text-muted`; vald har kant
-`accent`, fyllning `accent-soft` och text `text`. Prioritetsbricka A/B/C:
+Filterbricka: pill med kant `line`, text `text-muted`; vald lyfts till
+`surface-3` med kanten `text-subtle` och text `text`. Prioritetsbricka A/B/C:
 fyrkant 20 px, hörn `xs`; A fylld i `text` med `canvas`-text, B och C med
 kant.
 
@@ -214,7 +226,7 @@ Godkänt i `good` med en bock; "Ej inbjuden" i `text`; övriga i
 `text-muted`. Datum under i `text-subtle`.
 
 ### Notis
-Rad över sidans innehåll: `surface-2`, kant `line-strong`, `body` i
+Rad över sidans innehåll: `surface-2`, kant `line-strong`, hörn `md`, `body` i
 `text-muted`, siffror och namn i `text`, en länk i `accent-text`.
 
 ## 6. Gör och gör inte
@@ -227,8 +239,8 @@ Rad över sidans innehåll: `surface-2`, kant `line-strong`, `body` i
   "Skapa inbjudningslänk".
 
 ### Gör inte
-- Färga inte rubriker, ytor eller ikoner orange för att det ska kännas
-  levande.
+- Färga inte rubriker, ytor, ikoner eller valda lägen orange för att det ska
+  kännas levande.
 - Lägg inte versaler och spärrning på kortrubriker.
 - Använd inte färg ensam för status.
 - Inga gradienter, ingen glasmorfism, inga färgade kantlinjer till vänster på

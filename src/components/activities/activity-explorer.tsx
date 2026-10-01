@@ -225,7 +225,7 @@ export function ActivityExplorer({
                 className={cn(
                   "rounded-md border px-2.5 py-1.5 text-left text-[12px] transition-colors",
                   chosen === n
-                    ? "border-accent bg-accent-soft text-text"
+                    ? "border-text-subtle bg-surface-3 text-text"
                     : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
                 )}
               >

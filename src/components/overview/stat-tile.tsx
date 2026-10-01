@@ -27,7 +27,7 @@ export function StatTile({
     </>
   );
   const className =
-    "block min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5";
+    "lift block min-w-0 rounded-lg border border-line bg-surface p-4 sm:p-5";
   return href ? (
     <Link
       href={href}

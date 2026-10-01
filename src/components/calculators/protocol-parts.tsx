@@ -60,7 +60,7 @@ export function ProtocolPicker({
             className={cn(
               "rounded-md border px-3 py-1.5 text-sm transition-colors",
               sport === s.id
-                ? "border-accent bg-accent-soft text-text"
+                ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
             )}
           >
@@ -83,7 +83,7 @@ export function ProtocolPicker({
               className={cn(
                 "w-full rounded-lg border p-4 text-left transition-colors",
                 active
-                  ? "border-accent bg-accent-soft"
+                  ? "border-text-subtle bg-surface-3"
                   : locked
                     ? "cursor-not-allowed border-dashed border-line opacity-70"
                     : "border-line hover:border-accent/60",

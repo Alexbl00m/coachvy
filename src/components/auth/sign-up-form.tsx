@@ -65,7 +65,7 @@ export function SignUpForm({
                 className={cn(
                   "rounded-md border px-3 py-2.5 text-left transition-colors",
                   selected
-                    ? "border-accent bg-accent-soft"
+                    ? "border-text-subtle bg-surface-3"
                     : "border-ink-600 bg-ink-850 hover:border-ink-500",
                 )}
               >

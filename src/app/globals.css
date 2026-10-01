@@ -17,8 +17,8 @@
   /* Neutral scale: a cool near-black with a faint blue cast, stepped so
      that each surface reads as a plane above the last (DESIGN.md). Text
      steps are checked to 4.5:1 on every surface they sit on. */
-  --color-ink-950: #0b0c0f;
-  --color-ink-900: #0b0c0f;
+  --color-ink-950: #08090b;
+  --color-ink-900: #08090b;
   --color-ink-850: #111216;
   --color-ink-800: #1f2027;
   --color-ink-700: #23242b;
@@ -43,6 +43,12 @@
     "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo,
     monospace;
+
+  /* Hörn som hos Linear: knappar och fält 8 px (rounded-md), kort och
+     paneler 12 px (rounded-lg), dialoger och kartan 16 px (rounded-xl). */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 @theme inline {
@@ -69,7 +75,7 @@
 /* Dark is the default: the app is the larger surface and never flips.
    Values and their rules live in DESIGN.md; keep the two in step. */
 :root {
-  --canvas: #0b0c0f;
+  --canvas: #08090b;
   --surface: #111216;
   --surface-2: #17181d;
   --surface-3: #1e1f25;
@@ -80,6 +86,8 @@
   --text: #eceef2;
   --text-muted: #a0a3ad;
   --text-subtle: #878a95;
+  /* En svag ljus kant i överkanten på upphöjda paneler, som ljus uppifrån. */
+  --edge: rgb(255 255 255 / 0.04);
 
   /* Accenten används sparsamt: primärknappen, fokus, det valda. */
   --accent: #ec7a52;
@@ -132,6 +140,7 @@
   --text: #16171b;
   --text-muted: #55585f;
   --text-subtle: #62656d;
+  --edge: rgb(255 255 255 / 0);
   /* Mörkare än appens orange: vit text på den håller 4.5:1. */
   --accent: #c4532c;
   --accent-hover: #ad4623;
@@ -174,6 +183,11 @@ body {
 ::selection {
   background-color: var(--accent);
   color: var(--accent-on);
+}
+
+/* Upphöjd panel: ytan bär djupet, kanten i överkanten ger det ljus. */
+.lift {
+  box-shadow: inset 0 1px 0 0 var(--edge);
 }
 
 /* Consistent focus treatment across both surfaces */
@@ -234,6 +248,7 @@ body {
     --surface: #ffffff;
     --surface-2: #ffffff;
     --surface-3: #ffffff;
+    --edge: rgb(255 255 255 / 0);
     --line: #d5cbc1;
     --line-strong: #b8ab9e;
     --line-control: #b8ab9e;

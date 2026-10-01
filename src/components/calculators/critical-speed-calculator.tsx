@@ -62,7 +62,7 @@ export function CriticalSpeedCalculator() {
             className={cn(
               "rounded-md border px-4 py-2 text-sm font-medium capitalize transition-colors",
               discipline === option
-                ? "border-accent bg-accent-soft text-text"
+                ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line-strong text-text-muted hover:border-accent hover:text-text",
             )}
           >
