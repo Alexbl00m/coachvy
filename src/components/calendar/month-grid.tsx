@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { phaseFill } from "@/components/season/phase-style";
 import { SERIES } from "@/lib/calculators/chart-colors";
+import type { Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
 import {
   addDays,
@@ -40,6 +41,8 @@ function describe(date: string, items: DayItems): string {
   const parts = [
     items.races.length > 0 &&
       `${items.races.length} ${items.races.length === 1 ? "tävling" : "tävlingar"}`,
+    items.activities.length > 0 &&
+      `${items.activities.length} ${items.activities.length === 1 ? "genomförd aktivitet" : "genomförda aktiviteter"}`,
     items.workouts.length > 0 && `${items.workouts.length} pass`,
     items.tests.length > 0 &&
       `${items.tests.length} ${items.tests.length === 1 ? "test" : "tester"}`,
@@ -111,6 +114,11 @@ export function MonthGrid({
                 key: r.id,
                 race: r,
               })),
+              ...items.activities.map((a) => ({
+                kind: "activity" as const,
+                key: a.id,
+                activity: a,
+              })),
               ...items.workouts.map((w) => ({
                 kind: "workout" as const,
                 key: w.id,
@@ -178,6 +186,7 @@ export function MonthGrid({
                             ? "rotate-45 rounded-[1px] bg-text"
                             : "rounded-full",
                           row.kind === "workout" && "bg-text-muted",
+                          row.kind === "activity" && "bg-accent",
                         )}
                         style={
                           row.kind === "test"
@@ -214,6 +223,23 @@ export function MonthGrid({
                           <span className="truncate">
                             {who(row.race.adept_name)}
                             {row.race.name}
+                          </span>
+                        </span>
+                      );
+                    }
+                    if (row.kind === "activity") {
+                      return (
+                        <span
+                          key={row.key}
+                          className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text"
+                        >
+                          <SportIcon
+                            sport={row.activity.sport as Sport}
+                            className="size-3 shrink-0 text-accent"
+                          />
+                          <span className="truncate">
+                            {who(row.activity.adept_name)}
+                            {row.activity.name}
                           </span>
                         </span>
                       );

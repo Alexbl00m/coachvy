@@ -69,7 +69,8 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20260930090000_season_and_consent.sql`.
+   `20260930090000_season_and_consent.sql` och
+   `20260930150000_activities.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -1045,6 +1046,71 @@ passen och senaste testet.
 Adeptlistan har fått sök, grenfilter, ett filter för dem som är värda en titt,
 och kolumner för fas, återhämtning mot eget snitt, nästa tävling och olästa.
 
+## Lopp och aktiviteter
+
+Ett genomfört lopp eller pass laddas upp som .fit-fil under adeptens flik
+**Lopp och aktiviteter** – av coachen eller av adepten själv. Filen läses och
+analyseras i webbläsaren (`fit-file-parser`, samma tolk som testimporten).
+Filen sparas inte; det som sparas i `activities` är analysen, en nedsamplad
+serie på högst 2 000 punkter för kartan och graferna, och de tröskelvärden
+analysen räknades mot.
+
+### Tröskelvärdena som gällde då
+
+Ett lopp i juli läses mot vårens test, inte mot ett som gjordes efteråt och inte
+mot dagens värden när sidan öppnas nästa år (`src/lib/activities/reference.ts`).
+Varje värde väljs för sig ur det senaste testet på eller före loppdagen, och
+bara om inget sådant finns ur det närmaste efter:
+
+- **FTP** för IF, TSS och effektzoner: ett FTP-test, annars CP, annars LT2 i
+  watt, och utan test FTP:n som är inställd i cykeldatorn.
+- **CP och W′** (cykel) eller **CS och D′** (löpning) för W′bal/D′bal och
+  modellens bästa insatser.
+- **Tröskelpuls** för Friels pulszoner.
+
+Sidan räknar inte om. Vill man läsa ett gammalt lopp mot ett nytt test tar man
+bort aktiviteten och laddar upp filen igen.
+
+### Analysen
+
+Räknad sekund för sekund innan nedsamplingen (`src/lib/activities/analysis.ts`),
+regelbaserad som trendanalysen – samma fil ger samma text:
+
+- Normaliserad effekt (30 s rullande, fjärde potens), VI, IF, TSS och arbete.
+- Bästa insatser 5 s–60 min (cykel) eller 400 m–maraton (löpning), jämförda
+  med vad CP + W′/t eller CS/D′ ur testet säger. Ett lopp som slår modellen
+  säger att testet är gammalt.
+- W′bal enligt Skiba (2014). Går reserven under noll gav atleten mer än
+  modellen tillåter – då är CP eller W′ för lågt satta.
+- Frikoppling mellan puls och effekt (eller fart) mellan halvorna, och hur
+  andra halvan stod sig mot första.
+- Tid i zon, delsträckor var tionde km (cykel) eller varje km (löpning), och
+  klockans egna varv.
+
+### Sidan
+
+Karta (Leaflet) med rutten, start och mål. Under den graferna för höjd, fart,
+effekt, puls, kadens och W′bal under varandra, med samma x-axel – distans eller
+tid – och synkad pekare. Pekaren flyttar en markör på kartan, och en vald
+bästa insats markeras både i graferna och på kartan. Effekten jämnas ut över
+30 sekunder som i normaliserad effekt, det går att stänga av.
+
+Kartbrickorna kommer från OpenStreetMap. Deras villkor tillåter inte tung
+trafik; byt leverantör med `NEXT_PUBLIC_MAP_TILE_URL` och
+`NEXT_PUBLIC_MAP_ATTRIBUTION` utan kodändring. Mörkläget är ett CSS-filter på
+brickorna.
+
+Aktiviteterna syns också i kalendern, och en tävling i säsongsplanen som har
+ett uppladdat lopp länkar till analysen.
+
+### Garmin och direkt synk
+
+Uppladdningen gäller filer. Att få passen direkt från klockan kräver ett
+godkänt avtal med tillverkaren – för Garmin deras
+[Garmin Connect Developer Program](https://developer.garmin.com/gc-developer-program/),
+som tar ansökningar från företag. Med det på plats är det en OAuth-koppling per
+adept och en webhook som tar emot varje nytt pass och kör samma analys.
+
 ## Samtycke och integritet
 
 Laktat, puls, syreupptag, kroppssammansättning, sömn och skador är
@@ -1093,6 +1159,11 @@ Kända luckor:
   körningen med nyckel är alltså också det första provet på prompten.
 - **Planer är en säsongsplan**, inte en veckoplan: perioder och tävlingar.
   Passen byggs fortfarande ett i taget i passbyggaren och läggs på ett datum.
+- **Ingen direkt synk från klockan.** Lopp laddas upp som .fit-filer; se
+  "Garmin och direkt synk" ovan.
+- **Kartbrickorna är inte provade härifrån.** Sandlådan jag byggde i når inte
+  OpenStreetMap, så kartan är verifierad med en grå platta i stället för
+  brickor. Rutten, markören och markeringen är provade.
 - **Konton raderas inte från appen.** Inställningarna pekar till e-post, och
   raderingen görs för hand.
 - **Ett återtaget samtycke stoppar inte registreringen tekniskt.** Coachen ser

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { routes } from "@/lib/routes";
 import { deleteRace, saveRace } from "@/lib/season/actions";
 import {
   RACE_PRIORITIES,
@@ -55,11 +57,14 @@ export function RaceEditor({
   races,
   today,
   defaultSport,
+  analyses = {},
 }: {
   adeptId: string;
   races: AdeptRaceRow[];
   today: string;
   defaultSport: RaceSport | "";
+  /** Tävlingens uppladdade lopp, när det finns ett. */
+  analyses?: Record<string, string>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -130,6 +135,14 @@ export function RaceEditor({
           )}
           {race.note && (
             <p className="mt-0.5 text-[12px] text-text-subtle">{race.note}</p>
+          )}
+          {analyses[race.id] && (
+            <Link
+              href={`${routes.adepts}/${adeptId}/aktivitet/${analyses[race.id]}`}
+              className="mt-1 inline-block text-[13px] font-medium text-accent hover:text-accent-strong"
+            >
+              Se loppanalysen
+            </Link>
           )}
         </div>
         <div className="flex shrink-0 gap-1">

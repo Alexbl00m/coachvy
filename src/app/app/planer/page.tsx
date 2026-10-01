@@ -9,6 +9,7 @@ import { SeasonSummary } from "@/components/season/season-summary";
 import { SeasonTimeline } from "@/components/season/season-timeline";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
+import { listActivities } from "@/lib/activities/queries";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
@@ -106,11 +107,17 @@ export default async function PlanerPage({
     );
   }
 
-  const [blocks, races, sessions] = await Promise.all([
+  const [blocks, races, sessions, activities] = await Promise.all([
     listBlocks(adept.id),
     listRaces(adept.id),
     listSessions(adept.id),
+    listActivities(adept.id),
   ]);
+  // Senast uppladdade loppet per tävling – listan är nyast först.
+  const analyses: Record<string, string> = {};
+  for (const a of activities) {
+    if (a.race_id && !analyses[a.race_id]) analyses[a.race_id] = a.id;
+  }
 
   // Coachen planerar; en adept utan coach planerar sin egen säsong.
   const canPlan =
@@ -226,6 +233,7 @@ export default async function PlanerPage({
             races={races}
             today={today}
             defaultSport={raceSportOf(adept.sport)}
+            analyses={analyses}
           />
         </div>
       </div>

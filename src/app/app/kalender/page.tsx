@@ -21,6 +21,7 @@ import {
 } from "@/lib/calendar/queries";
 import { routes } from "@/lib/routes";
 import { listBlocks, listRacesBetween } from "@/lib/season/queries";
+import { listActivitiesBetween } from "@/lib/activities/queries";
 import { addDays, monthName, todayIso } from "@/lib/season/season";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import type { Adept } from "@/lib/types/database";
@@ -109,18 +110,21 @@ export default async function KalenderPage({
   const to =
     dates[dates.length - 1] > lastSoon ? dates[dates.length - 1] : lastSoon;
 
-  const [workouts, tests, races, blocks, checkins] = await Promise.all([
-    listScheduledWorkouts(from, to, adeptId),
-    listSessionsBetween(from, to, adeptId),
-    listRacesBetween(from, to),
-    adeptId ? listBlocks(adeptId) : Promise.resolve([]),
-    adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
-  ]);
+  const [workouts, tests, races, blocks, checkins, activities] =
+    await Promise.all([
+      listScheduledWorkouts(from, to, adeptId),
+      listSessionsBetween(from, to, adeptId),
+      listRacesBetween(from, to),
+      adeptId ? listBlocks(adeptId) : Promise.resolve([]),
+      adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
+      listActivitiesBetween(from, to, adeptId),
+    ]);
 
   const days = groupByDay({
     workouts,
     tests,
     races: adeptId ? races.filter((r) => r.adept_id === adeptId) : races,
+    activities,
     checkins,
   });
   const phases = adeptId ? phaseByDay(blocks, [...dates, ...soon]) : null;

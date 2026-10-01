@@ -46,6 +46,7 @@ export async function GET() {
       races,
       blocks,
       messages,
+      activities,
     ] = await Promise.all([
       rows(supabase.from("adept_profiles").select("*").in("adept_id", ids)),
       rows(
@@ -73,6 +74,13 @@ export async function GET() {
           .in("adept_id", ids)
           .order("created_at"),
       ),
+      rows(
+        supabase
+          .from("activities")
+          .select("*")
+          .in("adept_id", ids)
+          .order("started_at"),
+      ),
     ]);
     Object.assign(data, {
       bakgrund: background,
@@ -83,6 +91,7 @@ export async function GET() {
       tavlingar: races,
       perioder: blocks,
       meddelanden: messages,
+      aktiviteter: activities,
     });
   }
 

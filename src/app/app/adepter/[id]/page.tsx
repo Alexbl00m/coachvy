@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { ActivityList } from "@/components/activities/activity-list";
+import { ActivityUpload } from "@/components/activities/activity-upload";
 import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { AdeptProfileForm } from "@/components/adepts/adept-profile-form";
 import { PageHeader } from "@/components/page-header";
@@ -12,6 +14,8 @@ import { LoadPanel } from "@/components/training/load-panel";
 import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
+import { listActivities } from "@/lib/activities/queries";
+import { candidatesFrom } from "@/lib/activities/reference";
 import { getAdept, getHealthConsent } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
@@ -19,7 +23,7 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { listTestResults, listTestTypes } from "@/lib/tests/queries";
-import { sportOf } from "@/lib/tests/protocols";
+import { protocolByKey, sportOf } from "@/lib/tests/protocols";
 import {
   rollingCriticalPower,
   rollingCriticalSpeed,
@@ -34,11 +38,13 @@ import { CompareToggle } from "@/components/progression/compare-toggle";
 import { countUnread, listMessages } from "@/lib/messages/queries";
 import { listCheckins } from "@/lib/training/queries";
 import { listWorkouts } from "@/lib/workouts/queries";
+import { listRaces } from "@/lib/season/queries";
 
 const TABS = [
   { key: "oversikt", label: "Översikt" },
   { key: "testtillfallen", label: "Testtillfällen" },
   { key: "pass", label: "Pass" },
+  { key: "aktiviteter", label: "Lopp och aktiviteter" },
   { key: "maende", label: "Mående" },
   { key: "meddelanden", label: "Meddelanden" },
   { key: "testresultat", label: "Enstaka värden" },
@@ -108,6 +114,13 @@ export default async function AdeptPage({
       ? lactateCurves(await listFullSessions(adept.id))
       : [];
 
+  // Uppladdade pass och lopp, med tävlingarna de kan kopplas till.
+  const [activities, races] =
+    tab === "aktiviteter"
+      ? await Promise.all([listActivities(adept.id), listRaces(adept.id)])
+      : [[], []];
+  const canUpload = canEdit || adept.profile_id === user.id;
+
   // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
   // flyttat kurvan sedan dess.
   const lastFullTestOn = sessions[0]?.performed_on ?? null;
@@ -153,7 +166,7 @@ export default async function AdeptPage({
       <div
         role="tablist"
         aria-label="Adeptvyer"
-        // Sex flikar får inte plats på en telefon. Raden scrollar i sidled i
+        // Sju flikar får inte plats på en telefon. Raden scrollar i sidled i
         // stället för att skjuta ut hela sidan – en sida som går att dra
         // vågrätt känns trasig, en flikrad som gör det är en känd gest.
         className="mb-6 flex gap-1 overflow-x-auto border-b border-ink-800 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -271,6 +284,28 @@ export default async function AdeptPage({
             adept.profile_id === user.id && isMember(user) ? user.id : null
           }
         />
+      ) : tab === "aktiviteter" ? (
+        <div className="space-y-6">
+          {canUpload && (
+            <ActivityUpload
+              adeptId={adept.id}
+              candidates={candidatesFrom(
+                sessions,
+                (key) => protocolByKey(key)?.label ?? key,
+              )}
+              races={races.map((r) => ({
+                id: r.id,
+                name: r.name,
+                race_date: r.race_date,
+              }))}
+            />
+          )}
+          <ActivityList
+            adeptId={adept.id}
+            activities={activities}
+            raceNames={Object.fromEntries(races.map((r) => [r.id, r.name]))}
+          />
+        </div>
       ) : tab === "maende" ? (
         <LoadPanel adeptId={adept.id} checkins={checkins} />
       ) : tab === "meddelanden" ? (

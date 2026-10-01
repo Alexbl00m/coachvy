@@ -2,6 +2,7 @@ import { Bike, FlaskConical, Footprints, Waves } from "lucide-react";
 
 import type { Sport } from "@/lib/calculators/lactate";
 import { SERIES } from "@/lib/calculators/chart-colors";
+import type { ActivityInRange } from "@/lib/activities/queries";
 import type { CalendarTest, CalendarWorkout } from "@/lib/calendar/queries";
 import type { RaceWithAdept } from "@/lib/season/queries";
 import type { AdeptCheckinRow, TrainingBlockRow } from "@/lib/types/database";
@@ -11,6 +12,8 @@ export type DayItems = {
   workouts: CalendarWorkout[];
   tests: CalendarTest[];
   races: RaceWithAdept[];
+  /** Genomförda pass och lopp, uppladdade ur klockan. */
+  activities: ActivityInRange[];
   checkin: AdeptCheckinRow | null;
 };
 
@@ -18,6 +21,7 @@ export const emptyDay = (): DayItems => ({
   workouts: [],
   tests: [],
   races: [],
+  activities: [],
   checkin: null,
 });
 
@@ -26,11 +30,13 @@ export function groupByDay({
   workouts,
   tests,
   races,
+  activities = [],
   checkins,
 }: {
   workouts: CalendarWorkout[];
   tests: CalendarTest[];
   races: RaceWithAdept[];
+  activities?: ActivityInRange[];
   checkins: AdeptCheckinRow[];
 }): Map<string, DayItems> {
   const days = new Map<string, DayItems>();
@@ -45,6 +51,7 @@ export function groupByDay({
   for (const w of workouts) day(w.date).workouts.push(w);
   for (const t of tests) day(t.date).tests.push(t);
   for (const r of races) day(r.race_date).races.push(r);
+  for (const a of activities) day(a.performed_on).activities.push(a);
   for (const c of checkins) day(c.performed_on).checkin = c;
   return days;
 }

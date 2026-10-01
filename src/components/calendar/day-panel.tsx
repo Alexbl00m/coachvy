@@ -4,6 +4,8 @@ import { ChevronRight } from "lucide-react";
 import { PriorityBadge } from "@/components/season/priority-badge";
 import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
 import { Card, CardTitle } from "@/components/ui/card";
+import { formatClock } from "@/lib/activities/analysis";
+import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
 import {
   countdownText,
@@ -63,6 +65,7 @@ export function DayContent({
 
   if (
     items.races.length === 0 &&
+    items.activities.length === 0 &&
     items.workouts.length === 0 &&
     items.tests.length === 0 &&
     !checkin
@@ -90,6 +93,33 @@ export function DayContent({
                   .join(" · ") || `${race.priority}-lopp`}
                 {race.race_date >= today &&
                   ` · ${countdownText(daysBetween(today, race.race_date))}`}
+              </span>
+            </span>
+          </ItemLink>
+        </li>
+      ))}
+      {items.activities.map((a) => (
+        <li key={a.id}>
+          <ItemLink href={`${routes.adepts}/${a.adept_id}/aktivitet/${a.id}`}>
+            <SportIcon
+              sport={a.sport as Sport}
+              className="mt-0.5 size-4 shrink-0 text-accent"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-text">
+                {a.name}
+              </span>
+              <span className="block text-[12px] text-text-subtle">
+                {who(a.adept_name)}
+                {[
+                  a.distance_m !== null &&
+                    `${sv(Math.round(a.distance_m / 100) / 10)} km`,
+                  a.duration_s !== null && formatClock(a.duration_s),
+                  a.summary.normalizedPower !== null &&
+                    `NP ${Math.round(a.summary.normalizedPower)} W`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Genomförd"}
               </span>
             </span>
           </ItemLink>
@@ -224,6 +254,7 @@ export function Upcoming({
     return (
       items &&
       (items.races.length > 0 ||
+        items.activities.length > 0 ||
         items.workouts.length > 0 ||
         items.tests.length > 0)
     );

@@ -4,6 +4,11 @@
  */
 
 import type { Sport } from "@/lib/calculators/lactate";
+import type {
+  Reference as ActivityReference,
+  Streams as ActivityStreams,
+  Summary as ActivitySummary,
+} from "@/lib/activities/analysis";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 
 export type AccountRole = "coach" | "adept";
@@ -233,6 +238,30 @@ export type TrainingBlockRow = {
   starts_on: string;
   ends_on: string;
   focus: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Ett genomfört pass eller lopp ur klockans fil, med sin analys. */
+export type ActivityRow = {
+  id: string;
+  adept_id: string;
+  race_id: string | null;
+  name: string;
+  sport: "cykling" | "löpning" | "simning" | "annat";
+  started_at: string;
+  performed_on: string;
+  device: string | null;
+  duration_s: number | null;
+  moving_s: number | null;
+  distance_m: number | null;
+  ascent_m: number | null;
+  summary: ActivitySummary;
+  reference: ActivityReference | null;
+  streams: ActivityStreams;
+  laps: unknown[] | null;
+  note: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -477,6 +506,16 @@ export type Database = {
         > &
           Partial<TrainingBlockRow>;
         Update: Partial<TrainingBlockRow>;
+        Relationships: [];
+      };
+      activities: {
+        Row: ActivityRow;
+        Insert: Pick<
+          ActivityRow,
+          "adept_id" | "name" | "sport" | "started_at" | "performed_on" | "streams"
+        > &
+          Partial<ActivityRow>;
+        Update: Partial<ActivityRow>;
         Relationships: [];
       };
       adept_checkins: {

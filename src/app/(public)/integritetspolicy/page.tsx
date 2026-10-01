@@ -136,6 +136,14 @@ export default function IntegritetspolicyPage() {
                 i webbläsaren; bara de uppgifter som sparas i ett test lagras.
               </>,
               <>
+                <strong className="text-text">Genomförda pass och lopp:</strong>{" "}
+                tid, distans, fart, effekt, puls, kadens och höjd, och var du
+                befann dig längs rutten (GPS), ur filer från klockan eller
+                cykeldatorn. Filen läses i webbläsaren och sparas inte; det som
+                sparas är analysen och en förenklad kurva för kartan och
+                graferna.
+              </>,
+              <>
                 <strong className="text-text">Mående och belastning:</strong>{" "}
                 dagliga incheckningar med ansträngning (RPE), passlängd, sömn,
                 trötthet, muskelömhet och stress.
@@ -222,6 +230,12 @@ export default function IntegritetspolicyPage() {
               </>,
             ]}
           />
+          <p>
+            Kartorna i loppanalysen hämtas från OpenStreetMap. Webbläsaren ber
+            då deras servrar om kartbitarna för området kring rutten, och de ser
+            din IP-adress och vilket område som visas – men inte rutten, namnet
+            eller några mätvärden.
+          </p>
           <p>
             Några biträden har verksamhet utanför EU/EES, bland annat i USA.
             Överföringen sker då med de skyddsåtgärder dataskyddsförordningen

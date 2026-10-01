@@ -154,6 +154,42 @@ body {
 }
 
 /**
+ * Kartan i appens mörka yta. Brickorna inverteras och vrids tillbaka i ton, så
+ * att vatten förblir blått och skog grön men ljusheten följer ytan – en vit
+ * karta mitt i en mörk sida bländar. Rutten ritas ovanpå och påverkas inte.
+ * Utskriften behåller den ljusa kartan.
+ */
+.activity-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.6);
+}
+
+.activity-map.leaflet-container {
+  background: var(--surface-2);
+  font-family: var(--font-sans);
+}
+
+.activity-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  color: var(--text-subtle);
+}
+
+.activity-map .leaflet-control-attribution a {
+  color: var(--text-muted);
+}
+
+.activity-map .leaflet-bar a {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+@media print {
+  .activity-map .leaflet-tile-pane {
+    filter: none;
+  }
+}
+
+/**
  * Utskrift.
  *
  * "Spara som PDF" ligger i webbläsarens egen utskriftsdialog, så en fungerande
