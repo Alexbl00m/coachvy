@@ -1147,8 +1147,11 @@ Kända luckor:
   men det finns ingen vy i appen som visar dem ännu — läs dem i Supabase så
   länge. Ingen mailavisering heller.
 - Formuläret har en honeypot men ingen hastighetsbegränsning.
-- Ingen inbjudan skickas via e-post. En adept kopplas när hen registrerar sig
-  med adressen coachen lagt in, eller tackar ja till inbjudan i appen.
+- Appen skickar inga mejl själv. En adept utan konto har ett kort **Bjud in
+  till appen** på sin översikt, med en färdig text och en länk till
+  registreringen där namn och adress är ifyllda. Coachen skickar den som mejl
+  eller sms; kontot kopplas via adressen och samtycket ges vid registreringen.
+  Har adepten redan ett konto syns inbjudan i appen.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.
 - Testresultat kan skapas och tas bort, men inte redigeras.
 - **Löptesternas klockimport är prövad på syntetiska filer.** En riktig

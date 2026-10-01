@@ -6,6 +6,7 @@ import { ActivityList } from "@/components/activities/activity-list";
 import { ActivityUpload } from "@/components/activities/activity-upload";
 import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { AdeptProfileForm } from "@/components/adepts/adept-profile-form";
+import { InviteCard } from "@/components/adepts/invite-card";
 import { PageHeader } from "@/components/page-header";
 import { SessionPanel } from "@/components/tests/session-panel";
 import { TestResultsPanel } from "@/components/tests/test-results-panel";
@@ -203,6 +204,14 @@ export default async function AdeptPage({
             <AdeptInfoCard adept={adept} canEdit={canEdit} />
 
             <div className="space-y-6">
+              {canEdit && !adept.profile_id && (
+                <InviteCard
+                  adeptName={adept.full_name}
+                  email={adept.email}
+                  coachName={user.profile?.full_name ?? "din coach"}
+                />
+              )}
+
               <Card>
                 <CardTitle>Senaste test</CardTitle>
                 {latest ? (

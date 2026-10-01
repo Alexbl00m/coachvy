@@ -30,9 +30,18 @@ function SubmitButton() {
   );
 }
 
-export function SignUpForm() {
+/**
+ * `invite` fyller i formuläret från coachens inbjudningslänk: adept som
+ * kontotyp, och namnet och adressen coachen lagt in – det är adressen som
+ * kopplar kontot till rätt adept.
+ */
+export function SignUpForm({
+  invite,
+}: {
+  invite?: { name: string; email: string } | null;
+}) {
   const [state, formAction] = useActionState(signUp, initialState);
-  const [role, setRole] = useState<AccountRole>("coach");
+  const [role, setRole] = useState<AccountRole>(invite ? "adept" : "coach");
 
   return (
     <form action={formAction} className="space-y-4">
@@ -83,7 +92,7 @@ export function SignUpForm() {
           name="full_name"
           autoComplete="name"
           required
-          defaultValue={state.values?.full_name ?? ""}
+          defaultValue={state.values?.full_name ?? invite?.name ?? ""}
           placeholder="För- och efternamn"
         />
       </Field>
@@ -95,7 +104,7 @@ export function SignUpForm() {
           type="email"
           autoComplete="email"
           required
-          defaultValue={state.values?.email ?? ""}
+          defaultValue={state.values?.email ?? invite?.email ?? ""}
           placeholder="du@exempel.se"
         />
       </Field>
