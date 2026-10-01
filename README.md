@@ -36,8 +36,12 @@ platshållare och byggs modul för modul.
 
 ## Två ytor, ett designsystem
 
-Montserrat och accenten `#E6754E` gäller överallt. Bakgrunden gör det inte: den
-publika sajten är ljus, appen är mörk (`#1A1A1E`).
+Designsystemet står i `DESIGN.md`: hållning, alla tokens för båda ytorna,
+typografi, form och komponenterna med regler. Appen är byggd i Linears anda –
+nästan svart och sval (`#0B0C0F`), Geist, hårfina linjer i stället för skuggor
+och den orange accenten bara för det man ska göra eller det som är valt. Den
+publika sajten är ljus och behåller Montserrat, Lindblom Coachings typsnitt;
+dess orange är mörkare (`#C4532C`) så att vit text på den håller 4.5:1.
 
 Det löses med semantiska tokens i `src/app/globals.css` — färger heter efter vad
 de gör (`canvas`, `surface`, `line`, `text`, `text-muted`), inte efter hur mörka

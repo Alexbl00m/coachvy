@@ -1,8 +1,22 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 
 import { site } from "@/lib/site";
+
+// Geist för appen, Montserrat för den publika sajten (Lindblom Coachings
+// egen typsnitt). Se DESIGN.md.
+const geist = Geist({
+  variable: "--font-geist",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -26,7 +40,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="sv" className={`${montserrat.variable} h-full`}>
+    <html
+      lang="sv"
+      className={`${geist.variable} ${geistMono.variable} ${montserrat.variable} h-full`}
+    >
       <body className="min-h-full bg-canvas text-text">{children}</body>
     </html>
   );

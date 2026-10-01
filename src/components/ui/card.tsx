@@ -30,7 +30,7 @@ export function CardTitle({
 }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-text-muted">
+      <h2 className="text-[13px] font-medium text-text-muted">
         {children}
       </h2>
       {action}

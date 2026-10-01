@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 const controlClass =
-  "w-full rounded-md border border-line-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-text-subtle transition-colors hover:border-accent/60 focus:border-accent focus:outline-none disabled:opacity-50";
+  "w-full rounded-md border border-line-control bg-surface px-3 py-2 text-sm text-text placeholder:text-text-subtle transition-colors hover:border-text-subtle focus:border-accent focus:outline-none disabled:opacity-50";
 
 type FieldProps = {
   label: string;
