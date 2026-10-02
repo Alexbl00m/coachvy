@@ -222,6 +222,12 @@ export default function IntegritetspolicyPage() {
                 webbplatsen.
               </>,
               <>
+                <strong className="text-text">Resend</strong> – utskick av mejl:
+                bekräftelse av konto, återställt lösenord, inbjudningar från din
+                coach och svar på kontaktformuläret. Resend får mottagarens
+                adress och mejlets innehåll, inga mätvärden.
+              </>,
+              <>
                 <strong className="text-text">Anthropic</strong> – AI-coachen
                 och passbyggaren. När en coach ställer en fråga eller bygger ett
                 pass skickas adeptens mätta värden, träningsbakgrund och

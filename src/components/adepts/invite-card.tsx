@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { Check, Copy, Mail } from "lucide-react";
+import { useState, useSyncExternalStore, useTransition } from "react";
+import { Check, Copy, Mail, Send } from "lucide-react";
 
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { markInvited } from "@/lib/adepts/actions";
+import { emailAdept, markInvited } from "@/lib/adepts/actions";
+import {
+  inviteLink,
+  inviteSubject,
+  inviteText,
+} from "@/lib/adepts/invite-text";
 import { cn } from "@/lib/cn";
-import { routes } from "@/lib/routes";
 
 const noop = () => () => {};
 
@@ -37,6 +41,7 @@ export function InviteCard({
   coachName,
   mode,
   invitedAt: initialInvitedAt,
+  canEmail,
 }: {
   adeptId: string;
   adeptName: string;
@@ -44,6 +49,8 @@ export function InviteCard({
   coachName: string;
   mode: "inbjudan" | "samtycke";
   invitedAt: string | null;
+  /** Appen kan mejla själv: Resend är inställt. Annars bara kopiera. */
+  canEmail: boolean;
 }) {
   // Adressen sajten körs på, så att länken fungerar både skarpt och lokalt.
   const origin = useSyncExternalStore(
@@ -53,6 +60,9 @@ export function InviteCard({
   );
   const [copied, setCopied] = useState<"text" | "link" | null>(null);
   const [invitedAt, setInvitedAt] = useState(initialInvitedAt);
+  const [sending, startSending] = useTransition();
+  const [sent, setSent] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const firstName = adeptName.split(" ")[0] || adeptName;
   const title = mode === "inbjudan" ? "Bjud in till appen" : "Samtycke saknas";
@@ -69,42 +79,10 @@ export function InviteCard({
     );
   }
 
-  const params = new URLSearchParams({
-    inbjudan: "adept",
-    namn: adeptName,
-    epost: email ?? "",
-  });
-  const link =
-    mode === "inbjudan"
-      ? `${origin}${routes.signUp}?${params.toString()}`
-      : `${origin}${routes.settings}`;
-  const subject =
-    mode === "inbjudan"
-      ? "Inbjudan till Coachvy"
-      : "Ditt godkännande i Coachvy";
-  const message = (
-    mode === "inbjudan"
-      ? [
-          `Hej ${firstName}!`,
-          "",
-          "Jag har börjat använda Coachvy för dina tester, din säsongsplan och dina pass. Skapa ett konto här, så ser du allt jag lägger upp och kan checka in själv:",
-          "",
-          link,
-          "",
-          `Använd ${email} – det är den adressen som kopplar kontot till dig. Vid registreringen får du också godkänna att dina träningsuppgifter, som puls och testvärden, får behandlas i appen. Du kan ta tillbaka det när du vill under Inställningar.`,
-        ]
-      : [
-          `Hej ${firstName}!`,
-          "",
-          "För att jag ska kunna använda dina träningsuppgifter i Coachvy – som puls, testvärden och dina pass – behöver du godkänna det. Logga in och kryssa i samtycket under Inställningar:",
-          "",
-          link,
-          "",
-          "Du kan ta tillbaka det när du vill, på samma ställe.",
-        ]
-  )
-    .concat(["", `Hälsningar ${coachName}`])
-    .join("\n");
+  const target = { name: adeptName, email };
+  const link = inviteLink(mode, origin, target);
+  const subject = inviteSubject(mode);
+  const message = inviteText(mode, target, coachName, link);
 
   const noteSent = () => {
     if (mode !== "inbjudan") return;
@@ -112,6 +90,18 @@ export function InviteCard({
       if (at) setInvitedAt(at);
     });
   };
+
+  const send = () =>
+    startSending(async () => {
+      setSendError(null);
+      const result = await emailAdept(adeptId, mode);
+      if (!result.ok) {
+        setSendError(result.error ?? "Mejlet kunde inte skickas.");
+        return;
+      }
+      if (result.at) setInvitedAt(result.at);
+      setSent(email);
+    });
 
   const copy = async (what: "text" | "link") => {
     try {
@@ -129,7 +119,7 @@ export function InviteCard({
       <CardTitle>{title}</CardTitle>
       <p className="mb-3 text-sm text-text-muted">
         {mode === "inbjudan"
-          ? `${firstName} har inget konto än. Skicka texten som mejl eller sms – när hen registrerar sig kopplas kontot hit och hen samtycker till att hälsouppgifterna behandlas. Har hen redan ett konto syns inbjudan när hen loggar in.`
+          ? `${firstName} har inget konto än. ${canEmail ? "Skicka inbjudan härifrån, eller kopiera texten till ett sms" : "Skicka texten som mejl eller sms"} – när hen registrerar sig kopplas kontot hit och hen samtycker till att hälsouppgifterna behandlas. Har hen redan ett konto syns inbjudan när hen loggar in.`
           : `${firstName} har ett konto men har inte godkänt att hälsouppgifter behandlas. Tills dess används inte AI-funktionerna för ${firstName}. Skicka en påminnelse:`}
       </p>
       {mode === "inbjudan" && (
@@ -147,7 +137,22 @@ export function InviteCard({
         className="w-full resize-y rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[13px] leading-relaxed text-text"
       />
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button size="sm" onClick={() => copy("text")} disabled={!origin}>
+        {canEmail && email && (
+          <Button size="sm" onClick={send} disabled={sending}>
+            <Send aria-hidden className="size-3.5" />
+            {sending
+              ? "Skickar …"
+              : mode === "inbjudan"
+                ? "Skicka inbjudan"
+                : "Skicka påminnelse"}
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant={canEmail && email ? "secondary" : "primary"}
+          onClick={() => copy("text")}
+          disabled={!origin}
+        >
           {/* Ikonerna ligger på varandra och tonas över: bocken bekräftar
               att texten kopierades utan att knappen hoppar. */}
           <span aria-hidden className="relative size-3.5">
@@ -170,7 +175,7 @@ export function InviteCard({
           </span>
           {copied === "text" ? "Kopierat" : "Kopiera texten"}
         </Button>
-        {email && (
+        {email && !canEmail && (
           <a
             href={`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`}
             onClick={noteSent}
@@ -189,6 +194,17 @@ export function InviteCard({
           {copied === "link" ? "Länken kopierad" : "Kopiera bara länken"}
         </Button>
       </div>
+      {(sent || sendError) && (
+        <p
+          role="status"
+          className={cn(
+            "mt-3 text-[13px]",
+            sendError ? "text-bad" : "text-text-muted",
+          )}
+        >
+          {sendError ?? `Mejlat till ${sent}. Svar kommer till dig.`}
+        </p>
+      )}
     </Card>
   );
 }

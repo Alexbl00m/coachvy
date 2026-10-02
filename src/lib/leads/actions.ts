@@ -1,6 +1,8 @@
 "use server";
 
 import { field, optionalField, type FormState } from "@/lib/form-state";
+import { isEmailConfigured, sendEmail } from "@/lib/email/send";
+import { site } from "@/lib/site";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -67,6 +69,20 @@ export async function submitLead(
         "Något gick fel när meddelandet skulle skickas. Försök igen, eller mejla mig direkt.",
       values,
     };
+  }
+
+  // Förfrågan är sparad oavsett hur mejlet går – ett mejl som inte kommer
+  // fram ska inte se ut som ett formulär som inte fungerade.
+  if (isEmailConfigured()) {
+    const name = [values.first_name, optionalField(formData, "last_name")]
+      .filter(Boolean)
+      .join(" ");
+    await sendEmail({
+      to: process.env.CONTACT_NOTIFY_TO || site.email,
+      subject: `Ny förfrågan från ${name}`,
+      text: `${name} (${values.email}) skrev via kontaktformuläret:\n\n${values.message}\n\nSvara på det här mejlet så går svaret till ${values.first_name}.`,
+      replyTo: values.email,
+    });
   }
 
   return {

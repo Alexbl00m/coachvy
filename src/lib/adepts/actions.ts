@@ -4,9 +4,18 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireCoach } from "@/lib/auth/session";
+import { sendEmail } from "@/lib/email/send";
+import { siteOrigin } from "@/lib/site-origin";
 import { field, optionalField, type FormState } from "@/lib/form-state";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
+import {
+  inviteLink,
+  inviteSubject,
+  inviteText,
+  type InviteKind,
+} from "./invite-text";
+import { getAdept } from "./queries";
 
 function readAdeptForm(formData: FormData) {
   return {
@@ -123,4 +132,65 @@ export async function markInvited(
   if (error || !data || data.length === 0) return { at: null };
   revalidatePath(routes.adepts);
   return { at };
+}
+
+/**
+ * Mejlar inbjudan eller påminnelsen om samtycke till adepten, från appen.
+ *
+ * Texten byggs här ur databasen, inte ur det som står i rutan, så att ingen
+ * kan skicka annat än appens text i Coachvys namn. Svar går till coachen.
+ */
+export async function emailAdept(
+  adeptId: string,
+  kind: InviteKind,
+): Promise<{ ok: boolean; error?: string; at?: string }> {
+  const user = await requireCoach();
+  const adept = await getAdept(adeptId);
+  if (!adept || adept.coach_id !== user.id) {
+    return { ok: false, error: "Adepten hittades inte." };
+  }
+  if (!adept.email) {
+    return { ok: false, error: "Adepten saknar e-postadress." };
+  }
+  if (kind === "inbjudan" && adept.profile_id) {
+    return { ok: false, error: "Adepten har redan ett konto." };
+  }
+  if (kind === "samtycke" && !adept.profile_id) {
+    return {
+      ok: false,
+      error: "Adepten har inget konto än – skicka en inbjudan.",
+    };
+  }
+  // Ett dubbelklick ska inte bli två mejl.
+  if (
+    kind === "inbjudan" &&
+    adept.invited_at &&
+    Date.now() - new Date(adept.invited_at).getTime() < 10 * 60_000
+  ) {
+    return {
+      ok: false,
+      error: "Inbjudan skickades nyss. Vänta en stund innan du skickar igen.",
+    };
+  }
+
+  const origin = await siteOrigin();
+  const coachName = user.profile?.full_name ?? "din coach";
+  const target = { name: adept.full_name, email: adept.email };
+  const result = await sendEmail({
+    to: adept.email,
+    subject: inviteSubject(kind),
+    text: inviteText(kind, target, coachName, null),
+    replyTo: user.email,
+    action: {
+      label: kind === "inbjudan" ? "Skapa konto" : "Öppna Inställningar",
+      href: inviteLink(kind, origin, target),
+    },
+  });
+  if (!result.ok) return result;
+
+  if (kind === "inbjudan") {
+    const { at } = await markInvited(adeptId);
+    return { ok: true, at: at ?? undefined };
+  }
+  return { ok: true };
 }

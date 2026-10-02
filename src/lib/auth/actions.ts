@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { routes } from "@/lib/routes";
+import { siteOrigin } from "@/lib/site-origin";
 import { touchAdeptActivity } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -41,19 +41,6 @@ function text(formData: FormData, key: string): string {
 /** Only allow relative paths back into the app, never absolute URLs. */
 function safeNext(value: string): string | null {
   return value.startsWith("/") && !value.startsWith("//") ? value : null;
-}
-
-async function siteOrigin(): Promise<string> {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL;
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-
-  const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-  const protocol =
-    headerList.get("x-forwarded-proto") ??
-    (host?.startsWith("localhost") ? "http" : "https");
-
-  return host ? `${protocol}://${host}` : "http://localhost:3000";
 }
 
 export async function signIn(

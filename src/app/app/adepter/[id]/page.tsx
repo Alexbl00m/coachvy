@@ -19,6 +19,7 @@ import { listActivities } from "@/lib/activities/queries";
 import { candidatesFrom } from "@/lib/activities/reference";
 import { getAdept, getHealthConsent } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
+import { isEmailConfigured } from "@/lib/email/send";
 import { requireSessionUser } from "@/lib/auth/session";
 import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
@@ -227,6 +228,7 @@ export default async function AdeptPage({
                   coachName={user.profile?.full_name ?? "din coach"}
                   mode={adept.profile_id ? "samtycke" : "inbjudan"}
                   invitedAt={adept.invited_at ?? null}
+                  canEmail={isEmailConfigured()}
                 />
               )}
 

@@ -81,6 +81,21 @@ skelettet går att bläddra igenom i "demoläge".
    where id = (select id from public.profiles where email = 'din@adress');
    ```
 
+### Mejl med Resend
+
+Två saker, båda med samma Resend-konto och verifierade domän:
+
+1. **Supabase skickar inloggningens mejl** – bekräftelse, återställt
+   lösenord – via Resend. Utan egen SMTP skickar Supabase bara till
+   projektets egna medlemmar, så nya adepter får inget bekräftelsemejl.
+   Supabase → Authentication → Emails → SMTP Settings: host
+   `smtp.resend.com`, port `465`, användare `resend`, lösenord = en
+   Resend-nyckel, avsändare på den verifierade domänen. Höj sedan
+   gränsen under Authentication → Rate Limits.
+2. **Appen skickar sina egna** – inbjudningar, påminnelser om samtycke och
+   kontaktformuläret – med `RESEND_API_KEY` och `EMAIL_FROM` i Vercel (se
+   `.env.example`). Utan dem fungerar allt, men inbjudan kopieras för hand.
+
 ### Publicera på Vercel
 
 1. Importera repot på [vercel.com](https://vercel.com) (Add New → Project).
@@ -1162,14 +1177,15 @@ Kända luckor:
   markerade platshållare; jag hittar inte på tävlingsrapporter åt dig. När du
   har texterna lägger vi in `/blogg` med MDX-filer i repot.
 - **Inkorgen för kontaktförfrågningar saknas.** Meddelanden sparas i `leads`
-  men det finns ingen vy i appen som visar dem ännu — läs dem i Supabase så
-  länge. Ingen mailavisering heller.
+  och mejlas till `site.email` (eller `CONTACT_NOTIFY_TO`) när Resend är
+  inställt, men det finns ingen vy i appen som listar dem.
 - Formuläret har en honeypot men ingen hastighetsbegränsning.
-- Appen skickar inga mejl själv. En adept utan konto har ett kort **Bjud in
-  till appen** på sin översikt, med en färdig text och en länk till
-  registreringen där namn och adress är ifyllda. Coachen skickar den som mejl
-  eller sms; kontot kopplas via adressen och samtycket ges vid registreringen.
-  Har adepten redan ett konto syns inbjudan i appen.
+- En adept utan konto har ett kort **Bjud in till appen** på sin översikt.
+  Med Resend inställt mejlar appen inbjudan direkt (svar går till coachen);
+  annars kopierar coachen texten till mejl eller sms. Länken öppnar
+  registreringen med namn och adress ifyllda; kontot kopplas via adressen och
+  samtycket ges vid registreringen. Samma kort skickar en påminnelse till den
+  som har konto men inte godkänt.
 - "Senast aktiv" uppdateras vid inloggning, inte vid varje sidvisning.
 - Testresultat kan skapas och tas bort, men inte redigeras.
 - **Löptesternas klockimport är prövad på syntetiska filer.** En riktig
