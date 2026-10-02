@@ -65,7 +65,7 @@ export async function sendEmail(input: {
     return {
       ok: false,
       error:
-        "EMAIL_FROM saknas eller innehåller ingen e-postadress. Skriv till exempel: Coachvy <noreply@lindblomcoaching.com>",
+        "EMAIL_FROM saknas eller innehåller ingen e-postadress. Skriv till exempel: Coachvy <noreply@contact.lindblomcoaching.com>",
     };
   }
 
@@ -92,9 +92,14 @@ export async function sendEmail(input: {
       const detail = (await response.json().catch(() => null)) as {
         message?: string;
       } | null;
+      // Resend godkänner bara exakt den domän som är verifierad. Är det en
+      // underdomän måste avsändaren ligga på den, inte på huvuddomänen.
+      const unverified = /not verified/i.test(detail?.message ?? "")
+        ? " Adressen i EMAIL_FROM måste ligga på exakt den domän som är verifierad i Resend – är det en underdomän, till exempel contact.din-doman.com, ska avsändaren vara noreply@contact.din-doman.com."
+        : "";
       return {
         ok: false,
-        error: `Mejlet kunde inte skickas (${response.status}${detail?.message ? `: ${detail.message}` : ""}). Avsändare: ${from}.`,
+        error: `Mejlet kunde inte skickas (${response.status}${detail?.message ? `: ${detail.message}` : ""}). Avsändare: ${from}.${unverified}`,
       };
     }
     return { ok: true };
