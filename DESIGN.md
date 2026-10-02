@@ -1,11 +1,11 @@
 ---
 name: Coachvy
-description: Ett arbetsverktyg för uthållighetscoacher. Mörk, sval och exakt – i Linears anda – där data och adepternas läge står i centrum och den orange accenten bara markerar det man ska göra eller det som är valt.
+description: Lindblom Coachings sajt och Coachvy, arbetsverktyget för uthållighetscoacher. Mörk, sval och exakt – i Linears anda – där data och adepternas läge står i centrum och den orange accenten bara markerar det man ska göra eller det som är valt.
 
 # Värdena speglar src/app/globals.css. Den filen är sanningen för appen; det
 # här är den portabla exporten. Ändras en token där, ändra här också.
 colors:
-  dark:                         # appen – förvalt, vänds aldrig
+  dark:                         # sajten och appen
     canvas: "#08090b"           # sidans botten
     surface: "#111216"          # kort, paneler, tabeller
     surface-2: "#17181d"        # hover, vald rad, fält i fält
@@ -27,7 +27,7 @@ colors:
     warn: "#e2b340"             # varning – alltid med ord
     chart-grid: "#23242b"
     chart-axis-text: "#878a95"
-  light:                        # den publika sajten (.theme-light) och utskrift
+  light:                        # utskrift och mejl
     canvas: "#ffffff"
     surface: "#ffffff"
     surface-2: "#f7f7f8"
@@ -61,9 +61,9 @@ colors:
 
 typography:
   families:
-    sans: "Geist"               # appen
+    sans: "Geist"               # sajten och appen
     mono: "Geist Mono"          # siffror i tabeller, tider, id
-    brand: "Montserrat"         # bara den publika sajten (Lindblom Coaching)
+    brand: "Montserrat"         # bara i Lindblom Coachings logotyp
   styles:                       # px: storlek / radhöjd / vikt / spärrning
     display: "32 / 36 / 600 / -0.022em"   # sidrubrik på översikter
     title: "24 / 30 / 600 / -0.018em"     # sidrubrik (PageHeader)
@@ -165,10 +165,10 @@ diagram står i `chart-axis-text`, aldrig i seriefärgen.
 
 ## 3. Typografi
 
-Geist sätter appen: en tät grotesk som håller vid 12–14 px. Geist Mono
-används för siffror som står i kolumner – tider, tempo, watt i tabeller.
-Montserrat är Lindblom Coachings typsnitt och används bara på den publika
-sajten.
+Geist sätter både sajten och appen: en tät grotesk som håller vid 12–14 px
+och bär stora rubriker. Geist Mono används för siffror som står i kolumner –
+tider, tempo, watt i tabeller. Montserrat lever bara i Lindblom Coachings
+logotyp.
 
 - Brödtext och rader i `body` (14 px). Det är appens grundstorlek.
 - Kortrubriker i `body-sm`, medium, `text-muted`, vanlig skiftläge – inte
@@ -247,7 +247,25 @@ upp det man gör många gånger om dagen.
 - **Rör sig aldrig**: navigering, flikar, tooltips i tidslinjen, översiktens
   rutor, diagram, kalenderns månadsbyte.
 
-## 7. Gör och gör inte
+## 7. Sajten
+
+Sajten är samma instrument som appen, men den talar. Den delar paletten,
+typsnittet och komponenterna, och lägger till tre saker:
+
+- **Rubriker i två toner.** Påståendet i `text`, fortsättningen i
+  `text-muted` på samma rad: "Varje person är unik. Och tränar därefter."
+  Display 44–76 px, vikt 600, spärrning −0.028 till −0.04 em.
+- **Sektioner delas med en linje**, inte med bakgrundsfärg. En etikett i
+  Geist Mono 12 px `text-subtle` ovanför rubriken säger vad sektionen gäller.
+- **Rutnät med hårfina mellanrum.** Kort som hör ihop står i ett rutnät med
+  1 px `line` mellan sig (`gap-px` på `bg-line`), inte som fristående kort.
+
+Visa det adepten får, inte siffror om verksamheten. Startsidan visar ett
+laktattest som det ser ut i Coachvy, märkt som exempel; inga räknare över
+antal adepter eller lediga platser. Foton är riktiga bilder, aldrig
+genererade.
+
+## 8. Gör och gör inte
 
 ### Gör
 - Låt siffror stå i tabulära siffror och i Geist Mono när de bildar kolumn.

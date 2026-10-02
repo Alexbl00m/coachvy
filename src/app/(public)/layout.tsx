@@ -2,9 +2,8 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 
 /**
- * The public site runs on the light surface. `theme-light` re-points the
- * semantic colour tokens for everything inside it; the app keeps the dark
- * defaults from :root.
+ * Sajten och appen delar den mörka paletten och Geist (DESIGN.md), så att
+ * steget från startsidan in i Coachvy inte byter värld.
  */
 /**
  * The header reads the session to decide between "Logga in" and "Min översikt",
@@ -16,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default function PublicLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="theme-light flex min-h-screen flex-col bg-canvas text-text">
+    <div className="flex min-h-screen flex-col bg-canvas text-text">
       <SiteHeader />
       <main className="flex-1">{children}</main>
       <SiteFooter />

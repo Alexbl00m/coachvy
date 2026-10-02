@@ -1,16 +1,12 @@
 @import "tailwindcss";
 
 /*
- * Two surfaces, one system.
+ * En yta, ett system.
  *
- * The public site is light and the signed-in app is dark, so colours are
- * addressed by the job they do (canvas, surface, line, text) rather than by
- * how dark they are. `@theme inline` makes each utility resolve its variable
- * at use time, so putting `.theme-light` on a wrapper re-points the whole
- * scale for everything inside it.
- *
- * The raw `ink-*` scale stays available for app-only screens that are never
- * rendered on a light background.
+ * Sajten och appen delar den mörka paletten (DESIGN.md). Färgerna heter ändå
+ * efter vad de gör (canvas, surface, line, text) och inte efter hur mörka de
+ * är: `@theme inline` låter varje klass läsa sin variabel när den används, så
+ * utskriften kan peka om hela skalan till ljust på ett ställe.
  */
 
 @theme {
@@ -37,8 +33,8 @@
   --color-burgundy: #4d1414;
   --color-mauve: #83627c;
 
-  /* Geist sets the app: a tight grotesk that stays crisp at 12–14px. The
-     public site keeps Montserrat, Lindblom Coaching's own face. */
+  /* Geist sätter både sajten och appen: en tät grotesk som håller vid
+     12–14 px och bär stora rubriker. Montserrat lever kvar i logotypen. */
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo,
@@ -127,49 +123,6 @@
   --phase-topp-text: #121216;
   --phase-vila: #55555f;
   --phase-vila-text: #ffffff;
-}
-
-/* The public marketing surface. */
-.theme-light {
-  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  font-family: var(--font-sans);
-
-  --canvas: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #f7f7f8;
-  --surface-3: #efeff1;
-  --line: #e9e9ec;
-  --line-strong: #d6d6db;
-  --line-control: #8a8d96;
-  --text: #16171b;
-  --text-muted: #55585f;
-  --text-subtle: #62656d;
-  --edge: rgb(255 255 255 / 0);
-  /* Mörkare än appens orange: vit text på den håller 4.5:1. */
-  --accent: #c4532c;
-  --accent-hover: #ad4623;
-  --accent-text: #b14a25;
-  --accent-soft: #fcefe9;
-  --accent-on: #ffffff;
-  --good: #1f7a4a;
-  --bad: #c23b31;
-  --warn: #8a6100;
-
-  --chart-grid: #e9e9ec;
-  --chart-axis-text: #62656d;
-  --chart-surface: #ffffff;
-
-  --phase-grund: #e89b81;
-  --phase-grund-text: #121216;
-  --phase-uppbyggnad: #d87756;
-  --phase-uppbyggnad-text: #121216;
-  --phase-specifik: #c1542d;
-  --phase-specifik-text: #ffffff;
-  --phase-topp: #983d1c;
-  --phase-topp-text: #ffffff;
-  --phase-vila: #9a9aa5;
-  --phase-vila-text: #121216;
 }
 
 html,

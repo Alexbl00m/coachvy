@@ -9,9 +9,17 @@ export const site = {
   instagram: "https://instagram.com/lindblomcoaching",
   website: "lindblomcoaching.com",
 
-  /** Figures shown in the hero. Edit here, not in the markup. */
-  activeAdepts: "320+",
-  openSpots: 8,
+  /**
+   * Bilden under Om mig. Byt bild genom att lägga en ny fil i public/brand och
+   * ändra src, alt och måtten här – eller sätt `null`, så visas sektionen
+   * utan bild.
+   */
+  aboutImage: {
+    src: "/brand/alexander-portrait.jpg",
+    alt: "Alexander Lindblom springer mot mål i Ironman Kalmar",
+    width: 1200,
+    height: 1680,
+  } as { src: string; alt: string; width: number; height: number } | null,
 } as const;
 
 /**

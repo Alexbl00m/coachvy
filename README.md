@@ -36,23 +36,25 @@ platshållare och byggs modul för modul.
 
 ## Två ytor, ett designsystem
 
-Designsystemet står i `DESIGN.md`: hållning, alla tokens för båda ytorna,
-typografi, form och komponenterna med regler. Appen är byggd i Linears anda –
-nästan svart och sval (`#0B0C0F`), Geist, hårfina linjer i stället för skuggor
-och den orange accenten bara för det man ska göra eller det som är valt. Den
-publika sajten är ljus och behåller Montserrat, Lindblom Coachings typsnitt;
-dess orange är mörkare (`#C4532C`) så att vit text på den håller 4.5:1.
+Designsystemet står i `DESIGN.md`: hållning, alla tokens, typografi, form och
+komponenterna med regler. Sajten och appen är byggda i Linears anda – nästan
+svart och sval (`#08090B`), Geist, hårfina linjer i stället för skuggor och den
+orange accenten bara för det man ska göra. Sajten och appen delar samma palett,
+så att steget från startsidan in i Coachvy inte byter värld; Lindblom
+Coachings Montserrat lever kvar i logotypen.
 
-Det löses med semantiska tokens i `src/app/globals.css` — färger heter efter vad
-de gör (`canvas`, `surface`, `line`, `text`, `text-muted`), inte efter hur mörka
-de är. `:root` håller de mörka värdena, och klassen `theme-light` på den publika
-layouten pekar om hela skalan. Delade komponenter (`Button`, `Field`, `Card`,
-`Logo`) använder bara semantiska tokens och fungerar därför på båda ytorna.
+Färgerna är semantiska tokens i `src/app/globals.css` — de heter efter vad de
+gör (`canvas`, `surface`, `line`, `text`, `text-muted`), inte efter hur mörka de
+är. Utskriften pekar om hela skalan till ljust på ett ställe, så att en
+testrapport blir en vit sida på papper.
 
-Den råa `ink-*`-skalan finns kvar för appvyer som aldrig renderas ljust.
+Den råa `ink-*`-skalan finns kvar för vyer som aldrig skrivs ut.
 
-Redigera färgerna i `globals.css`, aldrig i enskilda komponenter. Marknadsförings-
-texternas siffror och kontaktuppgifter ligger i `src/lib/site.ts`.
+Redigera färgerna i `globals.css`, aldrig i enskilda komponenter.
+Kontaktuppgifterna och bilden under Om mig ligger i `src/lib/site.ts`: lägg en
+ny bild i `public/brand` och ändra `aboutImage`, eller sätt den till `null` för
+att visa sektionen utan bild. Bilden högst upp på startsidan är ett laktattest
+med påhittade värden (`test-preview.tsx`), inte ett foto.
 
 ## Kom igång
 
@@ -182,7 +184,7 @@ den av coachen när adepten läggs upp.
 src/
   app/
     (public)/          publika sajten – ljus yta, sidhuvud + sidfot
-      page.tsx         startsidan (hero, coaching, testning, om mig, kontakt)
+      page.tsx         startsidan (hero, hållning, coaching, testning, om mig, verktyg, kontakt)
       integritetspolicy/
     (auth)/            logga-in, registrera – egen layout
     app/               allt bakom inloggning – mörk yta, vänstermeny

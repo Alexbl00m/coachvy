@@ -29,7 +29,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
       </Button>
 
       {open && (
-        <div className="fixed inset-x-0 top-18 z-40 border-b border-line bg-canvas shadow-lg">
+        <div className="fixed inset-x-0 top-16 z-40 border-b border-line bg-canvas">
           <nav aria-label="Sidnavigering" className="flex flex-col p-4">
             {sections.map((item) => (
               <a
@@ -45,7 +45,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
               <Link
                 href={routes.signIn}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-3 text-base font-medium text-accent hover:bg-surface-2"
+                className="rounded-md px-3 py-3 text-base font-medium text-accent-text hover:bg-surface-2"
               >
                 Logga in
               </Link>

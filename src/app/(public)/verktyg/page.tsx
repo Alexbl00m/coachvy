@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Bike, FlaskConical, Gauge, Timer } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+import { tools } from "@/components/public/tools";
 import { ButtonLink } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { site } from "@/lib/site";
@@ -11,48 +12,12 @@ export const metadata = {
     "Fria räknare för löpning och cykel: loppprognos, träningszoner och effekt mot fart. Samma modeller som används i coachingen.",
 };
 
-const tools = [
-  {
-    href: "/verktyg/testberakning",
-    icon: FlaskConical,
-    title: "Testberäkning",
-    description:
-      "Elva protokoll för cykel, löpning och simning: CP och W′, FTP, critical speed och laktattrösklar. Ta med dig resultatet som PDF.",
-    inputs: "Ditt testresultat",
-  },
-  {
-    href: "/verktyg/loppprognos",
-    icon: Timer,
-    title: "Loppprognos",
-    description:
-      "Vad ditt 10 km-lopp säger om halvmaraton. Med två lopp räknas din egen utmattningsexponent fram, inte en schablon.",
-    inputs: "Distans och tid",
-  },
-  {
-    href: "/verktyg/traningszoner",
-    icon: Gauge,
-    title: "Träningszoner",
-    description:
-      "Zoner ur FTP, tröskeltempo eller critical speed. Tre olika modeller, för de utgår från olika slags test.",
-    inputs: "Ett tröskelvärde",
-  },
-  {
-    href: "/verktyg/cykeleffekt",
-    icon: Bike,
-    title: "Effekt och fart",
-    description:
-      "Vad en sträcka kostar i watt, och vad aero, vikt och däck är värda i tid. Hela effektbalansen på cykel.",
-    inputs: "Vikt, sträcka, väder och position",
-  },
-];
 
 export default function ToolsPage() {
   return (
     <>
-      <p className="text-[13px] font-medium uppercase tracking-[0.12em] text-accent">
-        Fria verktyg
-      </p>
-      <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+      <p className="font-mono text-[12px] text-text-subtle">Fria verktyg</p>
+      <h1 className="mt-5 max-w-3xl text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] text-balance text-text sm:text-[56px]">
         Räkna på din träning
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed text-text-muted">
@@ -68,20 +33,20 @@ export default function ToolsPage() {
             <Link
               key={tool.href}
               href={tool.href}
-              className="group rounded-lg border border-line bg-surface p-6 transition-colors hover:border-accent"
+              className="group rounded-xl border border-line bg-surface p-6 transition-colors duration-120 hover:border-line-strong hover:bg-surface-2"
             >
-              <Icon aria-hidden className="size-6 text-accent" />
+              <Icon aria-hidden className="size-5 text-text-muted" />
               <h2 className="mt-4 flex items-center gap-2 text-lg font-semibold text-text">
                 {tool.title}
                 <ArrowRight
                   aria-hidden
-                  className="size-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                  className="size-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-text"
                 />
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-text-muted">
                 {tool.description}
               </p>
-              <p className="mt-4 text-[12px] uppercase tracking-[0.1em] text-text-subtle">
+              <p className="mt-4 font-mono text-[12px] text-text-subtle">
                 In: {tool.inputs}
               </p>
             </Link>
@@ -89,7 +54,7 @@ export default function ToolsPage() {
         })}
       </div>
 
-      <div className="mt-14 rounded-lg border border-line bg-surface-2 p-8 sm:p-10">
+      <div className="mt-14 rounded-xl border border-line bg-surface p-8 sm:p-10">
         <h2 className="text-xl font-semibold text-text">
           Siffrorna är en början, inte ett svar
         </h2>

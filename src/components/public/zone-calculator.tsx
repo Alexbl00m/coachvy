@@ -150,7 +150,7 @@ export function ZoneCalculator() {
                 "rounded-md border px-3 py-1.5 text-sm transition-colors",
                 mode === m.id
                   ? "border-text-subtle bg-surface-3 text-text"
-                  : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
+                  : "border-line-strong text-text-muted hover:border-text-subtle hover:text-text",
               )}
             >
               {m.label}

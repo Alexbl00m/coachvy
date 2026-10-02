@@ -1,94 +1,87 @@
 import Image from "next/image";
-import { Award, Heart, Target } from "lucide-react";
 
-import { Section, SectionHeading } from "@/components/public/section";
-import { ButtonLink } from "@/components/ui/button";
+import { Section } from "@/components/public/section";
+import { cn } from "@/lib/cn";
+import { site } from "@/lib/site";
 
 const credentials = [
-  {
-    icon: Award,
-    text: "Uthållighetsträningsspecialist och legitimerad personlig tränare",
-  },
-  {
-    icon: Target,
-    text: "Lång erfarenhet av träning för medel- och långdistanstriathlon",
-  },
-  {
-    icon: Heart,
-    text: "Starkt förknippad med konditionsidrotter, särskilt cykling och triathlon",
-  },
+  "Uthållighetsträningsspecialist",
+  "Legitimerad personlig tränare, inriktning kondition",
+  "Lång erfarenhet av medel- och långdistanstriathlon",
+  "Hemma i cykling och triathlon",
 ];
 
 export function About() {
+  const image = site.aboutImage;
+
   return (
     <Section id="om-mig">
-      <SectionHeading
-        eyebrow="Om mig"
-        title="Kort om"
-        accent="mig"
-        description="Jag har alltid drömt om att hjälpa människor nå sina mål."
-      />
+      <div
+        className={cn(
+          "grid gap-12 lg:gap-16",
+          image && "md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]",
+        )}
+      >
+        {image && (
+          <div className="md:sticky md:top-24 md:self-start">
+            <Image
+              src={image.src}
+              alt={image.alt}
+              width={image.width}
+              height={image.height}
+              sizes="(min-width: 768px) 30rem, 100vw"
+              className="aspect-[4/5] w-full rounded-xl border border-line bg-surface object-cover object-top"
+            />
+          </div>
+        )}
 
-      <div className="mt-14 grid items-center gap-8 md:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-surface-2">
-          <Image
-            src="/brand/alexander-running.jpg"
-            alt="Alexander Lindblom under löppass"
-            fill
-            sizes="(min-width: 768px) 32rem, 100vw"
-            className="object-cover"
-          />
-        </div>
+        <div>
+          <p className="mb-5 font-mono text-[12px] text-text-subtle">Om mig</p>
+          <h2 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.028em] text-balance text-text sm:text-[44px]">
+            Alexander Lindblom.{" "}
+            <span className="text-text-muted">
+              Coach för uthållighet i {site.location}.
+            </span>
+          </h2>
 
-        <div className="rounded-2xl border border-line bg-surface p-8">
-          <h3 className="text-lg font-bold text-text">Min resa</h3>
-          <div className="mt-4 space-y-4 text-sm leading-relaxed text-text-muted">
+          <div className="mt-8 max-w-[62ch] space-y-5 text-[16px] leading-relaxed text-text-muted">
             <p>
               Redan i ung ålder insåg jag att jag brann för att stödja och guida
-              andra på deras väg mot framgång. Jag började som hockeytränare,
-              och där fick jag utveckla inte bara unga spelares färdigheter utan
+              andra på deras väg mot målet. Jag började som hockeytränare, och
+              där fick jag utveckla inte bara unga spelares färdigheter utan
               även deras mentala och känslomässiga välbefinnande.
             </p>
             <p>
-              Min starka kärlek till cykelsporten ledde mig till att dagligen
-              fördjupa mig i träning och cykling. Det var början på min resa som
-              coach. År 2022 utbildade jag mig till personlig tränare med
-              inriktning på konditionsträning.
+              Kärleken till cykelsporten fick mig att fördjupa mig i träning
+              varje dag. Det var början på min resa som coach. År 2022 utbildade
+              jag mig till personlig tränare med inriktning på
+              konditionsträning, och sedan dess har det handlat om uthållighet:
+              cykling, löpning och triathlon.
             </p>
           </div>
+
+          <ul className="mt-10 max-w-xl border-t border-line">
+            {credentials.map((item) => (
+              <li
+                key={item}
+                className="border-b border-line py-3.5 text-[15px] text-text"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <figure className="mt-12 max-w-xl">
+            <blockquote className="text-[22px] leading-[1.35] font-medium tracking-[-0.016em] text-balance text-text">
+              ”Coaching är inte bara träningsplanering – det handlar om att
+              skapa en relation. Träningen är en del av det större pusslet i
+              ditt liv, och allt ska samspela.”
+            </blockquote>
+            <figcaption className="mt-4 text-[14px] text-text-subtle">
+              Min filosofi
+            </figcaption>
+          </figure>
         </div>
-      </div>
-
-      <ul className="mt-8 grid gap-4 md:grid-cols-3">
-        {credentials.map((item) => {
-          const Icon = item.icon;
-          return (
-            <li
-              key={item.text}
-              className="flex items-start gap-3 rounded-xl border border-line bg-surface p-5 text-sm text-text"
-            >
-              <Icon aria-hidden className="mt-0.5 size-5 shrink-0 text-accent" />
-              {item.text}
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="mt-8 rounded-2xl bg-accent px-8 py-10 text-center">
-        <h3 className="text-xl font-bold text-accent-on">Min filosofi</h3>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-accent-on/90">
-          Coaching är inte bara träningsplanering — det handlar om att skapa en
-          relation. Träningen är en del av det större pusslet i ditt liv, och
-          allt ska samspela harmoniskt. Tillsammans navigerar vi genom hinder,
-          sätter konkreta mål och utformar strategier för att nå framgång.
-        </p>
-        <ButtonLink
-          href="#kontakt"
-          variant="secondary"
-          className="mt-7 border-transparent bg-canvas font-semibold text-accent hover:bg-canvas hover:text-accent-strong"
-        >
-          Låt oss börja din resa
-        </ButtonLink>
       </div>
     </Section>
   );

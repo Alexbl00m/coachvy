@@ -184,7 +184,7 @@ export function RacePredictor() {
                     setRows((c) => c.filter((r) => r.id !== row.id))
                   }
                   disabled={rows.length <= 1}
-                  className="mb-1.5 rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-30"
+                  className="mb-1.5 rounded-md p-1.5 text-text-subtle transition-colors hover:text-text disabled:opacity-30"
                 >
                   <Trash2 aria-hidden className="size-4" />
                 </button>

@@ -45,7 +45,7 @@ function List({ items }: { items: ReactNode[] }) {
         <li key={i} className="flex gap-2.5">
           <span
             aria-hidden
-            className="mt-2.5 size-1.5 shrink-0 rounded-full bg-accent"
+            className="mt-2.5 size-1.5 shrink-0 rounded-full bg-text-subtle"
           />
           <span>{item}</span>
         </li>
@@ -55,7 +55,7 @@ function List({ items }: { items: ReactNode[] }) {
 }
 
 const Mail = () => (
-  <a href={`mailto:${site.email}`} className="text-accent hover:underline">
+  <a href={`mailto:${site.email}`} className="text-accent-text hover:underline">
     {site.email}
   </a>
 );
@@ -90,10 +90,7 @@ export default function IntegritetspolicyPage() {
         <ol className="grid gap-1.5 text-[14px] sm:grid-cols-2">
           {sections.map((s, i) => (
             <li key={s.id}>
-              <a
-                href={`#${s.id}`}
-                className="text-text-muted hover:text-accent"
-              >
+              <a href={`#${s.id}`} className="text-text-muted hover:text-text">
                 {i + 1}. {s.title}
               </a>
             </li>
@@ -270,7 +267,7 @@ export default function IntegritetspolicyPage() {
                 ladda ned allt appen har om dig som en fil under{" "}
                 <a
                   href={routes.settings}
-                  className="text-accent hover:underline"
+                  className="text-accent-text hover:underline"
                 >
                   Inställningar
                 </a>

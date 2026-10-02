@@ -2,15 +2,16 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
-/** Shared rhythm for the marketing sections. */
+/**
+ * En sektion på sajten. Sektionerna skiljs åt med en hårfin linje, inte med
+ * olika bakgrunder – samma plan hela vägen, som hos Linear.
+ */
 export function Section({
   id,
-  tone = "canvas",
   children,
   className,
 }: {
   id?: string;
-  tone?: "canvas" | "sand";
   children: ReactNode;
   className?: string;
 }) {
@@ -18,41 +19,47 @@ export function Section({
     <section
       id={id}
       className={cn(
-        "scroll-mt-20 px-5 py-20 sm:px-8 sm:py-24",
-        tone === "sand" ? "bg-surface-2" : "bg-canvas",
+        "scroll-mt-16 border-t border-line px-5 py-20 sm:px-8 sm:py-28",
         className,
       )}
     >
-      <div className="mx-auto max-w-6xl">{children}</div>
+      <div className="mx-auto max-w-[1120px]">{children}</div>
     </section>
   );
 }
 
+/**
+ * Sektionsrubrik i två toner: påståendet i `text`, fortsättningen i
+ * `text-muted` på samma rad. Rubriken säger vad det gäller, fortsättningen
+ * varför – utan en extra rad brödtext under.
+ */
 export function SectionHeading({
-  eyebrow,
+  label,
   title,
-  accent,
+  continuation,
   description,
+  className,
 }: {
-  eyebrow?: string;
+  /** Kort etikett ovanför, i mono: vad sektionen handlar om. */
+  label?: string;
   title: string;
-  /** Rendered in the accent colour after the title. */
-  accent?: string;
-  description?: string;
+  continuation?: string;
+  description?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="mx-auto max-w-2xl text-center">
-      {eyebrow && (
-        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.16em] text-accent">
-          {eyebrow}
-        </p>
+    <div className={cn("max-w-3xl", className)}>
+      {label && (
+        <p className="mb-5 font-mono text-[12px] text-text-subtle">{label}</p>
       )}
-      <h2 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">
+      <h2 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.028em] text-balance text-text sm:text-[44px]">
         {title}
-        {accent && <span className="text-accent"> {accent}</span>}
+        {continuation && (
+          <span className="text-text-muted"> {continuation}</span>
+        )}
       </h2>
       {description && (
-        <p className="mt-4 text-base leading-relaxed text-text-muted">
+        <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-text-muted sm:text-base">
           {description}
         </p>
       )}

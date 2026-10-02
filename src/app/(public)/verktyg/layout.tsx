@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
  */
 export default function ToolsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
-      {children}
+    <div className="px-5 py-14 sm:px-8 sm:py-20">
+      <div className="mx-auto max-w-[1120px]">{children}</div>
     </div>
   );
 }
