@@ -11,8 +11,34 @@ import "server-only";
  * servern.
  */
 
+/**
+ * Avsändaren ur `EMAIL_FROM`, i den form Resend kräver: `namn@domän` eller
+ * `Namn <namn@domän>`. Vanliga inklistringsfel rättas: citattecken runt
+ * värdet, `EMAIL_FROM=` eller `EMAIL_FROM:` med i värdet, understreck i
+ * stället för mellanslag, radbrytningar. Går ingen adress att hitta är svaret
+ * `null`.
+ */
+export function senderFrom(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const value = raw
+    .trim()
+    .replace(/^EMAIL_FROM\s*[:=]\s*/i, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+  const address = /<?\s*([^\s<>"']+@[^\s<>"']+\.[^\s<>"']+)\s*>?/.exec(value);
+  if (!address) return null;
+  const name = value
+    .slice(0, address.index)
+    .replace(/[_"'<>]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return name ? `${name} <${address[1]}>` : address[1];
+}
+
 export function isEmailConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+  return Boolean(
+    process.env.RESEND_API_KEY?.trim() && senderFrom(process.env.EMAIL_FROM),
+  );
 }
 
 export type EmailResult = { ok: true } | { ok: false; error: string };
@@ -27,13 +53,19 @@ export async function sendEmail(input: {
   /** En knapp under texten. */
   action?: { label: string; href: string } | null;
 }): Promise<EmailResult> {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!key || !from) {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = senderFrom(process.env.EMAIL_FROM);
+  if (!key) {
+    return {
+      ok: false,
+      error: "Mejl är inte inställt: RESEND_API_KEY saknas i miljövariablerna.",
+    };
+  }
+  if (!from) {
     return {
       ok: false,
       error:
-        "Mejl är inte inställt: RESEND_API_KEY och EMAIL_FROM saknas i miljövariablerna.",
+        "EMAIL_FROM saknas eller innehåller ingen e-postadress. Skriv till exempel: Coachvy <noreply@lindblomcoaching.com>",
     };
   }
 
@@ -62,7 +94,7 @@ export async function sendEmail(input: {
       } | null;
       return {
         ok: false,
-        error: `Mejlet kunde inte skickas (${response.status}${detail?.message ? `: ${detail.message}` : ""}).`,
+        error: `Mejlet kunde inte skickas (${response.status}${detail?.message ? `: ${detail.message}` : ""}). Avsändare: ${from}.`,
       };
     }
     return { ok: true };
