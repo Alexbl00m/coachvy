@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { FormMessage } from "@/components/auth/form-message";
+import { ResendConfirmation } from "@/components/auth/resend-confirmation";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { signIn, type AuthFormState } from "@/lib/auth/actions";
@@ -27,6 +28,9 @@ export function SignInForm({ next }: { next?: string }) {
       {next && <input type="hidden" name="next" value={next} />}
 
       <FormMessage error={state.error} notice={state.notice} />
+      {state.unconfirmed && state.values?.email && (
+        <ResendConfirmation email={state.values.email} />
+      )}
 
       <Field label="E-post" htmlFor="email">
         <Input
