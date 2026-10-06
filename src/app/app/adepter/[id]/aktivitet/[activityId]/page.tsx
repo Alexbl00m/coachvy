@@ -483,6 +483,8 @@ export default async function ActivityPage({
                     ", ",
                   )}${ref.testedOn ? `, ur testen fram till ${ref.testedOn}` : ""}. Värdena står kvar även när nya tester görs; ta bort aktiviteten och ladda upp filen igen för att räkna mot dem.`
               : "Det fanns inga testvärden att räkna mot när filen laddades upp, så zoner, IF och W′bal saknas. Gör ett test, ta bort aktiviteten och ladda upp filen igen."}
+            {s.imported &&
+              " Passet kom in i en historikimport och sparades med en glesare serie, så kartan och graferna är grövre än för ett pass som laddats upp för sig. Siffrorna ovan är räknade på hela filen."}
           </p>
         </Card>
 

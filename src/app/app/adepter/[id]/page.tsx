@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { ActivityImport } from "@/components/activities/activity-import";
 import { ActivityList } from "@/components/activities/activity-list";
 import { ActivityUpload } from "@/components/activities/activity-upload";
+import { TrainingProfile } from "@/components/activities/training-profile";
 import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { AdeptProfileForm } from "@/components/adepts/adept-profile-form";
 import { InviteCard } from "@/components/adepts/invite-card";
@@ -17,6 +19,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { listActivities } from "@/lib/activities/queries";
 import { candidatesFrom } from "@/lib/activities/reference";
+import { todayIso } from "@/lib/season/season";
 import { getAdept, getHealthConsent } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { isEmailConfigured } from "@/lib/email/send";
@@ -122,6 +125,11 @@ export default async function AdeptPage({
       ? await Promise.all([listActivities(adept.id), listRaces(adept.id)])
       : [[], []];
   const canUpload = canEdit || adept.profile_id === user.id;
+  const showAllActivities = query.alla === "1";
+  const activityCandidates =
+    tab === "aktiviteter"
+      ? candidatesFrom(sessions, (key) => protocolByKey(key)?.label ?? key)
+      : [];
 
   // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
   // flyttat kurvan sedan dess.
@@ -318,10 +326,7 @@ export default async function AdeptPage({
           {canUpload && (
             <ActivityUpload
               adeptId={adept.id}
-              candidates={candidatesFrom(
-                sessions,
-                (key) => protocolByKey(key)?.label ?? key,
-              )}
+              candidates={activityCandidates}
               races={races.map((r) => ({
                 id: r.id,
                 name: r.name,
@@ -329,11 +334,37 @@ export default async function AdeptPage({
               }))}
             />
           )}
+          <TrainingProfile
+            adeptId={adept.id}
+            sources={activities.map((a) => ({
+              id: a.id,
+              name: a.name,
+              sport: a.sport,
+              performed_on: a.performed_on,
+              curve: a.curve,
+              best: a.sport === "löpning" ? a.best : null,
+            }))}
+            candidates={activityCandidates}
+            today={todayIso()}
+          />
           <ActivityList
             adeptId={adept.id}
-            activities={activities}
+            activities={
+              showAllActivities ? activities : activities.slice(0, 20)
+            }
+            total={activities.length}
+            moreHref={`?vy=aktiviteter&alla=1`}
             raceNames={Object.fromEntries(races.map((r) => [r.id, r.name]))}
           />
+          {canUpload && (
+            <ActivityImport
+              adeptId={adept.id}
+              adeptName={adept.full_name}
+              candidates={activityCandidates}
+              existingStarts={activities.map((a) => a.started_at)}
+              allowed={adept.profile_id === user.id || Boolean(consent)}
+            />
+          )}
         </div>
       ) : tab === "maende" ? (
         <LoadPanel adeptId={adept.id} checkins={checkins} />

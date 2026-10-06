@@ -1128,6 +1128,60 @@ används OpenStreetMap i stället och webbläsarkonsolen säger varför.
 Aktiviteterna syns också i kalendern, och en tävling i säsongsplanen som har
 ett uppladdat lopp länkar till analysen.
 
+### Historikimport
+
+Under listan finns **Importera historik**: en hel export på en gång, för
+bästa-kurvorna och profilen ur träningen. Exporten väljs eller släpps som den
+kommer – zip, `.fit` eller `.fit.gz`, flera filer på en gång – och läses i
+webbläsaren (`src/lib/activities/archive.ts`). Zip-arkivet läses bit för bit
+med `Blob.slice` och packas upp med webbläsarens `DecompressionStream`, utan
+bibliotek och utan att hela arkivet ligger i minnet. Zip i zip (Garmins export)
+och zip64 fungerar; GPX, TCX och allt annat hoppas över och räknas.
+
+Var exporten finns:
+
+- **Garmin:** garmin.com/account → Datahantering → Exportera dina data. Garmin
+  mejlar en länk till en zip; passen ligger i en zip inuti den
+  (`DI_CONNECT/DI-Connect-Uploaded-Files`). Släpp hela filen.
+- **TrainingPeaks:** Inställningar → Exportera data → Passfiler, för ett
+  datumspann. Zip-filen med `.fit.gz` släpps direkt.
+- **Strava:** Inställningar → Mitt konto → Ladda ner eller radera ditt konto →
+  Begär arkiv.
+
+Varje pass analyseras precis som en enskild uppladdning (`prepare.ts`), mot
+testet som gällde den dagen, men sparas med 300 punkter i serien i stället för
+2 000 – ungefär 20 kB per pass, så att ett år på 300 pass tar några MB.
+Kartan och graferna blir grövre; siffrorna är räknade på hela filen. Passen
+skickas tio i taget (`importActivities`) och sparas med `upsert … ignore
+duplicates` på adept och starttid, så att samma export kan importeras igen
+utan dubbletter.
+
+Importen kräver att adepten har godkänt behandlingen av hälsouppgifter – en
+historik är år av puls och GPS – och det kontrolleras också på servern.
+
+### Profil ur träningen
+
+Varje pass får en **bästa-kurva** när det läses in (`summary.curve`): bästa
+medeleffekt för 1 s–3 h, och för löpning bästa medelfart ur distansen för
+10 s–3 h. Effekt över 2 500 W och löpfart över 10 m/s räknas som mätfel. Pass
+som laddats upp före kurvan finns inte med; ladda upp dem igen för att ta med
+dem.
+
+På fliken visas profilen för en vald period (6 veckor, 90 dagar, 12 månader,
+allt), jämförd med lika lång tid före (`src/lib/activities/profile.ts`):
+
+- Kurvan i log-skala, med perioden före och modellen.
+- **CP och W′** (cykel) eller **CS och D′** (löpning) ur kurvans punkter på
+  3–20 minuter, arbete mot tid som en rät linje – samma modell som CP-testet –
+  jämfört med senaste testet. Hamnar W′ utanför 5–40 kJ eller D′ utanför
+  50–400 m säger sidan att 3–20 minuter i perioden troligen inte var maximala.
+- Bästa värde per längd, med passet det kom ur och hur många pass som bär den
+  längden. Färre än tre markeras: en kurva ur träning visar vad adepten
+  *minst* klarar.
+- För löpning snabbaste tid på distanserna 400 m–maraton.
+
+Listan visar de 20 senaste passen, med en länk till alla.
+
 ### Garmin och direkt synk
 
 Uppladdningen gäller filer. Att få passen direkt från klockan kräver ett

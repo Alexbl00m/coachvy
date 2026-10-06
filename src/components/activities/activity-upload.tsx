@@ -8,44 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { saveActivity } from "@/lib/activities/actions";
+import { formatClock } from "@/lib/activities/analysis";
 import {
-  analyse,
-  formatClock,
-  type Reference,
-  type Streams,
-  type Summary,
-} from "@/lib/activities/analysis";
-import type { ParsedActivity } from "@/lib/activities/fit";
-import {
-  pickReference,
-  type ReferenceCandidate,
-} from "@/lib/activities/reference";
+  parseFit,
+  prepareParsed,
+  SPORT_NAME,
+  type PreparedActivity,
+} from "@/lib/activities/prepare";
+import type { ReferenceCandidate } from "@/lib/activities/reference";
 import { routes } from "@/lib/routes";
 
 export type RaceChoice = { id: string; name: string; race_date: string };
 
-type Ready = {
-  parsed: ParsedActivity;
-  date: string;
-  summary: Summary;
-  streams: Streams;
-  reference: Reference;
-};
-
-const SPORT_NAME: Record<string, string> = {
-  cykling: "Cykelpass",
-  löpning: "Löppass",
-  simning: "Simpass",
-  annat: "Pass",
-};
-
-const stockholmDate = (iso: string) =>
-  new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Stockholm",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(iso));
+type Ready = PreparedActivity;
 
 const km = (m: number | null) =>
   m === null ? "–" : `${(m / 1000).toFixed(1).replace(".", ",")} km`;
@@ -86,32 +61,15 @@ export function ActivityUpload({
     setExisting(null);
     setReady(null);
     try {
-      const { readActivity } = await import("@/lib/activities/fit");
-      const parsed = await readActivity(await file.arrayBuffer());
-      const date = stockholmDate(parsed.startedAt);
-      const reference = pickReference(candidates, date, parsed.sport);
-      // Utan test räknas effekten mot FTP:n som är inställd i cykeldatorn.
-      if (
-        reference.ftp === null &&
-        parsed.sport === "cykling" &&
-        parsed.thresholdPower
-      ) {
-        reference.ftp = parsed.thresholdPower;
-        reference.ftpSource = "cykeldatorns inställning";
-      }
-      const { summary, streams } = analyse(
-        parsed.samples,
-        parsed.sport,
-        reference,
-        {
-          ascentM: parsed.ascentM,
-          thresholdPower: parsed.thresholdPower,
-        },
+      const prepared = prepareParsed(
+        await parseFit(await file.arrayBuffer()),
+        candidates,
       );
+      const { parsed, date } = prepared;
       const sameDay = races.find((r) => r.race_date === date);
       setRace(sameDay?.id ?? "");
       setName(sameDay?.name ?? `${SPORT_NAME[parsed.sport]} ${date}`);
-      setReady({ parsed, date, summary, streams, reference });
+      setReady(prepared);
     } catch (e) {
       setError(
         e instanceof Error && e.message.includes("för lite")

@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { ActivityRow } from "@/lib/types/database";
+import type { BestEffort, Curve } from "./analysis";
 
 /** Allt utom serien – listor behöver inte kartan. */
 const LIST_COLUMNS =
@@ -22,20 +23,48 @@ const numeric = <T extends Partial<ActivityRow>>(row: T): T => ({
   ascent_m: row.ascent_m === null ? null : Number(row.ascent_m),
 });
 
-export async function listActivities(
-  adeptId: string,
-): Promise<ActivityListItem[]> {
+/**
+ * En aktivitet i en lista: raden, de nyckeltal listan visar och bästa-kurvan
+ * för profilen – inte hela analysen. En historik kan vara hundratals pass.
+ */
+export type ActivityHead = {
+  id: string;
+  adept_id: string;
+  race_id: string | null;
+  name: string;
+  sport: string;
+  started_at: string;
+  performed_on: string;
+  duration_s: number | null;
+  distance_m: number | null;
+  normalized_power: number | null;
+  intensity_factor: number | null;
+  avg_speed: number | null;
+  curve: Curve | null;
+  best: BestEffort[] | null;
+  imported: boolean | null;
+};
+
+const HEAD_COLUMNS =
+  "id, adept_id, race_id, name, sport, started_at, performed_on, duration_s, distance_m, normalized_power:summary->normalizedPower, intensity_factor:summary->intensityFactor, avg_speed:summary->avgSpeed, curve:summary->curve, best:summary->best, imported:summary->imported";
+
+/** Adeptens aktiviteter, nyast först. */
+export async function listActivities(adeptId: string): Promise<ActivityHead[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("activities")
-    .select(LIST_COLUMNS)
+    .select(HEAD_COLUMNS)
     .eq("adept_id", adeptId)
     .order("started_at", { ascending: false });
   if (notMigrated(error)) return [];
   if (error)
     throw new Error(`Kunde inte hämta aktiviteterna: ${error.message}`);
-  return ((data ?? []) as ActivityListItem[]).map(numeric);
+  return ((data ?? []) as unknown as ActivityHead[]).map((row) => ({
+    ...row,
+    duration_s: row.duration_s === null ? null : Number(row.duration_s),
+    distance_m: row.distance_m === null ? null : Number(row.distance_m),
+  }));
 }
 
 export async function getActivity(id: string): Promise<ActivityRow | null> {

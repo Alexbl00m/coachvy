@@ -118,7 +118,38 @@ export type Summary = {
   hrZones: ZoneTime[] | null;
   splits: Split[];
   insights: string[];
+  /** Bästa-kurvan: underlaget för profilen ur träningen. Saknas i äldre pass. */
+  curve?: Curve;
+  /** Lagt in i en historikimport: sparat med en glesare serie. */
+  imported?: boolean;
 };
+
+/**
+ * Bästa medelvärdet för varje längd i `CURVE_SPANS`, som par [sekunder,
+ * värde]. Längder som är längre än passet saknas.
+ */
+export type Curve = {
+  /** Bästa medeleffekt, W. */
+  power: [number, number][] | null;
+  /** Bästa medelfart ur distansen, m/s. Bara löpning. */
+  speed: [number, number][] | null;
+};
+
+/**
+ * Längderna i bästa-kurvan, i sekunder: tätt där kurvan böjer av, glest där
+ * den planar ut. 3–20 minuter är tätast – därur räknas CP och CS.
+ */
+export const CURVE_SPANS = [
+  1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 300, 420, 600, 900,
+  1200, 1800, 2700, 3600, 5400, 7200, 10800,
+];
+
+/** Över det här är en effektsiffra ett mätfel, inte en spurt. */
+const MAX_POWER_W = 2500;
+/** Snabbare än så springer ingen; GPS-hopp ger annars falska bästa. */
+const MAX_RUN_SPEED_MS = 10;
+/** Kortare än så är löpfarten ur GPS mest brus. */
+const MIN_SPEED_SPAN_S = 10;
 
 const POWER_SPANS: [number, string][] = [
   [5, "5 s"],
@@ -260,6 +291,61 @@ function bestMean(
     }
   }
   return { value: best / span, at };
+}
+
+/**
+ * Bästa medelfart över `span` sekunder ur den kumulativa distansen – mer
+ * stabil än att medelvärdesbilda klockans momentana fart.
+ */
+function bestDistanceRate(distance: number[], span: number): number | null {
+  if (distance.length <= span || span <= 0) return null;
+  let best = 0;
+  for (let i = span; i < distance.length; i += 1) {
+    const rate = (distance[i] - distance[i - span]) / span;
+    if (rate > best) best = rate;
+  }
+  return best > 0 ? best : null;
+}
+
+/** Bästa-kurvan för passet, för effekt (med effektmätare) och löpfart. */
+export function curveOf(
+  seconds: Second[],
+  sport: ActivitySport,
+): Curve | undefined {
+  const power = seconds.map((s) => (s.power > MAX_POWER_W ? 0 : s.power));
+  const hasPower = power.some((p) => p > 0);
+  const powerCurve: [number, number][] = [];
+  if (hasPower) {
+    for (const span of CURVE_SPANS) {
+      const found = bestMean(power, span);
+      if (found && found.value > 0)
+        powerCurve.push([span, Math.round(found.value * 10) / 10]);
+    }
+  }
+
+  const speedCurve: [number, number][] = [];
+  if (sport === "löpning") {
+    // Distansen framåtfylld, så att ett glapp i början inte bryter serien.
+    let last = 0;
+    const distance = seconds.map((s) => {
+      if (s.distance !== null && s.distance >= last) last = s.distance;
+      return last;
+    });
+    if (last > 0) {
+      for (const span of CURVE_SPANS) {
+        if (span < MIN_SPEED_SPAN_S) continue;
+        const rate = bestDistanceRate(distance, span);
+        if (rate !== null && rate <= MAX_RUN_SPEED_MS)
+          speedCurve.push([span, Math.round(rate * 1000) / 1000]);
+      }
+    }
+  }
+
+  if (powerCurve.length === 0 && speedCurve.length === 0) return undefined;
+  return {
+    power: powerCurve.length > 0 ? powerCurve : null,
+    speed: speedCurve.length > 0 ? speedCurve : null,
+  };
 }
 
 /** Snabbaste tid över en sträcka, ur den kumulativa distansen. */
@@ -481,6 +567,8 @@ export function analyse(
     ascentM?: number | null;
     thresholdPower?: number | null;
   } = {},
+  /** Punkter i den sparade serien; en historikimport sparar glesare. */
+  points = DISPLAY_POINTS,
 ): { summary: Summary; streams: Streams } {
   const seconds = perSecond(samples);
   const moving = seconds.filter((s) => s.moving);
@@ -540,9 +628,10 @@ export function analyse(
     aboveCriticalS = series.filter((v) => v > (critical as number)).length;
   }
 
-  // Bästa insatser: effekt över tid på cykeln, tid över distans i löpning.
+  // Bästa insatser: tid över distans i löpning – också med löpeffekt, som
+  // visas i watt men inte jämförs så – och effekt över tid annars.
   const best: BestEffort[] = [];
-  if (hasPower) {
+  if (hasPower && sport !== "löpning") {
     for (const [span, label] of POWER_SPANS) {
       const found = bestMean(power, span);
       if (!found) continue;
@@ -656,9 +745,10 @@ export function analyse(
     hrZones,
     splits: splitsOf(seconds, sport),
     insights: [],
+    curve: curveOf(seconds, sport),
   };
   summary.insights = insightsFor(summary, sport, reference, ftp);
-  return { summary, streams: downsample(seconds, balance, reserve) };
+  return { summary, streams: downsample(seconds, balance, reserve, points) };
 }
 
 /**
