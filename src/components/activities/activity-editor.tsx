@@ -5,17 +5,22 @@ import { useId, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import { deleteActivity, updateActivity } from "@/lib/activities/actions";
 import { routes } from "@/lib/routes";
 import type { RaceChoice } from "./activity-upload";
 
-/** Namn, anteckning och kopplad tävling – och att ta bort aktiviteten. */
+/**
+ * Namn, anteckning, om det var en tävling och i så fall vilken planerad – och
+ * att ta bort aktiviteten. En tävling behöver inte vara planerad.
+ */
 export function ActivityEditor({
   id,
   adeptId,
   name: initialName,
   note: initialNote,
   raceId: initialRace,
+  isRace: initialIsRace,
   races,
 }: {
   id: string;
@@ -23,6 +28,7 @@ export function ActivityEditor({
   name: string;
   note: string | null;
   raceId: string | null;
+  isRace: boolean;
   races: RaceChoice[];
 }) {
   const router = useRouter();
@@ -32,6 +38,7 @@ export function ActivityEditor({
   const [name, setName] = useState(initialName);
   const [note, setNote] = useState(initialNote ?? "");
   const [race, setRace] = useState(initialRace ?? "");
+  const [isRace, setIsRace] = useState(initialIsRace || Boolean(initialRace));
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -41,7 +48,8 @@ export function ActivityEditor({
       const result = await updateActivity(id, adeptId, {
         name,
         note,
-        raceId: race || null,
+        raceId: isRace ? race || null : null,
+        isRace,
       });
       setMessage(result.ok ? "Sparat." : (result.error ?? "Kunde inte spara."));
       if (result.ok) router.refresh();
@@ -68,20 +76,30 @@ export function ActivityEditor({
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
-        <Field label="Tävling" htmlFor={raceId} optional>
-          <Select
-            id={raceId}
-            value={race}
-            onChange={(e) => setRace(e.target.value)}
-          >
-            <option value="">Ingen – ett träningspass</option>
-            {races.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} · {r.race_date}
-              </option>
-            ))}
-          </Select>
-        </Field>
+      </div>
+      <div className="grid items-start gap-4 sm:grid-cols-2">
+        <Switch
+          checked={isRace}
+          onChange={setIsRace}
+          label="Tävling"
+          hint="Ett lopp eller en tävling, planerad eller inte."
+        />
+        {isRace && (
+          <Field label="Planerad tävling" htmlFor={raceId} optional>
+            <Select
+              id={raceId}
+              value={race}
+              onChange={(e) => setRace(e.target.value)}
+            >
+              <option value="">Oplanerad – inte i säsongsplanen</option>
+              {races.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} · {r.race_date}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
       </div>
       <Field
         label="Anteckning"

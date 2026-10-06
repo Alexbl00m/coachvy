@@ -19,6 +19,7 @@ export const routes = {
   adepts: "/app/adepter",
   newAdept: "/app/adepter/ny",
   plans: "/app/planer",
+  activities: "/app/aktiviteter",
   newPlan: "/app/planer/ny",
   workoutBuilder: "/app/pass",
   testResults: "/app/testresultat",

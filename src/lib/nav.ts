@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Bot,
   CalendarDays,
@@ -45,6 +46,11 @@ const allSections: NavSection[] = [
         // visar sidan vad medlemskapet ger.
       },
       { label: "Planer", href: routes.plans, icon: ClipboardList },
+      {
+        label: "Lopp och aktiviteter",
+        href: routes.activities,
+        icon: Activity,
+      },
       { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
       { label: "Progression", href: routes.progression, icon: BarChart3 },
       { label: "Kalender", href: routes.calendar, icon: CalendarDays },

@@ -1,11 +1,11 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { ActivityRow } from "@/lib/types/database";
-import type { BestEffort, Curve } from "./analysis";
+import type { BestEffort, Curve, ZoneTime } from "./analysis";
 
 /** Allt utom serien – listor behöver inte kartan. */
 const LIST_COLUMNS =
-  "id, adept_id, race_id, name, sport, started_at, performed_on, device, duration_s, moving_s, distance_m, ascent_m, summary, reference, note, created_by, created_at, updated_at";
+  "id, adept_id, race_id, is_race, name, sport, started_at, performed_on, device, duration_s, moving_s, distance_m, ascent_m, summary, reference, note, created_by, created_at, updated_at";
 
 export type ActivityListItem = Omit<ActivityRow, "streams" | "laps">;
 
@@ -31,22 +31,27 @@ export type ActivityHead = {
   id: string;
   adept_id: string;
   race_id: string | null;
+  is_race: boolean;
   name: string;
   sport: string;
   started_at: string;
   performed_on: string;
   duration_s: number | null;
+  moving_s: number | null;
   distance_m: number | null;
   normalized_power: number | null;
   intensity_factor: number | null;
   avg_speed: number | null;
+  tss: number | null;
+  decoupling: number | null;
+  hr_zones: ZoneTime[] | null;
   curve: Curve | null;
   best: BestEffort[] | null;
   imported: boolean | null;
 };
 
 const HEAD_COLUMNS =
-  "id, adept_id, race_id, name, sport, started_at, performed_on, duration_s, distance_m, normalized_power:summary->normalizedPower, intensity_factor:summary->intensityFactor, avg_speed:summary->avgSpeed, curve:summary->curve, best:summary->best, imported:summary->imported";
+  "id, adept_id, race_id, is_race, name, sport, started_at, performed_on, duration_s, moving_s, distance_m, normalized_power:summary->normalizedPower, intensity_factor:summary->intensityFactor, avg_speed:summary->avgSpeed, tss:summary->tss, decoupling:summary->decouplingPct, hr_zones:summary->hrZones, curve:summary->curve, best:summary->best, imported:summary->imported";
 
 /** Adeptens aktiviteter, nyast först. */
 export async function listActivities(adeptId: string): Promise<ActivityHead[]> {
@@ -63,6 +68,7 @@ export async function listActivities(adeptId: string): Promise<ActivityHead[]> {
   return ((data ?? []) as unknown as ActivityHead[]).map((row) => ({
     ...row,
     duration_s: row.duration_s === null ? null : Number(row.duration_s),
+    moving_s: row.moving_s === null ? null : Number(row.moving_s),
     distance_m: row.distance_m === null ? null : Number(row.distance_m),
   }));
 }

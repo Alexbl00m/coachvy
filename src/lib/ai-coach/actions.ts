@@ -12,6 +12,7 @@ import { phaseLabel } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
+import { developmentFor } from "@/lib/activities/development-queries";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
@@ -43,11 +44,12 @@ export type AskResult =
   | { ok: true; answer: string }
   | { ok: false; error: string };
 
-/** De senaste testerna och passen, kortfattat. */
+/** De senaste testerna, passen och utvecklingen ur träningen, kortfattat. */
 async function historyToPrompt(adeptId: string): Promise<string | null> {
-  const [sessions, workouts] = await Promise.all([
+  const [sessions, workouts, development] = await Promise.all([
     listSessions(adeptId),
     listWorkouts(adeptId),
+    developmentFor(adeptId),
   ]);
 
   const lines: string[] = [];
@@ -73,6 +75,18 @@ async function historyToPrompt(adeptId: string): Promise<string | null> {
       lines.push(
         `- ${saved.created_at.slice(0, 10)}: ${saved.title}, ${formatDuration(resolved.totalSeconds)}${saved.summary ? ` – ${saved.summary}` : ""}`,
       );
+    }
+  }
+
+  // Samma regelbaserade text som coachen ser under Progression, så att
+  // svaren bygger på hur träningen faktiskt har gått.
+  if (development) {
+    lines.push(
+      `Utvecklingen ur träningen (${development.activities} uppladdade pass, räknat bakåt från ${development.anchor}):`,
+    );
+    for (const section of development.sections) {
+      lines.push(`${section.title}:`);
+      for (const line of section.lines) lines.push(`- ${line}`);
     }
   }
 

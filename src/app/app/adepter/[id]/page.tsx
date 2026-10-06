@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { ActivityImport } from "@/components/activities/activity-import";
-import { ActivityList } from "@/components/activities/activity-list";
-import { ActivityUpload } from "@/components/activities/activity-upload";
-import { TrainingProfile } from "@/components/activities/training-profile";
+import { AdeptActivities } from "@/components/activities/adept-activities";
 import { AdeptInfoCard } from "@/components/adepts/adept-info-card";
 import { AdeptProfileForm } from "@/components/adepts/adept-profile-form";
 import { InviteCard } from "@/components/adepts/invite-card";
@@ -17,9 +14,6 @@ import { LoadPanel } from "@/components/training/load-panel";
 import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
-import { listActivities } from "@/lib/activities/queries";
-import { candidatesFrom } from "@/lib/activities/reference";
-import { todayIso } from "@/lib/season/season";
 import { getAdept, getHealthConsent } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { isEmailConfigured } from "@/lib/email/send";
@@ -28,7 +22,7 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatLastActive, formatValue } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { listTestResults, listTestTypes } from "@/lib/tests/queries";
-import { protocolByKey, sportOf } from "@/lib/tests/protocols";
+import { sportOf } from "@/lib/tests/protocols";
 import {
   rollingCriticalPower,
   rollingCriticalSpeed,
@@ -43,7 +37,6 @@ import { CompareToggle } from "@/components/progression/compare-toggle";
 import { countUnread, listMessages } from "@/lib/messages/queries";
 import { listCheckins } from "@/lib/training/queries";
 import { listWorkouts } from "@/lib/workouts/queries";
-import { listRaces } from "@/lib/season/queries";
 
 const TABS = [
   { key: "oversikt", label: "Översikt" },
@@ -119,17 +112,7 @@ export default async function AdeptPage({
       ? lactateCurves(await listFullSessions(adept.id))
       : [];
 
-  // Uppladdade pass och lopp, med tävlingarna de kan kopplas till.
-  const [activities, races] =
-    tab === "aktiviteter"
-      ? await Promise.all([listActivities(adept.id), listRaces(adept.id)])
-      : [[], []];
   const canUpload = canEdit || adept.profile_id === user.id;
-  const showAllActivities = query.alla === "1";
-  const activityCandidates =
-    tab === "aktiviteter"
-      ? candidatesFrom(sessions, (key) => protocolByKey(key)?.label ?? key)
-      : [];
 
   // Senaste hela testet, för att kunna säga om ett nyare bästavärde har
   // flyttat kurvan sedan dess.
@@ -322,50 +305,13 @@ export default async function AdeptPage({
           }
         />
       ) : tab === "aktiviteter" ? (
-        <div className="space-y-6">
-          {canUpload && (
-            <ActivityUpload
-              adeptId={adept.id}
-              candidates={activityCandidates}
-              races={races.map((r) => ({
-                id: r.id,
-                name: r.name,
-                race_date: r.race_date,
-              }))}
-            />
-          )}
-          <TrainingProfile
-            adeptId={adept.id}
-            sources={activities.map((a) => ({
-              id: a.id,
-              name: a.name,
-              sport: a.sport,
-              performed_on: a.performed_on,
-              curve: a.curve,
-              best: a.sport === "löpning" ? a.best : null,
-            }))}
-            candidates={activityCandidates}
-            today={todayIso()}
-          />
-          <ActivityList
-            adeptId={adept.id}
-            activities={
-              showAllActivities ? activities : activities.slice(0, 20)
-            }
-            total={activities.length}
-            moreHref={`?vy=aktiviteter&alla=1`}
-            raceNames={Object.fromEntries(races.map((r) => [r.id, r.name]))}
-          />
-          {canUpload && (
-            <ActivityImport
-              adeptId={adept.id}
-              adeptName={adept.full_name}
-              candidates={activityCandidates}
-              existingStarts={activities.map((a) => a.started_at)}
-              allowed={adept.profile_id === user.id || Boolean(consent)}
-            />
-          )}
-        </div>
+        <AdeptActivities
+          adept={{ id: adept.id, full_name: adept.full_name }}
+          canUpload={canUpload}
+          consentGiven={adept.profile_id === user.id || Boolean(consent)}
+          showAll={query.alla === "1"}
+          moreHref="?vy=aktiviteter&alla=1"
+        />
       ) : tab === "maende" ? (
         <LoadPanel adeptId={adept.id} checkins={checkins} />
       ) : tab === "meddelanden" ? (

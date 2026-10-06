@@ -6,6 +6,7 @@ import { FileUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cn";
 import { saveActivity } from "@/lib/activities/actions";
 import { formatClock } from "@/lib/activities/analysis";
@@ -52,6 +53,7 @@ export function ActivityUpload({
   const [ready, setReady] = useState<Ready | null>(null);
   const [name, setName] = useState("");
   const [race, setRace] = useState("");
+  const [isRace, setIsRace] = useState(false);
   const [saving, startSaving] = useTransition();
 
   const read = async (file: File | undefined) => {
@@ -68,6 +70,7 @@ export function ActivityUpload({
       const { parsed, date } = prepared;
       const sameDay = races.find((r) => r.race_date === date);
       setRace(sameDay?.id ?? "");
+      setIsRace(Boolean(sameDay));
       setName(sameDay?.name ?? `${SPORT_NAME[parsed.sport]} ${date}`);
       setReady(prepared);
     } catch (e) {
@@ -90,7 +93,8 @@ export function ActivityUpload({
         sport: ready.parsed.sport,
         startedAt: ready.parsed.startedAt,
         device: ready.parsed.device,
-        raceId: race || null,
+        raceId: isRace ? race || null : null,
+        isRace,
         summary: ready.summary,
         reference: ready.reference,
         streams: ready.streams,
@@ -219,25 +223,30 @@ export function ActivityUpload({
                 onChange={(e) => setName(e.target.value)}
               />
             </Field>
-            <Field
-              label="Tävling"
-              htmlFor={raceId}
-              optional
-              hint="Kopplas loppet till en tävling i säsongsplanen syns analysen där."
-            >
-              <Select
-                id={raceId}
-                value={race}
-                onChange={(e) => setRace(e.target.value)}
-              >
-                <option value="">Ingen – ett träningspass</option>
-                {races.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} · {r.race_date}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            <div className="space-y-3">
+              <Switch
+                checked={isRace}
+                onChange={setIsRace}
+                label="Tävling"
+                hint="Ett lopp eller en tävling, planerad eller inte."
+              />
+              {isRace && (
+                <Field label="Planerad tävling" htmlFor={raceId} optional>
+                  <Select
+                    id={raceId}
+                    value={race}
+                    onChange={(e) => setRace(e.target.value)}
+                  >
+                    <option value="">Oplanerad – inte i säsongsplanen</option>
+                    {races.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name} · {r.race_date}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">

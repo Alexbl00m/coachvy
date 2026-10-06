@@ -17,6 +17,8 @@ export type SaveActivityInput = {
   startedAt: string;
   device: string | null;
   raceId: string | null;
+  /** En tävling, också utan en planerad att koppla till. */
+  isRace?: boolean;
   summary: Summary;
   reference: Reference;
   streams: Streams;
@@ -105,6 +107,8 @@ function rowOf(
     row: {
       adept_id: input.adeptId,
       race_id: input.raceId,
+      // En kopplad tävling är alltid en tävling.
+      is_race: Boolean(input.isRace) || input.raceId !== null,
       name,
       sport: input.sport,
       started_at: started.toISOString(),
@@ -249,10 +253,17 @@ export async function finishImport(adeptId: string): Promise<void> {
 export async function updateActivity(
   id: string,
   adeptId: string,
-  changes: { name?: string; note?: string | null; raceId?: string | null },
+  changes: {
+    name?: string;
+    note?: string | null;
+    raceId?: string | null;
+    isRace?: boolean;
+  },
 ): Promise<{ ok: boolean; error?: string }> {
   await requireSessionUser();
-  const patch: Partial<Pick<ActivityRow, "name" | "note" | "race_id">> = {};
+  const patch: Partial<
+    Pick<ActivityRow, "name" | "note" | "race_id" | "is_race">
+  > = {};
   if (changes.name !== undefined) {
     const name = changes.name.trim().slice(0, 120);
     if (!name) return { ok: false, error: "Ge aktiviteten ett namn." };
@@ -261,6 +272,11 @@ export async function updateActivity(
   if (changes.note !== undefined)
     patch.note = changes.note?.trim().slice(0, 2000) || null;
   if (changes.raceId !== undefined) patch.race_id = changes.raceId;
+  if (changes.isRace !== undefined) patch.is_race = changes.isRace;
+  // En kopplad tävling är alltid en tävling, och ett träningspass hör inte
+  // till någon planerad.
+  if (patch.race_id) patch.is_race = true;
+  if (patch.is_race === false) patch.race_id = null;
 
   const supabase = await createClient();
   const { data, error } = await supabase

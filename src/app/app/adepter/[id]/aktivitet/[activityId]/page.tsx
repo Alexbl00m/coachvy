@@ -200,6 +200,11 @@ export default async function ActivityPage({
               <Flag aria-hidden className="size-3.5 text-accent" />
               {race.name} · {race.priority}-lopp
             </Link>
+          ) : activity.is_race ? (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted">
+              <Flag aria-hidden className="size-3.5 text-accent" />
+              Oplanerad tävling
+            </span>
           ) : undefined
         }
       />
@@ -497,6 +502,7 @@ export default async function ActivityPage({
               name={activity.name}
               note={activity.note}
               raceId={activity.race_id}
+              isRace={activity.is_race}
               races={races.map((r) => ({
                 id: r.id,
                 name: r.name,

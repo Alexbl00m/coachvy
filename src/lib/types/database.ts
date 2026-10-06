@@ -250,6 +250,8 @@ export type ActivityRow = {
   id: string;
   adept_id: string;
   race_id: string | null;
+  /** En tävling – planerad (race_id satt) eller oplanerad. */
+  is_race: boolean;
   name: string;
   sport: "cykling" | "löpning" | "simning" | "annat";
   started_at: string;

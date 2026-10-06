@@ -53,7 +53,7 @@ export function ActivityList({
             >
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2 font-medium text-text">
-                  {a.race_id && (
+                  {(a.race_id || a.is_race) && (
                     <Flag
                       aria-label="Tävling"
                       className="size-3.5 shrink-0 text-accent"
@@ -69,6 +69,7 @@ export function ActivityList({
                   a.name !== raceNames[a.race_id]
                     ? ` · ${raceNames[a.race_id]}`
                     : ""}
+                  {a.is_race && !a.race_id ? " · oplanerad tävling" : ""}
                 </span>
               </span>
               <span className="flex gap-4 text-sm text-text-muted tabular-nums">

@@ -1,3 +1,4 @@
+import { DevelopmentCard } from "@/components/activities/development-card";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
 import {
@@ -6,6 +7,7 @@ import {
 } from "@/components/progression/progression-view";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
+import { developmentFor } from "@/lib/activities/development-queries";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
@@ -38,7 +40,7 @@ export default async function ProgressionPage({
   const header = (
     <PageHeader
       title="Progression"
-      description="Testerna över tid, en gren i taget."
+      description="Utvecklingen ur träningen och testerna över tid, en gren i taget."
     />
   );
 
@@ -55,10 +57,16 @@ export default async function ProgressionPage({
         </>
       );
     }
-    const sessions = await listFullSessions(adept.id);
+    const [sessions, development] = await Promise.all([
+      listFullSessions(adept.id),
+      developmentFor(adept.id),
+    ]);
     return (
       <>
         {header}
+        <div className="mb-6">
+          <DevelopmentCard reading={development} />
+        </div>
         <ProgressionView
           adeptId={adept.id}
           sessions={sessions}
@@ -90,7 +98,10 @@ export default async function ProgressionPage({
   const current =
     own.find((a) => a.id === requested) ??
     [...own].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))[0];
-  const sessions = await listFullSessions(current.id);
+  const [sessions, development] = await Promise.all([
+    listFullSessions(current.id),
+    developmentFor(current.id),
+  ]);
 
   return (
     <>
@@ -100,6 +111,9 @@ export default async function ProgressionPage({
           current={current.id}
           adepts={own.map((a) => ({ id: a.id, name: a.full_name, tests: counts.get(a.id) ?? 0 }))}
         />
+      </div>
+      <div className="mb-6">
+        <DevelopmentCard reading={development} />
       </div>
       <ProgressionView
         adeptId={current.id}

@@ -75,8 +75,8 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20260930090000_season_and_consent.sql`,
-   `20260930150000_activities.sql` och `20261001090000_invitations.sql`.
+   `20260930150000_activities.sql`, `20261001090000_invitations.sql` och
+   `20261006090000_activity_race_flag.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -1069,8 +1069,11 @@ och kolumner för fas, återhämtning mot eget snitt, nästa tävling och oläst
 
 ## Lopp och aktiviteter
 
-Ett genomfört lopp eller pass laddas upp som .fit-fil under adeptens flik
-**Lopp och aktiviteter** – av coachen eller av adepten själv. Filen läses och
+**Lopp och aktiviteter** finns i menyn (`/app/aktiviteter`) och som flik på
+adepten – samma innehåll (`src/components/activities/adept-activities.tsx`).
+Coachen väljer adept överst; utan val visas den med senast uppladdade pass.
+Ett genomfört lopp eller pass laddas upp som .fit-fil – av coachen eller av
+adepten själv. Filen läses och
 analyseras i webbläsaren (`fit-file-parser`, samma tolk som testimporten).
 Filen sparas inte; det som sparas i `activities` är analysen, en nedsamplad
 serie på högst 2 000 punkter för kartan och graferna, och de tröskelvärden
@@ -1127,6 +1130,36 @@ används OpenStreetMap i stället och webbläsarkonsolen säger varför.
 
 Aktiviteterna syns också i kalendern, och en tävling i säsongsplanen som har
 ett uppladdat lopp länkar till analysen.
+
+### Tävlingar: planerade och oplanerade
+
+En aktivitet markeras som tävling med växeln **Tävling** vid uppladdningen eller
+i redigeringen (`activities.is_race`). Med växeln på går den att knyta till en
+tävling i säsongsplanen, eller lämnas som **Oplanerad** – ett lopp som inte
+stod i planen. En knuten aktivitet är alltid en tävling; slås växeln av släpps
+kopplingen. Tävlingarna listas för sig överst, med antalet planerade och
+oplanerade.
+
+### Utveckling ur träningen
+
+Ett kort i text överst på sidan och i **Progression**
+(`src/lib/activities/development.ts`). Regelbaserat som resten: varje mening
+vilar på tal ur passen, samma data ger samma text. Räknat bakåt från i dag,
+eller från senaste passet om det är mer än en vecka gammalt:
+
+- **Mängd och kontinuitet** – timmar och pass per vecka och per gren de senaste
+  fyra veckorna, TSS, ökning eller minskning mot de fyra före (bara när båda
+  perioderna har minst fyra pass) och hur många av de senaste åtta veckorna som
+  har pass.
+- **Formen ur träningen** – bästa 1, 5 och 20 min effekt eller 5 och 20 min
+  fart de senaste sex veckorna mot de sex före, och CP/CS ur 90 dagars träning
+  mot senaste testet.
+- **Tävlingar** – antal det senaste året, planerade och oplanerade, och om det
+  senaste loppet slog modellen ur testet.
+- **Hållbarhet och intensitet** – median för frikopplingen på långpass (minst
+  75 min, inte tävlingar) och fördelningen låg/mellan/hög ur pulszonerna.
+
+Texten följer med i underlaget till AI Coach.
 
 ### Testrapporter: läs in eller klistra in
 
