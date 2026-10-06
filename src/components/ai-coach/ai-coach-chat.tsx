@@ -7,9 +7,11 @@ import { Bot, Eraser, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Select, Textarea } from "@/components/ui/field";
+import { PromptLibrary } from "@/components/ai-coach/prompt-library";
 import { ContextSummary } from "@/components/workouts/context-summary";
 import { cn } from "@/lib/cn";
 import { askCoach, clearConversation } from "@/lib/ai-coach/actions";
+import { placeholderRange } from "@/lib/ai-coach/prompt-library";
 import type { AthleteContext } from "@/lib/workouts/context";
 import type { AiMessageRow } from "@/lib/types/database";
 
@@ -22,14 +24,6 @@ type AdeptOption = { id: string; full_name: string };
  * rör sig – ett nytt test, en veckas incheckningar – och ett svar som räknar
  * på förra månadens CP är sämre än inget svar.
  */
-
-const EXAMPLES = [
-  "Vad säger de senaste testerna om var hon står?",
-  "Hon känns tung i benen – vad ser du i belastningen?",
-  "Vad bör vi prioritera de närmaste fyra veckorna?",
-  "Hur bör veckorna fram till A-loppet se ut, med toppningen?",
-  "Räcker den anaeroba kapaciteten för ett lopp med mycket backar?",
-];
 
 export function AiCoachChat({
   adepts,
@@ -60,6 +54,7 @@ export function AiCoachChat({
   /** Den senaste frågan, visad direkt så att tråden inte hoppar till. */
   const [optimistic, setOptimistic] = useState<string | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
 
   // Svaren som fanns när tråden öppnades. Bara de som kommer efteråt tonas
   // in – en tråd man öppnar ska stå still. Byts adepten börjar listan om.
@@ -99,6 +94,21 @@ export function AiCoachChat({
       }
       setOptimistic(null);
       router.refresh();
+    });
+  };
+
+  /** En fråga ur biblioteket: i rutan, med platsen att fylla i markerad. */
+  const pick = (prompt: string) => {
+    setQuestion(prompt);
+    requestAnimationFrame(() => {
+      const el = input.current;
+      if (!el) return;
+      el.focus();
+      const [start, end] = placeholderRange(prompt) ?? [
+        prompt.length,
+        prompt.length,
+      ];
+      el.setSelectionRange(start, end);
     });
   };
 
@@ -142,21 +152,10 @@ export function AiCoachChat({
             <div className="space-y-4">
               <p className="text-sm text-text-muted">
                 Fråga om {adeptName}. Svaret bygger på testtillfällena, den
-                rullande modellen, bakgrunden och de senaste incheckningarna –
-                allt som står till höger.
+                rullande modellen, bakgrunden, incheckningarna och hela
+                historiken ur de uppladdade passen och loppen. Skriv en egen
+                fråga, eller välj en i frågebiblioteket nedan.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {EXAMPLES.map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    onClick={() => setQuestion(example)}
-                    className="rounded-full border border-line-strong px-3 py-1 text-[12px] text-text-muted transition-colors hover:border-accent/60 hover:text-text"
-                  >
-                    {example}
-                  </button>
-                ))}
-              </div>
             </div>
           ) : (
             <ul className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
@@ -193,6 +192,7 @@ export function AiCoachChat({
 
         <Card className="min-w-0">
           <Textarea
+            ref={input}
             aria-label="Fråga om adepten"
             rows={3}
             value={question}
@@ -234,6 +234,11 @@ export function AiCoachChat({
             </span>
           </div>
         </Card>
+
+        <PromptLibrary
+          onPick={pick}
+          disabled={adeptId === null || blocked !== null}
+        />
       </div>
 
       <div className="min-w-0 space-y-4">

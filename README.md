@@ -983,9 +983,38 @@ Adepten ser den inte, och gränssnittet säger det rakt ut så att ingen skriver
 något där i tron att hon gör det. Samtalet *med* adepten ligger i stället under
 fliken Meddelanden på hennes sida, där båda kan skriva.
 
-Modellen är `claude-opus-5` med adaptivt tänkande och strömmande svar.
-Systemprompten ligger bakom en cachepunkt, atletens tal efter den.
+Modellen är `claude-opus-5-5` med adaptivt tänkande och strömmande svar.
+Systemprompten ligger bakom en cachepunkt, och underlaget om atleten bakom en
+egen – följdfrågor i samma tråd läser det ur cachen.
 `ANTHROPIC_API_KEY` är valfri – utan den säger rutan vad som saknas.
+
+### Frågebiblioteket
+
+Under rutan finns färdiga frågor i kategorier – läget nu, mönster över
+säsonger, tävlingsförberedelse, fysiologi och fartstrategi, små vinster,
+överraska mig och långa linjer (`src/lib/ai-coach/prompt-library.ts`). En vald
+fråga läggs i rutan utan att skickas, så att den går att skärpa först. Text
+inom hakparenteser, som `[bana]`, markeras så att den skrivs över direkt.
+
+### Hela historiken i underlaget
+
+Frågorna i biblioteket kräver mer än de senaste veckorna, så underlaget har en
+sammanfattning av hela historiken ur de uppladdade passen
+(`src/lib/activities/history-digest.ts`):
+
+- **Per månad:** pass, timmar per gren, TSS, antal hårda pass (IF minst 0,85
+  eller en kvart i Z4–5), bästa 5 och 20 min effekt eller fart, effektivitet
+  (effekt eller fart per hjärtslag på lugna pass), frikopplingen på långpassen
+  och incheckningarnas snitt. Månader utan pass står med som luckor.
+- **Varje tävling:** resultatet, om den slog testmodellen, de åtta veckorna
+  före, de sista tio dagarna dag för dag, de fyra veckorna efter och
+  incheckningarna två veckor före och efter.
+- **Genombrottspass:** pass minst 2 % över bästa 5 eller 20 min de 90 dagarna
+  före.
+
+Tre års historik med tusen pass blir runt 7 000 tokens. Vilopuls och HRV finns
+inte i appen; modellen är instruerad att säga det och läsa återhämtningen ur
+incheckningarna i stället.
 
 ## Grafen
 

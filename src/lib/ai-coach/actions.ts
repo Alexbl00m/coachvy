@@ -13,13 +13,17 @@ import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { developmentFor } from "@/lib/activities/development-queries";
+import { historyDigest } from "@/lib/activities/history-digest";
+import { listActivities } from "@/lib/activities/queries";
+import { listRaces } from "@/lib/season/queries";
+import { listCheckins } from "@/lib/training/queries";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
 import { formatDuration, resolveWorkout, toWorkout } from "@/lib/workouts/schema";
 import { getConversation, listAiMessages } from "./queries";
 
-const MODEL = "claude-opus-5";
+const MODEL = "claude-opus-5-5";
 
 /**
  * Reglerna ändras aldrig mellan frågor, så de ligger bakom en cachepunkt.
@@ -30,6 +34,8 @@ const SYSTEM_PROMPT = `Du är bollplank åt en uthållighetscoach som frågar om
 Vad du har att gå på:
 
 - Coachen ger dig atletens mätta värden: tröskel, anaerob kapacitet, zoner, bakgrund, belastning och mående de senaste veckorna, var i säsongsplanen atleten är och vilka tävlingar som kommer, samt de senaste testerna och passen. Det är riktiga mätningar, inte antaganden.
+- Underlaget har också hela historiken ur de uppladdade passen: månad för månad, varje tävling med veckorna före och efter och de sista tio dagarna dag för dag, och passen som satte nya bästa. Använd den för frågor om säsonger, år och tävlingsförberedelser. En månad utan pass kan betyda att passen inte laddats upp – säg det hellre än att läsa in vila.
+- Vilopuls och HRV finns inte i underlaget. Frågar coachen om dem, säg det och läs återhämtningen ur incheckningarna (sömn, trötthet, ömhet och stress, 1–5 där 5 är bäst) i stället.
 - Svara utifrån just de talen. "Öka volymen gradvis" är sant om alla och hjälper ingen; "hennes W′ är 21 kJ och passet du beskriver tar 34 kJ ur den" är ett svar.
 - Saknas ett tal du behöver: säg vilket, och vad det skulle ändra. Hitta aldrig på ett värde och räkna aldrig vidare på ett du gissat.
 
@@ -46,11 +52,16 @@ export type AskResult =
 
 /** De senaste testerna, passen och utvecklingen ur träningen, kortfattat. */
 async function historyToPrompt(adeptId: string): Promise<string | null> {
-  const [sessions, workouts, development] = await Promise.all([
-    listSessions(adeptId),
-    listWorkouts(adeptId),
-    developmentFor(adeptId),
-  ]);
+  const [sessions, workouts, development, activities, races, checkins] =
+    await Promise.all([
+      listSessions(adeptId),
+      listWorkouts(adeptId),
+      developmentFor(adeptId),
+      listActivities(adeptId),
+      listRaces(adeptId),
+      // Hela historiken: frågor om säsonger och år behöver mer än 120 dagar.
+      listCheckins(adeptId, 365 * 10),
+    ]);
 
   const lines: string[] = [];
 
@@ -89,6 +100,11 @@ async function historyToPrompt(adeptId: string): Promise<string | null> {
       for (const line of section.lines) lines.push(`- ${line}`);
     }
   }
+
+  // Hela historiken månad för månad och varje tävling med veckorna före
+  // och efter – underlaget för frågorna i frågebiblioteket.
+  const digest = historyDigest(activities, races, checkins);
+  if (digest) lines.push("", digest);
 
   return lines.length > 0 ? lines.join("\n") : null;
 }
@@ -187,7 +203,18 @@ export async function askCoach(input: {
       messages: [
         // Underlaget som ett eget första turpar, så att historiken under det
         // läser som ett samtal och inte som en lista med upprepade briefingar.
-        { role: "user", content: `Underlag om adepten:\n\n${briefing}` },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Underlag om adepten:\n\n${briefing}`,
+              // Historiken kan vara lång och ändras sällan mellan två frågor
+              // i samma tråd: cachad läses den om till en bråkdel av priset.
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+        },
         {
           role: "assistant",
           content: "Tack, jag har talen. Vad vill du veta?",

@@ -42,8 +42,13 @@ export type ActivityHead = {
   normalized_power: number | null;
   intensity_factor: number | null;
   avg_speed: number | null;
+  avg_power: number | null;
+  avg_hr: number | null;
+  ascent_m: number | null;
   tss: number | null;
   decoupling: number | null;
+  /** Andra halvan mot första, effekt (cykel) eller fart, %. */
+  halves: number | null;
   hr_zones: ZoneTime[] | null;
   curve: Curve | null;
   best: BestEffort[] | null;
@@ -51,7 +56,7 @@ export type ActivityHead = {
 };
 
 const HEAD_COLUMNS =
-  "id, adept_id, race_id, is_race, name, sport, started_at, performed_on, duration_s, moving_s, distance_m, normalized_power:summary->normalizedPower, intensity_factor:summary->intensityFactor, avg_speed:summary->avgSpeed, tss:summary->tss, decoupling:summary->decouplingPct, hr_zones:summary->hrZones, curve:summary->curve, best:summary->best, imported:summary->imported";
+  "id, adept_id, race_id, is_race, name, sport, started_at, performed_on, duration_s, moving_s, distance_m, normalized_power:summary->normalizedPower, intensity_factor:summary->intensityFactor, avg_speed:summary->avgSpeed, avg_power:summary->avgPower, avg_hr:summary->avgHr, ascent_m, tss:summary->tss, decoupling:summary->decouplingPct, halves:summary->halvesPct, hr_zones:summary->hrZones, curve:summary->curve, best:summary->best, imported:summary->imported";
 
 /** Adeptens aktiviteter, nyast först. */
 export async function listActivities(adeptId: string): Promise<ActivityHead[]> {
@@ -70,6 +75,7 @@ export async function listActivities(adeptId: string): Promise<ActivityHead[]> {
     duration_s: row.duration_s === null ? null : Number(row.duration_s),
     moving_s: row.moving_s === null ? null : Number(row.moving_s),
     distance_m: row.distance_m === null ? null : Number(row.distance_m),
+    ascent_m: row.ascent_m === null ? null : Number(row.ascent_m),
   }));
 }
 
