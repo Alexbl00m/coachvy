@@ -111,6 +111,7 @@ export function PublicTestCalculator() {
         onChange={calc.setRow}
         onAdd={calc.addRow}
         onRemove={calc.removeRow}
+        onReplace={calc.replaceRows}
       />
 
       <FinishCard calc={calc} />

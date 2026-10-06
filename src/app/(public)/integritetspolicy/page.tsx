@@ -225,12 +225,15 @@ export default function IntegritetspolicyPage() {
                 adress och mejlets innehåll, inga mätvärden.
               </>,
               <>
-                <strong className="text-text">Anthropic</strong> – AI-coachen
-                och passbyggaren. När en coach ställer en fråga eller bygger ett
-                pass skickas adeptens mätta värden, träningsbakgrund och
-                belastning med för att svaret ska bygga på dem. Det görs bara
-                för adepter som har gett sitt samtycke, och adeptens namn
-                skickas inte.
+                <strong className="text-text">Anthropic</strong> – AI-coachen,
+                passbyggaren och inläsningen av testrapporter. När en coach
+                ställer en fråga eller bygger ett pass skickas adeptens mätta
+                värden, träningsbakgrund och belastning med för att svaret ska
+                bygga på dem, men inte adeptens namn. När en testrapport läses
+                in skickas själva rapporten, som kan innehålla namn och
+                födelsedatum; ur den används bara mätvärdena, och Coachvy sparar
+                inte rapporten. Allt detta görs bara för adepter som har gett
+                sitt samtycke.
               </>,
             ]}
           />

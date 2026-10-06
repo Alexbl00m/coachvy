@@ -9,6 +9,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { IntensityUnit, Sport } from "@/lib/calculators/lactate";
 import { BodyFatEstimate } from "@/components/calculators/body-fat-estimate";
+import { PasteSteps } from "@/components/tests/paste-steps";
 import { cn } from "@/lib/cn";
 import { digitsForMetric } from "@/lib/format";
 import { displayValue } from "@/lib/tests/pace";
@@ -124,6 +125,7 @@ export function EffortTable({
   onAdd,
   onRemove,
   sessionDate,
+  onReplace,
   children,
 }: {
   rows: EffortRow[];
@@ -132,6 +134,8 @@ export function EffortTable({
   onChange: (id: number, patch: Partial<EffortRow>) => void;
   onAdd: () => void;
   onRemove: (id: number) => void;
+  /** Byter alla rader, t.ex. mot steg inklistrade ur ett kalkylark. */
+  onReplace?: (rows: Partial<Omit<EffortRow, "id">>[]) => void;
   /**
    * Testtillfällets datum. Satt visar tabellen ett datum per insats – ett
    * test med flera längder görs ofta över flera dagar. Tomt fält betyder
@@ -167,6 +171,8 @@ export function EffortTable({
       </CardTitle>
 
       {children}
+
+      {stepwise && onReplace && <PasteSteps onApply={onReplace} />}
 
       <div className="overflow-x-auto">
         <table

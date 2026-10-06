@@ -1128,6 +1128,33 @@ används OpenStreetMap i stället och webbläsarkonsolen säger varför.
 Aktiviteterna syns också i kalendern, och en tävling i säsongsplanen som har
 ett uppladdat lopp länkar till analysen.
 
+### Testrapporter: läs in eller klistra in
+
+Ett laktattest från ett labb behöver inte skrivas av. Överst i **Nytt
+testtillfälle** finns **Läs in ur labbets rapport**: en PDF eller ett foto av
+protokollet läses av Claude (`claude-opus-5-5`, `src/lib/tests/report-actions.ts`)
+som svarar med JSON enligt ett schema – gren, enhet, datum, vikt, vilovärde,
+stegen med laktat, puls och RPE, toppen och labbets egna tolkningar. Många
+rapporter, Aktivitus bland dem, har stegen bara som etiketter i ett diagram,
+så sidan läses som bild i stället för med en mall per labb.
+
+Svaret kontrolleras (`report-read.ts`): värden utanför det rimliga stryks och
+sägs ut, och modellens egna osäkerheter visas som varningar. **Fyll i
+formuläret** sätter laktatstegtest, stegen med vilan som rad 0, datum, vikt
+och toppen, och skriver labbets värden i anteckningen. Inget sparas förrän
+coachen granskat och tryckt Spara; trösklarna räknas av Coachvy ur stegen.
+
+Rapporten skickas till Anthropic och kan innehålla namn och födelsedatum,
+så inläsningen kräver samma samtycke som AI-coachen och kräver
+`ANTHROPIC_API_KEY`. Coachvy sparar inte rapporten. Foton skalas ned i
+webbläsaren; server actions tar högst 4 MB (`next.config.ts`).
+
+Utan AI: **Klistra in ur Excel** i stegtabellen – också i det fria
+verktyget. Markera raderna i kalkylarket, gärna med rubrikraden, och klistra
+in. Kolumnerna känns igen på rubrikerna (watt, km/h, tid, puls, laktat, RPE)
+eller gissas ur värdena, visas och kan ändras innan tabellen fylls i
+(`src/lib/tests/paste-steps.ts`). En rad som heter "vila" blir vilovärdet.
+
 ### Historikimport
 
 Under listan finns **Importera historik**: en hel export på en gång, för

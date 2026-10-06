@@ -12,6 +12,7 @@ import {
   UnitField,
 } from "@/components/calculators/protocol-parts";
 import { FitImport } from "@/components/tests/fit-import";
+import { ReportImport } from "@/components/tests/report-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -23,7 +24,11 @@ import type { TrainingBlockRow } from "@/lib/types/database";
 import { previewOnServer } from "@/lib/tests/preview-actions";
 import { saveTestSession } from "@/lib/tests/session-actions";
 import { FIT_SLOTS, kindFor } from "@/lib/tests/fit-efforts";
-import { useProtocolCalculator } from "@/lib/tests/use-protocol-calculator";
+import type { ReportReading } from "@/lib/tests/report-read";
+import {
+  formatDuration,
+  useProtocolCalculator,
+} from "@/lib/tests/use-protocol-calculator";
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
 const positive = (raw: string) => {
@@ -112,11 +117,61 @@ export function NewSessionForm({
     });
   };
 
+  /**
+   * Fyller i formuläret ur en inläst rapport: gren, laktatstegtest, enhet,
+   * datum, vikt, stegen med vilan som rad 0, toppen och labbets egna värden
+   * i anteckningen. Coachen granskar och sparar.
+   */
+  const applyReport = (r: ReportReading) => {
+    const sv = (v: number | null | undefined) =>
+      v === null || v === undefined ? "" : String(v).replace(".", ",");
+    if (r.sport && r.sport !== calc.sport) calc.setSport(r.sport);
+    calc.setProtocol("laktat-steg");
+    if (r.unit) calc.setUnit(r.unit);
+    if (r.weightKg !== null) calc.setWeight(sv(r.weightKg));
+    if (r.performedOn) setPerformedOn(r.performedOn);
+    calc.replaceRows([
+      ...(r.rest && (r.rest.lactate !== null || r.rest.heartRate !== null)
+        ? [
+            {
+              intensity: "0",
+              lactate: sv(r.rest.lactate),
+              heartRate: sv(r.rest.heartRate),
+            },
+          ]
+        : []),
+      ...r.steps.map((s) => ({
+        intensity: sv(s.intensity),
+        duration:
+          s.durationSeconds !== null ? formatDuration(s.durationSeconds) : "",
+        lactate: sv(s.lactate),
+        heartRate: sv(s.heartRate),
+        comment: s.rpe !== null ? `RPE ${sv(s.rpe)}` : "",
+      })),
+    ]);
+    calc.setFinish({
+      peak: sv(r.peak?.intensity),
+      vo2max: sv(r.peak?.vo2max),
+      peakLactate: sv(r.peak?.lactate),
+      peakHeartRate: sv(r.peak?.heartRate),
+    });
+    setNotes(
+      [
+        "Inläst ur labbets rapport.",
+        r.labValues ? `Labbets värden: ${r.labValues}` : null,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+  };
+
   const canSave = calc.analysis.metrics.length > 0 && !pending && !calc.pending;
   const stepwise = Boolean(calc.spec?.shape.lactate);
 
   return (
     <div className="space-y-6">
+      <ReportImport adeptId={adeptId} onApply={applyReport} />
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card className="min-w-0">
           <CardTitle>Protokoll</CardTitle>
@@ -199,6 +254,7 @@ export function NewSessionForm({
         onChange={calc.setRow}
         onAdd={calc.addRow}
         onRemove={calc.removeRow}
+        onReplace={calc.replaceRows}
         sessionDate={performedOn}
       >
         {FIT_SLOTS[calc.protocol] &&

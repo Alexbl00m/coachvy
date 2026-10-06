@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(import.meta.dirname),
   },
+  experimental: {
+    serverActions: {
+      // En testrapport (PDF eller foto) läses via en server action. Vercel tar
+      // högst 4,5 MB per anrop; bilder skalas ned i webbläsaren innan.
+      bodySizeLimit: "4mb",
+    },
+  },
 };
 
 export default nextConfig;
