@@ -1,3 +1,4 @@
+import { CoachvyMark } from "@/components/logo";
 import { SERIES } from "@/lib/calculators/chart-colors";
 import { cn } from "@/lib/cn";
 
@@ -167,7 +168,9 @@ export function TestPreview({ className }: { className?: string }) {
 
         <div className="grid md:grid-cols-[176px_minmax(0,1fr)]">
           <div className="hidden border-r border-line p-3 md:block">
-            <p className="px-2 pb-2 text-[11px] font-semibold tracking-[0.08em] text-text-subtle uppercase">
+            {/* Som sidomenyns huvud i appen, i mindre storlek. */}
+            <p className="flex items-center gap-2 px-2 pt-0.5 pb-3 text-[13px] font-semibold tracking-tight text-text">
+              <CoachvyMark weight="bold" className="size-5" />
               Coachvy
             </p>
             {NAV.map((item) => (
