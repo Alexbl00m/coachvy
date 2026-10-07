@@ -904,6 +904,51 @@ Ett sparat pass kan öppnas i byggaren igen. Då räknas det mot adeptens
 **nuvarande** tröskel, inte den det en gång sparades mot, och det som sparas
 blir en ny rad. Originalet ligger kvar som det skrevs.
 
+### Profilen
+
+Passet ritas som block (`src/components/workouts/workout-profile.tsx`):
+bredden är tiden, höjden målet i procent av referensen och färgen zonen. 30/15
+blir en streckkod, en tröskeltrappa blir en trappa. Varje block har ett eget
+verktygstips med watt eller tempo, längd, procent och zon, och piltangenterna
+stegar genom blocken. Stegtabellen under har samma färger och fungerar som
+grafens förklaring.
+
+Zonerna (`src/lib/workouts/intensity.ts`) styr bara färgen, ingenting räknas
+på dem. För FTP och LT2 är de Coggans nivåer (55, 75, 90, 105 och 120 %, med
+nivå 6 och 7 ihopslagna), för CP flyttade 4 % nedåt, och för CS och CSS egna
+gränser i fart – CS är gränsen mot det svåra området, så zon 5 börjar där.
+
+Samma profil i miniatyr (`workout-strip.tsx`) står i adeptens passlista, under
+*Kommande pass* på adeptens översikt och i kalenderns dagvy, så att passets
+form syns utan att det öppnas.
+
+### Till klockan och cykeldatorn
+
+Under varje pass – i byggaren och på ett sparat pass – finns två nedladdningar,
+byggda i webbläsaren ur det som visas, också ändringar som inte sparats:
+
+- **.fit** (`src/lib/workouts/export/fit.ts`) – FIT:s träningsfil, med
+  `file_id`, `workout` och ett `workout_step` per steg. Repetitioner skrivs som
+  i specifikationen: stegen en gång och ett upprepningssteg som pekar tillbaka.
+  Målen står i absoluta tal räknade mot passets referens – watt på cykel, fart
+  för löpning – så att coachens föreskrift gäller och inte klockans egen
+  FTP-inställning. Ett mål utan spann får ±3 % (minst ±5 W) på cykel och ±2 %
+  i fart, annars larmar klockan vid varje pedaltramp; ett spann coachen satt
+  står kvar. För Garmin: lägg filen i `GARMIN/NewFiles` via USB.
+- **.zwo** (`zwo.ts`), bara cykel – Zwifts format, som flera appar läser.
+  Effekten står i procent av FTP; byggdes passet mot CP eller LT2 säger
+  beskrivningen vilket värde FTP ska stå på i appen. Två steg som varvas blir
+  `IntervalsT`, uppvärmning och nedvarvning med spann blir ramper.
+
+Simpass exporteras inte: bassängpass i FIT kräver banlängd och simsätt per
+steg, och fartmål stöds inte på de flesta klockor.
+
+FIT-filerna skrivs med `fit-file-parser`s egen kodare (`fit-file-parser/encoder`)
+och kontrollerades mot bibliotekets strikta läsare (`readFitMessages`) –
+huvud, CRC och struktur – och genom att läsas tillbaka. Protokollversionen
+sätts till 1.0: bibliotekets förval är inget giltigt versionsbyte, och en
+klocka kan avvisa filen på det.
+
 ### Modellanropet
 
 `src/lib/workouts/generate.ts` anropar Anthropics API med `claude-opus-5`,

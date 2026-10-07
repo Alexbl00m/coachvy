@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
 import type { AdeptCheckinRow } from "@/lib/types/database";
+import { profileBlocks, type ProfileBlock } from "@/lib/workouts/blocks";
 import {
   formatDuration,
   resolveWorkout,
@@ -35,6 +36,8 @@ export type CalendarWorkout = {
   /** Passets längd ur stegen, "1:15:00". null när den inte går att räkna. */
   duration: string | null;
   summary: string | null;
+  /** Stegen som block, för miniatyrprofilen. Tom när passet inte går att lösa upp. */
+  profile: ProfileBlock[];
 };
 
 export type CalendarTest = {
@@ -77,14 +80,16 @@ export async function listScheduledWorkouts(
       reference: Number(row.reference),
     };
     let duration: string | null = null;
+    let profile: ProfileBlock[] = [];
     try {
-      const total = resolveWorkout(
-        toWorkout(saved),
-        saved.reference,
-      ).totalSeconds;
-      duration = total > 0 ? formatDuration(total) : null;
+      const resolved = resolveWorkout(toWorkout(saved), saved.reference);
+      duration =
+        resolved.totalSeconds > 0
+          ? formatDuration(resolved.totalSeconds)
+          : null;
+      profile = profileBlocks(resolved.steps, saved.reference, saved.basis);
     } catch {
-      // Ett pass som inte går att lösa upp visas ändå, utan längd.
+      // Ett pass som inte går att lösa upp visas ändå, utan längd och profil.
     }
     return {
       id: saved.id,
@@ -95,6 +100,7 @@ export async function listScheduledWorkouts(
       sport: saved.sport,
       duration,
       summary: saved.summary,
+      profile,
     };
   });
 }

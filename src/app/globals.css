@@ -123,6 +123,18 @@
   --phase-topp-text: #121216;
   --phase-vila: #55555f;
   --phase-vila-text: #ffffff;
+
+  /* Passets intensitetszoner: en blå stege från återhämtning till anaerobt,
+     så att ordningen syns i färgen och inte krockar med fasernas orange.
+     Lika ljushetssteg i OKLCH (ton 252), validerad som ordinal ramp mot
+     ytan (dataviz-skillens validate_palette.js --ordinal). I mörkt läge är
+     den lägsta zonen mörkast och den högsta ljusast. */
+  --zone-1: #035397;
+  --zone-2: #1d6cb7;
+  --zone-3: #3a85d3;
+  --zone-4: #55a0f0;
+  --zone-5: #7ebbfe;
+  --zone-6: #b0d5fe;
 }
 
 html,
@@ -274,6 +286,14 @@ body {
     --phase-topp-text: #ffffff;
     --phase-vila: #9a9aa5;
     --phase-vila-text: #121216;
+
+    /* Samma stege vänd för papper: ljusast för den lägsta zonen. */
+    --zone-1: #73b5ff;
+    --zone-2: #509bea;
+    --zone-3: #3580ce;
+    --zone-4: #1667b2;
+    --zone-5: #014f90;
+    --zone-6: #023869;
   }
 
   /*

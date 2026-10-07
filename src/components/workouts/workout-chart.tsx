@@ -4,7 +4,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,15 +11,23 @@ import {
 } from "recharts";
 
 import {
+  PLOT_LEFT,
+  PLOT_RIGHT,
+  timeTicks,
+  WorkoutProfile,
+  ZoneLegend,
+} from "@/components/workouts/workout-profile";
+import {
   CHART_AXIS_TEXT,
   CHART_GRID,
   SERIES,
 } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
 import type { BalanceResult } from "@/lib/workouts/balance";
+import { profileBlocks } from "@/lib/workouts/blocks";
+import { ZONES } from "@/lib/workouts/intensity";
 import {
   formatDuration,
-  formatPace,
   type ResolvedStep,
   type TargetBasis,
 } from "@/lib/workouts/schema";
@@ -36,70 +43,11 @@ import {
  * avståndet mellan kurvorna ingenting, vilket är sanningen.
  */
 
-/** Samma vänstermarginal i båda panelerna, annars glider tidsaxlarna isär. */
-const MARGIN = { top: 12, right: 16, bottom: 4, left: 0 };
-const Y_WIDTH = 52;
-
-type ProfilePoint = { t: number; percent: number; target: number };
+/** Samma marginaler som profilen ovanför, annars glider tidsaxlarna isär. */
+const MARGIN = { top: 12, right: PLOT_RIGHT, bottom: 4, left: 0 };
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
-
-/**
- * Stegen till en trappa.
- *
- * En punkt vid varje stegs början plus en avslutande punkt räcker: `stepAfter`
- * håller värdet tills nästa punkt, vilket är precis vad ett intervall gör.
- */
-function toProfile(steps: ResolvedStep[], reference: number): ProfilePoint[] {
-  const points: ProfilePoint[] = [];
-  let t = 0;
-
-  for (const step of steps) {
-    points.push({ t, percent: (step.target / reference) * 100, target: step.target });
-    t += step.seconds;
-  }
-
-  const last = steps[steps.length - 1];
-  points.push({
-    t,
-    percent: (last.target / reference) * 100,
-    target: last.target,
-  });
-
-  return points;
-}
-
-function ProfileTooltip({
-  active,
-  payload,
-  sport,
-  basis,
-}: {
-  active?: boolean;
-  payload?: Array<{ payload: ProfilePoint }>;
-  sport: Sport;
-  basis: TargetBasis;
-}) {
-  const point = payload?.[0]?.payload;
-  if (!active || !point) return null;
-
-  return (
-    <div className="rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium text-text tabular-nums">
-        {formatDuration(point.t)}
-      </p>
-      <p className="mt-1 text-text-muted tabular-nums">
-        {Math.round(point.percent)} % av {basis}
-      </p>
-      <p className="text-text-muted tabular-nums">
-        {sport === "cykling"
-          ? `${Math.round(point.target)} W`
-          : `${sv(point.target, 2)} m/s · ${formatPace(point.target, sport)}`}
-      </p>
-    </div>
-  );
-}
 
 function BalanceTooltip({
   active,
@@ -115,52 +63,17 @@ function BalanceTooltip({
 
   return (
     <div className="rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium text-text tabular-nums">
-        {formatDuration(point.t)}
+      <p className="text-sm font-semibold text-text tabular-nums">
+        {Math.round(point.percent)} % kvar
       </p>
-      <p className="mt-1 text-text-muted tabular-nums">
-        {Math.round(point.percent)} % kvar ·{" "}
+      <p className="mt-0.5 text-text-muted tabular-nums">
         {unit === "kJ"
           ? `${sv(point.balance / 1000, 1)} kJ`
-          : `${Math.round(point.balance)} m`}
+          : `${Math.round(point.balance)} m`}{" "}
+        · {formatDuration(point.t)}
       </p>
     </div>
   );
-}
-
-const timeTick = (value: number) => formatDuration(value);
-
-/**
- * Jämna tidsmarkeringar i stället för de recharts väljer själv.
- *
- * Automatiken delar tidsaxeln i lika delar, vilket ger "14:10" och "28:20" –
- * tal som inte betyder något för den som läser ett pass. Här väljs i stället
- * ett jämnt steg som ger ungefär ett halvdussin markeringar.
- */
-function timeTicks(totalSeconds: number): number[] {
-  const step =
-    [30, 60, 120, 300, 600, 900, 1800, 3600].find(
-      (candidate) => totalSeconds / candidate <= 7,
-    ) ?? 3600;
-
-  const ticks: number[] = [];
-  for (let t = 0; t <= totalSeconds; t += step) ticks.push(t);
-
-  // Slutet läggs till bara när det inte trängs med föregående markering.
-  const last = ticks[ticks.length - 1];
-  if (totalSeconds - last > step / 2) ticks.push(totalSeconds);
-  return ticks;
-}
-
-/**
- * Procentmarkeringar med steget 20, så att 100 % alltid hamnar på en linje.
- * Tröskeln är den enda nivå i grafen som betyder något i sig.
- */
-function percentTicks(max: number): { domain: [number, number]; ticks: number[] } {
-  const top = Math.ceil((max + 5) / 20) * 20;
-  const ticks: number[] = [];
-  for (let value = 0; value <= top; value += 20) ticks.push(value);
-  return { domain: [0, top], ticks };
 }
 
 export function WorkoutChart({
@@ -178,10 +91,7 @@ export function WorkoutChart({
 }) {
   if (steps.length === 0 || !(reference > 0)) return null;
 
-  const profile = toProfile(steps, reference);
-  const totalSeconds = profile[profile.length - 1].t;
-  const maxPercent = Math.max(...profile.map((p) => p.percent), 100);
-  const scale = percentTicks(maxPercent);
+  const totalSeconds = steps.reduce((sum, step) => sum + step.seconds, 0);
   const ticks = timeTicks(totalSeconds);
   const unit = sport === "cykling" ? "kJ" : "m";
 
@@ -191,109 +101,49 @@ export function WorkoutChart({
       percent: point.fraction * 100,
       balance: point.balance,
     })) ?? [];
+  const showBalance = balance !== null && balanceData.length > 1;
+  const blocks = profileBlocks(steps, reference, basis);
+  const zones = ZONES.filter((zone) => blocks.some((b) => b.zone === zone));
 
   return (
     <div className="space-y-1">
-      <div className="h-[240px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={profile} margin={MARGIN}>
-            <defs>
-              <linearGradient id="profile-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={SERIES.primary} stopOpacity={0.55} />
-                <stop offset="100%" stopColor={SERIES.primary} stopOpacity={0.08} />
-              </linearGradient>
-            </defs>
+      <WorkoutProfile
+        steps={steps}
+        reference={reference}
+        basis={basis}
+        sport={sport}
+        // Panelerna delar tidsaxel. Står den skriven två gånger läser man
+        // den som två olika axlar.
+        showTimeAxis={!showBalance}
+        legend={false}
+      />
 
-            <CartesianGrid
-              stroke={CHART_GRID}
-              strokeDasharray="2 4"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="t"
-              type="number"
-              domain={[0, totalSeconds]}
-              ticks={ticks}
-              tickFormatter={timeTick}
-              stroke={CHART_GRID}
-              // Panelerna delar tidsaxel. Står den skriven två gånger läser
-              // man den som två olika axlar.
-              tick={
-                balance ? false : { fill: CHART_AXIS_TEXT, fontSize: 12 }
-              }
-              tickLine={false}
-              height={balance ? 12 : 30}
-            />
-            <YAxis
-              domain={scale.domain}
-              ticks={scale.ticks}
-              stroke={CHART_GRID}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
-              tickLine={false}
-              width={Y_WIDTH}
-              tickFormatter={(v: number) => `${Math.round(v)} %`}
-            />
-            <Tooltip
-              content={<ProfileTooltip sport={sport} basis={basis} />}
-              cursor={{ stroke: CHART_AXIS_TEXT, strokeDasharray: "3 3" }}
-            />
-
-            {/* Tröskeln. Allt ovanför den tär på reserven, allt under fyller på. */}
-            <ReferenceLine
-              y={100}
-              stroke={CHART_AXIS_TEXT}
-              strokeDasharray="4 4"
-              label={{
-                value: basis,
-                position: "insideTopLeft",
-                fill: CHART_AXIS_TEXT,
-                fontSize: 11,
-              }}
-            />
-
-            <Area
-              type="stepAfter"
-              dataKey="percent"
-              stroke={SERIES.primary}
-              strokeWidth={2}
-              fill="url(#profile-fill)"
-              isAnimationActive={false}
-              activeDot={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {balance && balanceData.length > 1 && (
-        <div className="h-[170px] w-full">
+      {showBalance && (
+        <div className="h-[170px] w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={balanceData} margin={MARGIN}>
               <defs>
                 <linearGradient id="balance-fill" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="0%"
-                    stopColor={SERIES.secondary}
-                    stopOpacity={0.45}
+                    stopColor={SERIES.primary}
+                    stopOpacity={0.3}
                   />
                   <stop
                     offset="100%"
-                    stopColor={SERIES.secondary}
-                    stopOpacity={0.06}
+                    stopColor={SERIES.primary}
+                    stopOpacity={0.04}
                   />
                 </linearGradient>
               </defs>
 
-              <CartesianGrid
-                stroke={CHART_GRID}
-                strokeDasharray="2 4"
-                vertical={false}
-              />
+              <CartesianGrid stroke={CHART_GRID} vertical={false} />
               <XAxis
                 dataKey="t"
                 type="number"
                 domain={[0, totalSeconds]}
                 ticks={ticks}
-                tickFormatter={timeTick}
+                tickFormatter={(value: number) => formatDuration(value)}
                 stroke={CHART_GRID}
                 tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
                 tickLine={false}
@@ -304,31 +154,41 @@ export function WorkoutChart({
                 stroke={CHART_GRID}
                 tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
                 tickLine={false}
-                width={Y_WIDTH}
+                width={PLOT_LEFT}
                 tickFormatter={(v: number) => `${Math.round(v)} %`}
               />
               <Tooltip
                 content={<BalanceTooltip unit={unit} />}
-                cursor={{ stroke: CHART_AXIS_TEXT, strokeDasharray: "3 3" }}
+                cursor={{ stroke: CHART_AXIS_TEXT, strokeWidth: 1 }}
               />
 
               <Area
                 type="monotone"
                 dataKey="percent"
-                stroke={SERIES.secondary}
+                stroke={SERIES.primary}
                 strokeWidth={2}
                 fill="url(#balance-fill)"
                 isAnimationActive={false}
-                activeDot={{ r: 4, fill: SERIES.secondary }}
+                activeDot={{
+                  r: 4,
+                  fill: SERIES.primary,
+                  stroke: "var(--surface)",
+                  strokeWidth: 2,
+                }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       )}
 
+      <div className="pt-2">
+        <ZoneLegend zones={zones} />
+      </div>
+
       <p className="pl-[52px] text-[11px] text-text-subtle">
-        Överst: målet som andel av {basis}.
-        {balance
+        {showBalance ? "Överst" : "Höjden"}: målet som andel av {basis}, färgen
+        zonen.
+        {showBalance
           ? ` Nederst: ${sport === "cykling" ? "W′" : "D′"} som är kvar, i procent av full reserv.`
           : ""}
       </p>

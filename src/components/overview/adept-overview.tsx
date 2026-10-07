@@ -5,6 +5,7 @@ import { SeasonSummary } from "@/components/season/season-summary";
 import { ConsentToggle } from "@/components/settings/settings-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { listScheduledWorkouts } from "@/lib/calendar/queries";
 import { countUnread } from "@/lib/messages/queries";
 import { routes } from "@/lib/routes";
@@ -148,7 +149,7 @@ export async function AdeptOverview({
                       sport={w.sport}
                       className="mt-0.5 size-4 shrink-0 text-text-subtle"
                     />
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-text group-hover:text-accent">
                         {w.title}
                       </span>
@@ -158,6 +159,7 @@ export async function AdeptOverview({
                           : `${weekdayName(w.date)} ${longDate(w.date, today)}`}
                         {w.duration ? ` · ${w.duration}` : ""}
                       </span>
+                      <WorkoutStrip blocks={w.profile} className="mt-1.5 h-6" />
                     </span>
                   </Link>
                 </li>

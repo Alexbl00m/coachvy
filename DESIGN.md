@@ -58,6 +58,13 @@ colors:
     specifik: ["#d96a43", "#c1542d"]
     topp: ["#fb906b", "#983d1c"]
     vila: ["#55555f", "#9a9aa5"]
+  zones:                        # passets intensitetszoner, ordinal blå stege (mörk / ljus)
+    z1: ["#035397", "#73b5ff"]
+    z2: ["#1d6cb7", "#509bea"]
+    z3: ["#3a85d3", "#3580ce"]
+    z4: ["#55a0f0", "#1667b2"]
+    z5: ["#7ebbfe", "#014f90"]
+    z6: ["#b0d5fe", "#023869"]
 
 typography:
   families:
@@ -162,6 +169,13 @@ sig. Färgen ensam säger aldrig något. De är inte serier och inte accent.
 Serierna (`series.primary` … `tertiary`) och fasstegen är validerade för
 färgblindhet och båda ytorna; de byts inte mot nya nyanser. Text i ett
 diagram står i `chart-axis-text`, aldrig i seriefärgen.
+
+Passets zoner är en egen ordinal stege i blått (`--zone-1` … `--zone-6`), så
+att de inte krockar med fasernas orange eller med accenten. Stegen har lika
+ljushetsavstånd i OKLCH (ton 252) och är validerad med `--ordinal` mot båda
+ytorna. I mörkt läge är den lägsta zonen mörkast och den högsta ljusast; på
+papper är det tvärtom. Block i ett pass skiljs åt av en pixel i ytans färg,
+inte av en kantlinje.
 
 ## 3. Typografi
 

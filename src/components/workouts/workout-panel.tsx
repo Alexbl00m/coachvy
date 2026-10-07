@@ -7,9 +7,11 @@ import { Dumbbell, Plus, Trash2 } from "lucide-react";
 
 import { buttonClass } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
+import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { deleteWorkout } from "@/lib/workouts/actions";
+import { profileBlocks } from "@/lib/workouts/blocks";
 import {
   formatDuration,
   resolveWorkout,
@@ -145,6 +147,14 @@ export function WorkoutPanel({
                     </button>
                   )}
                 </div>
+                <WorkoutStrip
+                  blocks={profileBlocks(
+                    resolved.steps,
+                    saved.reference,
+                    saved.basis,
+                  )}
+                  className="mt-3"
+                />
               </Card>
             </li>
           );

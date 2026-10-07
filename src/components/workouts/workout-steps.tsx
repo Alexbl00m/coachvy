@@ -4,14 +4,13 @@ import { Fragment, useState } from "react";
 import { Trash2 } from "lucide-react";
 
 import { Input } from "@/components/ui/field";
-import { SERIES } from "@/lib/calculators/chart-colors";
 import { cn } from "@/lib/cn";
 import { parseDuration } from "@/lib/tests/use-protocol-calculator";
+import { ZONE_NAMES, zoneColor, zoneOf } from "@/lib/workouts/intensity";
 import {
   formatDuration,
   formatPace,
   resolveStep,
-  type StepKind,
   type Workout,
   type WorkoutStep,
 } from "@/lib/workouts/schema";
@@ -27,14 +26,6 @@ import {
  * Utan `onChange` läses tabellen bara. Ett sparat pass är en föreskrift, och
  * den ska inte gå att ändra av misstag när den öppnas.
  */
-
-const KIND_COLOR: Record<StepKind, string> = {
-  uppvärmning: "var(--text-subtle)",
-  intervall: SERIES.primary,
-  vila: SERIES.secondary,
-  distans: SERIES.tertiary,
-  nedvarvning: "var(--text-subtle)",
-};
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
@@ -163,6 +154,8 @@ export function WorkoutSteps({
               step.low === step.high
                 ? `${Math.round(step.low * 100)} %`
                 : `${Math.round(step.low * 100)}–${Math.round(step.high * 100)} %`;
+            // Samma färg som blocket i profilen: tabellen är grafens förklaring.
+            const zone = zoneOf((step.low + step.high) / 2, workout.basis);
 
             return (
               <Fragment key={key}>
@@ -198,9 +191,9 @@ export function WorkoutSteps({
                   <td className={cn("py-2 pr-3", inRepeat && "pl-5")}>
                     <span className="flex items-baseline gap-2">
                       <span
-                        aria-hidden
-                        className="size-2 shrink-0 translate-y-px rounded-full"
-                        style={{ backgroundColor: KIND_COLOR[step.kind] }}
+                        title={`Z${zone} ${ZONE_NAMES[zone]}`}
+                        className="size-2.5 shrink-0 translate-y-px rounded-[2px]"
+                        style={{ backgroundColor: zoneColor(zone) }}
                       />
                       <span className="text-text">{step.kind}</span>
                       {step.label && (

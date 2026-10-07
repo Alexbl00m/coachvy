@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { ResultGrid } from "@/components/calculators/result-grid";
 import { Card, CardTitle } from "@/components/ui/card";
+import { ExportWorkout } from "@/components/workouts/export-workout";
 import { WorkoutChart } from "@/components/workouts/workout-chart";
 import { WorkoutSteps } from "@/components/workouts/workout-steps";
 import { cn } from "@/lib/cn";
@@ -137,6 +138,8 @@ export function WorkoutView({
           </p>
         </Card>
       )}
+
+      <ExportWorkout workout={workout} reference={reference} />
     </div>
   );
 }

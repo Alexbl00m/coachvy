@@ -21,6 +21,7 @@ import {
 } from "@/lib/training/load";
 import { toCheckin } from "@/lib/training/queries";
 import type { TrainingBlockRow } from "@/lib/types/database";
+import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { SportIcon, TestIcon, type DayItems } from "./calendar-items";
 
 const sv = (v: number) => String(v).replace(".", ",");
@@ -132,7 +133,7 @@ export function DayContent({
               sport={w.sport}
               className="mt-0.5 size-4 shrink-0 text-text-subtle"
             />
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium text-text">
                 {w.title}
               </span>
@@ -140,6 +141,7 @@ export function DayContent({
                 {who(w.adeptName)}
                 {[w.duration, w.summary].filter(Boolean).join(" · ") || "Pass"}
               </span>
+              <WorkoutStrip blocks={w.profile} className="mt-2 h-6" />
             </span>
           </ItemLink>
         </li>
