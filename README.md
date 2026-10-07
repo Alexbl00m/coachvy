@@ -50,6 +50,12 @@ testrapport blir en vit sida på papper.
 
 Den råa `ink-*`-skalan finns kvar för vyer som aldrig skrivs ut.
 
+Coachvys märke – ett C med en topp inuti – är en liten SVG i
+`src/components/logo.tsx` (`CoachvyMark`), och favicon, `icon.svg` och
+`apple-icon.png` i `src/app` är samma märke på en mörk platta. Märket är ritat
+efter regler som står under *Märket* i `DESIGN.md`. Vill du ändra det: ändra
+banorna i `SHAPES`, och räkna om favicon och Apple-ikonen.
+
 Redigera färgerna i `globals.css`, aldrig i enskilda komponenter.
 Kontaktuppgifterna och bilden under Om mig ligger i `src/lib/site.ts`: lägg en
 ny bild i `public/brand` och ändra `aboutImage`, eller sätt den till `null` för

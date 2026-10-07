@@ -177,6 +177,34 @@ ytorna. I mörkt läge är den lägsta zonen mörkast och den högsta ljusast; p
 papper är det tvärtom. Block i ett pass skiljs åt av en pixel i ytans färg,
 inte av en kantlinje.
 
+### Märket
+
+Coachvys märke är ett C – en öppen ring – med en topp inuti
+(`src/components/logo.tsx`, `CoachvyMark`). Toppen är bergstoppen ur Lindblom
+Coachings logotyp, nedkokt till en enda form, och ringen är samma cirkel som
+rymmer den. Märket är ritat för hand i en ruta på 100 × 100, inte i en
+bildgenerator.
+
+- **Geometri.** Ringen är en båge på 270° med radie 38 och ändar som klipps
+  radiellt i ±45°, parallellt med toppens armar. Toppen är en chevron med två
+  lika långa armar. Streckvikten är densamma i ring och topp.
+- **Inte en bock, inte ett G.** Armarna är lika långa, så toppen läses inte som
+  en bockmarkering. Toppen rör inte ringen, så C:et läses inte som ett G.
+- **Två vikter, samma form.** Den vanliga (streck 12) för stora ytor och den
+  kraftigare (streck 14) för 32 px och mindre, där tunna streck och smala
+  springor annars försvinner. Sidomenyn, inloggningen och favicon använder den
+  kraftigare.
+- **Färg.** Märket följer texten (`currentColor`): vitt på mörk yta, svart på
+  ljus. Det är aldrig orange. En orange symbol med en uppåtvänd topp läses som
+  en annan aktörs märke i samma bransch; orange är för det man ska göra.
+- **Appikon och favicon.** En mörk platta (`surface`, `#111216`) med vitt
+  märke. Plattan är rundad i favicon och `icon.svg`, och en ren fyrkant i
+  `apple-icon.png`, eftersom iOS rundar själv.
+- **Ordmärket** är Geist semibold, 17 px, bredvid märket. Sajtens huvud visar
+  Lindblom Coachings logotyp i stället; Coachvys märke hör till appen.
+
+Provet för ett märke är 16 px: det ska fortfarande läsas som ett C med en topp.
+
 ## 3. Typografi
 
 Geist sätter både sajten och appen: en tät grotesk som håller vid 12–14 px
