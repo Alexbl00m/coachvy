@@ -33,6 +33,8 @@ export type Coach = {
   company_name: string | null;
   /** Sätts i databasen, aldrig av coachen själv – se migrationen för medlemskap. */
   plan: "bas" | "medlem";
+  /** Coachens egna referensgrupper. Null: appens utgångsvärden. */
+  reference_levels?: unknown;
   created_at: string;
   updated_at: string;
 };
@@ -55,6 +57,8 @@ export type Adept = {
   invited_at?: string | null;
   /** Sätts av admin, aldrig av coachen eller adepten själv. */
   plan: "bas" | "medlem";
+  /** Referensgruppen adepten siktar mot, för gap-analysen. */
+  target_level?: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -14,6 +14,8 @@ import { listSessions } from "@/lib/tests/session-queries";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { developmentFor } from "@/lib/activities/development-queries";
 import { historyDigest } from "@/lib/activities/history-digest";
+import { benchmarkSummaryFor } from "@/lib/benchmarks/queries";
+import type { Adept } from "@/lib/types/database";
 import { listActivities } from "@/lib/activities/queries";
 import { listRaces } from "@/lib/season/queries";
 import { listCheckins } from "@/lib/training/queries";
@@ -51,17 +53,27 @@ export type AskResult =
   | { ok: false; error: string };
 
 /** De senaste testerna, passen och utvecklingen ur träningen, kortfattat. */
-async function historyToPrompt(adeptId: string): Promise<string | null> {
-  const [sessions, workouts, development, activities, races, checkins] =
-    await Promise.all([
-      listSessions(adeptId),
-      listWorkouts(adeptId),
-      developmentFor(adeptId),
-      listActivities(adeptId),
-      listRaces(adeptId),
-      // Hela historiken: frågor om säsonger och år behöver mer än 120 dagar.
-      listCheckins(adeptId, 365 * 10),
-    ]);
+async function historyToPrompt(adept: Adept): Promise<string | null> {
+  const adeptId = adept.id;
+  const [
+    sessions,
+    workouts,
+    development,
+    activities,
+    races,
+    checkins,
+    benchmarks,
+  ] = await Promise.all([
+    listSessions(adeptId),
+    listWorkouts(adeptId),
+    developmentFor(adeptId),
+    listActivities(adeptId),
+    listRaces(adeptId),
+    // Hela historiken: frågor om säsonger och år behöver mer än 120 dagar.
+    listCheckins(adeptId, 365 * 10),
+    // Gap mot målnivån, effektprofilen mot Coggan och tävlingsmålen.
+    benchmarkSummaryFor(adept),
+  ]);
 
   const lines: string[] = [];
 
@@ -105,6 +117,7 @@ async function historyToPrompt(adeptId: string): Promise<string | null> {
   // och efter – underlaget för frågorna i frågebiblioteket.
   const digest = historyDigest(activities, races, checkins);
   if (digest) lines.push("", digest);
+  if (benchmarks) lines.push("", benchmarks);
 
   return lines.length > 0 ? lines.join("\n") : null;
 }
@@ -170,7 +183,7 @@ export async function askCoach(input: {
 
   const [context, history, previous] = await Promise.all([
     contextForAdept(input.adeptId),
-    historyToPrompt(input.adeptId),
+    historyToPrompt(adept),
     listAiMessages(conversationId),
   ]);
 

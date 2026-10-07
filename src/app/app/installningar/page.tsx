@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
 
+import { ReferenceLevelsEditor } from "@/components/benchmarks/reference-levels-editor";
 import { PageHeader } from "@/components/page-header";
 import {
   ConsentToggle,
@@ -11,6 +12,7 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
+import { referenceLevelsFor } from "@/lib/benchmarks/queries";
 import { routes } from "@/lib/routes";
 import { longDate } from "@/lib/season/season";
 import { site } from "@/lib/site";
@@ -37,6 +39,7 @@ export default async function InstallningarPage() {
   const isCoach = user.profile?.role === "coach";
   const consentAt = user.profile?.health_consent_at ?? null;
   const termsAt = user.profile?.accepted_terms_at ?? null;
+  const levels = isCoach ? await referenceLevelsFor(user.id) : null;
 
   return (
     <>
@@ -141,6 +144,26 @@ export default async function InstallningarPage() {
             </p>
           </div>
         </Card>
+
+        {levels && (
+          <section id="referensnivaer" className="min-w-0 lg:col-span-2">
+            <Card className="min-w-0">
+              <CardTitle>Referensnivåer</CardTitle>
+              <p className="mb-4 max-w-3xl text-sm leading-relaxed text-text-muted">
+                Grupperna adepternas tester jämförs mot under Progression → Mål
+                och referens, och som målnivå i gap-analysen. De står från lägst
+                till högst nivå. Byt värdena mot dina egna, döp om dem eller
+                lägg till en grupp – till exempel svensk elit ur dina labbdata.
+                {levels.isDefault &&
+                  " Nu gäller Coachvys utgångsnivåer, satta ur de spann som brukar anges för uthållighetsinriktade cyklister."}
+              </p>
+              <ReferenceLevelsEditor
+                groups={levels.groups}
+                isDefault={levels.isDefault}
+              />
+            </Card>
+          </section>
+        )}
       </div>
     </>
   );

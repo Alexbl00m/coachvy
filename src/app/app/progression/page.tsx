@@ -1,4 +1,5 @@
 import { DevelopmentCard } from "@/components/activities/development-card";
+import { ReferenceAndGoals } from "@/components/benchmarks/reference-and-goals";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
 import {
@@ -73,6 +74,13 @@ export default async function ProgressionPage({
           canEdit={false}
           sport={sportFromSlug(gren)}
           view={vy}
+          goals={
+            <ReferenceAndGoals
+              adept={adept}
+              sessions={sessions}
+              canEdit={false}
+            />
+          }
         />
       </>
     );
@@ -122,6 +130,9 @@ export default async function ProgressionPage({
         sport={sportFromSlug(gren)}
         view={vy}
         query={{ adept: current.id }}
+        goals={
+          <ReferenceAndGoals adept={current} sessions={sessions} canEdit />
+        }
       />
     </>
   );

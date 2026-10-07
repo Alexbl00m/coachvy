@@ -42,6 +42,7 @@ export const sportFromSlug = (slug: string | undefined): Sport | null =>
 
 export type ProgressionViewKey =
   | "oversikt"
+  | "mal"
   | "laktat"
   | "fart"
   | "metabol"
@@ -257,6 +258,7 @@ export function ProgressionView({
   sport: requestedSport,
   view: requestedView,
   query = {},
+  goals = null,
 }: {
   adeptId: string;
   sessions: FullSession[];
@@ -265,6 +267,11 @@ export function ProgressionView({
   view: string | undefined;
   /** Övriga parametrar i adressen, t.ex. vilken adept. */
   query?: Record<string, string>;
+  /**
+   * Fliken Mål och referens. Ett element som hämtar sitt eget underlag, och
+   * som därför bara renderas – och hämtar – när fliken är vald.
+   */
+  goals?: React.ReactNode;
 }) {
   if (sessions.length === 0) {
     return (
@@ -311,6 +318,7 @@ export function ProgressionView({
 
   const views: { key: ProgressionViewKey; label: string }[] = [
     { key: "oversikt", label: "Översikt" },
+    ...(goals ? [{ key: "mal" as const, label: "Mål och referens" }] : []),
     ...(curves.length > 0
       ? [{ key: "laktat" as const, label: "Laktatkurvor" }]
       : []),
@@ -426,6 +434,8 @@ export function ProgressionView({
           )}
         </div>
       )}
+
+      {view === "mal" && goals}
 
       {view === "laktat" && (
         <Card className="min-w-0">

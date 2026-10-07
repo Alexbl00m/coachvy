@@ -75,8 +75,8 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20260930150000_activities.sql`, `20261001090000_invitations.sql` och
-   `20261006090000_activity_race_flag.sql`.
+   `20261001090000_invitations.sql`, `20261006090000_activity_race_flag.sql`
+   och `20261007090000_reference_levels.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -654,6 +654,79 @@ laktattest utan eget VO2max lånar det närmaste i tid från ett annat test i
 samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
 referensspannen LT1 65–75 % och LT2 75–90 %, plus LT1 i procent av LT2 – och
 varje utnyttjandegrad som en egen tidslinje.
+
+## Mål och referens
+
+Fliken **Mål och referens** under Progression jämför adepten med vedertagen
+data och med sin målsättning – aldrig med andra adepter. Tre kort, alla med
+samma grafform (`src/components/benchmarks/level-chart.tsx`): nivåerna ligger
+på samma höjd i alla kolumner, så att formen på adeptens linje blir det man
+läser – en topp där adepten är stark, en dal där mest finns kvar.
+
+### Effektprofil mot Allen & Coggan
+
+Bästa effekt per kilo över 5 s, 1 min, 5 min, 20 min och vid tröskeln, ur
+träningen i vald period (90 dagar, 12 månader eller allt), placerad i Allen &
+Coggans tabell ur *Training and Racing with a Power Meter* – för män eller
+kvinnor efter adeptprofilen (`src/lib/benchmarks/coggan.ts`). Varje kategoris
+nedre gräns används, så att ett värde hamnar i exakt en av de åtta kategorierna
+från Otränad till Världsklass. 20 minuter jämförs mot tröskelns gränser delade
+med 0,95. Tröskeln är det högsta av FTP ur ett test i perioden, bästa timmen
+och 95 % av bästa 20 minuterna. Vikten tas från senaste testet med vikt.
+
+Texten säger var adepten är starkast och svagast mot tabellen och vilken form
+profilen har – sprinter, förföljare, tempo och klättring, eller tröskeln efter
+syreupptaget – med vad det brukar betyda för träningen. Två förbehåll går före
+tolkningen: längder som färre än tre pass bär, och en träningskurva som ligger
+långt under FTP ur testet. I det senare fallet har passen inte varit maximala,
+och formen läses inte alls. Kortet finns också på Lopp och aktiviteter.
+
+### Metabol profil mot referensnivåer
+
+Senaste testvärdet för VO2max, effekt vid VO2max, VLamax, sprint 20 s, CP,
+tröskeln (LT2), FatMax och utnyttjandegraden vid LT2, mot referensgrupper –
+förvalt Motionär, Ambitiös och Elit för män och kvinnor
+(`src/lib/benchmarks/reference-levels.ts`). Watt räknas per kilo med vikten
+från samma test. För VLamax, som är lägre hos uthålliga elitatleter, räknas
+riktningen ur grupperna, så att uppåt alltid är mot högre nivå.
+
+Det finns ingen publicerad standardtabell för de här måtten som Coggans för
+effekt. Utgångsvärdena är därför Coachvys egna, satta ur de spann som brukar
+anges för uthållighetsinriktade cyklister, och märkta så i gränssnittet.
+Coachen byter dem under **Inställningar → Referensnivåer**: värden per mått och
+kön, namn, ordning och upp till fem grupper – till exempel en för svensk elit
+ur egna labbdata. De sparas som JSON på coachraden
+(`coaches.reference_levels`), kontrolleras när de läses, och adepterna ser
+samma nivåer som sin coach.
+
+### Gap mot målet
+
+Coachen sätter en **målnivå** per adept – en av referensgrupperna
+(`adepts.target_level`). Gapet räknas mått för mått som andel av målvärdet, åt
+det håll som är bättre (`src/lib/benchmarks/gap.ts`), sorterat med störst
+avstånd först. Tolkningen följer hur en metabol profil brukar läsas: motorn
+(VO2max) mot hur stor del av den tröskeln utnyttjar, en hög VLamax som drar ned
+tröskeln och fettförbränningen, FatMax för bränsleekonomin och sprinten.
+
+**Tävlingsmålen** – de kommande tävlingarna i säsongsplanen, A först – tolkas
+ur distans och mål i fri text, som "315 km" och "under 9 timmar", "Halvmaraton"
+och "sub 1:29:30" (`src/lib/benchmarks/race-goal.ts`). "2:59" kan vara timmar
+eller minuter; det som ger en rimlig fart för grenen väljs.
+
+- **Löpning** jämförs mot prognosen ur testerna: adeptens egen fartkurva och
+  VDOT. Marginalen, eller hur mycket snabbare fart målet kräver och per vecka
+  fram till loppet.
+- **Cykling** har ingen sådan prognos – farten beror på bana, vind och klunga.
+  I stället räknas effekten målet kräver solo på platt väg (CdA 0,32 i
+  underdelen, 0,25 i tempoposition för tempolopp, Crr 0,0033, 9,5 kg cykel och
+  utrustning) och läggs mot vad som brukar gå att hålla: hela FTP i en timme och
+  omkring 11 % mindre per fördubblad tid – ca 0,89 för 2 h, 0,78 för 4 h och
+  0,65 för 9 h. En grov tumregel som stämmer med vanliga IF-nivåer, och
+  texten säger att klunga, backar och vind inte räknas.
+
+Samma gap, effektprofil och tävlingsmål går med i AI-coachens underlag
+(`src/lib/benchmarks/summary.ts`), så att svaren bygger på samma tal som
+coachen ser.
 
 ## Tempo och fart i resultat och zoner
 

@@ -3,9 +3,12 @@ import { ActivityList } from "@/components/activities/activity-list";
 import { ActivityUpload } from "@/components/activities/activity-upload";
 import { DevelopmentCard } from "@/components/activities/development-card";
 import { TrainingProfile } from "@/components/activities/training-profile";
+import { PowerBenchmark } from "@/components/benchmarks/power-benchmark";
 import { analyseTraining } from "@/lib/activities/development";
 import { listActivities } from "@/lib/activities/queries";
 import { candidatesFrom, pickReference } from "@/lib/activities/reference";
+import { getAdeptProfile } from "@/lib/adepts/profile";
+import { adeptValues } from "@/lib/benchmarks/values";
 import { listRaces } from "@/lib/season/queries";
 import { todayIso } from "@/lib/season/season";
 import { protocolByKey } from "@/lib/tests/protocols";
@@ -33,10 +36,11 @@ export async function AdeptActivities({
   /** Adressen som visar hela listan. */
   moreHref: string;
 }) {
-  const [activities, races, sessions] = await Promise.all([
+  const [activities, races, sessions, profile] = await Promise.all([
     listActivities(adept.id),
     listRaces(adept.id),
     listSessions(adept.id),
+    getAdeptProfile(adept.id),
   ]);
   const today = todayIso();
   const candidates = candidatesFrom(
@@ -48,6 +52,19 @@ export async function AdeptActivities({
     cs: pickReference(candidates, today, "löpning").cs,
   });
   const raceNames = Object.fromEntries(races.map((r) => [r.id, r.name]));
+  // Vikt, kön och FTP för effektprofilen mot Coggans tabell.
+  const body = adeptValues(sessions, {
+    profileSex: profile?.sex ?? null,
+    protocolLabel: (key) => protocolByKey(key)?.label ?? key,
+  });
+  const sources = activities.map((a) => ({
+    id: a.id,
+    name: a.name,
+    sport: a.sport,
+    performed_on: a.performed_on,
+    curve: a.curve,
+    best: a.sport === "löpning" ? a.best : null,
+  }));
   const competitions = activities.filter((a) => a.is_race || a.race_id);
   const planned = competitions.filter((a) => a.race_id).length;
   const unplanned = competitions.length - planned;
@@ -84,15 +101,17 @@ export async function AdeptActivities({
 
       <TrainingProfile
         adeptId={adept.id}
-        sources={activities.map((a) => ({
-          id: a.id,
-          name: a.name,
-          sport: a.sport,
-          performed_on: a.performed_on,
-          curve: a.curve,
-          best: a.sport === "löpning" ? a.best : null,
-        }))}
+        sources={sources}
         candidates={candidates}
+        today={today}
+      />
+
+      <PowerBenchmark
+        sources={sources}
+        weightKg={body.weightKg}
+        weightDate={body.weightDate}
+        sex={body.sex}
+        testFtp={body.ftp}
         today={today}
       />
 
