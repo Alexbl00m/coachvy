@@ -12,6 +12,10 @@
  * från ett startdatum. Medlemmen kan sedan justera veckorna per fas inom
  * fasens gränser innan planen startar.
  *
+ * Är det längre till loppet än planen kan vara går den i flera varv
+ * (`rounds.ts`): varje varv är planen kortad till varvets längd, och varven
+ * läggs efter varandra med loppet i det sista.
+ *
  * Modulen är ren: datum in, datum ut, inga klockor.
  */
 
@@ -40,6 +44,10 @@ export type PeriodizationInput = {
   length?: number;
   /** Medlemmens egna veckor per fas. Vinner över `length`. */
   counts?: Record<string, number>;
+  /** Varvens längd. Fler än ett: planen går i varv och `length` gäller inte. */
+  rounds?: number[];
+  /** Medlemmens egna veckor per fas i varje varv. Vinner över `rounds`. */
+  roundCounts?: (Record<string, number> | null | undefined)[];
 };
 
 export type PhaseSpan = {
@@ -55,6 +63,19 @@ export type PhaseSpan = {
   endsOn: string;
 };
 
+export type RoundPlan = {
+  /** 1 är första varvet. */
+  round: number;
+  weeks: number;
+  fromWeek: number;
+  toWeek: number;
+  startsOn: string;
+  endsOn: string;
+  phases: PhaseSpan[];
+  /** Fasernas veckor i varvet, för att justera dem. */
+  counts: Record<string, number>;
+};
+
 export type Periodization =
   | {
       ok: true;
@@ -63,7 +84,10 @@ export type Periodization =
       length: number;
       /** Planveckan loppet ligger i. Null utan lopp. */
       raceWeek: number | null;
+      /** Alla varvens faser i ordning. */
       phases: PhaseSpan[];
+      /** Ett varv när planen inte går i varv. */
+      rounds: RoundPlan[];
       /** Mallveckornas id i planens ordning. */
       weekMap: string[];
       notes: string[];
@@ -137,6 +161,79 @@ export function trimCounts(
   return counts;
 }
 
+/** Fasernas veckor ur medlemmens val, kontrollerade mot fasernas gränser. */
+function explicitCounts(
+  phases: Phase[],
+  bounds: Record<string, { min: number; max: number }>,
+  wanted: Record<string, number>,
+): Record<string, number> | string {
+  const counts: Record<string, number> = {};
+  for (const phase of phases) {
+    const n = wanted[phase.id] ?? bounds[phase.id].max;
+    const { min, max } = bounds[phase.id];
+    if (n < min || n > max) {
+      return min === max
+        ? `${phase.name} har ${max} veckor och kortas inte.`
+        : `${phase.name} kan vara ${min}–${max} veckor.`;
+    }
+    counts[phase.id] = n;
+  }
+  return counts;
+}
+
+/**
+ * Ett varv lagt från `fromWeek`. Varje fas behåller sina sista veckor:
+ * kortningen sker från fasens början.
+ */
+function layRound(input: {
+  round: number;
+  phases: Phase[];
+  weeks: TemplateWeek[];
+  counts: Record<string, number>;
+  startDate: string;
+  fromWeek: number;
+}): { plan: RoundPlan; weekMap: string[] } {
+  const { phases, weeks, counts, startDate } = input;
+  const weekMap: string[] = [];
+  const spans: PhaseSpan[] = [];
+  const offset = input.fromWeek - 1;
+  for (const phase of phases) {
+    const own = weeks.filter((w) => w.phaseId === phase.id);
+    const kept = own.slice(own.length - counts[phase.id]);
+    if (kept.length === 0) continue;
+    const fromWeek = offset + weekMap.length + 1;
+    weekMap.push(...kept.map((w) => w.id));
+    const toWeek = offset + weekMap.length;
+    spans.push({
+      phaseId: phase.id,
+      name: phase.name,
+      seasonPhase: phase.seasonPhase,
+      weeks: kept.length,
+      trimmed: own.length - kept.length,
+      fromWeek,
+      toWeek,
+      startsOn: addDays(startDate, (fromWeek - 1) * 7),
+      endsOn: addDays(startDate, toWeek * 7 - 1),
+    });
+  }
+  const toWeek = offset + weekMap.length;
+  return {
+    weekMap,
+    plan: {
+      round: input.round,
+      weeks: weekMap.length,
+      fromWeek: input.fromWeek,
+      toWeek,
+      startsOn: addDays(startDate, offset * 7),
+      endsOn: addDays(startDate, toWeek * 7 - 1),
+      phases: spans,
+      counts,
+    },
+  };
+}
+
+const weeksText = (n: number) => `${n} ${n === 1 ? "vecka" : "veckor"}`;
+
 export function proposePeriodization(input: PeriodizationInput): Periodization {
   const phases = [...input.phases].sort(byPosition);
   const weeks = [...input.weeks].sort(byPosition);
@@ -147,40 +244,59 @@ export function proposePeriodization(input: PeriodizationInput): Periodization {
 
   // Hur många veckor ryms före loppet?
   let available = Infinity;
+  let firstStart: string | null = null;
   let raceWeekStart: string | null = null;
   if (goal.mode === "lopp") {
-    const start = nextWeekStart(goal.earliest, goal.weekStart);
+    firstStart = nextWeekStart(goal.earliest, goal.weekStart);
     raceWeekStart = weekStartOn(goal.raceDate, goal.weekStart);
     if (goal.raceDate < goal.earliest) {
       return { ok: false, error: "Loppet har redan varit." };
     }
-    available = Math.floor(daysBetween(start, raceWeekStart) / 7) + 1;
+    available = Math.floor(daysBetween(firstStart, raceWeekStart) / 7) + 1;
     if (available < input.minWeeks) {
       return {
         ok: false,
-        error: `Det är ${Math.max(0, available)} ${available === 1 ? "vecka" : "veckor"} kvar till loppet, och planen behöver minst ${input.minWeeks}. Välj ett senare lopp eller starta utan lopp.`,
+        error: `Det är ${weeksText(Math.max(0, available))} kvar till loppet, och planen behöver minst ${input.minWeeks}. Välj ett senare lopp eller starta utan lopp.`,
       };
     }
   }
 
-  let counts: Record<string, number>;
+  // Fasernas veckor, varv för varv.
+  const multi = (input.rounds?.length ?? 0) > 1;
+  const roundCounts: Record<string, number>[] = [];
   let notes: string[] = [];
-  if (input.counts) {
-    counts = {};
-    for (const phase of phases) {
-      const n = input.counts[phase.id] ?? bounds[phase.id].max;
-      const { min, max } = bounds[phase.id];
-      if (n < min || n > max) {
+  if (multi) {
+    const rounds = input.rounds!;
+    for (let i = 0; i < rounds.length; i += 1) {
+      const own = input.roundCounts?.[i];
+      if (own) {
+        const counts = explicitCounts(phases, bounds, own);
+        if (typeof counts === "string") {
+          return { ok: false, error: `Varv ${i + 1}: ${counts}` };
+        }
+        roundCounts.push(counts);
+        continue;
+      }
+      const r = rounds[i];
+      if (!Number.isInteger(r) || r < input.minWeeks || r > maxWeeks) {
         return {
           ok: false,
-          error:
-            min === max
-              ? `${phase.name} har ${max} veckor och kortas inte.`
-              : `${phase.name} kan vara ${min}–${max} veckor.`,
+          error: `Varv ${i + 1} ska vara ${input.minWeeks}–${maxWeeks} veckor, inte ${r}.`,
         };
       }
-      counts[phase.id] = n;
+      const trimmed = trimCounts(phases, weeks, r);
+      if (!trimmed) {
+        return {
+          ok: false,
+          error: `Planen kan inte kortas till ${r} veckor.`,
+        };
+      }
+      roundCounts.push(trimmed);
     }
+  } else if (input.counts) {
+    const counts = explicitCounts(phases, bounds, input.counts);
+    if (typeof counts === "string") return { ok: false, error: counts };
+    roundCounts.push(counts);
   } else {
     const wanted = Math.min(input.length ?? maxWeeks, maxWeeks, available);
     const trimmed = trimCounts(phases, weeks, wanted);
@@ -190,7 +306,7 @@ export function proposePeriodization(input: PeriodizationInput): Periodization {
         error: `Planen kan inte kortas till ${wanted} veckor.`,
       };
     }
-    counts = trimmed;
+    roundCounts.push(trimmed);
     if (input.length !== undefined && input.length > available) {
       notes.push(
         `Det får plats ${available} veckor före loppet, så planen blev ${wanted} veckor i stället för ${input.length}.`,
@@ -198,12 +314,21 @@ export function proposePeriodization(input: PeriodizationInput): Periodization {
     }
   }
 
-  const length = Object.values(counts).reduce((s, n) => s + n, 0);
-  if (length < input.minWeeks || length > maxWeeks) {
-    return {
-      ok: false,
-      error: `Planen ska vara ${input.minWeeks}–${maxWeeks} veckor, inte ${length}.`,
-    };
+  const lengths = roundCounts.map((c) =>
+    Object.values(c).reduce((s, n) => s + n, 0),
+  );
+  for (let i = 0; i < lengths.length; i += 1) {
+    if (lengths[i] < input.minWeeks || lengths[i] > maxWeeks) {
+      const what = multi ? `Varv ${i + 1}` : "Planen";
+      return {
+        ok: false,
+        error: `${what} ska vara ${input.minWeeks}–${maxWeeks} veckor, inte ${lengths[i]}.`,
+      };
+    }
+  }
+  const length = lengths.reduce((s, n) => s + n, 0);
+  if (length > 104) {
+    return { ok: false, error: "En plan kan vara högst 104 veckor." };
   }
   if (length > available) {
     return {
@@ -217,38 +342,46 @@ export function proposePeriodization(input: PeriodizationInput): Periodization {
       ? addDays(raceWeekStart!, -(length - 1) * 7)
       : goal.startDate;
 
-  // Varje fas behåller sina sista veckor: kortningen sker från fasens början.
   const weekMap: string[] = [];
-  const spans: PhaseSpan[] = [];
-  for (const phase of phases) {
-    const own = weeks.filter((w) => w.phaseId === phase.id);
-    const kept = own.slice(own.length - counts[phase.id]);
-    if (kept.length === 0) continue;
-    const fromWeek = weekMap.length + 1;
-    weekMap.push(...kept.map((w) => w.id));
-    spans.push({
-      phaseId: phase.id,
-      name: phase.name,
-      seasonPhase: phase.seasonPhase,
-      weeks: kept.length,
-      trimmed: own.length - kept.length,
-      fromWeek,
-      toWeek: weekMap.length,
-      startsOn: addDays(startDate, (fromWeek - 1) * 7),
-      endsOn: addDays(startDate, weekMap.length * 7 - 1),
+  const rounds: RoundPlan[] = [];
+  for (const [i, counts] of roundCounts.entries()) {
+    const laid = layRound({
+      round: i + 1,
+      phases,
+      weeks,
+      counts,
+      startDate,
+      fromWeek: weekMap.length + 1,
     });
+    weekMap.push(...laid.weekMap);
+    rounds.push(laid.plan);
   }
+  const spans = rounds.flatMap((r) => r.phases);
 
-  for (const span of spans) {
-    if (span.trimmed > 0) {
-      notes.push(
-        `${span.name} är ${span.weeks} ${span.weeks === 1 ? "vecka" : "veckor"}, ${span.trimmed} kortare än i full längd.`,
-      );
+  for (const round of rounds) {
+    for (const span of round.phases) {
+      if (span.trimmed > 0) {
+        notes.push(
+          `${multi ? `Varv ${round.round}: ` : ""}${span.name} är ${weeksText(span.weeks)}, ${span.trimmed} kortare än i full längd.`,
+        );
+      }
     }
   }
+  if (multi) {
+    notes = [
+      `Planen går i ${rounds.length} varv: ${lengths.join(" + ")} veckor. Varven före det sista slutar med ett testlopp.`,
+      ...notes,
+    ];
+  }
   if (goal.mode === "lopp") {
+    const wait = Math.round(daysBetween(firstStart!, startDate) / 7);
     notes = [
       `Loppet ligger i vecka ${length}, en ${WEEKDAY_NAMES[weekdayIndex(goal.raceDate)]}.`,
+      ...(wait > 0
+        ? [
+            `Planen börjar om ${weeksText(wait)}. Fram till dess: lugn grundträning.`,
+          ]
+        : []),
       ...notes,
     ];
   }
@@ -260,6 +393,7 @@ export function proposePeriodization(input: PeriodizationInput): Periodization {
     length,
     raceWeek: goal.mode === "lopp" ? length : null,
     phases: spans,
+    rounds,
     weekMap,
     notes,
   };

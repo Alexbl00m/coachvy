@@ -1,5 +1,6 @@
 import type { Sport } from "@/lib/calculators/lactate";
 import {
+  BASIS_LABEL,
   formatDuration,
   formatPace,
   type ResolvedStep,
@@ -25,5 +26,5 @@ export function targetText(step: ResolvedStep, sport: Sport): string {
 export function percentText(step: ResolvedStep, basis: TargetBasis): string {
   const low = Math.round(step.lowFraction * 100);
   const high = Math.round(step.highFraction * 100);
-  return `${low === high ? low : `${low}–${high}`} % av ${basis}`;
+  return `${low === high ? low : `${low}–${high}`} % av ${BASIS_LABEL[basis]}`;
 }

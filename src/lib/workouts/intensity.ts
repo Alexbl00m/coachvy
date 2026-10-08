@@ -16,6 +16,9 @@
  *   72–82 % av CS, maratonfart kring 85–90 %.
  * - **CSS** (simning) är också en fart, men vattnets motstånd växer så brant
  *   med farten att några procent är ett helt zonsteg.
+ * - **5K och MP** (5 km-fart och maratonfart) är CS-gränserna omräknade:
+ *   5 km-farten ligger kring 104 % av CS och maratonfarten kring 87,5 %. 5 km-
+ *   fart blir då VO2max och maratonfart tempo.
  */
 
 import type { TargetBasis } from "./schema";
@@ -43,6 +46,8 @@ const CUTS: Record<TargetBasis, [number, number, number, number, number]> = {
   CP: [0.53, 0.72, 0.87, 1.01, 1.15],
   CS: [0.72, 0.82, 0.9, 1.0, 1.08],
   CSS: [0.86, 0.92, 0.97, 1.02, 1.07],
+  "5K": [0.69, 0.79, 0.87, 0.96, 1.04],
+  MP: [0.82, 0.94, 1.03, 1.14, 1.23],
 };
 
 /** Zonen för ett mål angivet som andel av referensen. */

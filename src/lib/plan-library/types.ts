@@ -34,6 +34,18 @@ export type TemplateWeek = {
   /** Ordningen i en plan av maxlängd. */
   position: number;
   kind: WeekKind;
+  /** Avstämning: formuppskattningen ses över i slutet av veckan. */
+  checkpoint?: boolean;
+};
+
+export type VolumeUnit = "km" | "h";
+
+/** Veckans volym på en nivå: ett tal, eller ett spann. */
+export type WeekVolume = {
+  weekId: string;
+  levelId: string;
+  min: number;
+  max: number | null;
 };
 
 export type Variant = {

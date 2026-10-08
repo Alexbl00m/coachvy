@@ -23,6 +23,8 @@ const NOMINAL: Record<TargetBasis, { sport: Sport; reference: number }> = {
   CS: { sport: "löpning", reference: 4.2 },
   LT2: { sport: "löpning", reference: 4.2 },
   CSS: { sport: "simning", reference: 1.35 },
+  "5K": { sport: "löpning", reference: 4.37 },
+  MP: { sport: "löpning", reference: 3.68 },
 };
 
 export const sportForBasis = (basis: TargetBasis): Sport =>

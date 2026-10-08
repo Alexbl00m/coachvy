@@ -34,10 +34,33 @@ export const STEP_KINDS: StepKind[] = [
   "nedvarvning",
 ];
 
-/** Vad procenttalen räknas mot. Alla finns som mätta värden i appen. */
-export type TargetBasis = "FTP" | "CP" | "CS" | "CSS" | "LT2";
+/**
+ * Vad procenttalen räknas mot. De fem första finns som mätta värden i appen.
+ * 5K och MP – 5 km-fart och maratonfart – är löparens formuppskattning, som
+ * planbibliotekets löpplaner räknar mot.
+ */
+export type TargetBasis = "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP";
 
-export const TARGET_BASES: TargetBasis[] = ["FTP", "CP", "CS", "CSS", "LT2"];
+export const TARGET_BASES: TargetBasis[] = [
+  "FTP",
+  "CP",
+  "CS",
+  "CSS",
+  "LT2",
+  "5K",
+  "MP",
+];
+
+/** Basen i löptext: "95 % av 5 km-fart". */
+export const BASIS_LABEL: Record<TargetBasis, string> = {
+  FTP: "FTP",
+  CP: "CP",
+  CS: "CS",
+  CSS: "CSS",
+  LT2: "LT2",
+  "5K": "5 km-fart",
+  MP: "maratonfart",
+};
 
 export type WorkoutStep = {
   kind: StepKind;

@@ -208,7 +208,8 @@ function inferKinds(
 const sv = (v: number) =>
   (Math.round(v * 100) / 100).toString().replace(".", ",");
 
-function formatAmount(step: WorkoutStep): string {
+/** Stegets längd: "4 min", "1:30", "1,5 km" eller "400 m". */
+export function formatAmount(step: WorkoutStep): string {
   if (step.durationSeconds) {
     const s = step.durationSeconds;
     if (s % 3600 === 0) return `${s / 3600} h`;

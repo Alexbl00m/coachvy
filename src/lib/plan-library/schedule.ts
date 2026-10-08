@@ -18,6 +18,7 @@ import { addDays } from "@/lib/season/season";
 
 import { levelForWeek } from "./levels";
 import { planWeekOf, planWeekStart } from "./periodization";
+import { roundOf, roundSpans } from "./rounds";
 import type {
   LevelChange,
   LogStatus,
@@ -27,7 +28,9 @@ import type {
   TemplateWeek,
   Variant,
   WeekKind,
+  WeekVolume,
 } from "./types";
+import { volumeFor, type VolumeRange } from "./volume";
 
 export type SessionState = "original" | "flyttad" | "ersatt" | "struken";
 
@@ -55,6 +58,14 @@ export type ScheduleWeek = {
   phaseId: string;
   kind: WeekKind;
   levelId: string;
+  /** Varvet veckan ligger i, 1 är första. */
+  round: number;
+  /** Sista veckan i ett varv som inte är det sista: ett testlopp. */
+  roundEnd: boolean;
+  /** Formuppskattningen ses över i slutet av veckan. */
+  checkpoint: boolean;
+  /** Veckans volym på veckans nivå. */
+  volume: VolumeRange | null;
   sessions: ScheduledSession[];
 };
 
@@ -70,7 +81,11 @@ export function buildSchedule(input: {
   changes: LevelChange[];
   overrides: Override[];
   logs: SessionLog[];
+  /** Varvens längd. Null: ett varv. */
+  rounds?: number[] | null;
+  volumes?: WeekVolume[];
 }): ScheduleWeek[] {
+  const rounds = roundSpans(input.rounds, input.weekMap.length);
   const weeksById = new Map(input.templateWeeks.map((w) => [w.id, w]));
   const overrides = new Map(
     input.overrides.map((o) => [sessionKey(o.planWeek, o.sessionId), o]),
@@ -134,6 +149,12 @@ export function buildSchedule(input: {
         phaseId: tw.phaseId,
         kind: tw.kind,
         levelId,
+        round: roundOf(rounds, week).round,
+        roundEnd: rounds.some(
+          (r) => r.toWeek === week && r.round < rounds.length,
+        ),
+        checkpoint: tw.checkpoint ?? false,
+        volume: volumeFor(input.volumes ?? [], templateWeekId, levelId),
         sessions,
       },
     ];
