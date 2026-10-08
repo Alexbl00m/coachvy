@@ -128,6 +128,7 @@ export type PlanLibraryTables = {
       created_by: string | null;
       created_at: string;
       updated_at: string;
+      volume_unit: "km" | "h";
     };
     Insert: {
       id?: string;
@@ -146,6 +147,7 @@ export type PlanLibraryTables = {
       created_by?: string | null;
       created_at?: string;
       updated_at?: string;
+      volume_unit?: "km" | "h";
     };
     Update: {
       id?: string;
@@ -164,6 +166,7 @@ export type PlanLibraryTables = {
       created_by?: string | null;
       created_at?: string;
       updated_at?: string;
+      volume_unit?: "km" | "h";
     };
     Relationships: [];
   };
@@ -278,6 +281,7 @@ export type PlanLibraryTables = {
       kind: "normal" | "avlastning" | "test" | "tävling";
       title: string | null;
       note: string | null;
+      checkpoint: boolean;
     };
     Insert: {
       id?: string;
@@ -287,6 +291,7 @@ export type PlanLibraryTables = {
       kind?: "normal" | "avlastning" | "test" | "tävling";
       title?: string | null;
       note?: string | null;
+      checkpoint?: boolean;
     };
     Update: {
       id?: string;
@@ -296,6 +301,7 @@ export type PlanLibraryTables = {
       kind?: "normal" | "avlastning" | "test" | "tävling";
       title?: string | null;
       note?: string | null;
+      checkpoint?: boolean;
     };
     Relationships: [];
   };
@@ -345,7 +351,7 @@ export type PlanLibraryTables = {
       duration_s: number | null;
       distance_m: number | null;
       zone: string | null;
-      basis: "FTP" | "CP" | "CS" | "CSS" | "LT2" | null;
+      basis: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
       blocks: Json | null;
     };
     Insert: {
@@ -357,7 +363,7 @@ export type PlanLibraryTables = {
       duration_s?: number | null;
       distance_m?: number | null;
       zone?: string | null;
-      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | null;
+      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
       blocks?: Json | null;
     };
     Update: {
@@ -369,8 +375,35 @@ export type PlanLibraryTables = {
       duration_s?: number | null;
       distance_m?: number | null;
       zone?: string | null;
-      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | null;
+      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
       blocks?: Json | null;
+    };
+    Relationships: [];
+  };
+  plan_template_week_volumes: {
+    Row: {
+      id: string;
+      version_id: string;
+      week_id: string;
+      level_id: string;
+      volume_min: number;
+      volume_max: number | null;
+    };
+    Insert: {
+      id?: string;
+      version_id: string;
+      week_id: string;
+      level_id: string;
+      volume_min: number;
+      volume_max?: number | null;
+    };
+    Update: {
+      id?: string;
+      version_id?: string;
+      week_id?: string;
+      level_id?: string;
+      volume_min?: number;
+      volume_max?: number | null;
     };
     Relationships: [];
   };
@@ -393,6 +426,7 @@ export type PlanLibraryTables = {
       created_at: string;
       updated_at: string;
       ended_at: string | null;
+      rounds: Json | null;
     };
     Insert: {
       id?: string;
@@ -412,6 +446,7 @@ export type PlanLibraryTables = {
       created_at?: string;
       updated_at?: string;
       ended_at?: string | null;
+      rounds?: Json | null;
     };
     Update: {
       id?: string;
@@ -431,6 +466,7 @@ export type PlanLibraryTables = {
       created_at?: string;
       updated_at?: string;
       ended_at?: string | null;
+      rounds?: Json | null;
     };
     Relationships: [];
   };
@@ -693,6 +729,39 @@ export type PlanLibraryTables = {
         | "avslutad"
         | "avbruten";
       detail?: Json | null;
+      created_by?: string | null;
+      created_at?: string;
+    };
+    Relationships: [];
+  };
+  fitness_estimates: {
+    Row: {
+      id: string;
+      adept_id: string;
+      sport: string;
+      five_k_seconds: number | null;
+      marathon_seconds: number | null;
+      note: string | null;
+      created_by: string | null;
+      created_at: string;
+    };
+    Insert: {
+      id?: string;
+      adept_id: string;
+      sport?: string;
+      five_k_seconds?: number | null;
+      marathon_seconds?: number | null;
+      note?: string | null;
+      created_by?: string | null;
+      created_at?: string;
+    };
+    Update: {
+      id?: string;
+      adept_id?: string;
+      sport?: string;
+      five_k_seconds?: number | null;
+      marathon_seconds?: number | null;
+      note?: string | null;
       created_by?: string | null;
       created_at?: string;
     };

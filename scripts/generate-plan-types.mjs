@@ -33,12 +33,14 @@ const TABLES = [
   "plan_template_weeks",
   "plan_template_sessions",
   "plan_template_session_variants",
+  "plan_template_week_volumes",
   "plan_instances",
   "plan_level_changes",
   "plan_session_overrides",
   "plan_session_logs",
   "plan_ai_suggestions",
   "plan_instance_events",
+  "fitness_estimates",
 ];
 
 const FUNCTIONS = [

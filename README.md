@@ -82,8 +82,9 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
    `20261007090000_reference_levels.sql`,
-   `20261007120000_plan_library.sql` och
-   `20261008090000_plan_library_example.sql`.
+   `20261007120000_plan_library.sql`,
+   `20261008090000_plan_library_example.sql` och
+   `20261008120000_plan_library_paces_rounds.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
