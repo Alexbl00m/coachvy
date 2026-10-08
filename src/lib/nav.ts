@@ -7,6 +7,9 @@ import {
   Dumbbell,
   FlaskConical,
   Gauge,
+  LayoutTemplate,
+  Library,
+  ListChecks,
   MessagesSquare,
   Settings,
   ShieldCheck,
@@ -45,7 +48,14 @@ const allSections: NavSection[] = [
         // Adepter ser den också: som medlem bygger de egna pass, annars
         // visar sidan vad medlemskapet ger.
       },
-      { label: "Planer", href: routes.plans, icon: ClipboardList },
+      { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
+      { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
+      {
+        label: "Min plan",
+        href: routes.myPlan,
+        icon: ListChecks,
+        audience: "adept",
+      },
       {
         label: "Lopp och aktiviteter",
         href: routes.activities,
@@ -84,6 +94,12 @@ const allSections: NavSection[] = [
       },
       { label: "Inställningar", href: routes.settings, icon: Settings },
       { label: "Admin", href: routes.admin, icon: UserCog, audience: "admin" },
+      {
+        label: "Planmallar",
+        href: routes.planTemplates,
+        icon: LayoutTemplate,
+        audience: "admin",
+      },
     ],
   },
 ];

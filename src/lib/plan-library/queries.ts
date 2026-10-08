@@ -284,32 +284,37 @@ export type LibraryEntry = {
   version: VersionRow;
   category: CategoryRow | null;
   levels: LevelRow[];
-  phases: Pick<PhaseRow, "id" | "name" | "position" | "specificity">[];
+  phases: (Pick<PhaseRow, "id" | "name" | "position" | "specificity"> & {
+    weeks: number;
+  })[];
 };
 
 export async function listLibrary(): Promise<LibraryEntry[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
-  const [templates, versions, categories, levels, phases] = await Promise.all([
-    supabase.from("plan_templates").select("*").is("archived_at", null),
-    supabase
-      .from("plan_template_versions")
-      .select("*")
-      .eq("status", "publicerad"),
-    supabase.from("plan_categories").select("*").order("sort"),
-    supabase
-      .from("plan_template_levels")
-      .select("*")
-      .order("rank", { ascending: false }),
-    supabase
-      .from("plan_template_phases")
-      .select("id, version_id, name, position, specificity")
-      .order("position"),
-  ]);
+  const [templates, versions, categories, levels, phases, weeks] =
+    await Promise.all([
+      supabase.from("plan_templates").select("*").is("archived_at", null),
+      supabase
+        .from("plan_template_versions")
+        .select("*")
+        .eq("status", "publicerad"),
+      supabase.from("plan_categories").select("*").order("sort"),
+      supabase
+        .from("plan_template_levels")
+        .select("*")
+        .order("rank", { ascending: false }),
+      supabase
+        .from("plan_template_phases")
+        .select("id, version_id, name, position, specificity")
+        .order("position"),
+      supabase.from("plan_template_weeks").select("phase_id"),
+    ]);
   const ts = rows(templates, "mallarna");
   const cs = rows(categories, "målen");
   const ls = rows(levels, "nivåerna");
   const ps = rows(phases, "faserna");
+  const ws = rows(weeks, "veckorna");
   const entries: LibraryEntry[] = [];
   for (const version of rows(versions, "versionerna")) {
     const template = ts.find((t) => t.id === version.template_id);
@@ -319,7 +324,12 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
       version,
       category: cs.find((c) => c.id === template.category_id) ?? null,
       levels: ls.filter((l) => l.version_id === version.id),
-      phases: ps.filter((p) => p.version_id === version.id),
+      phases: ps
+        .filter((p) => p.version_id === version.id)
+        .map((p) => ({
+          ...p,
+          weeks: ws.filter((w) => w.phase_id === p.id).length,
+        })),
     });
   }
   // Målens ordning, sedan titeln.
@@ -355,4 +365,100 @@ export async function loadPublishedBySlug(
     "versionen",
   );
   return version ? loadVersion(version.id) : null;
+}
+
+// ---------------------------------------------------------------------------
+// Medlemmens planer
+// ---------------------------------------------------------------------------
+
+export type InstanceRow = Row<"plan_instances">;
+export type LevelChangeRow = Row<"plan_level_changes">;
+export type OverrideRow = Row<"plan_session_overrides">;
+export type LogRow = Row<"plan_session_logs">;
+export type SuggestionRow = Row<"plan_ai_suggestions">;
+export type EventRow = Row<"plan_instance_events">;
+
+/** En adepts planer, den senast startade först. */
+export async function listInstances(adeptId: string): Promise<InstanceRow[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  return rows(
+    await supabase
+      .from("plan_instances")
+      .select("*")
+      .eq("adept_id", adeptId)
+      .order("created_at", { ascending: false }),
+    "planerna",
+  );
+}
+
+export async function getActiveInstance(
+  adeptId: string,
+): Promise<InstanceRow | null> {
+  const all = await listInstances(adeptId);
+  return all.find((i) => i.status === "aktiv") ?? null;
+}
+
+export type InstanceContent = {
+  instance: InstanceRow;
+  content: VersionContent;
+  changes: LevelChangeRow[];
+  overrides: OverrideRow[];
+  logs: LogRow[];
+  suggestions: SuggestionRow[];
+  events: EventRow[];
+};
+
+/** En plan med sin version och allt medlemmen gjort i den. */
+export async function loadInstance(
+  instanceId: string,
+): Promise<InstanceContent | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createClient();
+  const instance = one(
+    await supabase
+      .from("plan_instances")
+      .select("*")
+      .eq("id", instanceId)
+      .maybeSingle(),
+    "planen",
+  );
+  if (!instance) return null;
+  const [content, changes, overrides, logs, suggestions, events] =
+    await Promise.all([
+      loadVersion(instance.version_id),
+      supabase
+        .from("plan_level_changes")
+        .select("*")
+        .eq("instance_id", instanceId)
+        .order("created_at"),
+      supabase
+        .from("plan_session_overrides")
+        .select("*")
+        .eq("instance_id", instanceId),
+      supabase
+        .from("plan_session_logs")
+        .select("*")
+        .eq("instance_id", instanceId),
+      supabase
+        .from("plan_ai_suggestions")
+        .select("*")
+        .eq("instance_id", instanceId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("plan_instance_events")
+        .select("*")
+        .eq("instance_id", instanceId)
+        .order("created_at"),
+    ]);
+  if (!content) return null;
+  return {
+    instance,
+    content,
+    changes: rows(changes, "nivåhistoriken"),
+    overrides: rows(overrides, "ändringarna"),
+    logs: rows(logs, "loggen"),
+    suggestions: rows(suggestions, "förslagen"),
+    events: rows(events, "händelserna"),
+  };
 }

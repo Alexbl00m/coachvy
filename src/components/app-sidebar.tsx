@@ -22,6 +22,12 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const navSections = getNavSections(role, isAdmin);
+  // Den mest specifika länken vinner: Planmallar ligger under Planbiblioteket,
+  // och bara den ena ska vara markerad.
+  const activeHref = navSections
+    .flatMap((section) => section.items.map((item) => item.href))
+    .filter((href) => isActive(pathname, href))
+    .sort((a, b) => b.length - a.length)[0];
 
   return (
     <nav
@@ -36,7 +42,7 @@ export function AppSidebar({
             </p>
           )}
           {section.items.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = item.href === activeHref;
             const Icon = item.icon;
 
             return (
