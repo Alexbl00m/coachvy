@@ -1478,6 +1478,32 @@ genomförts vecka för vecka (`context.ts`). Ett förslag sparas i
 godkänner det. `proposeLevelChange` i `actions.ts` är kontraktet för att
 lämna ett förslag.
 
+### Volym, tempon och varv
+
+Migrationen `20261008120000_plan_library_paces_rounds.sql` lägger till fyra
+saker för löpplaner av den typ där nivåerna skiljer sig i volym:
+
+- **Volym per nivå och vecka** (`plan_template_week_volumes`), i km eller
+  timmar. Mallverktyget har en rad per vecka med ett tal eller ett spann per
+  nivå. Planvyn räknar vad nyckelpassen täcker med löparens tempon och
+  säger hur mycket lugn löpning som är kvar att fylla på (`volume.ts`).
+- **5 km-fart och maratonfart som baser** (`5K` och `MP`). Procenten i
+  passen ligger fast; tempona räknas ur formuppskattningen (`paces.ts`):
+  den nyaste av testerna och loppen (fartprofilen) och de tider adepten
+  eller coachen skrivit in (`fitness_estimates`). Saknas maratontiden
+  räknas den ur 5 km-tiden med Riegel – med löparens egen exponent bara när
+  kurvan bygger på en lång insats – och sägs vara uträknad. En inskriven
+  tid står för sig själv: anges bara maratontiden räknas 5 km ur den.
+- **Avstämning** (`plan_template_weeks.checkpoint`): veckor där
+  formuppskattningen ses över. Planvyn påminner; ingenting ändras av sig
+  självt utöver att ett nytt test eller en ny tid ger nya tempon.
+- **Varv** (`plan_instances.rounds`). Är det längre till loppet än planen
+  kan vara går den flera varv, var och ett kortat som en kort plan, med
+  ett testlopp sist i varje varv före det sista (`rounds.ts`): 24 veckor
+  på en plan om 12–18 blir 2 × 12, 36 blir 2 × 18. Hellre ett par veckors
+  lugn träning före start än ett varv till, och högst tre varv. Nivån kan
+  väljas per varv – den sparas som vanliga byten i nivåhistoriken.
+
 ### Typer och tester
 
 Typerna för planbibliotekets tabeller genereras ur databasen:
