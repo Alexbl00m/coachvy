@@ -128,7 +128,9 @@ export function DayContent({
       ))}
       {items.workouts.map((w) => (
         <li key={w.id}>
-          <ItemLink href={`${routes.adepts}/${w.adeptId}/pass/${w.id}`}>
+          <ItemLink
+            href={w.href ?? `${routes.adepts}/${w.adeptId}/pass/${w.id}`}
+          >
             <SportIcon
               sport={w.sport}
               className="mt-0.5 size-4 shrink-0 text-text-subtle"

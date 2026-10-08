@@ -1,4 +1,4 @@
-import { Bike, FlaskConical, Footprints, Waves } from "lucide-react";
+import { Bike, Dumbbell, FlaskConical, Footprints, Waves } from "lucide-react";
 
 import type { Sport } from "@/lib/calculators/lactate";
 import { SERIES } from "@/lib/calculators/chart-colors";
@@ -79,11 +79,17 @@ export function SportIcon({
   sport,
   className,
 }: {
-  sport: Sport;
+  sport: Sport | "annat";
   className?: string;
 }) {
   const Icon =
-    sport === "löpning" ? Footprints : sport === "simning" ? Waves : Bike;
+    sport === "löpning"
+      ? Footprints
+      : sport === "simning"
+        ? Waves
+        : sport === "annat"
+          ? Dumbbell
+          : Bike;
   return <Icon aria-hidden className={className} />;
 }
 

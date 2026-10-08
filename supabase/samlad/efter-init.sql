@@ -2975,6 +2975,7 @@ alter table public.adepts
 comment on column public.adepts.target_level is
   'Id på referensgruppen adepten siktar mot, för gap-analysen.';
 
+
 -- =============================================================================
 -- 20261007120000_plan_library.sql
 -- =============================================================================
@@ -3777,6 +3778,83 @@ begin
 end;
 $$;
 
+-- Numrerar om ett utkasts veckor i fasernas ordning (1, 2, 3 …) och håller
+-- längsta längden lika med antalet veckor. Körs efter att en vecka lagts
+-- till, tagits bort eller en fas flyttats. Som den inloggade: bara admin
+-- släpps igenom, och bara medan versionen är ett utkast.
+create or replace function public.reorder_plan_weeks(draft uuid)
+returns int
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_count int;
+begin
+  update public.plan_template_weeks set position = position + 100000
+    where version_id = draft;
+  with ordered as (
+    select w.id, row_number() over (order by p.position, w.position) as n
+    from public.plan_template_weeks w
+    join public.plan_template_phases p on p.id = w.phase_id
+    where w.version_id = draft
+  )
+  update public.plan_template_weeks w set position = o.n
+    from ordered o where o.id = w.id;
+
+  select count(*) into v_count from public.plan_template_weeks where version_id = draft;
+  update public.plan_template_versions
+    set max_weeks = greatest(v_count, 1),
+        min_weeks = least(min_weeks, greatest(v_count, 1))
+    where id = draft;
+  return v_count;
+end;
+$$;
+
+-- Kopierar en vecka med pass och varianter till veckan efter den, i samma fas.
+create or replace function public.copy_plan_week(week uuid)
+returns uuid
+language plpgsql
+set search_path = public
+as $$
+declare
+  w public.plan_template_weeks%rowtype;
+  v_new uuid;
+begin
+  select * into w from public.plan_template_weeks where id = week;
+  if not found then
+    raise exception 'Ingen vecka med det id:t.' using errcode = 'P0002';
+  end if;
+  update public.plan_template_weeks set position = position + 100000
+    where version_id = w.version_id and position > w.position;
+  insert into public.plan_template_weeks (version_id, phase_id, position, kind, title, note)
+    values (w.version_id, w.phase_id, w.position + 1, w.kind, w.title, w.note)
+    returning id into v_new;
+
+  create temp table _session_map (old uuid primary key, new uuid not null) on commit drop;
+  insert into _session_map
+    select id, gen_random_uuid() from public.plan_template_sessions where week_id = week;
+  insert into public.plan_template_sessions (
+    id, version_id, week_id, day, position, discipline, type, title, description
+  )
+  select m.new, s.version_id, v_new, s.day, s.position, s.discipline, s.type, s.title, s.description
+  from public.plan_template_sessions s join _session_map m on m.old = s.id;
+  insert into public.plan_template_session_variants (
+    version_id, session_id, level_id, description, duration_s, distance_m, zone, basis, blocks
+  )
+  select x.version_id, m.new, x.level_id, x.description, x.duration_s, x.distance_m,
+    x.zone, x.basis, x.blocks
+  from public.plan_template_session_variants x join _session_map m on m.old = x.session_id;
+
+  perform public.reorder_plan_weeks(w.version_id);
+  return v_new;
+end;
+$$;
+
+revoke all on function public.reorder_plan_weeks(uuid) from public, anon;
+revoke all on function public.copy_plan_week(uuid) from public, anon;
+grant execute on function public.reorder_plan_weeks(uuid) to authenticated;
+grant execute on function public.copy_plan_week(uuid) to authenticated;
+
 revoke all on function public.publish_plan_version(uuid) from public, anon;
 revoke all on function public.new_plan_draft(uuid) from public, anon;
 grant execute on function public.publish_plan_version(uuid) to authenticated;
@@ -4199,3 +4277,181 @@ grant select, insert, update, delete on
   public.plan_session_overrides, public.plan_session_logs, public.plan_ai_suggestions
   to authenticated;
 grant select on public.plan_instance_events to authenticated;
+
+
+-- =============================================================================
+-- 20261008090000_plan_library_example.sql
+-- =============================================================================
+
+-- Exempel: ett maraton på 4–6 veckor i tre nivåer, för att prova
+-- planbiblioteket. Från generellt till specifikt: lugn volym och korta
+-- backar först, sedan tröskeln, sedan maratonfarten i allt längre avsnitt,
+-- och till sist tapern och loppet. Målen är andelar av CS (critical speed);
+-- maratonfarten ligger runt 86 %.
+--
+-- Mallen är märkt som exempel och kan arkiveras under Planmallar. Körs
+-- migrationen igen händer ingenting.
+
+do $$
+begin
+  if exists (select 1 from public.plan_templates where slug = 'maraton-exempel') then
+    return;
+  end if;
+
+  insert into public.plan_templates (id, slug, category_id, is_example)
+  values ('575ccf0f-0977-42c6-9732-cd84ff5fb49c', 'maraton-exempel',
+    (select id from public.plan_categories where key = 'maraton'), true);
+
+  insert into public.plan_template_versions (
+    id, template_id, version, status, title, summary, goal, description,
+    prerequisites, min_weeks, max_weeks
+  ) values (
+    'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '575ccf0f-0977-42c6-9732-cd84ff5fb49c', 1, 'utkast', 'Maraton (exempel)',
+    'Ett kort exempel: från lugn volym till maratonfart på sex veckor.',
+    'Genomföra ett maraton i jämn fart, med maratonfarten inövad i långpassen.',
+    'Planen går från generellt till specifikt. De första veckorna bygger volym och tålighet med lugn löpning, korta backar och styrka. Sedan höjs tröskeln och långpassen blir progressiva. I den specifika fasen springer du maratonfart i allt längre avsnitt, och sista veckan sänks volymen medan farterna ligger kvar.
+
+Farterna anges som andel av din critical speed (CS) från ett löptest. Maratonfarten ligger runt 86 % av CS.
+
+Det här är ett exempel för att prova planbiblioteket – riktiga planer är längre.',
+    'Du springer minst tre gånger i veckan och klarar en timme i lugn fart. Ett löptest med CS gör farterna exakta.',
+    4, 6
+  );
+
+  insert into public.plan_template_levels (id, version_id, rank, key, name, description, hours_min, hours_max, sessions_min, sessions_max, intensity) values
+    ('268bd371-801c-47a4-b71c-748eaea1fe5a', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 3, 'A', 'Ambitiös', 'Flera år av löpning bakom dig och runt 50 km i veckan före start.', 7, 9, 6, 7, '{"låg": 80, "medel": 12, "hög": 8}'),
+    ('8fdbeef3-3fdc-40ce-8352-d48f697f577a', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 2, 'B', 'Mellan', 'Du har sprungit regelbundet i ett år, 30–45 km i veckan.', 5, 6, 5, 5, '{"låg": 82, "medel": 12, "hög": 6}'),
+    ('e97d9f74-8e46-46c7-88e7-3220661025bc', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 1, 'C', 'Grund', 'Första maratonet eller begränsad tid, 20–30 km i veckan.', 3, 4, 4, 4, '{"låg": 85, "medel": 10, "hög": 5}');
+
+  insert into public.plan_template_phases (id, version_id, position, name, season_phase, purpose, focus, specificity, intensity, min_weeks, trim_order) values
+    ('15dc13a1-a4d7-4c26-b24e-b38894c08d70', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 1, 'Generell', 'grund', 'Bygga volym och tålighet. Ingenting är loppspecifikt ännu.', 'Lugn distans, korta backsprinter, stigningslopp och styrka.', 1, '{"låg": 85, "medel": 8, "hög": 7}', 1, 1),
+    ('578a9b77-e0ca-4afe-a8cb-cfc3e4c1ae18', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 2, 'Fundamental', 'uppbyggnad', 'Höja tröskeln och förlänga långpassen. Farterna närmar sig maratonfarten.', 'Tröskelintervaller och progressiva långpass.', 3, '{"låg": 80, "medel": 14, "hög": 6}', 1, 2),
+    ('c0603eda-ecb3-442b-a56c-f16d78aac9c1', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 3, 'Specifik', 'specifik', 'Loppet i delar: maratonfart i långa avsnitt, på trötta ben.', 'Maratonfart i block och i långpasset.', 5, '{"låg": 75, "medel": 20, "hög": 5}', 1, null),
+    ('73427bb0-0481-47eb-813d-6095c4e2d491', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 4, 'Taper', 'topp', 'Mindre volym, samma farter – utvilad till start.', 'Kort fartkänsla, vila och loppet.', 5, '{"låg": 80, "medel": 15, "hög": 5}', 1, null);
+
+  insert into public.plan_template_weeks (id, version_id, phase_id, position, kind, title) values
+    ('51f0d29a-47c5-4f57-9bec-afec791d1062', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '15dc13a1-a4d7-4c26-b24e-b38894c08d70', 1, 'normal', 'Introduktion'),
+    ('d4842c31-6804-421b-99a5-d0321f4f5e56', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '15dc13a1-a4d7-4c26-b24e-b38894c08d70', 2, 'normal', 'Mer volym'),
+    ('885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '578a9b77-e0ca-4afe-a8cb-cfc3e4c1ae18', 3, 'normal', 'Tröskel'),
+    ('51126f93-ff47-49ce-a869-b7dbf4d97486', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '578a9b77-e0ca-4afe-a8cb-cfc3e4c1ae18', 4, 'normal', 'Längre tröskel'),
+    ('497d4307-e0e1-468e-83b1-e05772c76e4e', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c0603eda-ecb3-442b-a56c-f16d78aac9c1', 5, 'normal', 'Maratonfart'),
+    ('c4db2ab1-3958-446d-97fc-3e60f80846e6', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '73427bb0-0481-47eb-813d-6095c4e2d491', 6, 'tävling', 'Loppvecka');
+
+  insert into public.plan_template_sessions (id, version_id, week_id, day, position, discipline, type, title, description) values
+    ('d609423d-364b-46fa-94ef-9abfa1ea2b15', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51f0d29a-47c5-4f57-9bec-afec791d1062', 1, 1, 'löpning', 'Fart', 'Backsprinter', 'Korta, explosiva backar med full vila. Bygger styrka och steg utan att trötta.'),
+    ('33613aea-efc0-4978-8a44-c00f6fe5ab8b', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51f0d29a-47c5-4f57-9bec-afec791d1062', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('62557a13-1842-49fb-aab0-5140f86562e5', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51f0d29a-47c5-4f57-9bec-afec791d1062', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('59e4b0e2-5a99-439e-aba9-86f14508e57b', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51f0d29a-47c5-4f57-9bec-afec791d1062', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('a7d5e1a0-a1fe-408b-8425-30ce0053d519', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51f0d29a-47c5-4f57-9bec-afec791d1062', 6, 5, 'löpning', 'Långpass', 'Långpass', 'Lugnt hela vägen. Tiden på benen är poängen.'),
+    ('ba8248e9-0af2-4a38-a20f-e40da4837f9f', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd4842c31-6804-421b-99a5-d0321f4f5e56', 1, 1, 'löpning', 'Fart', 'Stigningslopp', 'Lugn löpning med korta stegringar mot snabbt men avslappnat.'),
+    ('c247be2f-e879-4b70-9e8c-2d37ad75f494', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd4842c31-6804-421b-99a5-d0321f4f5e56', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('a2dbe8cf-f5e0-4140-8963-f46f427faf00', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd4842c31-6804-421b-99a5-d0321f4f5e56', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('42395cc6-1145-43d3-8279-35e296538842', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd4842c31-6804-421b-99a5-d0321f4f5e56', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('1dc5a05a-0e11-4cb2-995b-4de825d77f33', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd4842c31-6804-421b-99a5-d0321f4f5e56', 6, 5, 'löpning', 'Långpass', 'Långpass', 'Lugnt hela vägen, lite längre än förra veckan.'),
+    ('e818111d-2eb0-493d-9ef1-61e0d088effe', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 1, 1, 'löpning', 'Tröskel', 'Tröskelintervaller', 'Jämnt och kontrollerat, strax under det du skulle orka i en timme.'),
+    ('8531c9d2-102d-414b-a1fd-0a2deb4c93e4', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('bc5bcbc3-a2de-418d-9d93-45b701fd6245', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('0df810a8-546a-4589-9756-6f30fa58239c', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('15d164fc-e0a0-41eb-ac65-1e704edaf7dc', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '885918e8-d0cb-4ce5-af74-8cf0760dcd6c', 6, 5, 'löpning', 'Långpass', 'Progressivt långpass', 'Lugnt, sedan en stegring mot strax under maratonfart.'),
+    ('2eb7a859-faa1-4a34-825f-ec22a1e29704', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51126f93-ff47-49ce-a869-b7dbf4d97486', 1, 1, 'löpning', 'Tröskel', 'Längre tröskel', 'Samma fart som förra veckan, längre avsnitt.'),
+    ('d62db6e3-5222-4ce4-9676-ef7ca2a29226', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51126f93-ff47-49ce-a869-b7dbf4d97486', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('68631eb2-c809-4139-b429-bf846fe2a2fa', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51126f93-ff47-49ce-a869-b7dbf4d97486', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('cf2fc370-0a19-469d-bf08-d1eb3f5c96ee', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51126f93-ff47-49ce-a869-b7dbf4d97486', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('91a27f88-77e4-4fc5-a5b1-7bdd5a37ee20', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '51126f93-ff47-49ce-a869-b7dbf4d97486', 6, 5, 'löpning', 'Långpass', 'Progressivt långpass', 'Som förra veckan, med längre stegring.'),
+    ('4a1160bc-b4ce-4219-930f-e690c19c4149', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '497d4307-e0e1-468e-83b1-e05772c76e4e', 1, 1, 'löpning', 'Specifikt', 'Maratonfart i block', 'Maratonfart med kort, aktiv vila. Öva på att äta och dricka i farten.'),
+    ('5c2e7c31-669e-4092-800f-c5de03def1b8', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '497d4307-e0e1-468e-83b1-e05772c76e4e', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('a46a0ffb-82c2-4adf-a74c-ee4169d89d6b', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '497d4307-e0e1-468e-83b1-e05772c76e4e', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('2cf724e0-ed86-4db5-9b3b-ae6b9e03d160', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '497d4307-e0e1-468e-83b1-e05772c76e4e', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('036dd6fa-07f6-4824-9835-ea0863323564', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '497d4307-e0e1-468e-83b1-e05772c76e4e', 6, 5, 'löpning', 'Specifikt', 'Långpass med maratonfart', 'Det viktigaste passet: maratonfart på trötta ben, med loppets mat och dryck.'),
+    ('4f950552-f5f4-41fd-98fa-0654f2cd4234', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 1, 1, 'löpning', 'Fart', 'Fartkänsla', 'Kort och lätt – påminn benen om farten.'),
+    ('eec12f31-691f-4039-84c4-430c3c638ccc', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 2, 2, 'löpning', 'Distans', 'Lugn löpning', 'Lugnt och avslappnat.'),
+    ('9435c835-c14b-409a-ae9b-75155c3434ad', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 3, 3, 'löpning', 'Distans', 'Lugn distans', 'Samtalsfart.'),
+    ('9fb192f3-3ac3-468f-8497-f0e3e751396f', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 4, 4, 'styrka', 'Styrka', 'Styrka', 'Knäböj, utfall, vadpress, höftlyft och bål. 2–3 set om 8–12 repetitioner.'),
+    ('69c05496-1a74-4b33-83ac-852c062f6486', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 5, 5, 'löpning', 'Aktivering', 'Kort aktivering', 'Dagen före: lite fart i benen, inget mer.'),
+    ('71e030fc-14c8-4226-a872-40cd51054c02', 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c4db2ab1-3958-446d-97fc-3e60f80846e6', 6, 6, 'löpning', 'Tävling', 'Loppet', 'Börja kontrollerat i maratonfart. Ät och drick enligt planen från långpassen.');
+
+  insert into public.plan_template_session_variants (version_id, session_id, level_id, description, duration_s, distance_m, zone, basis, blocks) values
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd609423d-364b-46fa-94ef-9abfa1ea2b15', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3060, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1200,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":8,"steps":[{"kind":"intervall","label":"","durationSeconds":10,"distanceM":null,"low":1.15,"high":1.15},{"kind":"vila","label":"","durationSeconds":110,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd609423d-364b-46fa-94ef-9abfa1ea2b15', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2520, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1200,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":6,"steps":[{"kind":"intervall","label":"","durationSeconds":10,"distanceM":null,"low":1.15,"high":1.15},{"kind":"vila","label":"","durationSeconds":110,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd609423d-364b-46fa-94ef-9abfa1ea2b15', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 1980, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":4,"steps":[{"kind":"intervall","label":"","durationSeconds":10,"distanceM":null,"low":1.1,"high":1.1},{"kind":"vila","label":"","durationSeconds":110,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '33613aea-efc0-4978-8a44-c00f6fe5ab8b', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '62557a13-1842-49fb-aab0-5140f86562e5', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3000, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3000,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '62557a13-1842-49fb-aab0-5140f86562e5', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '62557a13-1842-49fb-aab0-5140f86562e5', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2100, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2100,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '59e4b0e2-5a99-439e-aba9-86f14508e57b', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '59e4b0e2-5a99-439e-aba9-86f14508e57b', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a7d5e1a0-a1fe-408b-8425-30ce0053d519', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 5100, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":5100,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a7d5e1a0-a1fe-408b-8425-30ce0053d519', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 4500, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":4500,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a7d5e1a0-a1fe-408b-8425-30ce0053d519', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 3600, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3600,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'ba8248e9-0af2-4a38-a20f-e40da4837f9f', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3120, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1500,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":6,"steps":[{"kind":"intervall","label":"","durationSeconds":20,"distanceM":null,"low":1.05,"high":1.05},{"kind":"vila","label":"","durationSeconds":100,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'ba8248e9-0af2-4a38-a20f-e40da4837f9f', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2700, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1200,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":5,"steps":[{"kind":"intervall","label":"","durationSeconds":20,"distanceM":null,"low":1.05,"high":1.05},{"kind":"vila","label":"","durationSeconds":100,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'ba8248e9-0af2-4a38-a20f-e40da4837f9f', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 1980, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":4,"steps":[{"kind":"intervall","label":"","durationSeconds":20,"distanceM":null,"low":1,"high":1},{"kind":"vila","label":"","durationSeconds":100,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'c247be2f-e879-4b70-9e8c-2d37ad75f494', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a2dbe8cf-f5e0-4140-8963-f46f427faf00', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3300, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3300,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a2dbe8cf-f5e0-4140-8963-f46f427faf00', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a2dbe8cf-f5e0-4140-8963-f46f427faf00', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2400, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '42395cc6-1145-43d3-8279-35e296538842', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '42395cc6-1145-43d3-8279-35e296538842', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '1dc5a05a-0e11-4cb2-995b-4de825d77f33', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 5700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":5700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '1dc5a05a-0e11-4cb2-995b-4de825d77f33', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 5100, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":5100,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '1dc5a05a-0e11-4cb2-995b-4de825d77f33', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 4200, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":4200,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'e818111d-2eb0-493d-9ef1-61e0d088effe', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3750, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":5,"steps":[{"kind":"intervall","label":"","durationSeconds":360,"distanceM":null,"low":0.92,"high":0.92},{"kind":"vila","label":"","durationSeconds":90,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'e818111d-2eb0-493d-9ef1-61e0d088effe', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 3300, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":4,"steps":[{"kind":"intervall","label":"","durationSeconds":360,"distanceM":null,"low":0.92,"high":0.92},{"kind":"vila","label":"","durationSeconds":90,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'e818111d-2eb0-493d-9ef1-61e0d088effe', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2760, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":300,"distanceM":null,"low":0.9,"high":0.9},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '8531c9d2-102d-414b-a1fd-0a2deb4c93e4', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'bc5bcbc3-a2de-418d-9d93-45b701fd6245', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3300, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3300,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'bc5bcbc3-a2de-418d-9d93-45b701fd6245', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 3000, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3000,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'bc5bcbc3-a2de-418d-9d93-45b701fd6245', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2400, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '0df810a8-546a-4589-9756-6f30fa58239c', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '0df810a8-546a-4589-9756-6f30fa58239c', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '15d164fc-e0a0-41eb-ac65-1e704edaf7dc', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 6000, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":3600,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1800,"distanceM":null,"low":0.8,"high":0.8}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '15d164fc-e0a0-41eb-ac65-1e704edaf7dc', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 5100, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":3000,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1500,"distanceM":null,"low":0.8,"high":0.8}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '15d164fc-e0a0-41eb-ac65-1e704edaf7dc', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 4200, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":900,"distanceM":null,"low":0.8,"high":0.8}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '2eb7a859-faa1-4a34-825f-ec22a1e29704', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3660, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":600,"distanceM":null,"low":0.92,"high":0.92},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '2eb7a859-faa1-4a34-825f-ec22a1e29704', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 3300, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":480,"distanceM":null,"low":0.92,"high":0.92},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '2eb7a859-faa1-4a34-825f-ec22a1e29704', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2700, null, 'Tröskel', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":2,"steps":[{"kind":"intervall","label":"","durationSeconds":480,"distanceM":null,"low":0.9,"high":0.9},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'd62db6e3-5222-4ce4-9676-ef7ca2a29226', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '68631eb2-c809-4139-b429-bf846fe2a2fa', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3600, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3600,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '68631eb2-c809-4139-b429-bf846fe2a2fa', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 3000, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3000,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '68631eb2-c809-4139-b429-bf846fe2a2fa', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'cf2fc370-0a19-469d-bf08-d1eb3f5c96ee', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'cf2fc370-0a19-469d-bf08-d1eb3f5c96ee', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '91a27f88-77e4-4fc5-a5b1-7bdd5a37ee20', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 6600, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":3600,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.82,"high":0.82}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '91a27f88-77e4-4fc5-a5b1-7bdd5a37ee20', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 5700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":3300,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1800,"distanceM":null,"low":0.82,"high":0.82}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '91a27f88-77e4-4fc5-a5b1-7bdd5a37ee20', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 4800, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":3000,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1200,"distanceM":null,"low":0.82,"high":0.82}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4a1160bc-b4ce-4219-930f-e690c19c4149', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 4740, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":900,"distanceM":null,"low":0.86,"high":0.86},{"kind":"vila","label":"","durationSeconds":180,"distanceM":null,"low":0.75,"high":0.75}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4a1160bc-b4ce-4219-930f-e690c19c4149', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 3660, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":2,"steps":[{"kind":"intervall","label":"","durationSeconds":900,"distanceM":null,"low":0.86,"high":0.86},{"kind":"vila","label":"","durationSeconds":180,"distanceM":null,"low":0.75,"high":0.75}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4a1160bc-b4ce-4219-930f-e690c19c4149', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 3060, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":2,"steps":[{"kind":"intervall","label":"","durationSeconds":600,"distanceM":null,"low":0.86,"high":0.86},{"kind":"vila","label":"","durationSeconds":180,"distanceM":null,"low":0.75,"high":0.75}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '5c2e7c31-669e-4092-800f-c5de03def1b8', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a46a0ffb-82c2-4adf-a74c-ee4169d89d6b', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 3300, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":3300,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a46a0ffb-82c2-4adf-a74c-ee4169d89d6b', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2700, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'a46a0ffb-82c2-4adf-a74c-ee4169d89d6b', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2400, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2400,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '2cf724e0-ed86-4db5-9b3b-ae6b9e03d160', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2400, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '2cf724e0-ed86-4db5-9b3b-ae6b9e03d160', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '036dd6fa-07f6-4824-9835-ea0863323564', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 5400, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1800,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2700,"distanceM":null,"low":0.86,"high":0.86}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '036dd6fa-07f6-4824-9835-ea0863323564', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 4500, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1800,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1800,"distanceM":null,"low":0.86,"high":0.86}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '036dd6fa-07f6-4824-9835-ea0863323564', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 3600, null, 'Maratonfart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":1500,"distanceM":null,"low":0.72,"high":0.72}},{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1200,"distanceM":null,"low":0.86,"high":0.86}},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4f950552-f5f4-41fd-98fa-0654f2cd4234', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2700, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":4,"steps":[{"kind":"intervall","label":"","durationSeconds":180,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.7,"high":0.7}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4f950552-f5f4-41fd-98fa-0654f2cd4234', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 2700, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":4,"steps":[{"kind":"intervall","label":"","durationSeconds":180,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.7,"high":0.7}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '4f950552-f5f4-41fd-98fa-0654f2cd4234', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 2400, null, 'Fart', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.72,"high":0.72}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":180,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":120,"distanceM":null,"low":0.7,"high":0.7}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":600,"distanceM":null,"low":0.68,"high":0.68}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', 'eec12f31-691f-4039-84c4-430c3c638ccc', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 1800, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1800,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '9435c835-c14b-409a-ae9b-75155c3434ad', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 2100, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":2100,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '9435c835-c14b-409a-ae9b-75155c3434ad', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1800, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1800,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '9435c835-c14b-409a-ae9b-75155c3434ad', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 1500, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"distans","label":"","durationSeconds":1500,"distanceM":null,"low":0.72,"high":0.72}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '9fb192f3-3ac3-468f-8497-f0e3e751396f', '268bd371-801c-47a4-b71c-748eaea1fe5a', 'Lätt: ett set av varje, ingenting tungt.', 1500, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '9fb192f3-3ac3-468f-8497-f0e3e751396f', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', 'Lätt: ett set av varje, ingenting tungt.', 1200, null, null, null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '69c05496-1a74-4b33-83ac-852c062f6486', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, 1560, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":60,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":60,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":300,"distanceM":null,"low":0.65,"high":0.65}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '69c05496-1a74-4b33-83ac-852c062f6486', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, 1560, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":60,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":60,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":300,"distanceM":null,"low":0.65,"high":0.65}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '69c05496-1a74-4b33-83ac-852c062f6486', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, 1560, null, 'Lugnt', 'CS', '[{"type":"steg","step":{"kind":"uppvärmning","label":"","durationSeconds":900,"distanceM":null,"low":0.7,"high":0.7}},{"type":"repetition","times":3,"steps":[{"kind":"intervall","label":"","durationSeconds":60,"distanceM":null,"low":0.88,"high":0.88},{"kind":"vila","label":"","durationSeconds":60,"distanceM":null,"low":0.65,"high":0.65}]},{"type":"steg","step":{"kind":"nedvarvning","label":"","durationSeconds":300,"distanceM":null,"low":0.65,"high":0.65}}]'::jsonb),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '71e030fc-14c8-4226-a872-40cd51054c02', '268bd371-801c-47a4-b71c-748eaea1fe5a', null, null, 42195, 'Maratonfart', null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '71e030fc-14c8-4226-a872-40cd51054c02', '8fdbeef3-3fdc-40ce-8352-d48f697f577a', null, null, 42195, 'Maratonfart', null, null),
+    ('b5607552-d3cd-4e5e-96b4-c9dfae5b250c', '71e030fc-14c8-4226-a872-40cd51054c02', 'e97d9f74-8e46-46c7-88e7-3220661025bc', null, null, 42195, 'Maratonfart', null, null);
+
+  -- Publiceras direkt, som publish_plan_version gör.
+  perform set_config('coachvy.publishing', 'on', true);
+  update public.plan_template_versions
+    set status = 'publicerad', published_at = now()
+    where id = 'b5607552-d3cd-4e5e-96b4-c9dfae5b250c';
+  perform set_config('coachvy.publishing', 'off', true);
+end;
+$$;

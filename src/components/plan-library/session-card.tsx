@@ -28,7 +28,15 @@ export function SessionCard({
         {session.title}
       </span>
       <span className="block truncate text-[11px] text-text-subtle">
-        {[disciplineName, session.type].filter(Boolean).join(" · ")}
+        {[
+          disciplineName,
+          // "Styrka · Styrka" säger ingenting två gånger.
+          session.type?.toLowerCase() === disciplineName.toLowerCase()
+            ? null
+            : session.type,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       </span>
       {facts.length > 0 && (
         <span className="mt-0.5 block truncate text-[11px] text-text-muted tabular-nums">

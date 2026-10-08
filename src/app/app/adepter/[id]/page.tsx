@@ -203,6 +203,15 @@ export default async function AdeptPage({
             </Link>
           );
         })}
+        {/* Planen ur planbiblioteket har en egen sida. */}
+        {isCoach && (
+          <Link
+            href={`${routes.adepts}/${adept.id}/plan`}
+            className="-mb-px shrink-0 whitespace-nowrap border-b-2 border-transparent px-4 py-2.5 text-sm text-ink-400 transition-colors hover:text-ink-100"
+          >
+            Plan
+          </Link>
+        )}
       </div>
 
       {tab === "oversikt" ? (

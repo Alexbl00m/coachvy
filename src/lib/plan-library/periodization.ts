@@ -273,3 +273,44 @@ export function planWeekOf(startDate: string, date: string): number {
 /** Första dagen i en planvecka. */
 export const planWeekStart = (startDate: string, week: number) =>
   addDays(startDate, (week - 1) * 7);
+
+/** Faserna i en startad plan, ur veckokartan. */
+export function spansFromWeekMap(input: {
+  startDate: string;
+  weekMap: string[];
+  weeks: TemplateWeek[];
+  phases: Phase[];
+}): PhaseSpan[] {
+  const weekById = new Map(input.weeks.map((w) => [w.id, w]));
+  const phaseById = new Map(input.phases.map((p) => [p.id, p]));
+  const full = new Map<string, number>();
+  for (const w of input.weeks)
+    full.set(w.phaseId, (full.get(w.phaseId) ?? 0) + 1);
+
+  const spans: PhaseSpan[] = [];
+  input.weekMap.forEach((id, i) => {
+    const phase = phaseById.get(weekById.get(id)?.phaseId ?? "");
+    if (!phase) return;
+    const week = i + 1;
+    const last = spans.at(-1);
+    if (last && last.phaseId === phase.id && last.toWeek === week - 1) {
+      last.toWeek = week;
+      last.weeks += 1;
+      last.endsOn = addDays(input.startDate, week * 7 - 1);
+      last.trimmed = (full.get(phase.id) ?? 0) - last.weeks;
+      return;
+    }
+    spans.push({
+      phaseId: phase.id,
+      name: phase.name,
+      seasonPhase: phase.seasonPhase,
+      weeks: 1,
+      trimmed: (full.get(phase.id) ?? 0) - 1,
+      fromWeek: week,
+      toWeek: week,
+      startsOn: addDays(input.startDate, (week - 1) * 7),
+      endsOn: addDays(input.startDate, week * 7 - 1),
+    });
+  });
+  return spans;
+}

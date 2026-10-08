@@ -181,3 +181,23 @@ describe("utan lopp", () => {
     });
   });
 });
+
+describe("faserna i en startad plan", () => {
+  it("är desamma som i förslaget", async () => {
+    const { spansFromWeekMap } = await import("./periodization");
+    const p = proposePeriodization({
+      ...base,
+      goal: { mode: "fritt", startDate: "2026-10-12" },
+      length: 9,
+    });
+    if (!p.ok) throw new Error(p.error);
+    expect(
+      spansFromWeekMap({
+        startDate: p.startDate,
+        weekMap: p.weekMap,
+        weeks: WEEKS,
+        phases: PHASES,
+      }),
+    ).toEqual(p.phases);
+  });
+});

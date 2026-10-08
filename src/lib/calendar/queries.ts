@@ -3,6 +3,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
+import { listPlanSessionsBetween } from "@/lib/plan-library/plan-view";
+import { todayIso } from "@/lib/season/season";
 import type { AdeptCheckinRow } from "@/lib/types/database";
 import { profileBlocks, type ProfileBlock } from "@/lib/workouts/blocks";
 import {
@@ -32,12 +34,16 @@ export type CalendarWorkout = {
   adeptName: string;
   date: string;
   title: string;
-  sport: Sport;
+  /** "annat" för planpass utan gren med mål, som styrka. */
+  sport: Sport | "annat";
   /** Passets längd ur stegen, "1:15:00". null när den inte går att räkna. */
   duration: string | null;
   summary: string | null;
   /** Stegen som block, för miniatyrprofilen. Tom när passet inte går att lösa upp. */
   profile: ProfileBlock[];
+  /** Ett pass ur planbiblioteket: länken går till planen, inte till passet. */
+  href?: string;
+  fromPlan?: boolean;
 };
 
 export type CalendarTest = {
@@ -69,10 +75,15 @@ export async function listScheduledWorkouts(
     .order("scheduled_for", { ascending: true });
   if (adeptId) query = query.eq("adept_id", adeptId);
 
-  const { data, error } = await query;
+  const [{ data, error }, fromPlans] = await Promise.all([
+    query,
+    // Passen ur planbiblioteket räknas fram ur planen och ligger med här,
+    // så att kalendern och översikterna visar dem utan egen fråga.
+    listPlanSessionsBetween(from, to, adeptId, todayIso()),
+  ]);
   if (error) throw new Error(`Kunde inte hämta passen: ${error.message}`);
 
-  return (
+  const own: CalendarWorkout[] = (
     (data ?? []) as unknown as (Record<string, unknown> & Embedded)[]
   ).map((row) => {
     const saved = {
@@ -103,6 +114,7 @@ export async function listScheduledWorkouts(
       profile,
     };
   });
+  return [...own, ...fromPlans].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export async function listSessionsBetween(

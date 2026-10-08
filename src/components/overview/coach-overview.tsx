@@ -358,7 +358,10 @@ export async function CoachOverview({
                         .map((w) => (
                           <li key={w.id}>
                             <Link
-                              href={`${routes.adepts}/${w.adeptId}/pass/${w.id}`}
+                              href={
+                                w.href ??
+                                `${routes.adepts}/${w.adeptId}/pass/${w.id}`
+                              }
                               className="flex items-center gap-2 text-[13px] text-text-muted hover:text-text"
                             >
                               <SportIcon

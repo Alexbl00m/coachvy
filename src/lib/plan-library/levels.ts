@@ -112,6 +112,20 @@ export function supersededBy<T extends LevelChange>(
   );
 }
 
+/**
+ * Historiken som ett nytt byte från `fromWeek` bygger på: utan de planerade
+ * byten det ersätter. Nivån "före" bytet ska räknas härifrån – annars blir
+ * ett ersatt, framtida steg nivån man byter från.
+ */
+export function historyKept<T extends LevelChange>(
+  changes: T[],
+  fromWeek: number,
+  currentWeek: number,
+): T[] {
+  const gone = new Set(supersededBy(changes, fromWeek, currentWeek));
+  return changes.filter((c) => !gone.has(c));
+}
+
 /** Ett enkelt byte. */
 export function planSwitch(
   fromLevelId: string,

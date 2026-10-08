@@ -142,7 +142,7 @@ export async function AdeptOverview({
               {upcoming.slice(0, 6).map((w) => (
                 <li key={w.id}>
                   <Link
-                    href={`${own}/pass/${w.id}`}
+                    href={w.href ?? `${own}/pass/${w.id}`}
                     className="group flex items-start gap-2.5"
                   >
                     <SportIcon

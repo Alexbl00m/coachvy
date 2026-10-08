@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   effectiveWeek,
+  historyKept,
   levelForWeek,
   levelTimeline,
   planStepwise,
@@ -164,5 +165,31 @@ describe("tillfällig sänkning", () => {
     expect(scenarioTarget(LEVELS, "A", resa).id).toBe("C");
     const arbete = SCENARIOS.find((s) => s.reason === "arbete")!;
     expect(scenarioTarget(LEVELS, "A", arbete).id).toBe("B");
+  });
+});
+
+describe("ett nytt byte som ersätter planerade", () => {
+  it("räknar nivån före bytet utan de ersatta stegen", () => {
+    const changes = [
+      change({
+        id: "a",
+        effectiveWeek: 2,
+        fromLevelId: "A",
+        toLevelId: "B",
+        kind: "stegvis",
+      }),
+      change({
+        id: "b",
+        effectiveWeek: 3,
+        fromLevelId: "B",
+        toLevelId: "C",
+        kind: "stegvis",
+      }),
+    ];
+    const kept = historyKept(changes, 2, 1);
+    expect(kept).toEqual([]);
+    expect(levelForWeek("A", kept, 2)).toBe("A");
+    // Ett byte som redan gäller ligger kvar.
+    expect(historyKept(changes, 3, 2).map((c) => c.id)).toEqual(["a"]);
   });
 });

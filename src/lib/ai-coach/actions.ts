@@ -15,6 +15,8 @@ import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { developmentFor } from "@/lib/activities/development-queries";
 import { historyDigest } from "@/lib/activities/history-digest";
 import { benchmarkSummaryFor } from "@/lib/benchmarks/queries";
+import { planSummaryFor } from "@/lib/plan-library/plan-view";
+import { todayIso } from "@/lib/season/season";
 import type { Adept } from "@/lib/types/database";
 import { listActivities } from "@/lib/activities/queries";
 import { listRaces } from "@/lib/season/queries";
@@ -63,6 +65,7 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
     races,
     checkins,
     benchmarks,
+    plan,
   ] = await Promise.all([
     listSessions(adeptId),
     listWorkouts(adeptId),
@@ -73,6 +76,8 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
     listCheckins(adeptId, 365 * 10),
     // Gap mot målnivån, effektprofilen mot Coggan och tävlingsmålen.
     benchmarkSummaryFor(adept),
+    // Planen ur planbiblioteket, nivåhistoriken och vad som genomförts.
+    planSummaryFor(adeptId, todayIso()),
   ]);
 
   const lines: string[] = [];
@@ -118,6 +123,7 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
   const digest = historyDigest(activities, races, checkins);
   if (digest) lines.push("", digest);
   if (benchmarks) lines.push("", benchmarks);
+  if (plan) lines.push("", plan);
 
   return lines.length > 0 ? lines.join("\n") : null;
 }

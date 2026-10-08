@@ -81,9 +81,9 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20261006090000_activity_race_flag.sql`,
-   `20261007090000_reference_levels.sql` och
-   `20261007120000_plan_library.sql`.
+   `20261007090000_reference_levels.sql`,
+   `20261007120000_plan_library.sql` och
+   `20261008090000_plan_library_example.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -1403,6 +1403,89 @@ godkänt avtal med tillverkaren – för Garmin deras
 [Garmin Connect Developer Program](https://developer.garmin.com/gc-developer-program/),
 som tar ansökningar från företag. Med det på plats är det en OAuth-koppling per
 adept och en webhook som tar emot varje nytt pass och kör samma analys.
+
+## Planbiblioteket
+
+Färdiga planer mot ett mål – maraton, 70.3, cykel – som ingår i
+medlemskapet. Medlemmen väljer plan, längd och nivå och följer den som den är.
+Planen är **statisk**: ingenting i appen ändrar den utifrån sömn, dagsform
+eller annan data. Medlemmen loggar passen, flyttar dem och byter nivå själv;
+coachen kan göra detsamma åt sina adepter, och AI-coachen kan bara föreslå.
+
+### Mallarna
+
+Admin skriver mallarna under **Planmallar** (`/app/planbibliotek/mallar`).
+En mall har versioner. Ett utkast går att ändra fritt; en publicerad version
+är låst av triggrar i databasen, så att en plan som redan startats aldrig
+ändras i efterhand. Att redigera en publicerad mall ger ett nytt utkast.
+
+Innehållet är beskrivet för att kunna gå från ospecifikt till specifikt:
+
+- **Nivåer** med rank (A högst) och riktvärden: timmar och pass per vecka,
+  intensitetsfördelning. Antalet är fritt.
+- **Faser** i ordning, med syfte, fokus, specificitet 1–5, intensitet, fasen i
+  säsongsplanen och regeln för hur fasen kortas.
+- **Veckor** i faserna, och **pass** på en dag i veckan. Varje pass har en
+  variant per nivå; en nivå utan variant har inte passet. Strukturen skrivs
+  som en rad – `15 min 65%; 5x(4 min 105% + 2 min 60%); 10 min 60%` – och blir
+  samma block som passbyggarens pass (`src/lib/plan-library/structure.ts`).
+
+Sporter och mål ligger i tabeller (`plan_categories`, `disciplines`), inte i
+koden.
+
+### Starta en plan
+
+Startguiden räknar fram ett förslag (`periodization.ts`): med ett A-lopp
+bakåt från loppveckan, utan lopp framåt från ett startdatum. En kortare plan
+kortas fas för fas i mallens ordning och från fasens början, så att den
+specifika fasen och tapern står kvar. Medlemmen kan justera veckorna per fas
+innan start. Servern räknar om förslaget med samma funktion innan planen
+sparas.
+
+### Nivåbyten
+
+Ett byte gäller från nästa vecka, eller en vald vecka. Det kan vara ett
+enkelt byte, stegvis (A → C i steg om fyra veckor) eller tillfälligt –
+resa, sjukdom, skada, arbete eller familj har förval, men medlemmen väljer
+själv hur och när det blir tillbaka. Efter ett uppehåll föreslår planen en
+återinträdesnivå med motivering (`reentry.ts`). Hela historiken sparas:
+vecka, från, till, orsak och källa (medlem, coach eller AI). Ett planerat
+byte kan ångras innan det börjar gälla; historiken skrivs aldrig om.
+
+### Schemat räknas fram
+
+Medlemmens schema lagras inte pass för pass. Det byggs ur versionen,
+veckokartan, nivåhistoriken och avvikelserna (`schedule.ts`): flyttade,
+ersatta och strukna pass sparas som avvikelser med originalet kvar. Planens
+pass syns i kalendern och under Kommande pass, och coachen ser planen under
+adeptens flik **Plan**.
+
+### Medlemskapet
+
+Så länge adepten är medlem kan adepten och coachen ändra planen. Upphör
+medlemskapet blir planen skrivskyddad – ingenting raderas – och pausen
+loggas. När medlemskapet kommer tillbaka erbjuds en återstart: med lopp
+ligger datumet fast och nivån anpassas, utan lopp kan planen också skjutas
+fram. Hur många aktiva planer en medlem får ha styrs av
+`plan_library_settings` (en som utgångspunkt).
+
+### AI-coachen
+
+AI-coachens underlag innehåller planen, nivåhistoriken och vad som
+genomförts vecka för vecka (`context.ts`). Ett förslag sparas i
+`plan_ai_suggestions` med motivering och blir nivåbyten först när någon
+godkänner det. `proposeLevelChange` i `actions.ts` är kontraktet för att
+lämna ett förslag.
+
+### Typer och tester
+
+Typerna för planbibliotekets tabeller genereras ur databasen:
+`DATABASE_URL=… npm run db:types`. Logiken är ren och testas med Vitest:
+`npm test`.
+
+Migrationen `20261008090000_plan_library_example.sql` lägger in ett kort
+exempel, Maraton (exempel), i tre nivåer att prova med. Det är märkt som
+exempel och kan arkiveras under Planmallar.
 
 ## Samtycke och integritet
 
