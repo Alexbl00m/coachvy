@@ -709,6 +709,14 @@ export type PlanLibraryFunctions = {
     Args: { template: string };
     Returns: string;
   };
+  reorder_plan_weeks: {
+    Args: { draft: string };
+    Returns: number;
+  };
+  copy_plan_week: {
+    Args: { week: string };
+    Returns: string;
+  };
   can_read_plan_library: {
     Args: Record<string, never>;
     Returns: boolean;

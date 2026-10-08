@@ -44,6 +44,8 @@ const TABLES = [
 const FUNCTIONS = [
   "publish_plan_version",
   "new_plan_draft",
+  "reorder_plan_weeks",
+  "copy_plan_week",
   "can_read_plan_library",
   "can_read_plan_version",
   "can_edit_plan",

@@ -796,6 +796,83 @@ begin
 end;
 $$;
 
+-- Numrerar om ett utkasts veckor i fasernas ordning (1, 2, 3 …) och håller
+-- längsta längden lika med antalet veckor. Körs efter att en vecka lagts
+-- till, tagits bort eller en fas flyttats. Som den inloggade: bara admin
+-- släpps igenom, och bara medan versionen är ett utkast.
+create or replace function public.reorder_plan_weeks(draft uuid)
+returns int
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_count int;
+begin
+  update public.plan_template_weeks set position = position + 100000
+    where version_id = draft;
+  with ordered as (
+    select w.id, row_number() over (order by p.position, w.position) as n
+    from public.plan_template_weeks w
+    join public.plan_template_phases p on p.id = w.phase_id
+    where w.version_id = draft
+  )
+  update public.plan_template_weeks w set position = o.n
+    from ordered o where o.id = w.id;
+
+  select count(*) into v_count from public.plan_template_weeks where version_id = draft;
+  update public.plan_template_versions
+    set max_weeks = greatest(v_count, 1),
+        min_weeks = least(min_weeks, greatest(v_count, 1))
+    where id = draft;
+  return v_count;
+end;
+$$;
+
+-- Kopierar en vecka med pass och varianter till veckan efter den, i samma fas.
+create or replace function public.copy_plan_week(week uuid)
+returns uuid
+language plpgsql
+set search_path = public
+as $$
+declare
+  w public.plan_template_weeks%rowtype;
+  v_new uuid;
+begin
+  select * into w from public.plan_template_weeks where id = week;
+  if not found then
+    raise exception 'Ingen vecka med det id:t.' using errcode = 'P0002';
+  end if;
+  update public.plan_template_weeks set position = position + 100000
+    where version_id = w.version_id and position > w.position;
+  insert into public.plan_template_weeks (version_id, phase_id, position, kind, title, note)
+    values (w.version_id, w.phase_id, w.position + 1, w.kind, w.title, w.note)
+    returning id into v_new;
+
+  create temp table _session_map (old uuid primary key, new uuid not null) on commit drop;
+  insert into _session_map
+    select id, gen_random_uuid() from public.plan_template_sessions where week_id = week;
+  insert into public.plan_template_sessions (
+    id, version_id, week_id, day, position, discipline, type, title, description
+  )
+  select m.new, s.version_id, v_new, s.day, s.position, s.discipline, s.type, s.title, s.description
+  from public.plan_template_sessions s join _session_map m on m.old = s.id;
+  insert into public.plan_template_session_variants (
+    version_id, session_id, level_id, description, duration_s, distance_m, zone, basis, blocks
+  )
+  select x.version_id, m.new, x.level_id, x.description, x.duration_s, x.distance_m,
+    x.zone, x.basis, x.blocks
+  from public.plan_template_session_variants x join _session_map m on m.old = x.session_id;
+
+  perform public.reorder_plan_weeks(w.version_id);
+  return v_new;
+end;
+$$;
+
+revoke all on function public.reorder_plan_weeks(uuid) from public, anon;
+revoke all on function public.copy_plan_week(uuid) from public, anon;
+grant execute on function public.reorder_plan_weeks(uuid) to authenticated;
+grant execute on function public.copy_plan_week(uuid) to authenticated;
+
 revoke all on function public.publish_plan_version(uuid) from public, anon;
 revoke all on function public.new_plan_draft(uuid) from public, anon;
 grant execute on function public.publish_plan_version(uuid) to authenticated;
