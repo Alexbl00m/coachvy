@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:types": "node scripts/generate-plan-types.mjs && npx prettier --write src/lib/types/plan-library.generated.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

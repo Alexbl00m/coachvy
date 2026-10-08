@@ -81,8 +81,9 @@ skelettet går att bläddra igenom i "demoläge".
    `supabase/samlad/efter-init.sql`, som är alla övriga i en fil. Eller
    `supabase db push` om du länkat CLI:t. En databas som redan har de
    tidigare migrationerna behöver bara de nya, i ordning – senast
-   `20261001090000_invitations.sql`, `20261006090000_activity_race_flag.sql`
-   och `20261007090000_reference_levels.sql`.
+   `20261006090000_activity_race_flag.sql`,
+   `20261007090000_reference_levels.sql` och
+   `20261007120000_plan_library.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'

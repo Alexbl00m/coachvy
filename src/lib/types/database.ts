@@ -10,6 +10,10 @@ import type {
   Summary as ActivitySummary,
 } from "@/lib/activities/analysis";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
+import type {
+  PlanLibraryFunctions,
+  PlanLibraryTables,
+} from "./plan-library.generated";
 
 export type AccountRole = "coach" | "adept";
 
@@ -582,7 +586,7 @@ export type Database = {
         Update: Partial<TestResult>;
         Relationships: [];
       };
-    };
+    } & PlanLibraryTables;
     Views: { [_ in never]: never };
     Functions: {
       is_admin: {
@@ -617,7 +621,7 @@ export type Database = {
         Args: { adept: string };
         Returns: number;
       };
-    };
+    } & PlanLibraryFunctions;
     Enums: {
       account_role: AccountRole;
     };
