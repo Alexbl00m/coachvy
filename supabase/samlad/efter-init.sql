@@ -3698,6 +3698,8 @@ as $$
 declare
   v_src public.plan_template_versions%rowtype;
   v_new uuid;
+  -- Gammalt id → nytt id för nivåer, faser, veckor och pass.
+  v_map jsonb;
 begin
   if not public.is_admin() then
     raise exception 'Bara en admin redigerar planer.' using errcode = '42501';
@@ -3720,58 +3722,56 @@ begin
     v_src.description, v_src.prerequisites, v_src.min_weeks, v_src.max_weeks, auth.uid()
   ) returning id into v_new;
 
-  create temp table _map (old uuid primary key, new uuid not null) on commit drop;
-
-  insert into _map
-    select id, gen_random_uuid() from public.plan_template_levels where version_id = v_src.id
+  select coalesce(jsonb_object_agg(id::text, gen_random_uuid()), '{}'::jsonb)
+    into v_map
+  from (
+    select id from public.plan_template_levels where version_id = v_src.id
     union all
-    select id, gen_random_uuid() from public.plan_template_phases where version_id = v_src.id
+    select id from public.plan_template_phases where version_id = v_src.id
     union all
-    select id, gen_random_uuid() from public.plan_template_weeks where version_id = v_src.id
+    select id from public.plan_template_weeks where version_id = v_src.id
     union all
-    select id, gen_random_uuid() from public.plan_template_sessions where version_id = v_src.id;
+    select id from public.plan_template_sessions where version_id = v_src.id
+  ) ids;
 
   insert into public.plan_template_levels (
     id, version_id, rank, key, name, description, hours_min, hours_max,
     sessions_min, sessions_max, intensity
   )
-  select m.new, v_new, l.rank, l.key, l.name, l.description, l.hours_min, l.hours_max,
+  select (v_map ->> l.id::text)::uuid, v_new, l.rank, l.key, l.name, l.description, l.hours_min, l.hours_max,
     l.sessions_min, l.sessions_max, l.intensity
-  from public.plan_template_levels l join _map m on m.old = l.id
+  from public.plan_template_levels l
   where l.version_id = v_src.id;
 
   insert into public.plan_template_phases (
     id, version_id, position, name, season_phase, purpose, focus, specificity,
     intensity, min_weeks, trim_order
   )
-  select m.new, v_new, p.position, p.name, p.season_phase, p.purpose, p.focus,
+  select (v_map ->> p.id::text)::uuid, v_new, p.position, p.name, p.season_phase, p.purpose, p.focus,
     p.specificity, p.intensity, p.min_weeks, p.trim_order
-  from public.plan_template_phases p join _map m on m.old = p.id
+  from public.plan_template_phases p
   where p.version_id = v_src.id;
 
   insert into public.plan_template_weeks (id, version_id, phase_id, position, kind, title, note)
-  select m.new, v_new, mp.new, w.position, w.kind, w.title, w.note
+  select (v_map ->> w.id::text)::uuid, v_new,
+    (v_map ->> w.phase_id::text)::uuid, w.position, w.kind, w.title, w.note
   from public.plan_template_weeks w
-  join _map m on m.old = w.id
-  join _map mp on mp.old = w.phase_id
   where w.version_id = v_src.id;
 
   insert into public.plan_template_sessions (
     id, version_id, week_id, day, position, discipline, type, title, description
   )
-  select m.new, v_new, mw.new, s.day, s.position, s.discipline, s.type, s.title, s.description
+  select (v_map ->> s.id::text)::uuid, v_new,
+    (v_map ->> s.week_id::text)::uuid, s.day, s.position, s.discipline, s.type, s.title, s.description
   from public.plan_template_sessions s
-  join _map m on m.old = s.id
-  join _map mw on mw.old = s.week_id
   where s.version_id = v_src.id;
 
   insert into public.plan_template_session_variants (
     version_id, session_id, level_id, description, duration_s, distance_m, zone, basis, blocks
   )
-  select v_new, ms.new, ml.new, x.description, x.duration_s, x.distance_m, x.zone, x.basis, x.blocks
+  select v_new, (v_map ->> x.session_id::text)::uuid,
+    (v_map ->> x.level_id::text)::uuid, x.description, x.duration_s, x.distance_m, x.zone, x.basis, x.blocks
   from public.plan_template_session_variants x
-  join _map ms on ms.old = x.session_id
-  join _map ml on ml.old = x.level_id
   where x.version_id = v_src.id;
 
   return v_new;
@@ -3819,6 +3819,8 @@ as $$
 declare
   w public.plan_template_weeks%rowtype;
   v_new uuid;
+  -- Gammalt id → nytt id för veckans pass.
+  v_map jsonb;
 begin
   select * into w from public.plan_template_weeks where id = week;
   if not found then
@@ -3830,20 +3832,23 @@ begin
     values (w.version_id, w.phase_id, w.position + 1, w.kind, w.title, w.note)
     returning id into v_new;
 
-  create temp table _session_map (old uuid primary key, new uuid not null) on commit drop;
-  insert into _session_map
-    select id, gen_random_uuid() from public.plan_template_sessions where week_id = week;
+  select coalesce(jsonb_object_agg(id::text, gen_random_uuid()), '{}'::jsonb)
+    into v_map
+  from public.plan_template_sessions where week_id = week;
   insert into public.plan_template_sessions (
     id, version_id, week_id, day, position, discipline, type, title, description
   )
-  select m.new, s.version_id, v_new, s.day, s.position, s.discipline, s.type, s.title, s.description
-  from public.plan_template_sessions s join _session_map m on m.old = s.id;
+  select (v_map ->> s.id::text)::uuid, s.version_id, v_new, s.day, s.position, s.discipline,
+    s.type, s.title, s.description
+  from public.plan_template_sessions s where s.week_id = week;
   insert into public.plan_template_session_variants (
     version_id, session_id, level_id, description, duration_s, distance_m, zone, basis, blocks
   )
-  select x.version_id, m.new, x.level_id, x.description, x.duration_s, x.distance_m,
-    x.zone, x.basis, x.blocks
-  from public.plan_template_session_variants x join _session_map m on m.old = x.session_id;
+  select x.version_id, (v_map ->> x.session_id::text)::uuid, x.level_id, x.description,
+    x.duration_s, x.distance_m, x.zone, x.basis, x.blocks
+  from public.plan_template_session_variants x
+  join public.plan_template_sessions s on s.id = x.session_id
+  where s.week_id = week;
 
   perform public.reorder_plan_weeks(w.version_id);
   return v_new;
@@ -4073,6 +4078,12 @@ begin
   end loop;
 end;
 $$;
+
+-- Triggerfunktionerna körs bara som triggrar, aldrig via API:et.
+revoke all on function public.guard_plan_instance() from public, anon, authenticated;
+revoke all on function public.guard_plan_instance_rows() from public, anon, authenticated;
+revoke all on function public.log_plan_instance() from public, anon, authenticated;
+revoke all on function public.log_plan_membership() from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- RLS
