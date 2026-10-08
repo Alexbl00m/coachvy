@@ -248,6 +248,7 @@ export async function saveVersionMeta(input: {
   description: string;
   prerequisites: string;
   minWeeks: number;
+  volumeUnit: "km" | "h";
 }): Promise<AdminResult> {
   await requireAdmin();
   const title = text(input.title, 120);
@@ -272,6 +273,7 @@ export async function saveVersionMeta(input: {
       description: text(input.description, 6000),
       prerequisites: text(input.prerequisites, 2000),
       min_weeks: minWeeks,
+      volume_unit: input.volumeUnit === "h" ? "h" : "km",
     })
     .eq("id", input.versionId);
   if (error) return dbError(error);
@@ -585,6 +587,7 @@ export async function saveWeek(input: {
   kind: WeekKind;
   title: string;
   note: string;
+  checkpoint: boolean;
 }): Promise<AdminResult> {
   await requireAdmin();
   const supabase = await createClient();
@@ -594,9 +597,67 @@ export async function saveWeek(input: {
       kind: input.kind,
       title: text(input.title, 120),
       note: text(input.note, 2000),
+      checkpoint: input.checkpoint,
     })
     .eq("id", input.weekId);
   if (error) return dbError(error);
+  revalidatePath(routes.planTemplates, "layout");
+  return { ok: true };
+}
+
+/**
+ * Veckans volym per nivå. En nivå utan tal har ingen volym angiven; ett
+ * spann sparas som min och max.
+ */
+export async function saveWeekVolumes(input: {
+  versionId: string;
+  weekId: string;
+  volumes: { levelId: string; min: number | null; max: number | null }[];
+}): Promise<AdminResult> {
+  await requireAdmin();
+  const rows: {
+    version_id: string;
+    week_id: string;
+    level_id: string;
+    volume_min: number;
+    volume_max: number | null;
+  }[] = [];
+  const clear: string[] = [];
+  for (const v of input.volumes) {
+    const min = v.min !== null && Number.isFinite(v.min) ? v.min : null;
+    const max = v.max !== null && Number.isFinite(v.max) ? v.max : null;
+    if (min === null) {
+      if (max !== null) return fail("Ange det lägre talet först.");
+      clear.push(v.levelId);
+      continue;
+    }
+    if (min < 0 || min > 1000) return fail("Volymen ska vara 0–1000.");
+    if (max !== null && max < min) {
+      return fail("Spannets övre tal ska vara minst lika stort som det lägre.");
+    }
+    rows.push({
+      version_id: input.versionId,
+      week_id: input.weekId,
+      level_id: v.levelId,
+      volume_min: min,
+      volume_max: max !== null && max > min ? max : null,
+    });
+  }
+  const supabase = await createClient();
+  if (clear.length > 0) {
+    const { error } = await supabase
+      .from("plan_template_week_volumes")
+      .delete()
+      .eq("week_id", input.weekId)
+      .in("level_id", clear);
+    if (error) return dbError(error);
+  }
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from("plan_template_week_volumes")
+      .upsert(rows, { onConflict: "week_id,level_id" });
+    if (error) return dbError(error);
+  }
   revalidatePath(routes.planTemplates, "layout");
   return { ok: true };
 }

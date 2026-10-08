@@ -11,6 +11,8 @@ import type {
   TemplateSession,
   TemplateWeek,
   Variant,
+  VolumeUnit,
+  WeekVolume,
 } from "./types";
 
 export type Row<T extends keyof PlanLibraryTables> =
@@ -25,6 +27,7 @@ export type PhaseRow = Row<"plan_template_phases">;
 export type WeekRow = Row<"plan_template_weeks">;
 export type SessionRow = Row<"plan_template_sessions">;
 export type VariantRow = Row<"plan_template_session_variants">;
+export type VolumeRow = Row<"plan_template_week_volumes">;
 
 /**
  * Tabellerna finns inte ännu – migrationen för planbiblioteket är inte körd.
@@ -78,6 +81,14 @@ export const toWeek = (r: WeekRow): TemplateWeek => ({
   phaseId: r.phase_id,
   position: r.position,
   kind: r.kind,
+  checkpoint: r.checkpoint,
+});
+
+export const toVolume = (r: VolumeRow): WeekVolume => ({
+  weekId: r.week_id,
+  levelId: r.level_id,
+  min: Number(r.volume_min),
+  max: r.volume_max === null ? null : Number(r.volume_max),
 });
 
 export const toVariant = (r: VariantRow): Variant => ({
@@ -140,12 +151,15 @@ export type VersionContent = {
   weeks: WeekRow[];
   sessions: SessionRow[];
   variants: VariantRow[];
+  volumes: VolumeRow[];
   /** Samma sak som planbibliotekets begrepp, för logiken. */
   domain: {
     levels: Level[];
     phases: Phase[];
     weeks: TemplateWeek[];
     sessions: TemplateSession[];
+    volumes: WeekVolume[];
+    volumeUnit: VolumeUnit;
   };
 };
 
@@ -165,7 +179,7 @@ export async function loadVersion(
   );
   if (!version) return null;
 
-  const [template, levels, phases, weeks, sessions, variants] =
+  const [template, levels, phases, weeks, sessions, variants, volumes] =
     await Promise.all([
       supabase
         .from("plan_templates")
@@ -196,6 +210,10 @@ export async function loadVersion(
         .from("plan_template_session_variants")
         .select("*")
         .eq("version_id", versionId),
+      supabase
+        .from("plan_template_week_volumes")
+        .select("*")
+        .eq("version_id", versionId),
     ]);
 
   const templateRow = one(template, "mallen");
@@ -206,6 +224,7 @@ export async function loadVersion(
     weeks: rows(weeks, "veckorna"),
     sessions: rows(sessions, "passen"),
     variants: rows(variants, "varianterna"),
+    volumes: rows(volumes, "volymerna"),
   };
 
   let category: CategoryRow | null = null;
@@ -230,6 +249,8 @@ export async function loadVersion(
       phases: content.phases.map(toPhase),
       weeks: content.weeks.map(toWeek),
       sessions: content.sessions.map((s) => toSession(s, content.variants)),
+      volumes: content.volumes.map(toVolume),
+      volumeUnit: version.volume_unit,
     },
   };
 }

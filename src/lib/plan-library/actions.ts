@@ -25,6 +25,7 @@ import {
   supersededBy,
   type ReturnMode,
 } from "./levels";
+import { parseRaceTime } from "./paces";
 import { proposePeriodization } from "./periodization";
 import { loadPlanView } from "./plan-view";
 import { loadVersion } from "./queries";
@@ -73,6 +74,12 @@ export type StartPlanInput = {
   length: number;
   counts: Record<string, number> | null;
   levelId: string;
+  /** Varvens längd när planen går i varv. Null: ett varv. */
+  rounds?: number[] | null;
+  /** Medlemmens egna veckor per fas i varje varv. */
+  roundCounts?: (Record<string, number> | null)[] | null;
+  /** Nivån i varje varv; det första är `levelId`. */
+  roundLevels?: string[] | null;
 };
 
 /**
@@ -94,6 +101,19 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
   const { version, domain } = content;
   if (!domain.levels.some((l) => l.id === input.levelId)) {
     return fail("Välj en nivå.");
+  }
+  const rounds =
+    input.rounds && input.rounds.length > 1
+      ? input.rounds.map(Math.round)
+      : null;
+  if (rounds && rounds.length > 3) return fail("Högst tre varv.");
+  const roundLevels = rounds
+    ? rounds.map((_, i) =>
+        i === 0 ? input.levelId : (input.roundLevels?.[i] ?? input.levelId),
+      )
+    : [input.levelId];
+  if (!roundLevels.every((id) => domain.levels.some((l) => l.id === id))) {
+    return fail("Välj en nivå för varje varv.");
   }
 
   const today = todayIso();
@@ -156,6 +176,8 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
         : { mode: "fritt", startDate: input.goal.startDate },
     length: input.length,
     counts: input.counts ?? undefined,
+    rounds: rounds ?? undefined,
+    roundCounts: rounds ? (input.roundCounts ?? undefined) : undefined,
   });
   if (!proposal.ok) return fail(proposal.error);
 
@@ -173,11 +195,40 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
       race_date: raceDate,
       start_level_id: input.levelId,
       week_map: proposal.weekMap,
+      rounds: rounds ? proposal.rounds.map((r) => r.weeks) : null,
       created_by: user.id,
     })
     .select("id")
     .single();
   if (error) return dbError(error);
+
+  // Nivån i varje varv: ett byte där varvet börjar, som vilket byte som
+  // helst – det syns i historiken och går att ändra.
+  const switches = proposal.rounds.flatMap((round, i) =>
+    i > 0 && roundLevels[i] !== roundLevels[i - 1]
+      ? [
+          {
+            instance_id: data.id,
+            adept_id: adept.id,
+            effective_week: round.fromWeek,
+            from_level_id: roundLevels[i - 1],
+            to_level_id: roundLevels[i],
+            kind: "byte" as const,
+            reason: "eget val" as const,
+            source: "medlem" as const,
+            note: `Varv ${round.round}`,
+            group_id: crypto.randomUUID(),
+            created_by: user.id,
+          },
+        ]
+      : [],
+  );
+  if (switches.length > 0) {
+    const { error: sError } = await supabase
+      .from("plan_level_changes")
+      .insert(switches);
+    if (sError) return dbError(sError);
+  }
 
   refreshPlan();
   return { ok: true, id: data.id };
@@ -692,4 +743,72 @@ export async function proposeLevelChange(input: {
   if (error) return dbError(error);
   refreshPlan();
   return { ok: true, id: data.id };
+}
+
+// ---------------------------------------------------------------------------
+// Formuppskattningen
+// ---------------------------------------------------------------------------
+
+/**
+ * En ny formuppskattning: en 5 km-tid, en maratontid eller båda, som tider
+ * ("19:45", "3:15:00"). Den blir den gällande tills ett nyare test eller en
+ * nyare tid kommer – tempona i planen följer med.
+ */
+export async function saveFitnessEstimate(input: {
+  adeptId: string;
+  fiveK: string;
+  marathon: string;
+  note: string;
+}): Promise<PlanResult> {
+  const user = await requireSessionUser();
+  const fiveK = input.fiveK.trim() ? parseRaceTime(input.fiveK) : null;
+  const marathon = input.marathon.trim() ? parseRaceTime(input.marathon) : null;
+  if (input.fiveK.trim() && fiveK === null) {
+    return fail(
+      "Skriv 5 km-tiden som minuter och sekunder, till exempel 19:45.",
+    );
+  }
+  if (input.marathon.trim() && marathon === null) {
+    return fail(
+      "Skriv maratontiden som timmar, minuter och sekunder, till exempel 3:15:00.",
+    );
+  }
+  if (fiveK === null && marathon === null) {
+    return fail("Ange en 5 km-tid eller en maratontid.");
+  }
+  // Rimlighet: världsrekorden och en promenad sätter gränserna.
+  if (fiveK !== null && (fiveK < 12 * 60 || fiveK > 90 * 60)) {
+    return fail("5 km-tiden ska ligga mellan 12 och 90 minuter.");
+  }
+  if (marathon !== null && (marathon < 2 * 3600 || marathon > 8 * 3600)) {
+    return fail("Maratontiden ska ligga mellan 2 och 8 timmar.");
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.from("fitness_estimates").insert({
+    adept_id: input.adeptId,
+    five_k_seconds: fiveK,
+    marathon_seconds: marathon,
+    note: input.note.trim().slice(0, 300) || null,
+    created_by: user.id,
+  });
+  if (error) return dbError(error);
+  refreshPlan();
+  revalidatePath(`${routes.adepts}/${input.adeptId}/plan`);
+  return { ok: true };
+}
+
+export async function deleteFitnessEstimate(input: {
+  adeptId: string;
+  id: string;
+}): Promise<PlanResult> {
+  await requireSessionUser();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("fitness_estimates")
+    .delete()
+    .eq("id", input.id);
+  if (error) return dbError(error);
+  refreshPlan();
+  revalidatePath(`${routes.adepts}/${input.adeptId}/plan`);
+  return { ok: true };
 }

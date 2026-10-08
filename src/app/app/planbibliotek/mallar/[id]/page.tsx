@@ -152,6 +152,7 @@ export default async function PlanTemplatePage({
                 description: version.description ?? "",
                 prerequisites: version.prerequisites ?? "",
                 minWeeks: version.min_weeks,
+                volumeUnit: version.volume_unit,
               }}
             />
           </Card>
@@ -262,8 +263,11 @@ export default async function PlanTemplatePage({
             kind: w.kind,
             title: w.title,
             note: w.note,
+            checkpoint: w.checkpoint,
           }))}
           sessions={domain.sessions}
+          volumes={domain.volumes}
+          volumeUnit={domain.volumeUnit}
           levels={content.levels.map((l) => ({
             id: l.id,
             key: l.key,
@@ -296,8 +300,11 @@ export default async function PlanTemplatePage({
               position: w.position,
               kind: w.kind,
               title: w.title,
+              checkpoint: w.checkpoint,
             }))}
             sessions={domain.sessions}
+            volumes={domain.volumes}
+            volumeUnit={domain.volumeUnit}
             levelId={previewLevel.id}
             disciplineName={disciplineName}
           />

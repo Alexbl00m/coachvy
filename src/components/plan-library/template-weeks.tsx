@@ -1,5 +1,11 @@
 import { DAY_SHORT, weekKindLabel } from "@/lib/plan-library/labels";
-import type { TemplateSession, WeekKind } from "@/lib/plan-library/types";
+import type {
+  TemplateSession,
+  VolumeUnit,
+  WeekKind,
+  WeekVolume,
+} from "@/lib/plan-library/types";
+import { volumeFor, volumeText } from "@/lib/plan-library/volume";
 
 import { SessionCard } from "./session-card";
 
@@ -13,6 +19,8 @@ export function TemplateWeeks({
   sessions,
   levelId,
   disciplineName,
+  volumes = [],
+  volumeUnit = "km",
 }: {
   phases: { id: string; name: string }[];
   weeks: {
@@ -21,10 +29,13 @@ export function TemplateWeeks({
     position: number;
     kind: WeekKind;
     title: string | null;
+    checkpoint?: boolean;
   }[];
   sessions: TemplateSession[];
   levelId: string;
   disciplineName: (key: string) => string;
+  volumes?: WeekVolume[];
+  volumeUnit?: VolumeUnit;
 }) {
   return (
     <div className="space-y-6">
@@ -35,6 +46,7 @@ export function TemplateWeeks({
             {weeks
               .filter((w) => w.phaseId === phase.id)
               .map((week) => {
+                const volume = volumeFor(volumes, week.id, levelId);
                 const own = sessions
                   .filter((s) => s.weekId === week.id)
                   .flatMap((s) => {
@@ -53,6 +65,8 @@ export function TemplateWeeks({
                       {week.kind !== "normal" &&
                         ` · ${weekKindLabel(week.kind)}`}
                       {week.title && ` · ${week.title}`}
+                      {volume && ` · ${volumeText(volume, volumeUnit)}`}
+                      {week.checkpoint && " · avstämning"}
                     </p>
                     {own.length === 0 ? (
                       <p className="px-3 py-3 text-[13px] text-text-subtle">

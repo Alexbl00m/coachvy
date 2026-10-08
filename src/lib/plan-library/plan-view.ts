@@ -11,6 +11,7 @@ import { hoursMinutes } from "./labels";
 import { levelForWeek } from "./levels";
 import { spansFromWeekMap, type PhaseSpan } from "./periodization";
 import { templateProfile } from "./profile";
+import { parseRounds, roundSpans, type RoundSpan } from "./rounds";
 import {
   listDisciplines,
   loadInstance,
@@ -27,6 +28,8 @@ import type { Level, LevelChange, Override, SessionLog } from "./types";
 export type PlanView = InstanceContent & {
   levels: Level[];
   spans: PhaseSpan[];
+  /** Varven; ett när planen inte går i varv. */
+  rounds: RoundSpan[];
   schedule: ScheduleWeek[];
   /** Nivåhistoriken som planbibliotekets begrepp; `changes` är raderna. */
   history: (LevelChange & { id: string })[];
@@ -85,6 +88,7 @@ export async function loadPlanView(
   const { instance, content } = data;
   const weekMap = instance.week_map as string[];
   const history = data.changes.map(toChange);
+  const rounds = parseRounds(instance.rounds);
   const schedule = buildSchedule({
     startDate: instance.start_date,
     weekMap,
@@ -94,6 +98,8 @@ export async function loadPlanView(
     changes: history,
     overrides: data.overrides.map(toOverride),
     logs: data.logs.map(toLog),
+    rounds,
+    volumes: content.domain.volumes,
   });
   const currentWeek = currentPlanWeek(
     instance.start_date,
@@ -109,6 +115,7 @@ export async function loadPlanView(
       weeks: content.domain.weeks,
       phases: content.domain.phases,
     }),
+    rounds: roundSpans(rounds, instance.weeks),
     schedule,
     history,
     currentWeek,

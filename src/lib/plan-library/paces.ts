@@ -269,3 +269,38 @@ export function parseRaceTime(text: string): number | null {
   const total = h * 3600 + m * 60 + s;
   return total > 0 ? total : null;
 }
+
+/**
+ * Ett pass längd och tid med löparens tempon: angiven sträcka och tid
+ * först, annars räknad ur strukturen. Null där det inte går att räkna.
+ */
+export function sessionAmount(
+  variant: {
+    distanceM: number | null;
+    durationS: number | null;
+    basis: TargetBasis | null;
+    blocks: WorkoutBlock[] | null;
+  },
+  refs: ReferenceSpeeds,
+): { metres: number | null; seconds: number | null } {
+  const ref = variant.basis ? refs[variant.basis] : undefined;
+  const resolved =
+    variant.blocks && ref
+      ? resolveWorkout(
+          {
+            title: "",
+            sport: "löpning",
+            summary: "",
+            rationale: "",
+            basis: "CS",
+            blocks: variant.blocks,
+          },
+          ref,
+        )
+      : null;
+  const complete = resolved && resolved.dropped === 0 ? resolved : null;
+  return {
+    metres: variant.distanceM ?? complete?.totalMetres ?? null,
+    seconds: variant.durationS ?? complete?.totalSeconds ?? null,
+  };
+}

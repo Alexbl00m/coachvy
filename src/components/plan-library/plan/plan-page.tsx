@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, Gauge } from "lucide-react";
 
 import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
@@ -16,16 +16,28 @@ import {
   SOURCE_LABEL,
   weekKindLabel,
 } from "@/lib/plan-library/labels";
+import type { RunningFitness } from "@/lib/plan-library/fitness";
 import { levelTimeline } from "@/lib/plan-library/levels";
+import {
+  pacedBlocks,
+  RUNNING_BASES,
+  sessionAmount,
+  type ReferenceSpeeds,
+} from "@/lib/plan-library/paces";
 import type { PlanView } from "@/lib/plan-library/plan-view";
 import {
   summarizeWeek,
   weekByDay,
   type ScheduledSession,
+  type ScheduleWeek,
 } from "@/lib/plan-library/schedule";
 import { formatStructure } from "@/lib/plan-library/structure";
+import type { Variant } from "@/lib/plan-library/types";
+import { summarizeVolume, volumeText } from "@/lib/plan-library/volume";
 import { daysBetween, weekdayIndex } from "@/lib/season/season";
+import { BASIS_LABEL } from "@/lib/workouts/schema";
 
+import { FitnessCard } from "./fitness-card";
 import { LevelPanel } from "./level-panel";
 import { LevelTimeline } from "./level-timeline";
 import {
@@ -50,6 +62,74 @@ const longDate = (iso: string) =>
     timeZone: "UTC",
   }).format(new Date(`${iso}T00:00:00Z`));
 
+const isRunningBasis = (basis: Variant["basis"]) =>
+  basis !== null && RUNNING_BASES.includes(basis);
+
+/** Passets struktur som text, med löparens tempon där de finns. */
+function structureText(variant: Variant, refs: ReferenceSpeeds): string {
+  if (!variant.blocks) return "";
+  if (!isRunningBasis(variant.basis)) {
+    return `${formatStructure(variant.blocks)}${variant.basis ? ` av ${BASIS_LABEL[variant.basis]}` : ""}`;
+  }
+  return pacedBlocks(variant.blocks, refs[variant.basis!])
+    .map((b) => {
+      const steps = b.steps
+        .map((st) => `${st.amount} ${st.pace ?? `${st.percent}`}`)
+        .join(" + ");
+      return b.times > 1 ? `${b.times} × (${steps})` : steps;
+    })
+    .join("; ");
+}
+
+/** Passets steg med tempo, och procenten bredvid. */
+function PacedStructure({
+  variant,
+  refs,
+}: {
+  variant: Variant;
+  refs: ReferenceSpeeds;
+}) {
+  if (!variant.blocks) return null;
+  if (!isRunningBasis(variant.basis)) {
+    return (
+      <p className="mt-1 font-mono text-[11px] leading-snug text-text-subtle">
+        {structureText(variant, refs)}
+      </p>
+    );
+  }
+  const ref = refs[variant.basis!];
+  return (
+    <div className="mt-1.5 text-[12px] leading-snug tabular-nums">
+      <ul className="space-y-0.5">
+        {pacedBlocks(variant.blocks, ref).map((b, i) => (
+          <li key={i} className="text-text-muted">
+            {b.times > 1 && <span>{b.times} × (</span>}
+            {b.steps.map((st, j) => (
+              <span key={j}>
+                {j > 0 && " + "}
+                {st.amount}{" "}
+                <span className="text-text">{st.pace ?? st.percent}</span>
+                {st.label && (
+                  <span className="text-text-subtle"> {st.label}</span>
+                )}
+              </span>
+            ))}
+            {b.times > 1 && <span>)</span>}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-0.5 text-[11px] text-text-subtle">
+        {ref
+          ? `${pacedBlocks(variant.blocks, ref)
+              .flatMap((b) => b.steps.map((st) => st.percent))
+              .filter((v, i, all) => all.indexOf(v) === i)
+              .join(", ")} av ${BASIS_LABEL[variant.basis!]}`
+          : `Procent av ${BASIS_LABEL[variant.basis!]} – tempona visas när det finns en formuppskattning.`}
+      </p>
+    </div>
+  );
+}
+
 /**
  * Planen som medlemmen – eller coachen – ser den: veckan, hela planen,
  * nivån och historiken. Samma vy på Min plan och på adeptens sida.
@@ -62,6 +142,8 @@ export function PlanPage({
   canEdit,
   workouts,
   today,
+  fitness,
+  userId,
 }: {
   view: PlanView;
   /** Sidan vyn ligger på, för länkarna mellan veckorna. */
@@ -71,8 +153,40 @@ export function PlanPage({
   canEdit: boolean;
   workouts: { id: string; title: string }[];
   today: string;
+  /** Löparens formuppskattning och farterna procenten räknas mot. */
+  fitness: RunningFitness;
+  userId: string;
 }) {
   const { instance, schedule, levels, spans, history, content } = view;
+  const { refs } = fitness;
+  const multi = view.rounds.length > 1;
+  const usesPaces = content.domain.sessions.some((s) =>
+    s.variants.some((v) => isRunningBasis(v.basis)),
+  );
+  const unit = content.domain.volumeUnit;
+  const secondsOf = (s: ScheduledSession) =>
+    sessionAmount(s.variant, refs).seconds;
+  const hasVolumes = schedule.some((w) => w.volume);
+  const isRunning = (key: string) =>
+    view.disciplines.find((d) => d.key === key)?.structure_sport === "löpning";
+  const volumeOf = (w: ScheduleWeek) =>
+    w.volume
+      ? summarizeVolume({
+          target: w.volume,
+          unit,
+          sessions: w.sessions
+            .filter(
+              (s) =>
+                s.state !== "struken" &&
+                (unit === "h" || isRunning(s.session.discipline)),
+            )
+            .map((s) =>
+              s.state === "ersatt"
+                ? { metres: null, seconds: null }
+                : sessionAmount(s.variant, refs),
+            ),
+        })
+      : null;
   const active = instance.status === "aktiv";
   const editable = canEdit && active;
   const paused = active && !canEdit;
@@ -170,12 +284,7 @@ export function PlanPage({
             {instruction}
           </p>
         )}
-        {s.variant.blocks && (
-          <p className="mt-1 font-mono text-[11px] leading-snug text-text-subtle">
-            {formatStructure(s.variant.blocks)}{" "}
-            {s.variant.basis ? `av ${s.variant.basis}` : ""}
-          </p>
-        )}
+        <PacedStructure variant={s.variant} refs={refs} />
         {s.log && !editable && (
           <p className="mt-1 text-[11px] text-text-muted">
             {s.log.status === "genomförd"
@@ -217,8 +326,9 @@ export function PlanPage({
     );
   };
 
-  const summary = summarizeWeek(week);
+  const summary = summarizeWeek(week, secondsOf);
   const { days, flexible } = weekByDay(week);
+  const volume = volumeOf(week);
 
   return (
     <div className="space-y-6">
@@ -305,6 +415,7 @@ export function PlanPage({
                   </p>
                   <p className="text-[13px] text-text-muted">
                     {[
+                      multi ? `varv ${week.round}` : null,
                       span?.name,
                       `nivå ${levelOf(week.levelId)?.key ?? "?"}`,
                       week.kind !== "normal"
@@ -368,6 +479,52 @@ export function PlanPage({
                   ` · ${summary.done} genomförda${summary.partial ? `, ${summary.partial} delvis` : ""}${summary.skipped ? `, ${summary.skipped} hoppade` : ""}`}
               </p>
 
+              {volume && (
+                <p className="-mt-2 mb-4 text-[13px] text-text-muted tabular-nums">
+                  <span className="text-text">
+                    Veckovolym {volumeText(volume.target, unit)}
+                  </span>
+                  {volume.planned > 0 &&
+                    ` · passen ca ${volumeText({ min: volume.planned, max: null }, unit)}`}
+                  {volume.unknown > 0 &&
+                    ` (${volume.unknown} pass utan ${unit === "km" ? "sträcka" : "tid"})`}
+                  {volume.fill
+                    ? ` · fyll ut med ${volumeText(volume.fill, unit)} lugn löpning`
+                    : " · passen räcker"}
+                </p>
+              )}
+
+              {(week.roundEnd || week.checkpoint) && (
+                <div className="mb-4 space-y-2">
+                  {week.roundEnd && (
+                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
+                      <Flag
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0 text-accent"
+                      />
+                      <span>
+                        Sista veckan i varv {week.round}: den slutar med ett
+                        testlopp i stället för målet. Skriv in tiden efteråt –
+                        den blir din nya formuppskattning inför nästa varv.
+                      </span>
+                    </p>
+                  )}
+                  {week.checkpoint && (
+                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
+                      <Gauge
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0 text-accent"
+                      />
+                      <span>
+                        Avstämning i slutet av veckan: stämmer
+                        formuppskattningen? Ett test, ett lopp eller en ny tid
+                        ger nya tempon från nästa vecka.
+                      </span>
+                    </p>
+                  )}
+                </div>
+              )}
+
               <ol className="divide-y divide-line">
                 {days.map((d) => (
                   <li
@@ -417,17 +574,23 @@ export function PlanPage({
                   <thead>
                     <tr className="border-b border-line text-left text-[12px] text-text-muted">
                       <th className="py-2 pr-3 font-medium">Vecka</th>
+                      {multi && <th className="py-2 pr-3 font-medium">Varv</th>}
                       <th className="py-2 pr-3 font-medium">Datum</th>
                       <th className="py-2 pr-3 font-medium">Fas</th>
                       <th className="py-2 pr-3 font-medium">Nivå</th>
                       <th className="py-2 pr-3 text-right font-medium">Pass</th>
                       <th className="py-2 pr-3 text-right font-medium">Tid</th>
+                      {hasVolumes && (
+                        <th className="py-2 pr-3 text-right font-medium">
+                          Volym
+                        </th>
+                      )}
                       <th className="py-2 text-right font-medium">Genomfört</th>
                     </tr>
                   </thead>
                   <tbody>
                     {schedule.map((w) => {
-                      const s = summarizeWeek(w);
+                      const s = summarizeWeek(w, secondsOf);
                       return (
                         <tr
                           key={w.week}
@@ -444,6 +607,11 @@ export function PlanPage({
                               {w.week}
                             </Link>
                           </td>
+                          {multi && (
+                            <td className="py-2 pr-3 text-text-muted">
+                              {w.round}
+                            </td>
+                          )}
                           <td className="py-2 pr-3 text-text-muted">
                             {dayMonth(w.startsOn)}
                           </td>
@@ -460,6 +628,18 @@ export function PlanPage({
                                 · {weekKindLabel(w.kind).toLowerCase()}
                               </span>
                             )}
+                            {w.roundEnd && (
+                              <span className="text-text-subtle">
+                                {" "}
+                                · testlopp
+                              </span>
+                            )}
+                            {w.checkpoint && (
+                              <span className="text-text-subtle">
+                                {" "}
+                                · avstämning
+                              </span>
+                            )}
                           </td>
                           <td className="py-2 pr-3 text-text">
                             {levelOf(w.levelId)?.key}
@@ -470,6 +650,11 @@ export function PlanPage({
                           <td className="py-2 pr-3 text-right text-text-muted">
                             {hoursMinutes(s.plannedSeconds)}
                           </td>
+                          {hasVolumes && (
+                            <td className="py-2 pr-3 text-right text-text-muted">
+                              {w.volume ? volumeText(w.volume, unit) : ""}
+                            </td>
+                          )}
                           <td className="py-2 text-right text-text-muted">
                             {w.week <= view.currentWeek
                               ? `${s.done}/${s.planned}`
@@ -494,6 +679,9 @@ export function PlanPage({
                         )?.name
                       }{" "}
                       · nivå {levelOf(w.levelId)?.key}
+                      {w.volume ? ` · ${volumeText(w.volume, unit)}` : ""}
+                      {w.roundEnd ? " · testlopp" : ""}
+                      {w.checkpoint ? " · avstämning" : ""}
                     </h3>
                     <ul className="mt-1 text-[12px]">
                       {w.sessions
@@ -509,7 +697,7 @@ export function PlanPage({
                               : ""}
                             {s.variant.zone ? `, ${s.variant.zone}` : ""}
                             {s.variant.blocks
-                              ? ` – ${formatStructure(s.variant.blocks)}`
+                              ? ` – ${structureText(s.variant, refs)}`
                               : ""}
                           </li>
                         ))}
@@ -522,6 +710,31 @@ export function PlanPage({
         </div>
 
         <div className="space-y-6 print:hidden">
+          {usesPaces && (
+            <Card>
+              <CardTitle>Formuppskattning</CardTitle>
+              <FitnessCard
+                adeptId={instance.adept_id}
+                editable={editable}
+                current={fitness.current}
+                fromTests={fitness.fromTests}
+                refs={refs}
+                entries={fitness.entries.map((e) => ({
+                  id: e.id,
+                  fiveKSeconds:
+                    e.five_k_seconds === null ? null : Number(e.five_k_seconds),
+                  marathonSeconds:
+                    e.marathon_seconds === null
+                      ? null
+                      : Number(e.marathon_seconds),
+                  note: e.note,
+                  createdAt: e.created_at,
+                  own: e.created_by === userId,
+                }))}
+              />
+            </Card>
+          )}
+
           <Card>
             <CardTitle>Nivå</CardTitle>
             <LevelTimeline

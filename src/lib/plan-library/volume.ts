@@ -23,6 +23,15 @@ export function volumeFor(
   return v ? { min: v.min, max: v.max } : null;
 }
 
+/** Den största veckovolymen på en nivå. Null utan angivna volymer. */
+export function peakVolume(
+  volumes: WeekVolume[],
+  levelId: string,
+): number | null {
+  const own = volumes.filter((v) => v.levelId === levelId);
+  return own.length > 0 ? Math.max(...own.map((v) => v.max ?? v.min)) : null;
+}
+
 const num = (n: number) =>
   (Math.round(n * 10) / 10).toString().replace(".", ",");
 

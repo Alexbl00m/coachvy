@@ -18,6 +18,7 @@ type Meta = {
   description: string;
   prerequisites: string;
   minWeeks: number;
+  volumeUnit: "km" | "h";
 };
 
 /** Planens namn, texter och längd, och mallens adress och mål. */
@@ -91,6 +92,22 @@ export function MetaForm({
             value={meta.minWeeks}
             onChange={(e) => set({ minWeeks: Number(e.target.value) })}
           />
+        </Field>
+        <Field
+          label="Veckovolym i"
+          htmlFor="meta-unit"
+          hint="Volymen per nivå och vecka anges under Veckor."
+        >
+          <Select
+            id="meta-unit"
+            value={meta.volumeUnit}
+            onChange={(e) =>
+              set({ volumeUnit: e.target.value === "h" ? "h" : "km" })
+            }
+          >
+            <option value="km">Kilometer</option>
+            <option value="h">Timmar</option>
+          </Select>
         </Field>
         <div className="sm:col-span-2">
           <Field

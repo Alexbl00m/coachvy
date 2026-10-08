@@ -15,7 +15,11 @@ import { DAY_LONG } from "@/lib/plan-library/labels";
 import { templateProfile } from "@/lib/plan-library/profile";
 import { formatStructure, parseStructure } from "@/lib/plan-library/structure";
 import type { TemplateSession } from "@/lib/plan-library/types";
-import { TARGET_BASES, type TargetBasis } from "@/lib/workouts/schema";
+import {
+  BASIS_LABEL,
+  TARGET_BASES,
+  type TargetBasis,
+} from "@/lib/workouts/schema";
 
 import { useAction } from "../use-action";
 
@@ -345,7 +349,9 @@ export function SessionDialog({
                         <option value="">Ingen struktur</option>
                         {TARGET_BASES.map((b) => (
                           <option key={b} value={b}>
-                            {b}
+                            {BASIS_LABEL[b] === b
+                              ? b
+                              : `${BASIS_LABEL[b][0].toUpperCase()}${BASIS_LABEL[b].slice(1)}`}
                           </option>
                         ))}
                       </Select>

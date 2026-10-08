@@ -210,7 +210,14 @@ export type WeekSummary = {
   byDiscipline: Record<string, number>;
 };
 
-export function summarizeWeek(week: ScheduleWeek): WeekSummary {
+/**
+ * Veckan i siffror. `secondsOf` räknar ett pass tid när den inte står i
+ * mallen – till exempel ett långpass i kilometer, med löparens tempon.
+ */
+export function summarizeWeek(
+  week: ScheduleWeek,
+  secondsOf: (s: ScheduledSession) => number | null = () => null,
+): WeekSummary {
   const counts: Record<LogStatus, number> = {
     genomförd: 0,
     delvis: 0,
@@ -223,7 +230,8 @@ export function summarizeWeek(week: ScheduleWeek): WeekSummary {
     if (s.state === "struken") continue;
     planned += 1;
     if (s.log) counts[s.log.status] += 1;
-    const seconds = s.state === "ersatt" ? 0 : (s.variant.durationS ?? 0);
+    const seconds =
+      s.state === "ersatt" ? 0 : (s.variant.durationS ?? secondsOf(s) ?? 0);
     plannedSeconds += seconds;
     byDiscipline[s.session.discipline] =
       (byDiscipline[s.session.discipline] ?? 0) + seconds;

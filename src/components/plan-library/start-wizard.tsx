@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 
@@ -14,10 +14,18 @@ import {
   nextWeekStart,
   phaseBounds,
   proposePeriodization,
+  weekStartOn,
   type Goal,
 } from "@/lib/plan-library/periodization";
-import type { Phase, TemplateWeek } from "@/lib/plan-library/types";
+import {
+  MAX_ROUNDS,
+  proposeRounds,
+  roundOptions,
+} from "@/lib/plan-library/rounds";
+import type { Phase, TemplateWeek, VolumeUnit } from "@/lib/plan-library/types";
+import { volumeText } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
+import { daysBetween } from "@/lib/season/season";
 
 import { useAction } from "./use-action";
 
@@ -31,6 +39,8 @@ type LevelOption = {
   sessionsMin: number | null;
   sessionsMax: number | null;
   intensity: unknown;
+  /** Den största veckovolymen på nivån. */
+  volumePeak: number | null;
 };
 
 type RaceOption = { id: string; name: string; date: string; priority: string };
@@ -78,9 +88,15 @@ const choiceClass = (selected: boolean) =>
       : "border-line-strong text-text-muted hover:border-text-subtle hover:text-text",
   );
 
+const weeksText = (n: number) => `${n} ${n === 1 ? "vecka" : "veckor"}`;
+
 /**
- * Startguiden: mål, längd, faser och nivå. Förslaget räknas om vid varje
+ * Startguiden: mål, upplägg, faser och nivå. Förslaget räknas om vid varje
  * val med samma funktion som servern använder när planen sparas.
+ *
+ * Är det längre till loppet än planen kan vara föreslås varv – 2 × 12
+ * veckor i stället för 18 veckor som börjar om ett halvår – och nivån kan
+ * väljas för varje varv.
  */
 export function StartWizard({
   versionId,
@@ -90,6 +106,7 @@ export function StartWizard({
   phases,
   weeks,
   levels,
+  volumeUnit,
   races,
   today,
 }: {
@@ -100,6 +117,7 @@ export function StartWizard({
   phases: Phase[];
   weeks: TemplateWeek[];
   levels: LevelOption[];
+  volumeUnit: VolumeUnit;
   races: RaceOption[];
   today: string;
 }) {
@@ -115,10 +133,18 @@ export function StartWizard({
   const [weekStart, setWeekStart] = useState(0);
   const [startDate, setStartDate] = useState(nextWeekStart(today, 0));
   const [length, setLength] = useState(maxWeeks);
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  const [levelId, setLevelId] = useState(
-    levels[Math.floor(levels.length / 2)]?.id ?? "",
-  );
+  /** Antal varv medlemmen valt. Null: förslaget. */
+  const [roundsWanted, setRoundsWanted] = useState<number | null>(null);
+  /** Medlemmens egna veckor per fas, per varv. */
+  const [counts, setCounts] = useState<Record<
+    number,
+    Record<string, number>
+  > | null>(null);
+  const [levelIds, setLevelIds] = useState<string[]>(() => {
+    const middle = levels[Math.floor(levels.length / 2)]?.id ?? "";
+    return Array.from({ length: MAX_ROUNDS }, () => middle);
+  });
+  const levelId = levelIds[0];
 
   const raceDate =
     raceId === "ny"
@@ -132,48 +158,63 @@ export function StartWizard({
         : null
       : { mode: "fritt", startDate };
 
-  const proposal = useMemo(
-    () =>
-      goal
-        ? proposePeriodization({
-            phases,
-            weeks,
-            minWeeks,
-            maxWeeks,
-            goal,
-            length,
-            counts: counts ?? undefined,
-          })
-        : null,
-    // goal är ett nytt objekt varje gång; dess delar räcker som beroenden.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      phases,
-      weeks,
-      minWeeks,
-      maxWeeks,
-      mode,
-      raceDate,
-      weekStart,
-      startDate,
-      length,
-      counts,
-    ],
-  );
+  // Veckorna som ryms före loppet, och uppläggen de ger.
+  const available =
+    mode === "lopp" && raceDate && raceDate >= today
+      ? Math.floor(
+          daysBetween(
+            nextWeekStart(today, weekStart),
+            weekStartOn(raceDate, weekStart),
+          ) / 7,
+        ) + 1
+      : null;
+  const options =
+    available !== null ? roundOptions(available, minWeeks, maxWeeks) : [];
+  const option =
+    available === null
+      ? null
+      : (options.find((o) => o.rounds.length === roundsWanted) ??
+        proposeRounds(available, minWeeks, maxWeeks));
+  const roundCount =
+    mode === "lopp" ? (option?.rounds.length ?? 1) : (roundsWanted ?? 1);
+  const rounds =
+    mode === "lopp"
+      ? (option?.rounds ?? [])
+      : Array.from({ length: roundCount }, () => length);
+  const multi = roundCount > 1;
+
+  const proposal = goal
+    ? proposePeriodization({
+        phases,
+        weeks,
+        minWeeks,
+        maxWeeks,
+        goal,
+        length,
+        counts: !multi ? counts?.[0] : undefined,
+        rounds: multi ? rounds : undefined,
+        roundCounts: multi
+          ? rounds.map((_, i) => counts?.[i] ?? null)
+          : undefined,
+      })
+    : null;
   const bounds = phaseBounds(phases, weeks);
   const resetCounts = () => setCounts(null);
 
-  const adjust = (phaseId: string, delta: number) => {
+  const adjust = (round: number, phaseId: string, delta: number) => {
     if (!proposal?.ok) return;
-    const current = Object.fromEntries(
-      phases.map((p) => [
-        p.id,
-        proposal.phases.find((s) => s.phaseId === p.id)?.weeks ?? 0,
-      ]),
-    );
+    const current = { ...proposal.rounds[round].counts };
     current[phaseId] += delta;
-    setCounts(current);
+    setCounts((c) => ({ ...c, [round]: current }));
   };
+
+  const setLevel = (round: number, id: string) =>
+    setLevelIds((ids) =>
+      ids.map((old, i) =>
+        // Ett byte i ett tidigare varv följer med till de senare som hade samma nivå.
+        i === round || (i > round && old === ids[round]) ? id : old,
+      ),
+    );
 
   const level = levels.find((l) => l.id === levelId);
 
@@ -200,8 +241,11 @@ export function StartWizard({
                     }
                   : { mode, startDate },
               length: proposal.length,
-              counts,
+              counts: !multi ? (counts?.[0] ?? null) : null,
               levelId,
+              rounds: multi ? proposal.rounds.map((r) => r.weeks) : null,
+              roundCounts: multi ? proposal.rounds.map((r) => r.counts) : null,
+              roundLevels: multi ? levelIds.slice(0, roundCount) : null,
             }),
           () => router.push(routes.myPlan),
         );
@@ -326,14 +370,77 @@ export function StartWizard({
         )}
       </Step>
 
-      <Step n={2} title="Hur lång?">
-        {minWeeks === maxWeeks ? (
+      <Step n={2} title={mode === "lopp" ? "Upplägg" : "Hur lång?"}>
+        {mode === "lopp" && options.length > 1 && (
+          <div className="mb-4 grid gap-2 sm:grid-cols-2">
+            {options.map((o) => {
+              const selected = o.rounds.length === roundCount;
+              return (
+                <button
+                  key={o.rounds.length}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setRoundsWanted(o.rounds.length);
+                    resetCounts();
+                  }}
+                  className={choiceClass(selected)}
+                >
+                  <span className="block font-medium">
+                    {o.rounds.length === 1
+                      ? `Ett varv, ${weeksText(o.rounds[0])}`
+                      : `${o.rounds.length} varv, ${o.rounds.join(" + ")} veckor`}
+                  </span>
+                  <span className="block text-[13px] text-text-subtle">
+                    {o.leadIn === 0
+                      ? "Börjar nästa vecka."
+                      : `Börjar om ${weeksText(o.leadIn)} – lugn grundträning fram till dess.`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {mode === "lopp" && options.length > 1 && (
+          <p className="mb-4 text-[13px] text-text-muted">
+            Ju längre tid du ger dig, desto bättre. I varv går du igenom planen
+            flera gånger, med ett testlopp i slutet av varje varv före det sista
+            – och kan ta nästa varv på en högre nivå.
+          </p>
+        )}
+        {mode === "fritt" && (
+          <div className="mb-4 grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Varv"
+              htmlFor="start-varv"
+              hint="Planen gås igenom så många gånger, varv efter varv."
+            >
+              <Select
+                id="start-varv"
+                value={roundCount}
+                onChange={(e) => {
+                  setRoundsWanted(Number(e.target.value));
+                  resetCounts();
+                }}
+              >
+                {Array.from({ length: MAX_ROUNDS }, (_, i) => (
+                  <option key={i} value={i + 1}>
+                    {i === 0 ? "Ett varv" : `${i + 1} varv`}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        )}
+        {mode === "lopp" && multi ? null : minWeeks === maxWeeks ? (
           <p className="text-sm text-text-muted">
             Planen är {maxWeeks} veckor och går inte att korta.
           </p>
         ) : (
           <Field
-            label={`Längd: ${proposal?.ok ? proposal.length : length} veckor`}
+            label={`${multi ? "Varje varv" : "Längd"}: ${
+              proposal?.ok && !multi ? proposal.length : length
+            } veckor`}
             htmlFor="start-langd"
             hint={`Planen går att göra ${minWeeks}–${maxWeeks} veckor. Kortare plan: grundfasen blir kortare, den specifika delen och tapern ligger kvar.`}
           >
@@ -366,54 +473,78 @@ export function StartWizard({
               {longDate(proposal.startDate)} – {longDate(proposal.endDate)},{" "}
               {proposal.length} veckor.
             </p>
-            <ol className="mt-4 divide-y divide-line rounded-lg border border-line">
-              {proposal.phases.map((span) => {
-                const b = bounds[span.phaseId];
-                const total = proposal.length;
-                return (
-                  <li
-                    key={span.phaseId}
-                    className="flex flex-wrap items-center gap-3 px-4 py-3"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-text">
-                        {span.name}
-                      </span>
-                      <span className="block text-[12px] text-text-subtle tabular-nums">
-                        Vecka {span.fromWeek}
-                        {span.toWeek > span.fromWeek
-                          ? `–${span.toWeek}`
-                          : ""} · {shortDate(span.startsOn)} –{" "}
-                        {shortDate(span.endsOn)}
-                      </span>
+            {proposal.rounds.map((round, ri) => (
+              <div key={round.round} className="mt-4">
+                {multi && (
+                  <p className="mb-2 text-[13px] font-medium text-text">
+                    Varv {round.round}{" "}
+                    <span className="font-normal text-text-subtle tabular-nums">
+                      · {weeksText(round.weeks)} · {shortDate(round.startsOn)} –{" "}
+                      {shortDate(round.endsOn)}
+                      {ri < proposal.rounds.length - 1
+                        ? " · slutar med testlopp"
+                        : ""}
                     </span>
-                    <span className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={`Kortare ${span.name}`}
-                        disabled={span.weeks <= b.min || total <= minWeeks}
-                        onClick={() => adjust(span.phaseId, -1)}
+                  </p>
+                )}
+                <ol className="divide-y divide-line rounded-lg border border-line">
+                  {round.phases.map((span) => {
+                    const b = bounds[span.phaseId];
+                    const full =
+                      available !== null && proposal.length >= available;
+                    return (
+                      <li
+                        key={span.phaseId}
+                        className="flex flex-wrap items-center gap-3 px-4 py-3"
                       >
-                        <Minus aria-hidden className="size-4" />
-                      </Button>
-                      <span className="w-16 text-center text-sm tabular-nums">
-                        {span.weeks} v
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={`Längre ${span.name}`}
-                        disabled={span.weeks >= b.max || total >= maxWeeks}
-                        onClick={() => adjust(span.phaseId, 1)}
-                      >
-                        <Plus aria-hidden className="size-4" />
-                      </Button>
-                    </span>
-                  </li>
-                );
-              })}
-            </ol>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium text-text">
+                            {span.name}
+                          </span>
+                          <span className="block text-[12px] text-text-subtle tabular-nums">
+                            Vecka {span.fromWeek}
+                            {span.toWeek > span.fromWeek
+                              ? `–${span.toWeek}`
+                              : ""}{" "}
+                            · {shortDate(span.startsOn)} –{" "}
+                            {shortDate(span.endsOn)}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`Kortare ${span.name}${multi ? `, varv ${round.round}` : ""}`}
+                            disabled={
+                              span.weeks <= b.min || round.weeks <= minWeeks
+                            }
+                            onClick={() => adjust(ri, span.phaseId, -1)}
+                          >
+                            <Minus aria-hidden className="size-4" />
+                          </Button>
+                          <span className="w-16 text-center text-sm tabular-nums">
+                            {span.weeks} v
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`Längre ${span.name}${multi ? `, varv ${round.round}` : ""}`}
+                            disabled={
+                              span.weeks >= b.max ||
+                              round.weeks >= maxWeeks ||
+                              full
+                            }
+                            onClick={() => adjust(ri, span.phaseId, 1)}
+                          >
+                            <Plus aria-hidden className="size-4" />
+                          </Button>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            ))}
             {proposal.notes.length > 0 && (
               <ul className="mt-3 space-y-1 text-[13px] text-text-muted">
                 {proposal.notes.map((n) => (
@@ -435,14 +566,14 @@ export function StartWizard({
         )}
       </Step>
 
-      <Step n={4} title="Nivå">
+      <Step n={4} title={multi ? "Nivå i första varvet" : "Nivå"}>
         <div className="grid gap-2 md:grid-cols-3">
           {levels.map((l) => (
             <button
               key={l.id}
               type="button"
               aria-pressed={l.id === levelId}
-              onClick={() => setLevelId(l.id)}
+              onClick={() => setLevel(0, l.id)}
               className={choiceClass(l.id === levelId)}
             >
               <span className="block font-medium">
@@ -450,6 +581,9 @@ export function StartWizard({
               </span>
               <span className="block text-[12px] text-text-subtle tabular-nums">
                 {[
+                  l.volumePeak !== null
+                    ? `upp till ${volumeText({ min: l.volumePeak, max: null }, volumeUnit)}/vecka`
+                    : null,
                   rangeText(l.hoursMin, l.hoursMax, "h/vecka"),
                   rangeText(l.sessionsMin, l.sessionsMax, "pass"),
                 ]
@@ -468,6 +602,39 @@ export function StartWizard({
           <p className="mt-3 text-[12px] text-text-subtle">
             Intensitet på {level.key}: {intensityText(level.intensity)}.
           </p>
+        )}
+        {multi && proposal?.ok && (
+          <div className="mt-4 space-y-3 border-t border-line pt-4">
+            {proposal.rounds.slice(1).map((round) => (
+              <div key={round.round}>
+                <p className="mb-1.5 text-[13px] font-medium text-text">
+                  Varv {round.round}{" "}
+                  <span className="font-normal text-text-subtle">
+                    · från vecka {round.fromWeek}
+                  </span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {levels.map((l) => {
+                    const selected = levelIds[round.round - 1] === l.id;
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setLevel(round.round - 1, l.id)}
+                        className={choiceClass(selected)}
+                      >
+                        {l.key} · {l.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <p className="text-[13px] text-text-muted">
+              Till exempel en lägre volym första varvet och en högre mot målet.
+            </p>
+          </div>
         )}
         <p className="mt-3 text-[13px] text-text-muted">
           Du kan byta nivå när som helst under planen.

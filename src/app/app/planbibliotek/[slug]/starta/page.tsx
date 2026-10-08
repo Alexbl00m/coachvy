@@ -10,6 +10,7 @@ import {
   getActiveInstance,
   loadPublishedBySlug,
 } from "@/lib/plan-library/queries";
+import { peakVolume } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
 import { listRaces } from "@/lib/season/queries";
 import { todayIso } from "@/lib/season/season";
@@ -58,6 +59,7 @@ export default async function StartPlanPage({
           maxWeeks={version.max_weeks}
           phases={domain.phases}
           weeks={domain.weeks}
+          volumeUnit={domain.volumeUnit}
           today={today}
           races={races
             .filter((r) => r.race_date >= today)
@@ -82,6 +84,7 @@ export default async function StartPlanPage({
             sessionsMin: l.sessions_min,
             sessionsMax: l.sessions_max,
             intensity: l.intensity,
+            volumePeak: peakVolume(domain.volumes, l.id),
           }))}
         />
       </div>

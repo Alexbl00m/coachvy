@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Plus, Trash2 } from "lucide-react";
+import { Copy, Flag, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
@@ -10,9 +10,15 @@ import {
   copyWeek,
   deleteWeek,
   saveWeek,
+  saveWeekVolumes,
 } from "@/lib/plan-library/admin-actions";
 import { DAY_SHORT, WEEK_KINDS } from "@/lib/plan-library/labels";
-import type { TemplateSession, WeekKind } from "@/lib/plan-library/types";
+import type {
+  TemplateSession,
+  VolumeUnit,
+  WeekKind,
+  WeekVolume,
+} from "@/lib/plan-library/types";
 
 import { SessionCard } from "../session-card";
 import { useAction } from "../use-action";
@@ -25,6 +31,7 @@ type WeekRow = {
   kind: WeekKind;
   title: string | null;
   note: string | null;
+  checkpoint: boolean;
 };
 
 type Open = {
@@ -37,7 +44,8 @@ type Open = {
 /**
  * Veckorna fas för fas, dag för dag. Ett pass visas med den översta
  * nivåns variant och hur många nivåer det finns på; klicka för att ändra
- * alla nivåer.
+ * alla nivåer. Varje vecka har sin volym per nivå – det nivåerna skiljer
+ * sig i – och kan vara en avstämning av formuppskattningen.
  */
 export function WeeksEditor({
   versionId,
@@ -47,6 +55,8 @@ export function WeeksEditor({
   sessions,
   levels,
   disciplines,
+  volumes,
+  volumeUnit,
 }: {
   versionId: string;
   editable: boolean;
@@ -55,6 +65,8 @@ export function WeeksEditor({
   sessions: TemplateSession[];
   levels: { id: string; key: string; name: string }[];
   disciplines: DisciplineOption[];
+  volumes: WeekVolume[];
+  volumeUnit: VolumeUnit;
 }) {
   const [open, setOpen] = useState<Open | null>(null);
   const { pending, error, run } = useAction();
@@ -115,6 +127,17 @@ export function WeeksEditor({
                   pending={pending}
                   sessions={sessions.filter((s) => s.weekId === week.id)}
                   levels={levels}
+                  volumes={volumes.filter((v) => v.weekId === week.id)}
+                  volumeUnit={volumeUnit}
+                  onSaveVolumes={(next) =>
+                    run(() =>
+                      saveWeekVolumes({
+                        versionId,
+                        weekId: week.id,
+                        volumes: next,
+                      }),
+                    )
+                  }
                   disciplineName={disciplineName}
                   onOpen={(day, session) =>
                     setOpen({
@@ -139,6 +162,7 @@ export function WeeksEditor({
                         kind: patch.kind ?? week.kind,
                         title: patch.title ?? week.title ?? "",
                         note: week.note ?? "",
+                        checkpoint: patch.checkpoint ?? week.checkpoint,
                       }),
                     )
                   }
@@ -174,6 +198,9 @@ function WeekBlock({
   pending,
   sessions,
   levels,
+  volumes,
+  volumeUnit,
+  onSaveVolumes,
   disciplineName,
   onOpen,
   onCopy,
@@ -185,13 +212,24 @@ function WeekBlock({
   pending: boolean;
   sessions: TemplateSession[];
   levels: { id: string; key: string }[];
+  volumes: WeekVolume[];
+  volumeUnit: VolumeUnit;
+  onSaveVolumes: (
+    volumes: { levelId: string; min: number | null; max: number | null }[],
+  ) => void;
   disciplineName: (key: string) => string;
   onOpen: (day: number | null, session: TemplateSession | null) => void;
   onCopy: () => void;
   onDelete: () => void;
-  onSave: (patch: { kind?: WeekKind; title?: string }) => void;
+  onSave: (patch: {
+    kind?: WeekKind;
+    title?: string;
+    checkpoint?: boolean;
+  }) => void;
 }) {
   const [title, setTitle] = useState(week.title ?? "");
+  // Rutan svarar direkt; servern får värdet i bakgrunden.
+  const [checkpoint, setCheckpoint] = useState(week.checkpoint);
   const columns: (number | null)[] = [0, 1, 2, 3, 4, 5, 6, null];
 
   return (
@@ -226,6 +264,23 @@ function WeekBlock({
             className="h-8 py-1 text-[13px]"
           />
         </div>
+        <label
+          className="flex shrink-0 items-center gap-1.5 text-[13px] text-text-muted"
+          title="I slutet av veckan ses formuppskattningen över, och tempona följer med."
+        >
+          <input
+            type="checkbox"
+            className="size-4 accent-[var(--accent)]"
+            disabled={!editable || pending}
+            checked={checkpoint}
+            onChange={(e) => {
+              setCheckpoint(e.target.checked);
+              onSave({ checkpoint: e.target.checked });
+            }}
+          />
+          <Flag aria-hidden className="size-3.5" />
+          Avstämning
+        </label>
         {editable && (
           <span className="flex gap-1">
             <Button
@@ -249,6 +304,18 @@ function WeekBlock({
           </span>
         )}
       </div>
+      {levels.length > 0 && (
+        <VolumeStrip
+          key={volumes.map((v) => `${v.levelId}:${v.min}:${v.max}`).join("|")}
+          week={week.position}
+          levels={levels}
+          volumes={volumes}
+          unit={volumeUnit}
+          editable={editable}
+          pending={pending}
+          onSave={onSaveVolumes}
+        />
+      )}
       <div className="overflow-x-auto">
         <div className="grid min-w-[56rem] grid-cols-8 divide-x divide-line">
           {columns.map((day) => {
@@ -305,6 +372,114 @@ function WeekBlock({
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+type VolumeDraft = Record<string, { min: string; max: string }>;
+
+const draftOf = (levels: { id: string }[], volumes: WeekVolume[]) =>
+  Object.fromEntries(
+    levels.map((l) => {
+      const v = volumes.find((x) => x.levelId === l.id);
+      return [
+        l.id,
+        {
+          min: v ? String(v.min) : "",
+          max: v?.max != null ? String(v.max) : "",
+        },
+      ];
+    }),
+  ) as VolumeDraft;
+
+const toNumber = (text: string) => {
+  const t = text.trim().replace(",", ".");
+  if (!t) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** Veckans volym per nivå: ett tal eller ett spann, sparas när fältet lämnas. */
+function VolumeStrip({
+  week,
+  levels,
+  volumes,
+  unit,
+  editable,
+  pending,
+  onSave,
+}: {
+  week: number;
+  levels: { id: string; key: string }[];
+  volumes: WeekVolume[];
+  unit: VolumeUnit;
+  editable: boolean;
+  pending: boolean;
+  onSave: (
+    volumes: { levelId: string; min: number | null; max: number | null }[],
+  ) => void;
+}) {
+  const [draft, setDraft] = useState(() => draftOf(levels, volumes));
+  const initial = draftOf(levels, volumes);
+  const save = () => {
+    const changed = levels.some(
+      (l) =>
+        draft[l.id].min !== initial[l.id].min ||
+        draft[l.id].max !== initial[l.id].max,
+    );
+    if (!changed) return;
+    onSave(
+      levels.map((l) => ({
+        levelId: l.id,
+        min: toNumber(draft[l.id].min),
+        max: toNumber(draft[l.id].max),
+      })),
+    );
+  };
+  const field =
+    "h-7 w-14 rounded-md border border-line bg-surface-2 px-1.5 text-right text-[13px] tabular-nums text-text focus:border-text-subtle focus:outline-none disabled:opacity-60";
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-3 py-2 text-[13px]">
+      <span className="text-text-muted">Volym</span>
+      {levels.map((l) => (
+        <span key={l.id} className="flex items-center gap-1">
+          <span className="w-4 font-medium text-text">{l.key}</span>
+          <input
+            aria-label={`Volym nivå ${l.key}, vecka ${week}`}
+            inputMode="decimal"
+            disabled={!editable || pending}
+            className={field}
+            value={draft[l.id].min}
+            onChange={(e) =>
+              setDraft((d) => ({
+                ...d,
+                [l.id]: { ...d[l.id], min: e.target.value },
+              }))
+            }
+            onBlur={save}
+          />
+          <span aria-hidden className="text-text-subtle">
+            –
+          </span>
+          <input
+            aria-label={`Volym nivå ${l.key}, vecka ${week}, övre`}
+            inputMode="decimal"
+            disabled={!editable || pending}
+            placeholder="–"
+            className={field}
+            value={draft[l.id].max}
+            onChange={(e) =>
+              setDraft((d) => ({
+                ...d,
+                [l.id]: { ...d[l.id], max: e.target.value },
+              }))
+            }
+            onBlur={save}
+          />
+          <span className="text-text-subtle">{unit}</span>
+        </span>
+      ))}
     </div>
   );
 }

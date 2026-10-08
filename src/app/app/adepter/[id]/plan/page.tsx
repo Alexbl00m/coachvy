@@ -12,6 +12,7 @@ import {
   listWorkoutOptions,
   loadPlanView,
 } from "@/lib/plan-library/plan-view";
+import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { listInstances } from "@/lib/plan-library/queries";
 import { routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
@@ -27,7 +28,7 @@ export default async function AdeptPlanPage({
   params,
   searchParams,
 }: PageProps<"/app/adepter/[id]/plan">) {
-  await requireCoach();
+  const coach = await requireCoach();
   const { id } = await params;
   const query = await searchParams;
   const adept = await getAdept(id);
@@ -73,10 +74,11 @@ export default async function AdeptPlanPage({
     );
   }
 
-  const [view, canEdit, workouts] = await Promise.all([
+  const [view, canEdit, workouts, fitness] = await Promise.all([
     loadPlanView(chosen.id, today),
     canEditPlan(id),
     listWorkoutOptions(id),
+    loadRunningFitness(id),
   ]);
   if (!view) notFound();
   const weekParam = Number(query.vecka);
@@ -112,6 +114,8 @@ export default async function AdeptPlanPage({
         canEdit={canEdit}
         workouts={workouts}
         today={today}
+        fitness={fitness}
+        userId={coach.id}
       />
     </>
   );

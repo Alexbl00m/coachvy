@@ -21,6 +21,7 @@ import {
   listDisciplines,
   loadPublishedBySlug,
 } from "@/lib/plan-library/queries";
+import { peakVolume, volumeText } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
 
 export const metadata = { title: "Plan" };
@@ -59,6 +60,7 @@ export default async function LibraryPlanPage({
   if (!content) notFound();
 
   const { version, levels, phases, weeks, domain } = content;
+  const peak = (levelId: string) => peakVolume(domain.volumes, levelId);
   const level =
     levels.find((l) => l.id === query.niva) ??
     levels[Math.floor(levels.length / 2)] ??
@@ -178,8 +180,11 @@ export default async function LibraryPlanPage({
                   position: w.position,
                   kind: w.kind,
                   title: w.title,
+                  checkpoint: w.checkpoint,
                 }))}
                 sessions={domain.sessions}
+                volumes={domain.volumes}
+                volumeUnit={domain.volumeUnit}
                 levelId={level.id}
                 disciplineName={(key) =>
                   disciplines.find((d) => d.key === key)?.name ?? key
@@ -203,6 +208,9 @@ export default async function LibraryPlanPage({
                   </p>
                   <p className="text-[12px] text-text-subtle tabular-nums">
                     {[
+                      peak(l.id) !== null
+                        ? `upp till ${volumeText({ min: peak(l.id)!, max: null }, domain.volumeUnit)}/vecka`
+                        : null,
                       rangeText(l.hours_min, l.hours_max, "h/vecka"),
                       rangeText(l.sessions_min, l.sessions_max, "pass"),
                       intensityText(l.intensity),

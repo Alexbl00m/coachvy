@@ -14,6 +14,7 @@ import {
   listWorkoutOptions,
   loadPlanView,
 } from "@/lib/plan-library/plan-view";
+import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { listInstances } from "@/lib/plan-library/queries";
 import { routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
@@ -100,10 +101,11 @@ export default async function MyPlanPage({
     );
   }
 
-  const [view, canEdit, workouts] = await Promise.all([
+  const [view, canEdit, workouts, fitness] = await Promise.all([
     loadPlanView(chosen.id, today),
     canEditPlan(user.adept.id),
     listWorkoutOptions(user.adept.id),
+    loadRunningFitness(user.adept.id),
   ]);
   if (!view) redirect(routes.planLibrary);
 
@@ -128,6 +130,8 @@ export default async function MyPlanPage({
         canEdit={canEdit}
         workouts={workouts}
         today={today}
+        fitness={fitness}
+        userId={user.id}
       />
       {pastList}
     </>
