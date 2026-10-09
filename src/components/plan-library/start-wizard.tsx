@@ -107,6 +107,7 @@ export function StartWizard({
   weeks,
   levels,
   volumeUnit,
+  usesPaces,
   races,
   today,
 }: {
@@ -118,6 +119,8 @@ export function StartWizard({
   weeks: TemplateWeek[];
   levels: LevelOption[];
   volumeUnit: VolumeUnit;
+  /** Planen räknar tempon: då väljs vad de räknas ur. */
+  usesPaces: boolean;
   races: RaceOption[];
   today: string;
 }) {
@@ -145,6 +148,8 @@ export function StartWizard({
     return Array.from({ length: MAX_ROUNDS }, () => middle);
   });
   const levelId = levelIds[0];
+  const [paceMode, setPaceMode] = useState<"form" | "mål">("form");
+  const [goalTime, setGoalTime] = useState("");
 
   const raceDate =
     raceId === "ny"
@@ -246,6 +251,8 @@ export function StartWizard({
               rounds: multi ? proposal.rounds.map((r) => r.weeks) : null,
               roundCounts: multi ? proposal.rounds.map((r) => r.counts) : null,
               roundLevels: multi ? levelIds.slice(0, roundCount) : null,
+              paceMode: usesPaces ? paceMode : "form",
+              goalTime: usesPaces && paceMode === "mål" ? goalTime : undefined,
             }),
           () => router.push(routes.myPlan),
         );
@@ -640,6 +647,58 @@ export function StartWizard({
           Du kan byta nivå när som helst under planen.
         </p>
       </Step>
+
+      {usesPaces && (
+        <Step n={5} title="Tempo">
+          <p className="mb-3 text-sm text-text-muted">
+            Passen anges i procent och zoner. Vad ska tempona räknas ur?
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              aria-pressed={paceMode === "form"}
+              onClick={() => setPaceMode("form")}
+              className={choiceClass(paceMode === "form")}
+            >
+              <span className="block font-medium">Min form</span>
+              <span className="block text-[13px] text-text-subtle">
+                Dina tester och tider. Tempona följer med när formen ändras.
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={paceMode === "mål"}
+              onClick={() => setPaceMode("mål")}
+              className={choiceClass(paceMode === "mål")}
+            >
+              <span className="block font-medium">Min måltid</span>
+              <span className="block text-[13px] text-text-subtle">
+                Tiden du vill springa maraton på. Tempona räknas ur den.
+              </span>
+            </button>
+          </div>
+          {paceMode === "mål" && (
+            <div className="mt-4 max-w-xs">
+              <Field
+                label="Måltid för maraton"
+                htmlFor="start-maltid"
+                hint="Till exempel 3:15:00. Känns de första passen för snabba är målet för högt satt."
+              >
+                <Input
+                  id="start-maltid"
+                  inputMode="numeric"
+                  placeholder="3:15:00"
+                  value={goalTime}
+                  onChange={(e) => setGoalTime(e.target.value)}
+                />
+              </Field>
+            </div>
+          )}
+          <p className="mt-3 text-[13px] text-text-muted">
+            Du kan byta senare under planen.
+          </p>
+        </Step>
+      )}
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         {error && (

@@ -80,7 +80,23 @@ export type StartPlanInput = {
   roundCounts?: (Record<string, number> | null)[] | null;
   /** Nivån i varje varv; det första är `levelId`. */
   roundLevels?: string[] | null;
+  /** Vad tempona räknas ur. Standard: formuppskattningen. */
+  paceMode?: "form" | "mål";
+  /** Måltiden för maraton, som "3:15:00", när tempona räknas ur målet. */
+  goalTime?: string;
 };
+
+/** Läser en måltid för maraton. Ger ett fel i text eller sekunderna. */
+function readGoalTime(text: string | undefined): number | string {
+  const seconds = text?.trim() ? parseRaceTime(text) : null;
+  if (seconds === null) {
+    return "Skriv måltiden som timmar, minuter och sekunder, till exempel 3:15:00.";
+  }
+  if (seconds < 2 * 3600 || seconds > 8 * 3600) {
+    return "Måltiden för ett maraton ska ligga mellan 2 och 8 timmar.";
+  }
+  return seconds;
+}
 
 /**
  * Startar en plan: periodiseringen räknas om här med samma funktion som
@@ -114,6 +130,14 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
     : [input.levelId];
   if (!roundLevels.every((id) => domain.levels.some((l) => l.id === id))) {
     return fail("Välj en nivå för varje varv.");
+  }
+
+  const paceMode = input.paceMode === "mål" ? "mål" : "form";
+  let goalSeconds: number | null = null;
+  if (paceMode === "mål") {
+    const goal = readGoalTime(input.goalTime);
+    if (typeof goal === "string") return fail(goal);
+    goalSeconds = goal;
   }
 
   const today = todayIso();
@@ -196,6 +220,8 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
       start_level_id: input.levelId,
       week_map: proposal.weekMap,
       rounds: rounds ? proposal.rounds.map((r) => r.weeks) : null,
+      pace_mode: paceMode,
+      goal_seconds: goalSeconds,
       created_by: user.id,
     })
     .select("id")
@@ -810,5 +836,35 @@ export async function deleteFitnessEstimate(input: {
   if (error) return dbError(error);
   refreshPlan();
   revalidatePath(`${routes.adepts}/${input.adeptId}/plan`);
+  return { ok: true };
+}
+
+/**
+ * Vad tempona räknas ur: formuppskattningen eller en måltid. Procenten i
+ * passen ändras inte – bara tempona.
+ */
+export async function setPaceSource(input: {
+  instanceId: string;
+  mode: "form" | "mål";
+  goalTime?: string;
+}): Promise<PlanResult> {
+  const ctx = await context(input.instanceId);
+  if (!isCtx(ctx)) return ctx;
+  let goalSeconds: number | null = null;
+  if (input.mode === "mål") {
+    const goal = readGoalTime(input.goalTime);
+    if (typeof goal === "string") return fail(goal);
+    goalSeconds = goal;
+  }
+  const { error } = await ctx.supabase
+    .from("plan_instances")
+    .update({
+      pace_mode: input.mode === "mål" ? "mål" : "form",
+      goal_seconds: input.mode === "mål" ? goalSeconds : null,
+    })
+    .eq("id", input.instanceId);
+  if (error) return dbError(error);
+  refreshPlan();
+  revalidatePath(`${routes.adepts}/${ctx.view.instance.adept_id}/plan`);
   return { ok: true };
 }

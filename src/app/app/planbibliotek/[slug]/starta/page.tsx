@@ -60,6 +60,9 @@ export default async function StartPlanPage({
           phases={domain.phases}
           weeks={domain.weeks}
           volumeUnit={domain.volumeUnit}
+          usesPaces={domain.sessions.some((s) =>
+            s.variants.some((v) => v.basis === "5K" || v.basis === "MP"),
+          )}
           today={today}
           races={races
             .filter((r) => r.race_date >= today)

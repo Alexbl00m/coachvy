@@ -11,7 +11,9 @@
  *
  * Steg skiljs med semikolon, plus eller radbrytning. En repetition skrivs
  * `5x(…)`. Längd i s, min, h, m eller km, eller som 1:30. Målet i procent,
- * ett tal eller ett spann. Efter procenten får en etikett stå; är den ett
+ * ett tal eller ett spann – eller en namngiven zon, `@LO`, `@MT`, `@S`,
+ * `@I`, `@WK`, `@RK` (andel av maratonfart, se zones.ts). Efter målet får en
+ * etikett stå; är den ett
  * av stegtyperna (uppvärmning, intervall, vila, distans, nedvarvning) blir
  * den stegets typ. Annars gissas typen: först uppvärmning, sist
  * nedvarvning, i en repetition är det hårdaste intervall och resten vila.
@@ -19,6 +21,7 @@
  * Modulen är ren.
  */
 
+import { zoneByKey, zoneForRange, type Zone } from "./zones";
 import {
   STEP_KINDS,
   type StepKind,
@@ -53,7 +56,11 @@ function splitTop(text: string): string[] {
 
 const num = (raw: string) => Number(raw.replace(",", "."));
 
-type RawStep = Omit<WorkoutStep, "kind"> & { kind: StepKind | null };
+type RawStep = Omit<WorkoutStep, "kind"> & {
+  kind: StepKind | null;
+  /** Zonen steget angavs som, för att gissa typen. */
+  zone?: Zone;
+};
 
 function parseStep(raw: string): RawStep | string {
   const text = raw.trim().replace(/\s+/g, " ");
@@ -86,11 +93,30 @@ function parseStep(raw: string): RawStep | string {
     return `"${raw.trim()}" har ingen längd.`;
   }
 
+  const zoneMatch = rest.match(/^\s*@\s*([A-Za-z]{1,2})\b/);
+  if (zoneMatch) {
+    const zone = zoneByKey(zoneMatch[1]);
+    if (!zone) {
+      return `"${raw.trim()}": zonen @${zoneMatch[1]} finns inte – välj RK, LO, MT, S, I eller WK.`;
+    }
+    const label = rest.slice(zoneMatch[0].length).trim();
+    const kind = STEP_KINDS.find((k) => k === label.toLowerCase()) ?? null;
+    return {
+      kind,
+      label: kind ? "" : label.slice(0, 60),
+      durationSeconds,
+      distanceM,
+      low: zone.low,
+      high: zone.high,
+      zone,
+    };
+  }
+
   const target = rest.match(
     /^\s*@?\s*(\d+(?:[.,]\d+)?)\s*(?:%\s*)?(?:[-–]\s*(\d+(?:[.,]\d+)?)\s*)?%/,
   );
   if (!target) {
-    return `"${raw.trim()}" saknar mål i procent – skriv till exempel 65% eller 90-95%.`;
+    return `"${raw.trim()}" saknar mål – skriv till exempel 65%, 90-95% eller @LO.`;
   }
   const low = num(target[1]) / 100;
   const high = target[2] ? num(target[2]) / 100 : low;
@@ -179,16 +205,20 @@ function inferKinds(
       return {
         type: "repetition",
         times: block.times,
-        steps: block.steps.map((s) => ({
-          ...s,
-          kind:
-            s.kind ??
-            (s.high === hardest && block.steps.length > 1
-              ? "intervall"
-              : block.steps.length === 1
+        steps: block.steps.map((s) => {
+          const { zone: _zone, ...step } = s;
+          void _zone;
+          return {
+            ...step,
+            kind:
+              s.kind ??
+              (s.high === hardest && block.steps.length > 1
                 ? "intervall"
-                : "vila"),
-        })),
+                : block.steps.length === 1
+                  ? "intervall"
+                  : "vila"),
+          };
+        }),
       };
     }
     const s = block.step;
@@ -198,10 +228,12 @@ function inferKinds(
         ? "uppvärmning"
         : raw.length > 1 && index === last
           ? "nedvarvning"
-          : s.high >= 0.9
+          : (s.zone ? s.zone.hard : s.high >= 0.9)
             ? "intervall"
             : "distans");
-    return { type: "steg", step: { ...s, kind } };
+    const { zone: _zone, ...step } = s;
+    void _zone;
+    return { type: "steg", step: { ...step, kind } };
   });
 }
 
@@ -221,16 +253,33 @@ export function formatAmount(step: WorkoutStep): string {
   return m >= 1000 && m % 100 === 0 ? `${sv(m / 1000)} km` : `${m} m`;
 }
 
-function formatStep(step: WorkoutStep, inferred: StepKind): string {
+function formatStep(
+  step: WorkoutStep,
+  inferred: StepKind,
+  zones: boolean,
+): string {
   const low = sv(step.low * 100);
   const high = sv(step.high * 100);
-  const target = low === high ? `${low}%` : `${low}-${high}%`;
+  const zone = zones ? zoneForRange(step.low, step.high) : null;
+  const target = zone
+    ? `@${zone.key}`
+    : low === high
+      ? `${low}%`
+      : `${low}-${high}%`;
   const label = step.label || (step.kind !== inferred ? step.kind : "");
   return [formatAmount(step), target, label].filter(Boolean).join(" ");
 }
 
-/** Blocken som en rad, i samma form som `parseStructure` läser. */
-export function formatStructure(blocks: WorkoutBlock[]): string {
+/**
+ * Blocken som en rad, i samma form som `parseStructure` läser. Med `zones`
+ * skrivs mål som ligger exakt på en zon som `@LO` – bara rätt för pass som
+ * räknas mot maratonfart.
+ */
+export function formatStructure(
+  blocks: WorkoutBlock[],
+  options: { zones?: boolean } = {},
+): string {
+  const zones = options.zones ?? false;
   // Typerna som raden skulle få utan etiketter, för att bara skriva ut de
   // som avviker.
   const bare = inferKinds(
@@ -248,11 +297,11 @@ export function formatStructure(blocks: WorkoutBlock[]): string {
     .map((block, i) => {
       const plain = bare[i];
       if (block.type === "steg" && plain.type === "steg") {
-        return formatStep(block.step, plain.step.kind);
+        return formatStep(block.step, plain.step.kind, zones);
       }
       if (block.type === "repetition" && plain.type === "repetition") {
         return `${block.times}x(${block.steps
-          .map((s, j) => formatStep(s, plain.steps[j].kind))
+          .map((s, j) => formatStep(s, plain.steps[j].kind, zones))
           .join(" + ")})`;
       }
       return "";

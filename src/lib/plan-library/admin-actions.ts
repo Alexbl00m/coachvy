@@ -715,7 +715,12 @@ export async function saveSession(input: SessionInput): Promise<AdminResult> {
     }
     if (!v.basis || !TARGET_BASES.includes(v.basis)) {
       return fail(
-        "Välj vad procenten räknas mot (FTP, CP, CS, CSS eller LT2).",
+        "Välj vad procenten räknas mot (FTP, CP, CS, CSS, LT2, 5 km-fart eller maratonfart).",
+      );
+    }
+    if (raw.includes("@") && v.basis !== "MP") {
+      return fail(
+        "Zoner som @LO och @MT räknas mot maratonfart – välj Maratonfart som bas, eller skriv procent.",
       );
     }
     const result = parseStructure(raw);

@@ -29,6 +29,7 @@ import {
 import { targetText } from "@/lib/workouts/target-text";
 
 import { formatAmount } from "./structure";
+import { zoneForRange, type ZoneKey } from "./zones";
 
 export const FIVE_K_M = 5000;
 export const MARATHON_M = 42195;
@@ -164,6 +165,8 @@ export type PacedStep = {
   amount: string;
   /** "105 %" eller "70–75 %". */
   percent: string;
+  /** Zonen steget ligger på när passet räknas mot maratonfart. */
+  zone: ZoneKey | null;
   /** "3:58/km". Null utan referens. */
   pace: string | null;
   metres: number | null;
@@ -185,6 +188,7 @@ const percentOf = (low: number, high: number) => {
 export function pacedBlocks(
   blocks: WorkoutBlock[] | null,
   reference: number | null | undefined,
+  basis: TargetBasis | null = null,
 ): PacedBlock[] {
   if (!blocks) return [];
   const ref = reference && reference > 0 ? reference : null;
@@ -212,6 +216,13 @@ export function pacedBlocks(
         Math.min(step.low, step.high),
         Math.max(step.low, step.high),
       ),
+      zone:
+        basis === "MP"
+          ? (zoneForRange(
+              Math.min(step.low, step.high),
+              Math.max(step.low, step.high),
+            )?.key ?? null)
+          : null,
       pace: resolved ? targetText(resolved, "löpning") : null,
       metres: resolved?.metres ?? step.distanceM ?? null,
       seconds: resolved?.seconds ?? step.durationSeconds ?? 0,

@@ -74,7 +74,9 @@ function draftOf(
         distanceKm: v?.distanceM ? v.distanceM / 1000 : null,
         zone: v?.zone ?? "",
         basis: v?.basis ?? (sport ? DEFAULT_BASIS[sport] : null) ?? null,
-        structure: v?.blocks ? formatStructure(v.blocks) : "",
+        structure: v?.blocks
+          ? formatStructure(v.blocks, { zones: v.basis === "MP" })
+          : "",
       };
     }),
   };
@@ -253,7 +255,12 @@ export function SessionDialog({
             15 min 65%; 5x(4 min 105% + 2 min 60%); 10 min 60%
           </code>
           . Längd i s, min, h, m eller km, målet i procent av basen. Tiden
-          räknas fram ur strukturen när den bara har tider.
+          räknas fram ur strukturen när den bara har tider. Med maratonfart som
+          bas går zoner också:{" "}
+          <code className="text-text-muted">
+            3 km @LO; 2x(5 km @MT + 1 km @LO); 2 km @LO
+          </code>{" "}
+          (RK, LO, MT, S, I, WK).
         </p>
 
         <div className="mt-3 space-y-3">
@@ -370,9 +377,11 @@ export function SessionDialog({
                             patchVariant(i, { structure: e.target.value })
                           }
                           placeholder={
-                            v.basis
-                              ? "15 min 65%; 3x(10 min 95% + 3 min 60%); 10 min 60%"
-                              : "Välj vad procenten räknas mot först"
+                            v.basis === "MP"
+                              ? "3 km @LO; 2x(5 km @MT + 1 km @LO); 2 km @LO"
+                              : v.basis
+                                ? "15 min 65%; 3x(10 min 95% + 3 min 60%); 10 min 60%"
+                                : "Välj vad procenten räknas mot först"
                           }
                           className="font-mono text-[13px]"
                         />

@@ -130,6 +130,20 @@ describe("tempon", () => {
     expect(paced[1].steps[0].pace).toBe("3:49/km");
   });
 
+  it("ger zonen och ett tempospann för pass i zoner", () => {
+    // Maraton på 3:15:00 är 4:37/km, 3,61 m/s.
+    const mp = 42195 / (3 * 3600 + 15 * 60);
+    const paced = pacedBlocks(blocks("10 km @LO + 5 km @MT"), mp, "MP");
+    expect(paced[0].steps[0].zone).toBe("LO");
+    expect(paced[1].steps[0].zone).toBe("MT");
+    // LO är 83–92,5 % av maratonfart: ungefär 5:00–5:34/km.
+    expect(paced[0].steps[0].pace).toMatch(/^5:0\d–5:3\d\/km$/);
+    // Samma procent mot en annan bas är ingen zon.
+    expect(
+      pacedBlocks(blocks("10 km @LO"), mp, "5K")[0].steps[0].zone,
+    ).toBeNull();
+  });
+
   it("visar procenten utan tempo när referensen saknas", () => {
     const paced = pacedBlocks(blocks("30 min 80-85%"), undefined);
     expect(paced[0].steps[0].pace).toBeNull();

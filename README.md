@@ -83,8 +83,9 @@ skelettet går att bläddra igenom i "demoläge".
    tidigare migrationerna behöver bara de nya, i ordning – senast
    `20261007090000_reference_levels.sql`,
    `20261007120000_plan_library.sql`,
-   `20261008090000_plan_library_example.sql` och
-   `20261008120000_plan_library_paces_rounds.sql`.
+   `20261008090000_plan_library_example.sql`,
+   `20261008120000_plan_library_paces_rounds.sql` och
+   `20261009120000_plan_library_pace_source.sql`.
 3. Registrera dig i appen som coach och gör kontot till medlem:
    ```sql
    update public.coaches set plan = 'medlem'
@@ -1503,6 +1504,20 @@ saker för löpplaner av den typ där nivåerna skiljer sig i volym:
   på en plan om 12–18 blir 2 × 12, 36 blir 2 × 18. Hellre ett par veckors
   lugn träning före start än ett varv till, och högst tre varv. Nivån kan
   väljas per varv – den sparas som vanliga byten i nivåhistoriken.
+
+### Zoner och tempokälla
+
+Med maratonfart som bas kan passen skrivas i namngivna zoner –
+`22 km @LO + 7 km @MT` – med RK, LO, MT, S, I och WK (`zones.ts`). Zonerna är
+andelar av maratonfarten, tagna som medelvärden över maratontider från 2:30
+till 4:50 och kontrollerade mot publicerade tempotabeller (inom 2,5 %).
+Planvyn visar zonen och löparens tempospann på varje steg, och en zontabell.
+
+Tempona kan räknas ur två källor (`plan_instances.pace_mode`, migrationen
+`20261009120000_plan_library_pace_source.sql`): **form**, alltså
+formuppskattningen ur tester och inskrivna tider, eller **mål**, en måltid
+för maraton som medlemmen anger. Valet görs när planen startas och kan bytas
+medan den är aktiv. Procenten ändras aldrig, bara tempona.
 
 ### Typer och tester
 

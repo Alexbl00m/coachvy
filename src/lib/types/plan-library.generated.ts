@@ -427,6 +427,8 @@ export type PlanLibraryTables = {
       updated_at: string;
       ended_at: string | null;
       rounds: Json | null;
+      pace_mode: "form" | "mål";
+      goal_seconds: number | null;
     };
     Insert: {
       id?: string;
@@ -447,6 +449,8 @@ export type PlanLibraryTables = {
       updated_at?: string;
       ended_at?: string | null;
       rounds?: Json | null;
+      pace_mode?: "form" | "mål";
+      goal_seconds?: number | null;
     };
     Update: {
       id?: string;
@@ -467,6 +471,8 @@ export type PlanLibraryTables = {
       updated_at?: string;
       ended_at?: string | null;
       rounds?: Json | null;
+      pace_mode?: "form" | "mål";
+      goal_seconds?: number | null;
     };
     Relationships: [];
   };

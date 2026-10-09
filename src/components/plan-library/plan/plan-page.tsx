@@ -19,7 +19,9 @@ import {
 import type { RunningFitness } from "@/lib/plan-library/fitness";
 import { levelTimeline } from "@/lib/plan-library/levels";
 import {
+  completeEstimate,
   pacedBlocks,
+  referenceSpeeds,
   RUNNING_BASES,
   sessionAmount,
   type ReferenceSpeeds,
@@ -38,6 +40,7 @@ import { daysBetween, weekdayIndex } from "@/lib/season/season";
 import { BASIS_LABEL } from "@/lib/workouts/schema";
 
 import { FitnessCard } from "./fitness-card";
+import { PaceSource } from "./pace-source";
 import { LevelPanel } from "./level-panel";
 import { LevelTimeline } from "./level-timeline";
 import {
@@ -71,10 +74,13 @@ function structureText(variant: Variant, refs: ReferenceSpeeds): string {
   if (!isRunningBasis(variant.basis)) {
     return `${formatStructure(variant.blocks)}${variant.basis ? ` av ${BASIS_LABEL[variant.basis]}` : ""}`;
   }
-  return pacedBlocks(variant.blocks, refs[variant.basis!])
+  return pacedBlocks(variant.blocks, refs[variant.basis!], variant.basis)
     .map((b) => {
       const steps = b.steps
-        .map((st) => `${st.amount} ${st.pace ?? `${st.percent}`}`)
+        .map(
+          (st) =>
+            `${st.amount} ${st.zone ? `@${st.zone} ` : ""}${st.pace ?? st.percent}`,
+        )
         .join(" + ");
       return b.times > 1 ? `${b.times} × (${steps})` : steps;
     })
@@ -101,13 +107,18 @@ function PacedStructure({
   return (
     <div className="mt-1.5 text-[12px] leading-snug tabular-nums">
       <ul className="space-y-0.5">
-        {pacedBlocks(variant.blocks, ref).map((b, i) => (
+        {pacedBlocks(variant.blocks, ref, variant.basis).map((b, i) => (
           <li key={i} className="text-text-muted">
             {b.times > 1 && <span>{b.times} × (</span>}
             {b.steps.map((st, j) => (
               <span key={j}>
                 {j > 0 && " + "}
                 {st.amount}{" "}
+                {st.zone && (
+                  <span className="mr-1 rounded-sm bg-surface-3 px-1 text-[11px] font-medium text-text">
+                    {st.zone}
+                  </span>
+                )}
                 <span className="text-text">{st.pace ?? st.percent}</span>
                 {st.label && (
                   <span className="text-text-subtle"> {st.label}</span>
@@ -120,8 +131,10 @@ function PacedStructure({
       </ul>
       <p className="mt-0.5 text-[11px] text-text-subtle">
         {ref
-          ? `${pacedBlocks(variant.blocks, ref)
-              .flatMap((b) => b.steps.map((st) => st.percent))
+          ? `${pacedBlocks(variant.blocks, ref, variant.basis)
+              .flatMap((b) =>
+                b.steps.map((st) => (st.zone ? st.zone : st.percent)),
+              )
               .filter((v, i, all) => all.indexOf(v) === i)
               .join(", ")} av ${BASIS_LABEL[variant.basis!]}`
           : `Procent av ${BASIS_LABEL[variant.basis!]} – tempona visas när det finns en formuppskattning.`}
@@ -158,7 +171,22 @@ export function PlanPage({
   userId: string;
 }) {
   const { instance, schedule, levels, spans, history, content } = view;
-  const { refs } = fitness;
+  // Med en måltid räknas 5 km-fart och maratonfart ur den; CS och LT2 ligger
+  // kvar ur testerna.
+  const goalEstimate =
+    instance.pace_mode === "mål" && instance.goal_seconds
+      ? completeEstimate({
+          marathonSeconds: Number(instance.goal_seconds),
+          source: "manuell",
+          date: instance.start_date,
+        })
+      : null;
+  const refs: ReferenceSpeeds = goalEstimate
+    ? { ...fitness.refs, ...referenceSpeeds(goalEstimate) }
+    : fitness.refs;
+  const usesZones = content.domain.sessions.some((s) =>
+    s.variants.some((v) => v.basis === "MP"),
+  );
   const multi = view.rounds.length > 1;
   const usesPaces = content.domain.sessions.some((s) =>
     s.variants.some((v) => isRunningBasis(v.basis)),
@@ -712,26 +740,50 @@ export function PlanPage({
         <div className="space-y-6 print:hidden">
           {usesPaces && (
             <Card>
-              <CardTitle>Formuppskattning</CardTitle>
-              <FitnessCard
-                adeptId={instance.adept_id}
+              <CardTitle>Tempo</CardTitle>
+              <PaceSource
+                key={`${instance.pace_mode}-${instance.goal_seconds}`}
+                instanceId={instance.id}
                 editable={editable}
-                current={fitness.current}
-                fromTests={fitness.fromTests}
-                refs={refs}
-                entries={fitness.entries.map((e) => ({
-                  id: e.id,
-                  fiveKSeconds:
-                    e.five_k_seconds === null ? null : Number(e.five_k_seconds),
-                  marathonSeconds:
-                    e.marathon_seconds === null
-                      ? null
-                      : Number(e.marathon_seconds),
-                  note: e.note,
-                  createdAt: e.created_at,
-                  own: e.created_by === userId,
-                }))}
+                mode={instance.pace_mode}
+                goalSeconds={
+                  instance.goal_seconds ? Number(instance.goal_seconds) : null
+                }
+                marathonSpeed={refs.MP ?? null}
+                showZones={usesZones}
               />
+              <details
+                open={instance.pace_mode === "form"}
+                className="mt-5 border-t border-line pt-4"
+              >
+                <summary className="cursor-pointer text-sm font-medium text-text marker:text-text-subtle">
+                  Formuppskattning
+                  {instance.pace_mode === "mål" ? " (används inte nu)" : ""}
+                </summary>
+                <div className="mt-3">
+                  <FitnessCard
+                    adeptId={instance.adept_id}
+                    editable={editable}
+                    current={fitness.current}
+                    fromTests={fitness.fromTests}
+                    refs={fitness.refs}
+                    entries={fitness.entries.map((e) => ({
+                      id: e.id,
+                      fiveKSeconds:
+                        e.five_k_seconds === null
+                          ? null
+                          : Number(e.five_k_seconds),
+                      marathonSeconds:
+                        e.marathon_seconds === null
+                          ? null
+                          : Number(e.marathon_seconds),
+                      note: e.note,
+                      createdAt: e.created_at,
+                      own: e.created_by === userId,
+                    }))}
+                  />
+                </div>
+              </details>
             </Card>
           )}
 
