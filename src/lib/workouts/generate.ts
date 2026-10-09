@@ -16,6 +16,7 @@ import { listBlocks, listRaces } from "@/lib/season/queries";
 import { seasonToPrompt, todayIso } from "@/lib/season/season";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
+import { PHILOSOPHY_PROMPT } from "@/lib/ai-coach/philosophy";
 import { readBalance, wPrimeBalance } from "./balance";
 import {
   buildAthleteContext,
@@ -270,9 +271,12 @@ export async function generateWorkout(
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system: [
+        { type: "text", text: SYSTEM_PROMPT },
+        // Filosofin är lika statisk som reglerna; cachepunkten efter den
+        // täcker båda.
         {
           type: "text",
-          text: SYSTEM_PROMPT,
+          text: PHILOSOPHY_PROMPT,
           cache_control: { type: "ephemeral" },
         },
       ],

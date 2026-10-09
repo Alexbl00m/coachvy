@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(import.meta.dirname),
   },
+  // Träningsfilosofin läses från docs/ i AI-anropen, så att filen är den enda
+  // källan. Den följer med till servern.
+  outputFileTracingIncludes: {
+    "/**": ["./docs/traningsfilosofi.md"],
+  },
   experimental: {
     serverActions: {
       // En testrapport (PDF eller foto) läses via en server action. Vercel tar

@@ -26,6 +26,7 @@ import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
 import { formatDuration, resolveWorkout, toWorkout } from "@/lib/workouts/schema";
 import { getConversation, listAiMessages } from "./queries";
+import { PHILOSOPHY_PROMPT } from "./philosophy";
 
 const MODEL = "claude-opus-5-5";
 
@@ -213,9 +214,12 @@ export async function askCoach(input: {
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system: [
+        { type: "text", text: SYSTEM_PROMPT },
+        // Filosofin är lika statisk som reglerna; cachepunkten efter den
+        // täcker båda.
         {
           type: "text",
-          text: SYSTEM_PROMPT,
+          text: PHILOSOPHY_PROMPT,
           cache_control: { type: "ephemeral" },
         },
       ],

@@ -1143,6 +1143,16 @@ Tre års historik med tusen pass blir runt 7 000 tokens. Vilopuls och HRV finns
 inte i appen; modellen är instruerad att säga det och läsa återhämtningen ur
 incheckningarna i stället.
 
+### Träningsfilosofin
+
+`docs/traningsfilosofi.md` är Alexanders träningsfilosofi och grunden för
+planmallarna och AI:n. AI-coachen och passbyggarens AI skickar med hela texten
+som ett eget block i systemprompten (`src/lib/ai-coach/philosophy.ts`), före
+cachepunkten. Filen läses från disk när servern startar och följer med till
+Vercel via `outputFileTracingIncludes` i `next.config.ts`. Filosofin ändras i
+filen, inte i koden. Samma fil läses in via `CLAUDE.md`, så att den också
+styr arbetet med kodbasen och planerna.
+
 ## Grafen
 
 Testkurvan visar **en testtyp i taget**, valbar med knapparna ovanför
