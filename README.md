@@ -1569,6 +1569,29 @@ Migrationen `20261008090000_plan_library_example.sql` lägger in ett kort
 exempel, Maraton (exempel), i tre nivåer att prova med. Det är märkt som
 exempel och kan arkiveras under Planmallar.
 
+## Passbiblioteket
+
+`/app/passbibliotek` är coachens egna pass att återanvända – de
+kvalitetsformat ett block bygger på (`session_library`, migrationen
+`20261010150000_session_library.sql`). Ett pass har namn, gren, typ,
+intensitet, faser och raden det skrivs som – samma rad som planmallarnas
+pass, med zoner som `@LO` och `@HM-10K` mot maratonfart eller procent av
+en bas. Till det **syftet** (vilken egenskap utvecklas, vilken begränsning
+påverkas), **instruktionen** och **hur det byggs på**, en variabel i taget.
+
+- **I planmallarna** hämtas ett pass till alla nivåer med *Hämta från
+  passbiblioteket* i passdialogen, och nivåerna skalas sedan för hand. En
+  nivås pass sparas i biblioteket med *Spara i biblioteket*.
+- **I passbyggaren** öppnas ett pass för en adept med *Till passbyggaren*.
+  Passbyggaren räknar mot adeptens tröskel, så ett löppass i zoner eller
+  loppfart räknas om: stegets fart är andelen gånger adeptens fart ur
+  formuppskattningen, uttryckt som andel av CS eller LT2
+  (`toAdeptWorkout` i `src/lib/session-library/library.ts`). Ett byggt pass
+  sparas i biblioteket med *Spara i passbiblioteket*.
+- **Delning.** Biblioteket är coachens eget. En admin kan dela ett pass med
+  alla coacher; de kan använda och kopiera det men bara ägaren ändrar det.
+  RLS säger detsamma.
+
 ## Samtycke och integritet
 
 Laktat, puls, syreupptag, kroppssammansättning, sömn och skador är

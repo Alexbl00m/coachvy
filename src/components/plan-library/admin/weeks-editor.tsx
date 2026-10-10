@@ -22,6 +22,8 @@ import type {
 
 import { SessionCard } from "../session-card";
 import { useAction } from "../use-action";
+import type { LibrarySession } from "@/lib/session-library/library";
+
 import { SessionDialog, type DisciplineOption } from "./session-dialog";
 
 type WeekRow = {
@@ -57,6 +59,7 @@ export function WeeksEditor({
   disciplines,
   volumes,
   volumeUnit,
+  library,
 }: {
   versionId: string;
   editable: boolean;
@@ -67,6 +70,8 @@ export function WeeksEditor({
   disciplines: DisciplineOption[];
   volumes: WeekVolume[];
   volumeUnit: VolumeUnit;
+  /** Passbiblioteket, att hämta pass ur i passdialogen. */
+  library: LibrarySession[];
 }) {
   const [open, setOpen] = useState<Open | null>(null);
   const { pending, error, run } = useAction();
@@ -186,6 +191,7 @@ export function WeeksEditor({
           levels={levels}
           disciplines={disciplines}
           defaultDiscipline={defaultDiscipline}
+          library={library}
         />
       )}
     </div>

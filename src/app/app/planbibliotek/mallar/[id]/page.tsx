@@ -22,6 +22,7 @@ import {
 } from "@/lib/plan-library/queries";
 import { validateVersion } from "@/lib/plan-library/validate";
 import { routes } from "@/lib/routes";
+import { listLibrary } from "@/lib/session-library/queries";
 
 export const metadata = { title: "Planmall" };
 
@@ -54,10 +55,11 @@ export default async function PlanTemplatePage({
     template.versions[0];
   if (!chosen) notFound();
 
-  const [content, categories, disciplines] = await Promise.all([
+  const [content, categories, disciplines, library] = await Promise.all([
     loadVersion(chosen.id),
     listCategories(),
     listDisciplines(),
+    listLibrary(),
   ]);
   if (!content) notFound();
 
@@ -283,6 +285,7 @@ export default async function PlanTemplatePage({
             name: d.name,
             structureSport: d.structure_sport,
           }))}
+          library={library}
         />
       )}
 

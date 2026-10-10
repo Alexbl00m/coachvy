@@ -10,7 +10,10 @@ import { routes } from "@/lib/routes";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { getWorkout } from "@/lib/workouts/queries";
-import { toWorkout } from "@/lib/workouts/schema";
+import { toWorkout, type Workout } from "@/lib/workouts/schema";
+import { loadRunningFitness } from "@/lib/plan-library/fitness";
+import { toAdeptWorkout } from "@/lib/session-library/library";
+import { getLibrarySession } from "@/lib/session-library/queries";
 
 export const metadata = { title: "Passbyggare" };
 
@@ -52,13 +55,19 @@ export default async function PassPage({
       ? query.adept
       : null;
   const workoutId = typeof query.pass === "string" ? query.pass : null;
+  // Ett pass ur passbiblioteket, för coachen: `?adept=…&bibliotek=…`.
+  const libraryId =
+    !selfService && typeof query.bibliotek === "string"
+      ? query.bibliotek
+      : null;
 
-  const [adepts, context, saved] = await Promise.all([
+  const [adepts, context, saved, libraryPass] = await Promise.all([
     selfService
       ? Promise.resolve(user.adept ? [user.adept] : [])
       : listAdepts(),
     adeptId ? contextForAdept(adeptId) : Promise.resolve(null),
     workoutId ? getWorkout(workoutId) : Promise.resolve(null),
+    libraryId ? getLibrarySession(libraryId) : Promise.resolve(null),
   ]);
 
   // AI-bygget skickar adeptens hälsouppgifter till Anthropic: bara med
@@ -77,7 +86,48 @@ export default async function PassPage({
    * samma watt. Originalet ligger kvar orört – det som sparas härifrån blir
    * en ny rad.
    */
-  const initialWorkout =
+  /**
+   * Ett biblioteksspass räknas om mot adeptens tröskel. Ett löppass i zoner
+   * eller loppfart behöver adeptens formuppskattning för det; den hämtas
+   * bara då.
+   */
+  let fromLibrary: Workout | null = null;
+  let notice: string | null = null;
+  if (libraryId) {
+    if (!libraryPass) {
+      notice = "Passet finns inte i ditt passbibliotek.";
+    } else if (!context || adeptId === null) {
+      notice = `Välj en adept för att öppna ${libraryPass.title} ur passbiblioteket.`;
+    } else {
+      const speeds =
+        libraryPass.sport === "löpning" && libraryPass.basis !== context.basis
+          ? (await loadRunningFitness(adeptId)).refs
+          : {};
+      const result = toAdeptWorkout(
+        libraryPass,
+        {
+          sport: context.sport,
+          basis: context.basis,
+          reference: context.reference,
+        },
+        speeds,
+      );
+      if (result.ok) {
+        fromLibrary = result.workout;
+        notice = [
+          `${libraryPass.title} ur passbiblioteket.`,
+          result.note,
+          "Ändra stegen nedan och spara på adepten.",
+        ]
+          .filter(Boolean)
+          .join(" ");
+      } else {
+        notice = `${libraryPass.title} gick inte att öppna: ${result.error}`;
+      }
+    }
+  }
+
+  const savedWorkout =
     saved &&
     context &&
     adeptId !== null &&
@@ -87,6 +137,7 @@ export default async function PassPage({
     saved.sport === context.sport
       ? toWorkout(saved)
       : null;
+  const initialWorkout = savedWorkout ?? fromLibrary;
 
   return (
     <>
@@ -102,7 +153,9 @@ export default async function PassPage({
       <WorkoutBuilder
         // Nyckeln tvingar fram en ny montering när ett annat pass öppnas, så
         // att utgångsläget verkligen byts ut.
-        key={workoutId ?? "nytt"}
+        key={
+          workoutId ?? (libraryId ? `bibliotek-${libraryId}-${adeptId}` : "nytt")
+        }
         adepts={adepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
         adeptId={context ? adeptId : null}
         serverContext={context}
@@ -110,6 +163,8 @@ export default async function PassPage({
         configured={isAnthropicConfigured()}
         selfService={selfService}
         blocked={blocked}
+        notice={notice}
+        library={selfService ? null : { canShare: user.isAdmin }}
       />
     </>
   );

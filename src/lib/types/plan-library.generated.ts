@@ -812,6 +812,63 @@ export type PlanLibraryTables = {
     };
     Relationships: [];
   };
+  session_library: {
+    Row: {
+      id: string;
+      owner_id: string;
+      shared: boolean;
+      title: string;
+      sport: "löpning" | "cykling" | "simning";
+      kind: string | null;
+      intensity: string | null;
+      purpose: string | null;
+      description: string | null;
+      progression: string | null;
+      phases: unknown;
+      basis: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "10K" | "HM" | "MP";
+      structure: string;
+      blocks: Json;
+      created_at: string;
+      updated_at: string;
+    };
+    Insert: {
+      id?: string;
+      owner_id?: string;
+      shared?: boolean;
+      title: string;
+      sport: "löpning" | "cykling" | "simning";
+      kind?: string | null;
+      intensity?: string | null;
+      purpose?: string | null;
+      description?: string | null;
+      progression?: string | null;
+      phases?: unknown;
+      basis: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "10K" | "HM" | "MP";
+      structure: string;
+      blocks: Json;
+      created_at?: string;
+      updated_at?: string;
+    };
+    Update: {
+      id?: string;
+      owner_id?: string;
+      shared?: boolean;
+      title?: string;
+      sport?: "löpning" | "cykling" | "simning";
+      kind?: string | null;
+      intensity?: string | null;
+      purpose?: string | null;
+      description?: string | null;
+      progression?: string | null;
+      phases?: unknown;
+      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "10K" | "HM" | "MP";
+      structure?: string;
+      blocks?: Json;
+      created_at?: string;
+      updated_at?: string;
+    };
+    Relationships: [];
+  };
 };
 
 export type PlanLibraryFunctions = {

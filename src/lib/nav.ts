@@ -9,6 +9,7 @@ import {
   Gauge,
   LayoutTemplate,
   Library,
+  LibraryBig,
   ListChecks,
   MessagesSquare,
   Settings,
@@ -29,7 +30,8 @@ export type NavItem = {
   audience?: Audience;
 };
 
-type Audience = "coach" | "adept" | "all" | "admin";
+/** `staff`: coacher och admin. */
+type Audience = "coach" | "adept" | "all" | "admin" | "staff";
 
 export type NavSection = {
   /** Rendered above the group; omit for the primary group. */
@@ -47,6 +49,12 @@ const allSections: NavSection[] = [
         icon: Dumbbell,
         // Adepter ser den också: som medlem bygger de egna pass, annars
         // visar sidan vad medlemskapet ger.
+      },
+      {
+        label: "Passbibliotek",
+        href: routes.sessionLibrary,
+        icon: LibraryBig,
+        audience: "staff",
       },
       { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
       { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
@@ -120,7 +128,8 @@ export function getNavSections(
           !item.audience ||
           item.audience === "all" ||
           item.audience === role ||
-          (item.audience === "admin" && isAdmin),
+          (item.audience === "admin" && isAdmin) ||
+          (item.audience === "staff" && (role === "coach" || isAdmin)),
       ),
     }))
     .filter((section) => section.items.length > 0);

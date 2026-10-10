@@ -41,6 +41,7 @@ const TABLES = [
   "plan_ai_suggestions",
   "plan_instance_events",
   "fitness_estimates",
+  "session_library",
 ];
 
 const FUNCTIONS = [

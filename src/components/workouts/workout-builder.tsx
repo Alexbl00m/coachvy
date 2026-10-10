@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { BookmarkPlus, Sparkles } from "lucide-react";
 
+import { SessionEditor } from "@/components/session-library/session-editor";
 import { PrintButton } from "@/components/workouts/print-button";
 import { ContextSummary } from "@/components/workouts/context-summary";
 import { WorkoutView } from "@/components/workouts/workout-view";
@@ -18,6 +19,7 @@ import {
 import { generateWorkout } from "@/lib/workouts/generate";
 import { saveWorkout } from "@/lib/workouts/actions";
 import type { Workout } from "@/lib/workouts/schema";
+import { fromWorkout } from "@/lib/session-library/library";
 
 type AdeptOption = { id: string; full_name: string };
 
@@ -65,6 +67,8 @@ export function WorkoutBuilder({
   configured,
   selfService = false,
   blocked = null,
+  notice = null,
+  library = null,
 }: {
   adepts: AdeptOption[];
   adeptId: string | null;
@@ -79,6 +83,10 @@ export function WorkoutBuilder({
   selfService?: boolean;
   /** Varför passet inte kan byggas med AI för adepten – samtycket saknas. */
   blocked?: string | null;
+  /** Hur ett pass ur passbiblioteket räknades om, eller varför det inte gick. */
+  notice?: string | null;
+  /** Coachen kan spara passet i passbiblioteket; admin kan också dela det. */
+  library?: { canShare: boolean } | null;
 }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -101,6 +109,7 @@ export function WorkoutBuilder({
   const [saved, setSaved] = useState<string | null>(null);
   /** Datumet passet läggs på i kalendern när det sparas. Valfritt. */
   const [scheduledFor, setScheduledFor] = useState("");
+  const [toLibrary, setToLibrary] = useState<string | null>(null);
 
   const sport = serverContext?.sport ?? manualSport;
   const cycling = sport === "cykling";
@@ -206,6 +215,11 @@ export function WorkoutBuilder({
 
   return (
     <div className="space-y-6">
+      {notice && (
+        <Card className="print:hidden">
+          <p className="text-sm text-text">{notice}</p>
+        </Card>
+      )}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] print:hidden">
         <Card className="min-w-0">
           <CardTitle>{workout ? "Ändra passet" : "Beskriv passet"}</CardTitle>
@@ -461,6 +475,16 @@ export function WorkoutBuilder({
                     : "Spara på adepten"}
               </Button>
             )}
+            {library && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setToLibrary(`bib-${Date.now()}`)}
+              >
+                <BookmarkPlus aria-hidden className="size-4" />
+                Spara i passbiblioteket
+              </Button>
+            )}
             <PrintButton />
             <span className="text-[13px] text-text-subtle">
               {saved ??
@@ -472,6 +496,18 @@ export function WorkoutBuilder({
             </span>
           </div>
         </>
+      )}
+
+      {library && workout && toLibrary && (
+        <SessionEditor
+          key={toLibrary}
+          open
+          onClose={() => setToLibrary(null)}
+          sessionId={null}
+          initial={fromWorkout(workout)}
+          isAdmin={library.canShare}
+          onSaved={() => setSaved("Passet är sparat i passbiblioteket.")}
+        />
       )}
     </div>
   );

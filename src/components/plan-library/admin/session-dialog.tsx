@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Trash2 } from "lucide-react";
+import { BookmarkPlus, Copy, LibraryBig, Trash2 } from "lucide-react";
 
+import { LibraryPicker } from "@/components/session-library/library-picker";
+import { SessionEditor } from "@/components/session-library/session-editor";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -12,9 +14,14 @@ import {
   type VariantInput,
 } from "@/lib/plan-library/admin-actions";
 import { DAY_LONG } from "@/lib/plan-library/labels";
-import { templateProfile } from "@/lib/plan-library/profile";
+import { sportForBasis, templateProfile } from "@/lib/plan-library/profile";
 import { formatStructure, parseStructure } from "@/lib/plan-library/structure";
 import type { TemplateSession } from "@/lib/plan-library/types";
+import type { Sport } from "@/lib/calculators/lactate";
+import type {
+  LibraryInput,
+  LibrarySession,
+} from "@/lib/session-library/library";
 import {
   BASIS_LABEL,
   TARGET_BASES,
@@ -102,6 +109,7 @@ export function SessionDialog({
   levels,
   disciplines,
   defaultDiscipline,
+  library,
 }: {
   open: boolean;
   onClose: () => void;
@@ -114,12 +122,19 @@ export function SessionDialog({
   disciplines: DisciplineOption[];
   /** Disciplinen ett nytt pass börjar med. */
   defaultDiscipline: string;
+  /** Passbiblioteket att hämta pass ur. */
+  library: LibrarySession[];
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState(() =>
     draftOf(session, weekId, day, levels, disciplines, defaultDiscipline),
   );
   const { pending, error, setError, run } = useAction();
+  const [picking, setPicking] = useState(false);
+  const [saving, setSaving] = useState<{
+    key: string;
+    initial: LibraryInput;
+  } | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -134,6 +149,56 @@ export function SessionDialog({
       ...d,
       variants: d.variants.map((v, j) => (j === i ? { ...v, ...p } : v)),
     }));
+
+  const sportOf = (discipline: string) =>
+    (disciplines.find((d) => d.key === discipline)?.structureSport ??
+      null) as Sport | null;
+
+  /**
+   * Ett biblioteksspass på alla nivåer som är med. Nivåerna skalas sedan
+   * för hand – samma format, olika mängd.
+   */
+  const applyPass = (pass: LibrarySession) =>
+    setDraft((d) => ({
+      ...d,
+      discipline:
+        disciplines.find((x) => x.structureSport === pass.sport)?.key ??
+        d.discipline,
+      title: pass.title,
+      type: pass.kind || d.type,
+      description: pass.purpose || pass.description || d.description,
+      variants: d.variants.map((v) =>
+        v.included
+          ? {
+              ...v,
+              basis: pass.basis,
+              zone: pass.intensity || v.zone,
+              structure: pass.structure,
+              description: v.description || pass.description,
+            }
+          : v,
+      ),
+    }));
+
+  const saveToLibrary = (v: VariantInput) => {
+    if (!v.basis) return;
+    setSaving({
+      key: `${v.levelId}-${Date.now()}`,
+      initial: {
+        title: draft.title,
+        sport: sportOf(draft.discipline) ?? sportForBasis(v.basis),
+        kind: draft.type,
+        intensity: v.zone,
+        purpose: draft.description,
+        description: v.description,
+        progression: "",
+        phases: [],
+        basis: v.basis,
+        structure: v.structure,
+        shared: false,
+      },
+    });
+  };
 
   const parsed = useMemo(
     () =>
@@ -168,9 +233,19 @@ export function SessionDialog({
             </h2>
             <p className="text-[13px] text-text-subtle">{weekLabel}</p>
           </div>
-          <Button size="sm" variant="ghost" onClick={onClose}>
-            Stäng
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setPicking(true)}
+            >
+              <LibraryBig aria-hidden className="size-3.5" />
+              Hämta från passbiblioteket
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onClose}>
+              Stäng
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-4">
@@ -395,7 +470,18 @@ export function SessionDialog({
                         </p>
                       )}
                       {profile.length > 0 && (
-                        <WorkoutStrip blocks={profile} className="mt-2 h-6" />
+                        <div className="mt-2 flex items-center gap-2">
+                          <WorkoutStrip blocks={profile} className="h-6 flex-1" />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveToLibrary(v)}
+                            title="Spara nivåns pass i passbiblioteket"
+                          >
+                            <BookmarkPlus aria-hidden className="size-3.5" />
+                            Spara i biblioteket
+                          </Button>
+                        </div>
                       )}
                     </div>
                     <div className="sm:col-span-4">
@@ -458,6 +544,24 @@ export function SessionDialog({
           </div>
         </div>
       </form>
+      {picking && (
+        <LibraryPicker
+          open
+          onClose={() => setPicking(false)}
+          sessions={library}
+          onPick={applyPass}
+        />
+      )}
+      {saving && (
+        <SessionEditor
+          key={saving.key}
+          open
+          onClose={() => setSaving(null)}
+          sessionId={null}
+          initial={saving.initial}
+          isAdmin
+        />
+      )}
     </dialog>
   );
 }
