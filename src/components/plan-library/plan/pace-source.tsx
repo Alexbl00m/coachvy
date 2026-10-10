@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { setPaceSource } from "@/lib/plan-library/actions";
 import { raceTimeText } from "@/lib/plan-library/paces";
-import { ZONES } from "@/lib/plan-library/zones";
+import type { Race } from "@/lib/plan-library/races";
+import { ZONES, type ZoneKey } from "@/lib/plan-library/zones";
 import { formatDuration } from "@/lib/workouts/schema";
 
 import { useAction } from "../use-action";
@@ -17,10 +18,14 @@ type Props = {
   editable: boolean;
   mode: "form" | "mål";
   goalSeconds: number | null;
-  /** Maratonfarten i m/s som zonerna räknas mot. Null: ingen uppskattning. */
-  marathonSpeed: number | null;
-  /** Planen anger passen i zoner. */
-  showZones: boolean;
+  /** Loppet planen leder fram till; måltiden gäller det. */
+  race: Race;
+  /** Farten i m/s som zonerna räknas mot. Null: ingen uppskattning. */
+  zoneSpeed: number | null;
+  /** Zonerna planen använder, i ordning. Tom: planen står inte i zoner. */
+  zones: ZoneKey[];
+  /** LT2 ur laktattestet i m/s, att jämföra tröskeln med. */
+  lt2: number | null;
 };
 
 const choice = (selected: boolean) =>
@@ -35,16 +40,18 @@ const choice = (selected: boolean) =>
 const perKm = (speed: number) => formatDuration(1000 / speed);
 
 /**
- * Vad tempona räknas ur – formuppskattningen eller en måltid – och, för
- * planer i zoner, vad zonerna blir i tempo.
+ * Vad tempona räknas ur – formuppskattningen eller en måltid för planens
+ * lopp – och, för planer i zoner, vad zonerna blir i tempo.
  */
 export function PaceSource({
   instanceId,
   editable,
   mode,
   goalSeconds,
-  marathonSpeed,
-  showZones,
+  race,
+  zoneSpeed,
+  zones,
+  lt2,
 }: Props) {
   const { pending, error, run } = useAction();
   const [draftMode, setDraftMode] = useState(mode);
@@ -55,6 +62,8 @@ export function PaceSource({
     draftMode !== mode ||
     (draftMode === "mål" &&
       goal !== (goalSeconds ? raceTimeText(goalSeconds) : ""));
+  const label = `Måltid för ${race.name}`;
+  const shown = ZONES.filter((z) => zones.includes(z.key));
 
   return (
     <div className="space-y-4">
@@ -80,17 +89,17 @@ export function PaceSource({
         >
           <span className="block font-medium">Min måltid</span>
           <span className="block text-[12px] text-text-subtle">
-            Tempona räknas ur den tid du vill springa maraton på.
+            Tempona räknas ur den tid du vill springa {race.name} på.
           </span>
         </button>
       </div>
       {draftMode === "mål" && (
         <label className="block text-sm text-text-muted">
-          Måltid för maraton
+          {label}
           <Input
-            aria-label="Måltid för maraton"
+            aria-label={label}
             inputMode="numeric"
-            placeholder="3:15:00"
+            placeholder={race.example}
             disabled={!editable}
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
@@ -122,11 +131,11 @@ export function PaceSource({
         Procenten i passen ändras inte, bara tempona. Du kan byta när som helst.
       </p>
 
-      {showZones && marathonSpeed && (
+      {shown.length > 0 && zoneSpeed && (
         <div>
           <p className="mb-1.5 text-[13px] font-medium text-text">Dina zoner</p>
           <ul className="divide-y divide-line rounded-md border border-line text-[13px] tabular-nums">
-            {ZONES.map((z) => (
+            {shown.map((z) => (
               <li
                 key={z.key}
                 className="flex items-baseline justify-between gap-3 px-3 py-1.5"
@@ -139,16 +148,28 @@ export function PaceSource({
                 </span>
                 <span className="shrink-0 text-text">
                   {z.low === z.high
-                    ? perKm(marathonSpeed * z.low)
-                    : `${perKm(marathonSpeed * z.high)}–${perKm(marathonSpeed * z.low)}`}
+                    ? perKm(zoneSpeed * z.low)
+                    : `${perKm(zoneSpeed * z.high)}–${perKm(zoneSpeed * z.low)}`}
                   <span className="text-text-subtle">/km</span>
                 </span>
               </li>
             ))}
+            {lt2 && (
+              <li className="flex items-baseline justify-between gap-3 px-3 py-1.5">
+                <span className="text-text-muted">LT2 ur laktattestet</span>
+                <span className="shrink-0 text-text-muted">
+                  {perKm(lt2)}
+                  <span className="text-text-subtle">/km</span>
+                </span>
+              </li>
+            )}
           </ul>
           <p className="mt-1.5 text-[11px] leading-snug text-text-subtle">
-            Zonerna är en vägledning och räknas ur maratonfarten. Lugn distans
-            ska kännas lugn även när benen orkar mer.
+            Zonerna räknas ur farten på {race.name} och är en vägledning. Lugn
+            distans ska kännas lugn även när benen orkar mer.
+            {lt2
+              ? " Ligger LT2 långt från tröskelzonen, säg till din coach – modellen och testet ska stämma."
+              : ""}
           </p>
         </div>
       )}

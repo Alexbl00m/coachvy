@@ -10,6 +10,8 @@ import {
   getActiveInstance,
   loadPublishedBySlug,
 } from "@/lib/plan-library/queries";
+import { RUNNING_BASES } from "@/lib/plan-library/paces";
+import { raceByKey, raceByMetres } from "@/lib/plan-library/races";
 import { peakVolume } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
 import { listRaces } from "@/lib/season/queries";
@@ -61,8 +63,19 @@ export default async function StartPlanPage({
           weeks={domain.weeks}
           volumeUnit={domain.volumeUnit}
           usesPaces={domain.sessions.some((s) =>
-            s.variants.some((v) => v.basis === "5K" || v.basis === "MP"),
+            s.variants.some(
+              (v) => v.basis !== null && RUNNING_BASES.includes(v.basis),
+            ),
           )}
+          race={(() => {
+            const r =
+              raceByMetres(
+                content.template.race_distance_m === null
+                  ? null
+                  : Number(content.template.race_distance_m),
+              ) ?? raceByKey("M");
+            return { name: r.name, example: r.example };
+          })()}
           today={today}
           races={races
             .filter((r) => r.race_date >= today)

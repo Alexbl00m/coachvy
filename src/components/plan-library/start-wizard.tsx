@@ -108,6 +108,7 @@ export function StartWizard({
   levels,
   volumeUnit,
   usesPaces,
+  race,
   races,
   today,
 }: {
@@ -121,6 +122,8 @@ export function StartWizard({
   volumeUnit: VolumeUnit;
   /** Planen räknar tempon: då väljs vad de räknas ur. */
   usesPaces: boolean;
+  /** Loppet planen leder fram till, för måltiden. */
+  race: { name: string; example: string };
   races: RaceOption[];
   today: string;
 }) {
@@ -673,21 +676,21 @@ export function StartWizard({
             >
               <span className="block font-medium">Min måltid</span>
               <span className="block text-[13px] text-text-subtle">
-                Tiden du vill springa maraton på. Tempona räknas ur den.
+                Tiden du vill springa {race.name} på. Tempona räknas ur den.
               </span>
             </button>
           </div>
           {paceMode === "mål" && (
             <div className="mt-4 max-w-xs">
               <Field
-                label="Måltid för maraton"
+                label={`Måltid för ${race.name}`}
                 htmlFor="start-maltid"
-                hint="Till exempel 3:15:00. Känns de första passen för snabba är målet för högt satt."
+                hint={`Till exempel ${race.example}. Känns de första passen för snabba är målet för högt satt.`}
               >
                 <Input
                   id="start-maltid"
                   inputMode="numeric"
-                  placeholder="3:15:00"
+                  placeholder={race.example}
                   value={goalTime}
                   onChange={(e) => setGoalTime(e.target.value)}
                 />

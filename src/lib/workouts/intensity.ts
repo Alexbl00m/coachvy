@@ -47,6 +47,9 @@ const CUTS: Record<TargetBasis, [number, number, number, number, number]> = {
   CS: [0.72, 0.82, 0.9, 1.0, 1.08],
   CSS: [0.86, 0.92, 0.97, 1.02, 1.07],
   "5K": [0.69, 0.79, 0.87, 0.96, 1.04],
+  // 10 km ur 5 km och halvmaraton ur maraton, med loppfaktorerna (races.ts).
+  "10K": [0.72, 0.82, 0.91, 1.0, 1.08],
+  HM: [0.79, 0.9, 0.99, 1.09, 1.18],
   MP: [0.82, 0.94, 1.03, 1.14, 1.23],
 };
 

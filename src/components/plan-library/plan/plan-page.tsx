@@ -33,8 +33,10 @@ import {
   type ScheduledSession,
   type ScheduleWeek,
 } from "@/lib/plan-library/schedule";
+import { raceByKey, raceByMetres } from "@/lib/plan-library/races";
 import { formatStructure } from "@/lib/plan-library/structure";
 import type { Variant } from "@/lib/plan-library/types";
+import { usedZones } from "@/lib/plan-library/zones";
 import { summarizeVolume, volumeText } from "@/lib/plan-library/volume";
 import { daysBetween, weekdayIndex } from "@/lib/season/season";
 import { BASIS_LABEL } from "@/lib/workouts/schema";
@@ -64,6 +66,9 @@ const longDate = (iso: string) =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${iso}T00:00:00Z`));
+
+const numOrUndefined = (v: number | null) =>
+  v === null ? undefined : Number(v);
 
 const isRunningBasis = (basis: Variant["basis"]) =>
   basis !== null && RUNNING_BASES.includes(basis);
@@ -104,10 +109,15 @@ function PacedStructure({
     );
   }
   const ref = refs[variant.basis!];
+  const blocks = pacedBlocks(variant.blocks, ref, variant.basis);
+  // Zonerna förklaras i tempokortet; bara procent behöver sin bas.
+  const percents = blocks
+    .flatMap((b) => b.steps.filter((st) => !st.zone).map((st) => st.percent))
+    .filter((v, i, all) => all.indexOf(v) === i);
   return (
     <div className="mt-1.5 text-[12px] leading-snug tabular-nums">
       <ul className="space-y-0.5">
-        {pacedBlocks(variant.blocks, ref, variant.basis).map((b, i) => (
+        {blocks.map((b, i) => (
           <li key={i} className="text-text-muted">
             {b.times > 1 && <span>{b.times} × (</span>}
             {b.steps.map((st, j) => (
@@ -129,16 +139,18 @@ function PacedStructure({
           </li>
         ))}
       </ul>
-      <p className="mt-0.5 text-[11px] text-text-subtle">
-        {ref
-          ? `${pacedBlocks(variant.blocks, ref, variant.basis)
-              .flatMap((b) =>
-                b.steps.map((st) => (st.zone ? st.zone : st.percent)),
-              )
-              .filter((v, i, all) => all.indexOf(v) === i)
-              .join(", ")} av ${BASIS_LABEL[variant.basis!]}`
-          : `Procent av ${BASIS_LABEL[variant.basis!]} – tempona visas när det finns en formuppskattning.`}
-      </p>
+      {!ref ? (
+        <p className="mt-0.5 text-[11px] text-text-subtle">
+          Procent av {BASIS_LABEL[variant.basis!]} – tempona visas när det finns
+          en formuppskattning.
+        </p>
+      ) : (
+        percents.length > 0 && (
+          <p className="mt-0.5 text-[11px] text-text-subtle">
+            {percents.join(", ")} av {BASIS_LABEL[variant.basis!]}
+          </p>
+        )
+      )}
     </div>
   );
 }
@@ -171,21 +183,33 @@ export function PlanPage({
   userId: string;
 }) {
   const { instance, schedule, levels, spans, history, content } = view;
-  // Med en måltid räknas 5 km-fart och maratonfart ur den; CS och LT2 ligger
-  // kvar ur testerna.
+  // Planens lopp: måltiden gäller det, och zonerna räknas ur farten på det.
+  const raceMetres =
+    content.template.race_distance_m === null
+      ? null
+      : Number(content.template.race_distance_m);
+  const race = raceByMetres(raceMetres) ?? raceByKey("M");
+  // Med en måltid räknas loppfarterna ur den; CS och LT2 ligger kvar ur
+  // testerna.
   const goalEstimate =
     instance.pace_mode === "mål" && instance.goal_seconds
       ? completeEstimate({
-          marathonSeconds: Number(instance.goal_seconds),
+          times: { [race.key]: Number(instance.goal_seconds) },
           source: "manuell",
           date: instance.start_date,
         })
       : null;
   const refs: ReferenceSpeeds = goalEstimate
-    ? { ...fitness.refs, ...referenceSpeeds(goalEstimate) }
-    : fitness.refs;
-  const usesZones = content.domain.sessions.some((s) =>
-    s.variants.some((v) => v.basis === "MP"),
+    ? referenceSpeeds(goalEstimate, fitness.measured, raceMetres)
+    : referenceSpeeds(fitness.current, fitness.measured, raceMetres);
+  const zonesUsed = usedZones(
+    content.domain.sessions.flatMap((s) =>
+      s.variants
+        .filter((v) => v.basis === "MP" && v.blocks)
+        .map((v) =>
+          v.blocks!.flatMap((b) => (b.type === "steg" ? [b.step] : b.steps)),
+        ),
+    ),
   );
   const multi = view.rounds.length > 1;
   const usesPaces = content.domain.sessions.some((s) =>
@@ -749,8 +773,10 @@ export function PlanPage({
                 goalSeconds={
                   instance.goal_seconds ? Number(instance.goal_seconds) : null
                 }
-                marathonSpeed={refs.MP ?? null}
-                showZones={usesZones}
+                race={race}
+                zoneSpeed={refs.MP ?? null}
+                zones={zonesUsed}
+                lt2={refs.LT2 ?? null}
               />
               <details
                 open={instance.pace_mode === "form"}
@@ -766,17 +792,16 @@ export function PlanPage({
                     editable={editable}
                     current={fitness.current}
                     fromTests={fitness.fromTests}
-                    refs={fitness.refs}
+                    measured={fitness.measured}
+                    race={raceByMetres(raceMetres)?.key ?? null}
                     entries={fitness.entries.map((e) => ({
                       id: e.id,
-                      fiveKSeconds:
-                        e.five_k_seconds === null
-                          ? null
-                          : Number(e.five_k_seconds),
-                      marathonSeconds:
-                        e.marathon_seconds === null
-                          ? null
-                          : Number(e.marathon_seconds),
+                      times: {
+                        "5K": numOrUndefined(e.five_k_seconds),
+                        "10K": numOrUndefined(e.ten_k_seconds),
+                        HM: numOrUndefined(e.half_seconds),
+                        M: numOrUndefined(e.marathon_seconds),
+                      },
                       note: e.note,
                       createdAt: e.created_at,
                       own: e.created_by === userId,

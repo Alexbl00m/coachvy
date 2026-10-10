@@ -12,10 +12,29 @@
  * tröskeln ligger närmare maratonfarten för en långsam löpare – så
  * tempona är en vägledning, inte en exakt tabell.
  *
+ * Utöver dem finns loppfarterna HM, 10K och 5K, för planer mot kortare
+ * lopp. De står också som andel av maratonfarten (Riegel 1,06, se
+ * races.ts), och i en halvmaratonplan räknas maratonfarten ur
+ * halvmaratonfarten – så @HM blir exakt löparens halvmaratonfart.
+ *
+ * Två zoner med bindestreck, `@HM-10K`, är spannet mellan dem: från den
+ * långsammare zonens nedre gräns till den snabbares övre.
+ *
  * Modulen är ren.
  */
 
-export type ZoneKey = "RK" | "LO" | "MT" | "S" | "I" | "WK";
+import { RACE_FACTOR } from "./races";
+
+export type ZoneKey =
+  | "RK"
+  | "LO"
+  | "MT"
+  | "WK"
+  | "S"
+  | "HM"
+  | "10K"
+  | "I"
+  | "5K";
 
 export type Zone = {
   key: ZoneKey;
@@ -56,11 +75,35 @@ export const ZONES: Zone[] = [
     hard: true,
   },
   {
+    key: "WK",
+    name: "Måltempo maraton",
+    low: 1,
+    high: 1,
+    description: "Exakt det tempo du vill springa maratonloppet i.",
+    hard: true,
+  },
+  {
     key: "S",
     name: "Tröskel",
     low: 1.01,
     high: 1.065,
     description: "Tempot du ungefär klarar i en timme.",
+    hard: true,
+  },
+  {
+    key: "HM",
+    name: "Halvmaratonfart",
+    low: RACE_FACTOR.HM,
+    high: RACE_FACTOR.HM,
+    description: "Farten du springer en halvmara i.",
+    hard: true,
+  },
+  {
+    key: "10K",
+    name: "Milfart",
+    low: RACE_FACTOR["10K"],
+    high: RACE_FACTOR["10K"],
+    description: "Farten du springer en mil i.",
     hard: true,
   },
   {
@@ -72,11 +115,11 @@ export const ZONES: Zone[] = [
     hard: true,
   },
   {
-    key: "WK",
-    name: "Måltempo",
-    low: 1,
-    high: 1,
-    description: "Exakt det tempo du vill springa loppet i.",
+    key: "5K",
+    name: "5 km-fart",
+    low: RACE_FACTOR["5K"],
+    high: RACE_FACTOR["5K"],
+    description: "Farten du springer 5 km i.",
     hard: true,
   },
 ];
@@ -95,11 +138,54 @@ export function zoneForRange(low: number, high: number): Zone | null {
   return ZONES.find((z) => close(z.low, low) && close(z.high, high)) ?? null;
 }
 
+/** Zonerna i ett spann `@A-B`, eller null när det inte är ett. */
+export function zoneSpan(
+  low: number,
+  high: number,
+): { from: Zone; to: Zone } | null {
+  if (zoneForRange(low, high)) return null;
+  const from = ZONES.find((z) => close(z.low, low));
+  const to = ZONES.find((z) => close(z.high, high));
+  return from && to && from !== to ? { from, to } : null;
+}
+
+/** "LO", "HM-10K" – målet som zon, eller null när det inte är en. */
+export function zoneLabel(low: number, high: number): string | null {
+  const zone = zoneForRange(low, high);
+  if (zone) return zone.key;
+  const span = zoneSpan(low, high);
+  return span ? `${span.from.key}-${span.to.key}` : null;
+}
+
 /** Zonen en fart (andel av maratonfart) ligger i, för färg och namn. */
 export function zoneAt(fraction: number): Zone | null {
   return (
-    ZONES.filter((z) => z.key !== "WK").find(
+    ZONES.filter((z) => z.low !== z.high).find(
       (z) => fraction >= z.low - 1e-9 && fraction <= z.high + 1e-9,
     ) ?? null
   );
+}
+
+/** Zonerna stegen i blocken står i, i zonernas ordning – spann räknas med. */
+export function usedZones(
+  blocks: { low: number; high: number }[][],
+): ZoneKey[] {
+  const keys = new Set<ZoneKey>();
+  for (const steps of blocks) {
+    for (const step of steps) {
+      const low = Math.min(step.low, step.high);
+      const high = Math.max(step.low, step.high);
+      const zone = zoneForRange(low, high);
+      if (zone) {
+        keys.add(zone.key);
+        continue;
+      }
+      const span = zoneSpan(low, high);
+      if (span) {
+        keys.add(span.from.key);
+        keys.add(span.to.key);
+      }
+    }
+  }
+  return ZONES.map((z) => z.key).filter((k) => keys.has(k));
 }

@@ -132,3 +132,33 @@ describe("strukturen som text", () => {
     }
   });
 });
+
+describe("loppfarter och spann", () => {
+  it("läser @HM, @10K och ett spann mellan två zoner", () => {
+    const r = parseStructure(
+      "3 km @LO; 3x(2 km @HM-10K + 2 min @RK); 10 min @HM",
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const rep = r.blocks[1];
+    expect(rep.type).toBe("repetition");
+    if (rep.type !== "repetition") return;
+    expect(rep.steps[0].low).toBeCloseTo(1.0425, 9);
+    expect(rep.steps[0].high).toBeCloseTo(1.0902, 9);
+    expect(rep.steps[0].kind).toBe("intervall");
+    expect(rep.steps[1].kind).toBe("vila");
+    const last = r.blocks[2];
+    expect(last.type === "steg" && last.step.low).toBeCloseTo(1.0425, 9);
+    expect(formatStructure(r.blocks, { zones: true })).toBe(
+      "3 km @LO; 3x(2 km @HM-10K + 2 min @RK); 10 min @HM",
+    );
+  });
+
+  it("säger vilka zoner som finns när en saknas", () => {
+    const r = parseStructure("10 min @XX");
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.error).toContain("@XX finns inte");
+    expect(r.error).toContain("10K");
+  });
+});

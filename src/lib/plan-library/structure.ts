@@ -12,7 +12,8 @@
  * Steg skiljs med semikolon, plus eller radbrytning. En repetition skrivs
  * `5x(…)`. Längd i s, min, h, m eller km, eller som 1:30. Målet i procent,
  * ett tal eller ett spann – eller en namngiven zon, `@LO`, `@MT`, `@S`,
- * `@I`, `@WK`, `@RK` (andel av maratonfart, se zones.ts). Efter målet får en
+ * `@I`, `@WK`, `@RK`, loppfarterna `@HM`, `@10K`, `@5K`, eller ett spann
+ * mellan två zoner, `@HM-10K` (andel av maratonfart, se zones.ts). Efter målet får en
  * etikett stå; är den ett
  * av stegtyperna (uppvärmning, intervall, vila, distans, nedvarvning) blir
  * den stegets typ. Annars gissas typen: först uppvärmning, sist
@@ -21,7 +22,7 @@
  * Modulen är ren.
  */
 
-import { zoneByKey, zoneForRange, type Zone } from "./zones";
+import { ZONE_KEYS, zoneByKey, zoneLabel, type Zone } from "./zones";
 import {
   STEP_KINDS,
   type StepKind,
@@ -93,12 +94,17 @@ function parseStep(raw: string): RawStep | string {
     return `"${raw.trim()}" har ingen längd.`;
   }
 
-  const zoneMatch = rest.match(/^\s*@\s*([A-Za-z]{1,2})\b/);
+  const zoneMatch = rest.match(
+    /^\s*@\s*([A-Za-z0-9]{1,3})(?:\s*[-–]\s*([A-Za-z0-9]{1,3}))?(?![A-Za-z0-9])/,
+  );
   if (zoneMatch) {
-    const zone = zoneByKey(zoneMatch[1]);
-    if (!zone) {
-      return `"${raw.trim()}": zonen @${zoneMatch[1]} finns inte – välj RK, LO, MT, S, I eller WK.`;
+    const keys = [zoneMatch[1], zoneMatch[2]].filter(Boolean) as string[];
+    const found = keys.map((k) => zoneByKey(k));
+    const missing = keys.find((_, i) => !found[i]);
+    if (missing) {
+      return `"${raw.trim()}": zonen @${missing} finns inte – välj ${ZONE_KEYS.join(", ")}.`;
     }
+    const zones = found as Zone[];
     const label = rest.slice(zoneMatch[0].length).trim();
     const kind = STEP_KINDS.find((k) => k === label.toLowerCase()) ?? null;
     return {
@@ -106,9 +112,9 @@ function parseStep(raw: string): RawStep | string {
       label: kind ? "" : label.slice(0, 60),
       durationSeconds,
       distanceM,
-      low: zone.low,
-      high: zone.high,
-      zone,
+      low: Math.min(...zones.map((z) => z.low)),
+      high: Math.max(...zones.map((z) => z.high)),
+      zone: { ...zones[0], hard: zones.some((z) => z.hard) },
     };
   }
 
@@ -260,9 +266,9 @@ function formatStep(
 ): string {
   const low = sv(step.low * 100);
   const high = sv(step.high * 100);
-  const zone = zones ? zoneForRange(step.low, step.high) : null;
+  const zone = zones ? zoneLabel(step.low, step.high) : null;
   const target = zone
-    ? `@${zone.key}`
+    ? `@${zone}`
     : low === high
       ? `${low}%`
       : `${low}-${high}%`;

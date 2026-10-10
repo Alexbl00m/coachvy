@@ -144,6 +144,11 @@ export default async function PlanTemplatePage({
               maxWeeks={version.max_weeks}
               slug={content.template.slug}
               categoryId={content.template.category_id}
+              raceMetres={
+                content.template.race_distance_m === null
+                  ? null
+                  : Number(content.template.race_distance_m)
+              }
               categories={categories.map((c) => ({ id: c.id, name: c.name }))}
               initial={{
                 title: version.title,

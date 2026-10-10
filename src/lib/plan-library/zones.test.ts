@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { formatStructure, parseStructure } from "./structure";
-import { ZONES, zoneAt, zoneByKey, zoneForRange } from "./zones";
+import { ZONES, zoneAt, zoneByKey, zoneForRange, zoneLabel } from "./zones";
 
 /** Tempo (s/km) för en andel av maratonfart. */
 const pace = (mpSecPerKm: number, fraction: number) => mpSecPerKm / fraction;
@@ -41,8 +41,19 @@ const TABLES: Record<string, Record<string, [string, string]>> = {
 const MARATHON_M = 42195;
 
 describe("zoner", () => {
-  it("har sex zoner och hittar dem på nyckel", () => {
-    expect(ZONES.map((z) => z.key)).toEqual(["RK", "LO", "MT", "S", "I", "WK"]);
+  it("har zonerna och loppfarterna, och hittar dem på nyckel", () => {
+    expect(ZONES.map((z) => z.key)).toEqual([
+      "RK",
+      "LO",
+      "MT",
+      "WK",
+      "S",
+      "HM",
+      "10K",
+      "I",
+      "5K",
+    ]);
+    expect(zoneByKey("10k")?.name).toBe("Milfart");
     expect(zoneByKey("lo")?.name).toBe("Lugn distans");
     expect(zoneByKey("X")).toBeUndefined();
   });
@@ -62,11 +73,15 @@ describe("zoner", () => {
   });
 
   it("ordnar zonerna från långsamt till snabbt", () => {
-    const sorted = ZONES.filter((z) => z.key !== "WK");
-    for (let i = 1; i < sorted.length; i += 1) {
-      expect(sorted[i].low).toBeGreaterThan(sorted[i - 1].low);
-      expect(sorted[i].high).toBeGreaterThan(sorted[i - 1].high);
+    const ranges = ZONES.filter((z) => z.low !== z.high);
+    for (let i = 1; i < ranges.length; i += 1) {
+      expect(ranges[i].low).toBeGreaterThan(ranges[i - 1].low);
+      expect(ranges[i].high).toBeGreaterThan(ranges[i - 1].high);
     }
+    // Loppfarterna: maraton, halvmaraton, 10 km, 5 km.
+    const races = ZONES.filter((z) => z.low === z.high).map((z) => z.low);
+    expect(races).toEqual([...races].sort((a, b) => a - b));
+    expect(races[0]).toBe(1);
   });
 
   it("hittar zonen en fart ligger i", () => {
@@ -76,6 +91,15 @@ describe("zoner", () => {
     expect(zoneAt(1.3)).toBeNull();
     expect(zoneForRange(1, 1)?.key).toBe("WK");
     expect(zoneForRange(0.5, 0.6)).toBeNull();
+    // Loppfarterna ligger inte i någon zon själva.
+    expect(zoneAt(1.0425)?.key).toBe("S");
+  });
+
+  it("namnger ett spann mellan två zoner", () => {
+    expect(zoneLabel(1.0425, 1.0902)).toBe("HM-10K");
+    expect(zoneLabel(0.935, 1.065)).toBe("MT-S");
+    expect(zoneLabel(0.83, 0.925)).toBe("LO");
+    expect(zoneLabel(0.9, 1)).toBeNull();
   });
 });
 

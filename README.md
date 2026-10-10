@@ -1526,8 +1526,38 @@ Planvyn visar zonen och löparens tempospann på varje steg, och en zontabell.
 Tempona kan räknas ur två källor (`plan_instances.pace_mode`, migrationen
 `20261009120000_plan_library_pace_source.sql`): **form**, alltså
 formuppskattningen ur tester och inskrivna tider, eller **mål**, en måltid
-för maraton som medlemmen anger. Valet görs när planen startas och kan bytas
-medan den är aktiv. Procenten ändras aldrig, bara tempona.
+för planens lopp som medlemmen anger. Valet görs när planen startas och kan
+bytas medan den är aktiv. Procenten ändras aldrig, bara tempona.
+
+### Loppdistans och fyra formtider
+
+Migrationen `20261010120000_plan_library_race_distance.sql` gör planerna
+oberoende av maraton:
+
+- **Loppdistans per mall** (`plan_templates.race_distance_m`): 5 km, 10 km,
+  halvmaraton eller maraton. Den sätts ur kategorin när mallen skapas och kan
+  ändras under Översikt. Måltiden gäller den distansen (`races.ts`).
+- **Fyra formtider** (`fitness_estimates`): 5 km, 10 km, halvmaraton och
+  maraton. Saknade tider räknas ur den inskrivna tid som ligger **närmast i
+  distans** (Riegel 1,06) – en 10 km-tid väger tyngre än en 5 km-tid för
+  halvmaraton och maraton. Finns tider på båda sidor om en distans används
+  löparens egen exponent mellan dem (1,02–1,15).
+- **Zoner för loppfarter**: HM, 10K och 5K är punktzoner, exakt farten på
+  distansen, och ett steg kan ligga mellan två zoner – `@HM-10K` är tröskeln
+  mellan halvmaraton- och milfart. Zonerna står fortfarande som andel av
+  maratonfarten; i en plan mot ett annat lopp räknas den ur loppfarten med
+  samma faktor (`RACE_FACTOR`), så att `@HM` blir precis måltidens fart.
+- **Baser 10K och HM** för pass i procent av milfart eller halvmaratonfart.
+
+Zontabellen i planvyn visar bara zonerna planen använder, och LT2 ur
+laktattestet bredvid när det finns – som kontroll av tröskelzonen, inte som
+grund för tempona.
+
+Halvmaratonplanerna (utkast, laddade med SQL utanför repot):
+**Halvmaraton i tratten (12–24 veckor)** i fem nivåer A–E, uppbyggd som
+Canovas tratt – generell, stödjande och specifik fas – med ett 10 km-test
+före den specifika delen, och **Första halvmaran (10–16 veckor)** i tre
+nivåer med ett kvalitetspass i veckan.
 
 ### Typer och tester
 

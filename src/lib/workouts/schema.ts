@@ -36,10 +36,20 @@ export const STEP_KINDS: StepKind[] = [
 
 /**
  * Vad procenttalen räknas mot. De fem första finns som mätta värden i appen.
- * 5K och MP – 5 km-fart och maratonfart – är löparens formuppskattning, som
- * planbibliotekets löpplaner räknar mot.
+ * 5K, 10K, HM och MP – loppfarterna på 5 km, 10 km, halvmaraton och
+ * maraton – är löparens formuppskattning, som planbibliotekets löpplaner
+ * räknar mot.
  */
-export type TargetBasis = "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP";
+export type TargetBasis =
+  | "FTP"
+  | "CP"
+  | "CS"
+  | "CSS"
+  | "LT2"
+  | "5K"
+  | "10K"
+  | "HM"
+  | "MP";
 
 export const TARGET_BASES: TargetBasis[] = [
   "FTP",
@@ -48,6 +58,8 @@ export const TARGET_BASES: TargetBasis[] = [
   "CSS",
   "LT2",
   "5K",
+  "10K",
+  "HM",
   "MP",
 ];
 
@@ -59,6 +71,8 @@ export const BASIS_LABEL: Record<TargetBasis, string> = {
   CSS: "CSS",
   LT2: "LT2",
   "5K": "5 km-fart",
+  "10K": "milfart",
+  HM: "halvmaratonfart",
   MP: "maratonfart",
 };
 

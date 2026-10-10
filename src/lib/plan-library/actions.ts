@@ -25,7 +25,8 @@ import {
   supersededBy,
   type ReturnMode,
 } from "./levels";
-import { parseRaceTime } from "./paces";
+import { parseRaceTime, raceTimeText } from "./paces";
+import { RACES, raceByKey, raceByMetres, type Race } from "./races";
 import { proposePeriodization } from "./periodization";
 import { loadPlanView } from "./plan-view";
 import { loadVersion } from "./queries";
@@ -82,18 +83,22 @@ export type StartPlanInput = {
   roundLevels?: string[] | null;
   /** Vad tempona räknas ur. Standard: formuppskattningen. */
   paceMode?: "form" | "mål";
-  /** Måltiden för maraton, som "3:15:00", när tempona räknas ur målet. */
+  /** Måltiden för planens lopp, som "1:45:00", när tempona räknas ur målet. */
   goalTime?: string;
 };
 
-/** Läser en måltid för maraton. Ger ett fel i text eller sekunderna. */
-function readGoalTime(text: string | undefined): number | string {
+/** Loppet en plan leder fram till; maraton när mallen inte säger något. */
+const raceOf = (raceMetres: number | null | undefined): Race =>
+  raceByMetres(raceMetres) ?? raceByKey("M");
+
+/** Läser en måltid för loppet. Ger ett fel i text eller sekunderna. */
+function readGoalTime(text: string | undefined, race: Race): number | string {
   const seconds = text?.trim() ? parseRaceTime(text) : null;
   if (seconds === null) {
-    return "Skriv måltiden som timmar, minuter och sekunder, till exempel 3:15:00.";
+    return `Skriv måltiden som en tid, till exempel ${race.example}.`;
   }
-  if (seconds < 2 * 3600 || seconds > 8 * 3600) {
-    return "Måltiden för ett maraton ska ligga mellan 2 och 8 timmar.";
+  if (seconds < race.min || seconds > race.max) {
+    return `Måltiden för ${race.name} ska ligga mellan ${raceTimeText(race.min)} och ${raceTimeText(race.max)}.`;
   }
   return seconds;
 }
@@ -135,7 +140,10 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
   const paceMode = input.paceMode === "mål" ? "mål" : "form";
   let goalSeconds: number | null = null;
   if (paceMode === "mål") {
-    const goal = readGoalTime(input.goalTime);
+    const goal = readGoalTime(
+      input.goalTime,
+      raceOf(content.template.race_distance_m),
+    );
     if (typeof goal === "string") return fail(goal);
     goalSeconds = goal;
   }
@@ -776,44 +784,45 @@ export async function proposeLevelChange(input: {
 // ---------------------------------------------------------------------------
 
 /**
- * En ny formuppskattning: en 5 km-tid, en maratontid eller båda, som tider
- * ("19:45", "3:15:00"). Den blir den gällande tills ett nyare test eller en
- * nyare tid kommer – tempona i planen följer med.
+ * En ny formuppskattning: en tid på 5 km, 10 km, halvmaraton eller maraton,
+ * eller flera, som tider ("19:45", "1:45:00"). Den blir den gällande tills
+ * ett nyare test eller en nyare tid kommer – tempona i planen följer med.
  */
 export async function saveFitnessEstimate(input: {
   adeptId: string;
-  fiveK: string;
-  marathon: string;
+  /** Tiderna per distans som text; tomma utelämnas. */
+  times: Partial<Record<Race["key"], string>>;
   note: string;
 }): Promise<PlanResult> {
   const user = await requireSessionUser();
-  const fiveK = input.fiveK.trim() ? parseRaceTime(input.fiveK) : null;
-  const marathon = input.marathon.trim() ? parseRaceTime(input.marathon) : null;
-  if (input.fiveK.trim() && fiveK === null) {
-    return fail(
-      "Skriv 5 km-tiden som minuter och sekunder, till exempel 19:45.",
-    );
+  const seconds: Partial<Record<Race["key"], number>> = {};
+  for (const race of RACES) {
+    const text = input.times[race.key]?.trim();
+    if (!text) continue;
+    const value = parseRaceTime(text);
+    if (value === null) {
+      return fail(
+        `Skriv tiden på ${race.name} som en tid, till exempel ${race.example}.`,
+      );
+    }
+    // Rimlighet: världsrekorden och en promenad sätter gränserna.
+    if (value < race.min || value > race.max) {
+      return fail(
+        `Tiden på ${race.name} ska ligga mellan ${raceTimeText(race.min)} och ${raceTimeText(race.max)}.`,
+      );
+    }
+    seconds[race.key] = value;
   }
-  if (input.marathon.trim() && marathon === null) {
-    return fail(
-      "Skriv maratontiden som timmar, minuter och sekunder, till exempel 3:15:00.",
-    );
-  }
-  if (fiveK === null && marathon === null) {
-    return fail("Ange en 5 km-tid eller en maratontid.");
-  }
-  // Rimlighet: världsrekorden och en promenad sätter gränserna.
-  if (fiveK !== null && (fiveK < 12 * 60 || fiveK > 90 * 60)) {
-    return fail("5 km-tiden ska ligga mellan 12 och 90 minuter.");
-  }
-  if (marathon !== null && (marathon < 2 * 3600 || marathon > 8 * 3600)) {
-    return fail("Maratontiden ska ligga mellan 2 och 8 timmar.");
+  if (Object.keys(seconds).length === 0) {
+    return fail("Ange minst en tid.");
   }
   const supabase = await createClient();
   const { error } = await supabase.from("fitness_estimates").insert({
     adept_id: input.adeptId,
-    five_k_seconds: fiveK,
-    marathon_seconds: marathon,
+    five_k_seconds: seconds["5K"] ?? null,
+    ten_k_seconds: seconds["10K"] ?? null,
+    half_seconds: seconds.HM ?? null,
+    marathon_seconds: seconds.M ?? null,
     note: input.note.trim().slice(0, 300) || null,
     created_by: user.id,
   });
@@ -852,7 +861,10 @@ export async function setPaceSource(input: {
   if (!isCtx(ctx)) return ctx;
   let goalSeconds: number | null = null;
   if (input.mode === "mål") {
-    const goal = readGoalTime(input.goalTime);
+    const goal = readGoalTime(
+      input.goalTime,
+      raceOf(ctx.view.content.template.race_distance_m),
+    );
     if (typeof goal === "string") return fail(goal);
     goalSeconds = goal;
   }

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/types/plan-library.generated";
 import { TARGET_BASES, type TargetBasis } from "@/lib/workouts/schema";
 
+import { CATEGORY_RACE, raceByKey, raceByMetres } from "./races";
 import { parseStructure, structureSeconds } from "./structure";
 import type { SeasonPhase, WeekKind } from "./types";
 
@@ -144,9 +145,26 @@ export async function createTemplate(input: {
   let slug = base;
   for (let i = 2; used.has(slug); i++) slug = `${base}-${i}`;
 
+  // Löpkategorierna har en självklar distans; den går att ändra efteråt.
+  let raceMetres: number | null = null;
+  if (input.categoryId) {
+    const { data: category } = await supabase
+      .from("plan_categories")
+      .select("key")
+      .eq("id", input.categoryId)
+      .maybeSingle();
+    const key = category ? CATEGORY_RACE[category.key] : undefined;
+    raceMetres = key ? raceByKey(key).metres : null;
+  }
+
   const { data: template, error } = await supabase
     .from("plan_templates")
-    .insert({ slug, category_id: input.categoryId, created_by: user.id })
+    .insert({
+      slug,
+      category_id: input.categoryId,
+      race_distance_m: raceMetres,
+      created_by: user.id,
+    })
     .select("id")
     .single();
   if (error) return dbError(error);
@@ -204,13 +222,22 @@ export async function updateTemplate(input: {
   templateId: string;
   slug: string;
   categoryId: string | null;
+  /** Loppet planen leder fram till, i meter. Utelämnad: oförändrad. */
+  raceMetres?: number | null;
 }): Promise<AdminResult> {
   await requireAdmin();
   const slug = await slugify(input.slug);
+  const race =
+    input.raceMetres === undefined ? undefined : raceByMetres(input.raceMetres);
+  if (input.raceMetres && !race) return fail("Välj ett av loppen.");
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_templates")
-    .update({ slug, category_id: input.categoryId })
+    .update({
+      slug,
+      category_id: input.categoryId,
+      ...(race === undefined ? {} : { race_distance_m: race?.metres ?? null }),
+    })
     .eq("id", input.templateId);
   if (error) {
     return error.code === "23505"
@@ -715,12 +742,12 @@ export async function saveSession(input: SessionInput): Promise<AdminResult> {
     }
     if (!v.basis || !TARGET_BASES.includes(v.basis)) {
       return fail(
-        "Välj vad procenten räknas mot (FTP, CP, CS, CSS, LT2, 5 km-fart eller maratonfart).",
+        "Välj vad procenten räknas mot (FTP, CP, CS, CSS, LT2, 5 km-fart, milfart, halvmaratonfart eller maratonfart).",
       );
     }
     if (raw.includes("@") && v.basis !== "MP") {
       return fail(
-        "Zoner som @LO och @MT räknas mot maratonfart – välj Maratonfart som bas, eller skriv procent.",
+        "Zoner som @LO och @HM står i planens zonsystem – välj Maratonfart som bas, eller skriv procent.",
       );
     }
     const result = parseStructure(raw);

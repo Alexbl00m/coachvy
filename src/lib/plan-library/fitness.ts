@@ -24,7 +24,9 @@ export type RunningFitness = {
   fromTests: FitnessEstimate | null;
   /** De inskrivna, nyast först. */
   entries: EstimateRow[];
-  /** Farterna passens procent räknas mot. */
+  /** CS och LT2 ur testerna, för planer som räknar mot dem. */
+  measured: { cs: number | null; lt2: number | null };
+  /** Farterna passens procent räknas mot, med zonerna mot maraton. */
   refs: ReferenceSpeeds;
 };
 
@@ -43,6 +45,7 @@ export async function loadRunningFitness(
     current: null,
     fromTests: null,
     entries: [],
+    measured: { cs: null, lt2: null },
     refs: {},
   };
   if (!isSupabaseConfigured()) return empty;
@@ -61,10 +64,15 @@ export async function loadRunningFitness(
   const profile = speedProfile(sessions);
   const fromTests = estimateFromProfile(profile);
   const latest = rows[0];
+  const num = (v: number | string | null) => (v === null ? null : Number(v));
   const manual = latest
     ? completeEstimate({
-        fiveKSeconds: latest.five_k_seconds,
-        marathonSeconds: latest.marathon_seconds,
+        times: {
+          "5K": num(latest.five_k_seconds),
+          "10K": num(latest.ten_k_seconds),
+          HM: num(latest.half_seconds),
+          M: num(latest.marathon_seconds),
+        },
         source: "manuell",
         date: latest.created_at.slice(0, 10),
         note: latest.note,
@@ -86,10 +94,12 @@ export async function loadRunningFitness(
     }
   }
 
+  const measured = { cs: profile?.cs?.speed ?? null, lt2 };
   return {
     current,
     fromTests,
     entries: rows,
-    refs: referenceSpeeds(current, { cs: profile?.cs?.speed ?? null, lt2 }),
+    measured,
+    refs: referenceSpeeds(current, measured),
   };
 }

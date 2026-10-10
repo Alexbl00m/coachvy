@@ -24,6 +24,8 @@ const NOMINAL: Record<TargetBasis, { sport: Sport; reference: number }> = {
   LT2: { sport: "löpning", reference: 4.2 },
   CSS: { sport: "simning", reference: 1.35 },
   "5K": { sport: "löpning", reference: 4.37 },
+  "10K": { sport: "löpning", reference: 4.01 },
+  HM: { sport: "löpning", reference: 3.84 },
   MP: { sport: "löpning", reference: 3.68 },
 };
 

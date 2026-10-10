@@ -260,7 +260,10 @@ export function SessionDialog({
           <code className="text-text-muted">
             3 km @LO; 2x(5 km @MT + 1 km @LO); 2 km @LO
           </code>{" "}
-          (RK, LO, MT, S, I, WK).
+          (RK, LO, MT, WK, S, I), loppfarterna HM, 10K och 5K, och ett spann
+          mellan två zoner som{" "}
+          <code className="text-text-muted">3x(2 km @HM-10K + 2 min @RK)</code>.
+          Zonerna räknas ur farten på mallens loppdistans.
         </p>
 
         <div className="mt-3 space-y-3">

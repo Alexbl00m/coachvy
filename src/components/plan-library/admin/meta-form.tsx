@@ -9,6 +9,8 @@ import {
   updateTemplate,
 } from "@/lib/plan-library/admin-actions";
 
+import { RACES } from "@/lib/plan-library/races";
+
 import { useAction } from "../use-action";
 
 type Meta = {
@@ -30,6 +32,7 @@ export function MetaForm({
   maxWeeks,
   slug: initialSlug,
   categoryId: initialCategory,
+  raceMetres: initialRace,
   categories,
 }: {
   templateId: string;
@@ -39,11 +42,16 @@ export function MetaForm({
   maxWeeks: number;
   slug: string;
   categoryId: string | null;
+  /** Loppet planen leder fram till, i meter. */
+  raceMetres: number | null;
   categories: { id: string; name: string }[];
 }) {
   const [meta, setMeta] = useState(initial);
   const [slug, setSlug] = useState(initialSlug);
   const [categoryId, setCategoryId] = useState(initialCategory ?? "");
+  const [raceMetres, setRaceMetres] = useState(
+    initialRace === null ? "" : String(initialRace),
+  );
   const { pending, error, run } = useAction();
   const [saved, setSaved] = useState(false);
   const set = (patch: Partial<Meta>) => {
@@ -62,6 +70,7 @@ export function MetaForm({
               templateId,
               slug,
               categoryId: categoryId || null,
+              raceMetres: raceMetres ? Number(raceMetres) : null,
             });
             if (!t.ok || !editable) return t;
             return saveVersionMeta({ versionId, ...meta });
@@ -176,6 +185,27 @@ export function MetaForm({
               </option>
             ))}
             <option value="">Inget mål</option>
+          </Select>
+        </Field>
+        <Field
+          label="Loppdistans"
+          htmlFor="meta-race"
+          hint="Måltiden gäller loppet, och zonerna räknas ur farten på det."
+        >
+          <Select
+            id="meta-race"
+            value={raceMetres}
+            onChange={(e) => {
+              setSaved(false);
+              setRaceMetres(e.target.value);
+            }}
+          >
+            {RACES.map((r) => (
+              <option key={r.key} value={String(r.metres)}>
+                {r.name[0].toUpperCase() + r.name.slice(1)}
+              </option>
+            ))}
+            <option value="">Inget bestämt lopp</option>
           </Select>
         </Field>
         <Field

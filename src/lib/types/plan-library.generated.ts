@@ -87,6 +87,7 @@ export type PlanLibraryTables = {
       created_by: string | null;
       created_at: string;
       updated_at: string;
+      race_distance_m: number | null;
     };
     Insert: {
       id?: string;
@@ -97,6 +98,7 @@ export type PlanLibraryTables = {
       created_by?: string | null;
       created_at?: string;
       updated_at?: string;
+      race_distance_m?: number | null;
     };
     Update: {
       id?: string;
@@ -107,6 +109,7 @@ export type PlanLibraryTables = {
       created_by?: string | null;
       created_at?: string;
       updated_at?: string;
+      race_distance_m?: number | null;
     };
     Relationships: [];
   };
@@ -351,7 +354,17 @@ export type PlanLibraryTables = {
       duration_s: number | null;
       distance_m: number | null;
       zone: string | null;
-      basis: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
+      basis:
+        | "FTP"
+        | "CP"
+        | "CS"
+        | "CSS"
+        | "LT2"
+        | "5K"
+        | "10K"
+        | "HM"
+        | "MP"
+        | null;
       blocks: Json | null;
     };
     Insert: {
@@ -363,7 +376,17 @@ export type PlanLibraryTables = {
       duration_s?: number | null;
       distance_m?: number | null;
       zone?: string | null;
-      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
+      basis?:
+        | "FTP"
+        | "CP"
+        | "CS"
+        | "CSS"
+        | "LT2"
+        | "5K"
+        | "10K"
+        | "HM"
+        | "MP"
+        | null;
       blocks?: Json | null;
     };
     Update: {
@@ -375,7 +398,17 @@ export type PlanLibraryTables = {
       duration_s?: number | null;
       distance_m?: number | null;
       zone?: string | null;
-      basis?: "FTP" | "CP" | "CS" | "CSS" | "LT2" | "5K" | "MP" | null;
+      basis?:
+        | "FTP"
+        | "CP"
+        | "CS"
+        | "CSS"
+        | "LT2"
+        | "5K"
+        | "10K"
+        | "HM"
+        | "MP"
+        | null;
       blocks?: Json | null;
     };
     Relationships: [];
@@ -750,6 +783,8 @@ export type PlanLibraryTables = {
       note: string | null;
       created_by: string | null;
       created_at: string;
+      ten_k_seconds: number | null;
+      half_seconds: number | null;
     };
     Insert: {
       id?: string;
@@ -760,6 +795,8 @@ export type PlanLibraryTables = {
       note?: string | null;
       created_by?: string | null;
       created_at?: string;
+      ten_k_seconds?: number | null;
+      half_seconds?: number | null;
     };
     Update: {
       id?: string;
@@ -770,6 +807,8 @@ export type PlanLibraryTables = {
       note?: string | null;
       created_by?: string | null;
       created_at?: string;
+      ten_k_seconds?: number | null;
+      half_seconds?: number | null;
     };
     Relationships: [];
   };
