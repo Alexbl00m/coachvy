@@ -72,7 +72,9 @@ export function LibraryView({
     setEditing({
       key: `ny-${Date.now()}`,
       id: null,
-      initial: emptyLibraryInput(sport === "alla" ? "löpning" : (sport as never)),
+      initial: emptyLibraryInput(
+        sport === "alla" ? "löpning" : (sport as never),
+      ),
     });
 
   return (
@@ -172,7 +174,11 @@ export function LibraryView({
                         size="sm"
                         variant="secondary"
                         onClick={() =>
-                          setEditing({ key: s.id, id: s.id, initial: inputOf(s) })
+                          setEditing({
+                            key: s.id,
+                            id: s.id,
+                            initial: inputOf(s),
+                          })
                         }
                       >
                         <Pencil aria-hidden className="size-3.5" />
@@ -194,7 +200,8 @@ export function LibraryView({
                         variant="ghost"
                         disabled={pending}
                         onClick={() => {
-                          if (!confirm(`Ta bort ${s.title} ur biblioteket?`)) return;
+                          if (!confirm(`Ta bort ${s.title} ur biblioteket?`))
+                            return;
                           run(() => deleteLibrarySession(s.id));
                         }}
                       >

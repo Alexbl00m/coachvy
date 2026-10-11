@@ -23,6 +23,7 @@ export const routes = {
   newPlan: "/app/planer/ny",
   workoutBuilder: "/app/pass",
   sessionLibrary: "/app/passbibliotek",
+  runningPlanner: "/app/lopplanerare",
   planLibrary: "/app/planbibliotek",
   planTemplates: "/app/planbibliotek/mallar",
   myPlan: "/app/min-plan",

@@ -1592,6 +1592,38 @@ påverkas), **instruktionen** och **hur det byggs på**, en variabel i taget.
   alla coacher; de kan använda och kopiera det men bara ägaren ändrar det.
   RLS säger detsamma.
 
+## Löpplaneraren
+
+`/app/lopplanerare` räknar fram veckovolym och långpass vecka för vecka
+fram till ett lopp – för coacher, och för medlemmar som planerar själva.
+Räkningen är löpträningsplaneraren i kalkylarket, rad för rad
+(`src/lib/running-planner/planner.ts`, testad mot arkets formler):
+
+- **Referenstabellen** ger start- och toppvärden för långpass och volym och
+  taperns längd per distans (5 km till ultra 160 km) och nivå 1–3.
+  Långpass och volym i dag ersätter startvärdena när de är ifyllda.
+- **Kurvan** stiger linjärt från start till topp. Var tredje vecka är
+  avlastning (långpass × 0,70, volym × 0,72); var fjärde går också att
+  välja. Toppveckan ligger före tapern, som sänker långpasset 20 % och
+  volymen 18 % per vecka. Loppveckan har 35 % av toppvolymen.
+- **Kontrollerna** säger till när långpasset är över 40 % av veckan, när
+  startvärdena ligger över toppen, när en första mara får färre än 16 veckor
+  och när volymen ökar mer än 10 % i veckan i snitt.
+
+Ovanpå arket ligger träningsfilosofin: uppbyggnaden delas längs blocken i
+en polariserad grund, en uppbyggnad med tröskel och en specifik del, och
+ett 10 km-test (5 km för 5 km-loppet) ligger veckan före den specifika
+delen. Varje vecka visar blockets ett eller två återkommande format och
+långpasset.
+
+Veckorna visas som staplar (`components/running/week-bars.tsx`): volymen
+som längd, långpasset som stapelns ljusa början och långpassets andel till
+höger. Zonerna i tempo ligger fästa längst ner (`zone-bar.tsx`), räknade ur
+en tid – för en adept förifylld med den tid i formuppskattningen som ligger
+närmast loppet. Inställningarna står i adressen, så en plan går att spara
+och skicka som länk. Samma staplar och zonlist visar **Hela planen** i
+planbibliotekets planvy.
+
 ## Samtycke och integritet
 
 Laktat, puls, syreupptag, kroppssammansättning, sömn och skador är

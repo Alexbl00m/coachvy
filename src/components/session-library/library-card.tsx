@@ -46,7 +46,9 @@ export function LibraryCard({
             {session.intensity && (
               <span className={chip}>{session.intensity}</span>
             )}
-            {!session.own && <span className={cn(chip, "text-accent")}>Delat</span>}
+            {!session.own && (
+              <span className={cn(chip, "text-accent")}>Delat</span>
+            )}
             {session.own && session.shared && (
               <span className={cn(chip, "text-accent")}>Delas med coacher</span>
             )}

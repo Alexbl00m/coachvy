@@ -221,7 +221,11 @@ export type AdeptTarget = {
 const round3 = (v: number) => Math.round(v * 1000) / 1000;
 
 function scaleStep(step: WorkoutStep, factor: number): WorkoutStep {
-  return { ...step, low: round3(step.low * factor), high: round3(step.high * factor) };
+  return {
+    ...step,
+    low: round3(step.low * factor),
+    high: round3(step.high * factor),
+  };
 }
 
 function scaleBlocks(blocks: WorkoutBlock[], factor: number): WorkoutBlock[] {
@@ -250,11 +254,19 @@ const paceText = (speed: number) => {
 export function toAdeptWorkout(
   pass: Pick<
     LibrarySession,
-    "title" | "sport" | "basis" | "blocks" | "purpose" | "description" | "progression"
+    | "title"
+    | "sport"
+    | "basis"
+    | "blocks"
+    | "purpose"
+    | "description"
+    | "progression"
   >,
   target: AdeptTarget,
   speeds: ReferenceSpeeds = {},
-): { ok: true; workout: Workout; note: string | null } | { ok: false; error: string } {
+):
+  | { ok: true; workout: Workout; note: string | null }
+  | { ok: false; error: string } {
   if (pass.sport !== target.sport) {
     return {
       ok: false,
@@ -264,7 +276,8 @@ export function toAdeptWorkout(
   if (!target.basis || !target.reference || !(target.reference > 0)) {
     return {
       ok: false,
-      error: "Adepten saknar en tröskel att räkna passet mot. Lägg in ett test först.",
+      error:
+        "Adepten saknar en tröskel att räkna passet mot. Lägg in ett test först.",
     };
   }
 
@@ -272,7 +285,9 @@ export function toAdeptWorkout(
   let note: string | null = null;
   if (pass.basis !== target.basis) {
     const runningPass =
-      RACE_BASES.includes(pass.basis) || pass.basis === "CS" || pass.basis === "LT2";
+      RACE_BASES.includes(pass.basis) ||
+      pass.basis === "CS" ||
+      pass.basis === "LT2";
     if (runningPass) {
       const from = speeds[pass.basis];
       if (!from || !(from > 0)) {
@@ -288,7 +303,10 @@ export function toAdeptWorkout(
     }
   }
 
-  const rationale = [pass.purpose, pass.progression && `Så byggs det på: ${pass.progression}`]
+  const rationale = [
+    pass.purpose,
+    pass.progression && `Så byggs det på: ${pass.progression}`,
+  ]
     .filter(Boolean)
     .join("\n\n");
 

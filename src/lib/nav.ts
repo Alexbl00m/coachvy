@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bot,
   CalendarDays,
+  ChartBarBig,
   ClipboardList,
   Dumbbell,
   FlaskConical,
@@ -55,6 +56,13 @@ const allSections: NavSection[] = [
         href: routes.sessionLibrary,
         icon: LibraryBig,
         audience: "staff",
+      },
+      {
+        label: "Löpplanerare",
+        href: routes.runningPlanner,
+        icon: ChartBarBig,
+        // Adepter ser den också: som medlem planerar de sin egen väg till
+        // loppet, annars visar sidan vad medlemskapet ger.
       },
       { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
       { label: "Planbibliotek", href: routes.planLibrary, icon: Library },

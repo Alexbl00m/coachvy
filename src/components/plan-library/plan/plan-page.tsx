@@ -5,6 +5,8 @@ import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
 import { SessionCard } from "@/components/plan-library/session-card";
 import { StatusChip } from "@/components/plan-library/status-chip";
+import { WeekBars, type WeekBarRow } from "@/components/running/week-bars";
+import { ZoneBar } from "@/components/running/zone-bar";
 import { PrintButton } from "@/components/workouts/print-button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
@@ -40,6 +42,7 @@ import { usedZones } from "@/lib/plan-library/zones";
 import { summarizeVolume, volumeText } from "@/lib/plan-library/volume";
 import { daysBetween, weekdayIndex } from "@/lib/season/season";
 import { BASIS_LABEL } from "@/lib/workouts/schema";
+import { zonePaces } from "@/lib/running-planner/zones";
 
 import { FitnessCard } from "./fitness-card";
 import { PaceSource } from "./pace-source";
@@ -262,10 +265,78 @@ export function PlanPage({
     ? daysBetween(today, instance.race_date)
     : null;
   const end = schedule.at(-1)!.endsOn;
+
   const link = (params: Record<string, string | number>) =>
     `${basePath}${basePath.includes("?") ? "&" : "?"}${new URLSearchParams(
       Object.entries(params).map(([k, v]) => [k, String(v)]),
     )}`;
+
+  // Hela planen som veckostaplar: volymen (eller tiden), långpasset och
+  // veckans nyckelpass.
+  const KEY_TYPES = ["kvalitet", "specifikt", "test", "tävling"];
+  const typeOf = (s: ScheduledSession) => (s.session.type ?? "").toLowerCase();
+  const weekRows: WeekBarRow[] = schedule.map((w, i) => {
+    const s = summarizeWeek(w, secondsOf);
+    const live = w.sessions.filter((x) => x.state !== "struken");
+    const long = live.find((x) => typeOf(x) === "långpass");
+    const longKm =
+      long && unit === "km"
+        ? (sessionAmount(long.variant, refs).metres ?? 0) / 1000
+        : 0;
+    const key = live
+      .filter((x) => KEY_TYPES.includes(typeOf(x)))
+      .map((x) => x.session.title)
+      .filter((t, j, all) => all.indexOf(t) === j);
+    const items = [
+      ...key,
+      ...(long
+        ? [longKm > 0 ? `${long.session.title} ${Math.round(longKm * 2) / 2} km`.replace(".", ",") : long.session.title]
+        : []),
+    ];
+    const phase = spans.find((x) => w.week >= x.fromWeek && w.week <= x.toWeek);
+    const prev = i > 0
+      ? spans.find((x) => schedule[i - 1].week >= x.fromWeek && schedule[i - 1].week <= x.toWeek)
+      : null;
+    const value = hasVolumes
+      ? (w.volume ? (w.volume.max ?? w.volume.min) : 0)
+      : s.plannedSeconds / 3600;
+    return {
+      key: w.week,
+      label: `V${w.week}`,
+      meta: `${dayMonth(w.startsOn)} · ${levelOf(w.levelId)?.key ?? ""}`.replace(".", ""),
+      value,
+      valueText: hasVolumes
+        ? w.volume
+          ? volumeText(w.volume, unit)
+          : ""
+        : hoursMinutes(s.plannedSeconds),
+      inner: longKm > 0 ? longKm : null,
+      emphasis:
+        w.kind !== "normal"
+          ? weekKindLabel(w.kind)
+          : w.roundEnd
+            ? "Testlopp"
+            : null,
+      items: items.length > 0 ? items : live.slice(0, 2).map((x) => x.session.title),
+      quiet: w.kind !== "normal",
+      current: w.week === view.currentWeek,
+      href: link({ vecka: w.week }),
+      group:
+        multi && w.round !== (schedule[i - 1]?.round ?? 0)
+          ? `Varv ${w.round}${phase ? ` · ${phase.name}` : ""}`
+          : phase && phase !== prev
+            ? phase.name
+            : null,
+      note: w.checkpoint
+        ? { tone: "info" as const, text: "Avstämning: se över formuppskattningen." }
+        : null,
+      aside: w.week <= view.currentWeek ? `${s.done}/${s.planned}` : `${s.planned} pass`,
+    };
+  });
+  const zonePaceList =
+    usesPaces && refs.MP && zonesUsed.length > 0
+      ? zonePaces(refs.MP, zonesUsed)
+      : [];
 
   // Tillbaka efter en paus i medlemskapet: hur länge var planen pausad?
   const lastPause = [...view.events].reverse().find((e) => e.kind === "pausad");
@@ -621,102 +692,18 @@ export function PlanPage({
           ) : (
             <Card>
               <CardTitle>Hela planen</CardTitle>
-              <div className="overflow-x-auto print:hidden">
-                <table className="w-full border-collapse text-sm whitespace-nowrap tabular-nums">
-                  <thead>
-                    <tr className="border-b border-line text-left text-[12px] text-text-muted">
-                      <th className="py-2 pr-3 font-medium">Vecka</th>
-                      {multi && <th className="py-2 pr-3 font-medium">Varv</th>}
-                      <th className="py-2 pr-3 font-medium">Datum</th>
-                      <th className="py-2 pr-3 font-medium">Fas</th>
-                      <th className="py-2 pr-3 font-medium">Nivå</th>
-                      <th className="py-2 pr-3 text-right font-medium">Pass</th>
-                      <th className="py-2 pr-3 text-right font-medium">Tid</th>
-                      {hasVolumes && (
-                        <th className="py-2 pr-3 text-right font-medium">
-                          Volym
-                        </th>
-                      )}
-                      <th className="py-2 text-right font-medium">Genomfört</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schedule.map((w) => {
-                      const s = summarizeWeek(w, secondsOf);
-                      return (
-                        <tr
-                          key={w.week}
-                          className={cn(
-                            "border-b border-line last:border-0",
-                            w.week === view.currentWeek && "bg-surface-2",
-                          )}
-                        >
-                          <td className="py-2 pr-3">
-                            <Link
-                              href={link({ vecka: w.week })}
-                              className="text-text hover:text-accent"
-                            >
-                              {w.week}
-                            </Link>
-                          </td>
-                          {multi && (
-                            <td className="py-2 pr-3 text-text-muted">
-                              {w.round}
-                            </td>
-                          )}
-                          <td className="py-2 pr-3 text-text-muted">
-                            {dayMonth(w.startsOn)}
-                          </td>
-                          <td className="py-2 pr-3 text-text-muted">
-                            {
-                              spans.find(
-                                (x) =>
-                                  w.week >= x.fromWeek && w.week <= x.toWeek,
-                              )?.name
-                            }
-                            {w.kind !== "normal" && (
-                              <span className="text-text-subtle">
-                                {" "}
-                                · {weekKindLabel(w.kind).toLowerCase()}
-                              </span>
-                            )}
-                            {w.roundEnd && (
-                              <span className="text-text-subtle">
-                                {" "}
-                                · testlopp
-                              </span>
-                            )}
-                            {w.checkpoint && (
-                              <span className="text-text-subtle">
-                                {" "}
-                                · avstämning
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 pr-3 text-text">
-                            {levelOf(w.levelId)?.key}
-                          </td>
-                          <td className="py-2 pr-3 text-right text-text-muted">
-                            {s.planned}
-                          </td>
-                          <td className="py-2 pr-3 text-right text-text-muted">
-                            {hoursMinutes(s.plannedSeconds)}
-                          </td>
-                          {hasVolumes && (
-                            <td className="py-2 pr-3 text-right text-text-muted">
-                              {w.volume ? volumeText(w.volume, unit) : ""}
-                            </td>
-                          )}
-                          <td className="py-2 text-right text-text-muted">
-                            {w.week <= view.currentWeek
-                              ? `${s.done}/${s.planned}`
-                              : ""}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="print:hidden">
+                <WeekBars
+                  rows={weekRows}
+                  legend={
+                    hasVolumes
+                      ? `Stapeln är veckans volym${unit === "km" ? ", den ljusa början långpasset" : ""}. Till höger: genomförda pass av planerade.`
+                      : "Stapeln är veckans planerade tid. Till höger: genomförda pass av planerade."
+                  }
+                />
+                {zonePaceList.length > 0 && (
+                  <ZoneBar zones={zonePaceList} caption="Dina zoner" />
+                )}
               </div>
               {/* Utskriften: varje vecka med sina pass. */}
               <div className="hidden space-y-4 print:block">

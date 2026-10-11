@@ -60,8 +60,8 @@ export function LibraryPicker({
               Hämta från passbiblioteket
             </h2>
             <p className="text-[13px] text-text-subtle">
-              Namn, typ och struktur fylls i på varje nivå. Skala sedan
-              nivåerna – samma format, olika mängd.
+              Namn, typ och struktur fylls i på varje nivå. Skala sedan nivåerna
+              – samma format, olika mängd.
             </p>
           </div>
           <Button size="sm" variant="ghost" onClick={onClose}>
@@ -72,7 +72,11 @@ export function LibraryPicker({
         {sessions.length === 0 ? (
           <div className="space-y-3 text-sm text-text-muted">
             <p>Biblioteket är tomt.</p>
-            <ButtonLink href={routes.sessionLibrary} size="sm" variant="secondary">
+            <ButtonLink
+              href={routes.sessionLibrary}
+              size="sm"
+              variant="secondary"
+            >
               Till passbiblioteket
             </ButtonLink>
           </div>

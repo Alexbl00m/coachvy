@@ -99,8 +99,13 @@ export async function copyLibrarySession(id: string): Promise<LibraryResult> {
     .maybeSingle();
   if (error || !source) return fail("Passet hittades inte.");
 
-  const { id: _id, owner_id: _owner, created_at: _c, updated_at: _u, ...rest } =
-    source;
+  const {
+    id: _id,
+    owner_id: _owner,
+    created_at: _c,
+    updated_at: _u,
+    ...rest
+  } = source;
   void _id;
   void _owner;
   void _c;
@@ -117,7 +122,9 @@ export async function copyLibrarySession(id: string): Promise<LibraryResult> {
     .select("id")
     .single();
   if (insertError || !data) {
-    return fail(`Det gick inte att kopiera: ${insertError?.message ?? "okänt fel"}`);
+    return fail(
+      `Det gick inte att kopiera: ${insertError?.message ?? "okänt fel"}`,
+    );
   }
   refresh();
   return { ok: true, id: data.id };

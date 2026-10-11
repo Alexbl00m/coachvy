@@ -110,8 +110,7 @@ export function SessionEditor({
     () => (draft.structure.trim() ? parseStructure(draft.structure) : null),
     [draft.structure],
   );
-  const zonesWithoutMp =
-    draft.structure.includes("@") && draft.basis !== "MP";
+  const zonesWithoutMp = draft.structure.includes("@") && draft.basis !== "MP";
   const profile =
     parsed && parsed.ok ? templateProfile(parsed.blocks, draft.basis) : [];
   const bases = BASES_FOR_SPORT[draft.sport];
@@ -141,11 +140,13 @@ export function SessionEditor({
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2 id={id("titel-rubrik")} className="text-lg font-semibold">
-              {sessionId ? "Ändra pass i biblioteket" : "Nytt pass i biblioteket"}
+              {sessionId
+                ? "Ändra pass i biblioteket"
+                : "Nytt pass i biblioteket"}
             </h2>
             <p className="text-[13px] text-text-subtle">
-              Skriv syftet och hur passet byggs på, så följer det med när
-              passet används.
+              Skriv syftet och hur passet byggs på, så följer det med när passet
+              används.
             </p>
           </div>
           <Button size="sm" variant="ghost" onClick={onClose}>
@@ -255,8 +256,8 @@ export function SessionEditor({
               )}
               {zonesWithoutMp && (
                 <p className="text-warn">
-                  Zoner som @LO och @HM står mot maratonfart – välj
-                  Maratonfart som bas, eller skriv procent.
+                  Zoner som @LO och @HM står mot maratonfart – välj Maratonfart
+                  som bas, eller skriv procent.
                 </p>
               )}
               {parsed && parsed.ok && !zonesWithoutMp && (
@@ -271,8 +272,8 @@ export function SessionEditor({
             <p className="mt-1 text-[11px] leading-relaxed text-text-subtle">
               Som i planmallarna: steg skiljs med semikolon, en repetition
               skrivs <code className="text-text-muted">5x(…)</code>. Med
-              maratonfart som bas går zonerna RK, LO, MT, S, I, loppfarterna
-              HM, 10K, 5K och spann som{" "}
+              maratonfart som bas går zonerna RK, LO, MT, S, I, loppfarterna HM,
+              10K, 5K och spann som{" "}
               <code className="text-text-muted">@HM-10K</code>.
             </p>
           </div>
@@ -325,7 +326,10 @@ export function SessionEditor({
 
           <fieldset className="sm:col-span-6">
             <legend className="mb-1.5 text-[13px] font-medium text-text">
-              Faser <span className="text-[11px] font-normal text-text-subtle">valfritt</span>
+              Faser{" "}
+              <span className="text-[11px] font-normal text-text-subtle">
+                valfritt
+              </span>
             </legend>
             <div className="flex flex-wrap gap-2">
               {TRAINING_PHASES.map((p) => {

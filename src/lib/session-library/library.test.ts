@@ -114,30 +114,52 @@ describe("toAdeptWorkout", () => {
   });
 
   it("lämnar procenten orörda när basen är densamma", () => {
-    const own = { ...pass, basis: "CS" as const, blocks: blocksOf("3x(5 min 95% + 1 min 60%)") };
-    const r = toAdeptWorkout(own, { sport: "löpning", basis: "CS", reference: 4.2 });
+    const own = {
+      ...pass,
+      basis: "CS" as const,
+      blocks: blocksOf("3x(5 min 95% + 1 min 60%)"),
+    };
+    const r = toAdeptWorkout(own, {
+      sport: "löpning",
+      basis: "CS",
+      reference: 4.2,
+    });
     expect(r.ok && r.workout.blocks).toEqual(own.blocks);
     expect(r.ok && r.note).toBeNull();
   });
 
   it("vägrar fel gren och saknad formuppskattning", () => {
     expect(
-      toAdeptWorkout(pass, { sport: "cykling", basis: "FTP", reference: 250 }).ok,
+      toAdeptWorkout(pass, { sport: "cykling", basis: "FTP", reference: 250 })
+        .ok,
     ).toBe(false);
-    const r = toAdeptWorkout(pass, { sport: "löpning", basis: "CS", reference: 4 }, {});
-    expect(r).toEqual({ ok: false, error: expect.stringContaining("formuppskattning") });
+    const r = toAdeptWorkout(
+      pass,
+      { sport: "löpning", basis: "CS", reference: 4 },
+      {},
+    );
+    expect(r).toEqual({
+      ok: false,
+      error: expect.stringContaining("formuppskattning"),
+    });
   });
 
   it("vägrar när adepten saknar tröskel", () => {
     expect(
-      toAdeptWorkout(pass, { sport: "löpning", basis: null, reference: null }, { MP: 3.6 }).ok,
+      toAdeptWorkout(
+        pass,
+        { sport: "löpning", basis: null, reference: null },
+        { MP: 3.6 },
+      ).ok,
     ).toBe(false);
   });
 });
 
 describe("fromWorkout", () => {
   it("skriver passbyggarens pass som en rad som går att läsa tillbaka", () => {
-    const blocks = blocksOf("15 min 65%; 4x(8 min 95% + 2 min 60%); 10 min 60%");
+    const blocks = blocksOf(
+      "15 min 65%; 4x(8 min 95% + 2 min 60%); 10 min 60%",
+    );
     const input = fromWorkout({
       title: "Tröskel",
       sport: "cykling",
