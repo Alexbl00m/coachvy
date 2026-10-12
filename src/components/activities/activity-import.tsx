@@ -19,6 +19,7 @@ import {
   prepareParsed,
   SPORT_NAME,
 } from "@/lib/activities/prepare";
+import { KIND_NAME, legName } from "@/lib/activities/multisport";
 import type { ReferenceCandidate } from "@/lib/activities/reference";
 import { cn } from "@/lib/cn";
 
@@ -162,24 +163,55 @@ export function ActivityImport({
       if (cancelled.current) break;
       setCurrent(entry.name.split("/").pop() ?? entry.name);
       try {
-        const parsed = await parseFit(await entry.read());
-        const start = Date.parse(parsed.startedAt);
-        if (known.has(start)) {
+        const file = await parseFit(await entry.read());
+        const starts = file.legs.map((l) => Date.parse(l.startedAt));
+        if (!file.multisport) {
+          const parsed = file.legs[0];
+          const start = starts[0];
+          if (known.has(start)) {
+            t.duplicates += 1;
+          } else {
+            known.add(start);
+            const p = prepareParsed(parsed, candidates, IMPORT_POINTS);
+            batch.push({
+              adeptId,
+              name: `${SPORT_NAME[parsed.sport]} ${p.date}`,
+              sport: parsed.sport,
+              startedAt: parsed.startedAt,
+              device: parsed.device,
+              raceId: null,
+              summary: { ...p.summary, imported: true },
+              reference: p.reference,
+              streams: p.streams,
+              laps: [],
+            });
+          }
+        } else if (starts.slice(1).every((s) => known.has(s))) {
+          // Grenarna finns redan. Bara den första kan krocka med en äldre
+          // import av hela filen som ett pass, och den reder servern ut.
           t.duplicates += 1;
         } else {
-          known.add(start);
-          const p = prepareParsed(parsed, candidates, IMPORT_POINTS);
-          batch.push({
-            adeptId,
-            name: `${SPORT_NAME[parsed.sport]} ${p.date}`,
-            sport: parsed.sport,
-            startedAt: parsed.startedAt,
-            device: parsed.device,
-            raceId: null,
-            summary: { ...p.summary, imported: true },
-            reference: p.reference,
-            streams: p.streams,
-            laps: [],
+          // Ett multisportlopp sparas i samma omgång, så att grenarna hålls
+          // ihop.
+          if (batch.length + file.legs.length > IMPORT_BATCH && !(await flush()))
+            break;
+          const multi = file.multisport;
+          file.legs.forEach((leg, i) => {
+            known.add(starts[i]);
+            const p = prepareParsed(leg, candidates, IMPORT_POINTS);
+            batch.push({
+              adeptId,
+              name: legName(`${KIND_NAME[multi.kind]} ${p.date}`, leg.sport),
+              sport: leg.sport,
+              startedAt: leg.startedAt,
+              device: leg.device,
+              raceId: null,
+              summary: { ...p.summary, imported: true },
+              reference: p.reference,
+              streams: p.streams,
+              laps: [],
+              multisport: { ...multi, leg: i },
+            });
           });
         }
       } catch {

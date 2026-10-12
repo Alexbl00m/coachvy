@@ -10,6 +10,7 @@ import type {
   Summary as ActivitySummary,
 } from "@/lib/activities/analysis";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
+import type { MultisportSummary } from "@/lib/activities/multisport";
 import type {
   PlanLibraryFunctions,
   PlanLibraryTables,
@@ -274,6 +275,8 @@ export type ActivityRow = {
   streams: ActivityStreams;
   laps: unknown[] | null;
   note: string | null;
+  /** En gren i ett multisportlopp: gemensamt id, grenens plats och delarna. */
+  multisport: MultisportSummary | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

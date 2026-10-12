@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cn";
-import { saveActivity } from "@/lib/activities/actions";
+import { saveActivity, saveMultisport } from "@/lib/activities/actions";
 import { formatClock } from "@/lib/activities/analysis";
 import {
   parseFit,
@@ -17,11 +17,22 @@ import {
   type PreparedActivity,
 } from "@/lib/activities/prepare";
 import type { ReferenceCandidate } from "@/lib/activities/reference";
+import {
+  KIND_NAME,
+  legName,
+  type MultisportSummary,
+} from "@/lib/activities/multisport";
 import { routes } from "@/lib/routes";
+
+import { MultisportStrip } from "./multisport-strip";
 
 export type RaceChoice = { id: string; name: string; race_date: string };
 
-type Ready = PreparedActivity;
+/** Ett pass, eller grenarna i ett multisportlopp med loppets delar. */
+type Ready = PreparedActivity & {
+  legs: PreparedActivity[];
+  multisport: MultisportSummary | null;
+};
 
 const km = (m: number | null) =>
   m === null ? "–" : `${(m / 1000).toFixed(1).replace(".", ",")} km`;
@@ -63,16 +74,21 @@ export function ActivityUpload({
     setExisting(null);
     setReady(null);
     try {
-      const prepared = prepareParsed(
-        await parseFit(await file.arrayBuffer()),
-        candidates,
-      );
+      const fileData = await parseFit(await file.arrayBuffer());
+      const legs = fileData.legs.map((leg) => prepareParsed(leg, candidates));
+      const prepared = legs[0];
       const { parsed, date } = prepared;
       const sameDay = races.find((r) => r.race_date === date);
+      const multi = fileData.multisport;
       setRace(sameDay?.id ?? "");
       setIsRace(Boolean(sameDay));
-      setName(sameDay?.name ?? `${SPORT_NAME[parsed.sport]} ${date}`);
-      setReady(prepared);
+      setName(
+        sameDay?.name ??
+          (multi
+            ? `${KIND_NAME[multi.kind]} ${date}`
+            : `${SPORT_NAME[parsed.sport]} ${date}`),
+      );
+      setReady({ ...prepared, legs, multisport: multi });
     } catch (e) {
       setError(
         e instanceof Error && e.message.includes("för lite")
@@ -86,6 +102,35 @@ export function ActivityUpload({
 
   const save = () => {
     if (!ready) return;
+    const multi = ready.multisport;
+    if (multi) {
+      startSaving(async () => {
+        const result = await saveMultisport(
+          adeptId,
+          ready.legs.map((leg, i) => ({
+            adeptId,
+            name: legName(name.trim(), leg.parsed.sport),
+            sport: leg.parsed.sport,
+            startedAt: leg.parsed.startedAt,
+            device: leg.parsed.device,
+            raceId: isRace ? race || null : null,
+            isRace,
+            summary: leg.summary,
+            reference: leg.reference,
+            streams: leg.streams,
+            laps: leg.parsed.laps,
+            multisport: { ...multi, leg: i },
+          })),
+        );
+        if (result.ok) {
+          router.push(`${routes.adepts}/${adeptId}/aktivitet/${result.id}`);
+          return;
+        }
+        setError(result.error);
+        setExisting(result.existingId ?? null);
+      });
+      return;
+    }
     startSaving(async () => {
       const result = await saveActivity({
         adeptId,
@@ -174,7 +219,30 @@ export function ActivityUpload({
 
       {ready && s && ref && (
         <div className="enter space-y-4 rounded-lg border border-line p-4">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+          {ready.multisport && (
+            <div className="space-y-2">
+              <p className="text-sm text-text">
+                <span className="font-medium">
+                  {KIND_NAME[ready.multisport.kind]}
+                </span>{" "}
+                · {formatClock(ready.multisport.totalS)} ·{" "}
+                {km(ready.multisport.distanceM)}
+                <span className="block text-[12px] text-text-subtle">
+                  Filen har flera grenar. Varje gren sparas som en egen
+                  aktivitet med sin egen analys, och växlingarna som tider. Ett
+                  pass som redan finns i samma gren – cykeldatorns – blir
+                  grenen i stället för klockans inspelning.
+                </span>
+              </p>
+              <MultisportStrip parts={ready.multisport.parts} />
+            </div>
+          )}
+          <dl
+            className={cn(
+              "grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4",
+              ready.multisport && "hidden",
+            )}
+          >
             {[
               ["Datum", ready.date],
               ["Tid", formatClock(s.elapsedS)],
@@ -251,7 +319,11 @@ export function ActivityUpload({
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={save} disabled={saving || !name.trim()}>
-              {saving ? "Sparar …" : "Spara och visa analysen"}
+              {saving
+                ? "Sparar …"
+                : ready.multisport
+                  ? `Spara ${ready.legs.length} grenar`
+                  : "Spara och visa analysen"}
             </Button>
             <Button
               variant="ghost"

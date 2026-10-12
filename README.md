@@ -1354,6 +1354,25 @@ in. Kolumnerna känns igen på rubrikerna (watt, km/h, tid, puls, laktat, RPE)
 eller gissas ur värdena, visas och kan ändras innan tabellen fylls i
 (`src/lib/tests/paste-steps.ts`). En rad som heter "vila" blir vilovärdet.
 
+### Multisport
+
+En multisportfil – Garmins triathlon, duathlon eller annan *auto multi
+sport* – har en session per gren och en per växling. Varje gren sparas som
+en egen aktivitet med sin egen analys (simfart, cykelns effekt, löpningens
+tempo), och växlingarna som tider. Grenarna delar en sammanfattning
+(`activities.multisport`, migrationen
+`20261012090000_activity_multisport.sql`) med loppets delar i ordning, och
+aktivitetssidan visar hela loppet som en remsa med länkar mellan grenarna
+(`src/lib/activities/multisport.ts`, `fit.ts`).
+
+- **En äldre import av hela filen som ett pass** – samma start, hela
+  loppets längd – ersätts när filen laddas upp igen. Kopplingen till
+  tävlingen följer med till grenarna.
+- **Cykeldatorns pass** blir cykelgrenen i stället för klockans inspelning,
+  när det redan finns i samma tid. Laddas cykeldatorns fil upp efteråt och
+  har effekt när klockans gren saknar det, tar den grenens plats.
+- Historikimporten delar multisportfiler på samma sätt.
+
 ### Historikimport
 
 Under listan finns **Importera historik**: en hel export på en gång, för

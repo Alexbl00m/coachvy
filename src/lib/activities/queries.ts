@@ -92,6 +92,24 @@ export async function getActivity(id: string): Promise<ActivityRow | null> {
   return data ? numeric(data as ActivityRow) : null;
 }
 
+/** Grenarna i samma multisportlopp, i ordning. RLS avgör. */
+export async function listMultisportLegs(
+  adeptId: string,
+  multisportId: string,
+): Promise<{ id: string; leg: number }[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("activities")
+    .select("id, leg:multisport->leg")
+    .eq("adept_id", adeptId)
+    .eq("multisport->>id", multisportId);
+  if (error) return [];
+  return ((data ?? []) as unknown as { id: string; leg: number | null }[])
+    .map((r) => ({ id: r.id, leg: Number(r.leg ?? 0) }))
+    .sort((a, b) => a.leg - b.leg);
+}
+
 export type ActivityInRange = ActivityListItem & { adept_name: string };
 
 /** Aktiviteter mellan två datum, för kalendern. RLS avgör vilka adepter. */

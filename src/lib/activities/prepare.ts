@@ -13,7 +13,7 @@ import {
   type Streams,
   type Summary,
 } from "./analysis";
-import type { ParsedActivity } from "./fit";
+import type { ParsedActivity, ParsedFile } from "./fit";
 import { pickReference, type ReferenceCandidate } from "./reference";
 
 export type PreparedActivity = {
@@ -49,10 +49,13 @@ export const stockholmDate = (iso: string) =>
     day: "2-digit",
   }).format(new Date(iso));
 
-/** Läser filen ur bufferten. Kastar om den inte går att tolka. */
-export async function parseFit(buffer: ArrayBuffer): Promise<ParsedActivity> {
-  const { readActivity } = await import("./fit");
-  return readActivity(buffer);
+/**
+ * Läser filen ur bufferten: en aktivitet, eller en per gren i en
+ * multisportfil. Kastar om den inte går att tolka.
+ */
+export async function parseFit(buffer: ArrayBuffer): Promise<ParsedFile> {
+  const { readActivities } = await import("./fit");
+  return readActivities(buffer);
 }
 
 /**

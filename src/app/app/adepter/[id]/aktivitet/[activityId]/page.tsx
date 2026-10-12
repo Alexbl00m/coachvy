@@ -8,7 +8,9 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
-import { getActivity } from "@/lib/activities/queries";
+import { getActivity, listMultisportLegs } from "@/lib/activities/queries";
+import { KIND_NAME } from "@/lib/activities/multisport";
+import { MultisportStrip } from "@/components/activities/multisport-strip";
 import {
   formatClock,
   paceOf,
@@ -167,6 +169,17 @@ export default async function ActivityPage({
   const running = activity.sport === "löpning";
   const laps = ((activity.laps ?? []) as Lap[]).filter((l) => l.seconds > 0);
   const ftp = ref?.ftp ?? null;
+  const multi = activity.multisport;
+  const legs = multi ? await listMultisportLegs(adept.id, multi.id) : [];
+  const legCount = multi
+    ? multi.parts.filter((p) => p.kind === "gren").length
+    : 0;
+  const legHrefs = Array.from({ length: legCount }, (_, i) => {
+    const leg = legs.find((l) => l.leg === i);
+    return leg && leg.id !== activity.id
+      ? `${routes.adepts}/${adept.id}/aktivitet/${leg.id}`
+      : null;
+  });
 
   return (
     <>
@@ -210,6 +223,22 @@ export default async function ActivityPage({
       />
 
       <div className="space-y-6">
+        {multi && (
+          <Card>
+            <CardTitle>
+              {KIND_NAME[multi.kind]} · {formatClock(multi.totalS)} totalt ·{" "}
+              {sv(multi.distanceM / 1000, 1)} km
+            </CardTitle>
+            <MultisportStrip
+              parts={multi.parts}
+              hrefs={legHrefs}
+              current={multi.leg}
+            />
+            <p className="mt-2 text-[12px] text-text-subtle">
+              Varje gren har sin egen analys. Växlingarna är klockans tider.
+            </p>
+          </Card>
+        )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {tilesFor(s, activity.sport).map((t) => (
             <div
