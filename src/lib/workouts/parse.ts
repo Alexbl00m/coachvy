@@ -217,7 +217,9 @@ export function parseWorkout(
       title: text(root.title, "Pass", 80),
       sport,
       summary: text(root.summary, "", 240),
-      rationale: text(root.rationale, "", 1200),
+      // Ett pass ur passbiblioteket har sin förklaring med: syfte,
+      // utförande, anpassningar, energi och progression.
+      rationale: text(root.rationale, "", 4000),
       basis,
       blocks,
     },

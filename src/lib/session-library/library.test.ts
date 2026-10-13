@@ -6,7 +6,9 @@ import type { WorkoutBlock } from "@/lib/workouts/schema";
 import {
   amountText,
   blockTotals,
+  educationText,
   fromWorkout,
+  levelOf,
   toAdeptWorkout,
   validateLibraryInput,
   type LibraryInput,
@@ -20,9 +22,13 @@ const base: LibraryInput = {
   purpose: "Höjer tröskeln.",
   description: "Ansträngt men hållbart.",
   progression: "Ett drag till varje vecka.",
+  adaptations: "",
+  fueling: "",
+  timing: "",
   phases: ["uppbyggnad", "okänd"],
   basis: "MP",
   structure: "3 km @LO; 4x(2 km @HM-10K + 2 min @RK); 2 km @LO",
+  levels: [],
   shared: false,
 };
 
@@ -70,6 +76,103 @@ describe("validateLibraryInput", () => {
   });
 });
 
+describe("nivåer", () => {
+  const cycling: LibraryInput = {
+    ...base,
+    sport: "cykling",
+    basis: "FTP",
+    structure: "",
+    levels: [
+      {
+        key: "A",
+        structure: "15 min 60%; 5x(4 min 115% + 3 min 50%); 10 min 50%",
+      },
+      {
+        key: "B",
+        structure: "15 min 60%; 4x(4 min 115% + 3 min 50%); 10 min 50%",
+      },
+      {
+        key: "C",
+        structure: "15 min 60%; 3x(4 min 115% + 3 min 50%); 10 min 50%",
+      },
+    ],
+  };
+
+  it("tolkar varje nivå och gör nivå B till passets rad", () => {
+    const r = validateLibraryInput(cycling);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.levels.map((l) => l.key)).toEqual(["A", "B", "C"]);
+    expect(r.value.structure).toBe(cycling.levels[1].structure);
+    const rep = r.value.levels[0].blocks[1];
+    expect(rep.type === "repetition" && rep.times).toBe(5);
+  });
+
+  it("kräver alla tre nivåerna och säger vilken som är fel", () => {
+    const missing = validateLibraryInput({
+      ...cycling,
+      levels: cycling.levels.slice(0, 2),
+    });
+    expect(missing).toEqual({
+      ok: false,
+      error: expect.stringContaining("nivå C"),
+    });
+    const broken = validateLibraryInput({
+      ...cycling,
+      levels: [
+        cycling.levels[0],
+        { key: "B", structure: "4x(4 min)" },
+        cycling.levels[2],
+      ],
+    });
+    expect(broken).toEqual({
+      ok: false,
+      error: expect.stringContaining("nivå B"),
+    });
+  });
+
+  it("ger adepten passet på vald nivå, och nivå B annars", () => {
+    const r = validateLibraryInput(cycling);
+    if (!r.ok) throw new Error(r.error);
+    const pass = {
+      ...r.value,
+      title: "VO₂max 4 min",
+      sport: "cykling" as const,
+    };
+    const target = {
+      sport: "cykling" as const,
+      basis: "FTP" as const,
+      reference: 300,
+    };
+    const a = toAdeptWorkout(pass, target, {}, "A");
+    const plain = toAdeptWorkout(pass, target);
+    const times = (w: typeof a) =>
+      w.ok && w.workout.blocks[1].type === "repetition"
+        ? w.workout.blocks[1].times
+        : null;
+    expect(times(a)).toBe(5);
+    expect(times(plain)).toBe(4);
+    expect(a.ok && a.workout.summary).toContain("nivå A");
+    expect(levelOf(pass, "C").structure).toBe(cycling.levels[2].structure);
+  });
+});
+
+describe("educationText", () => {
+  it("skriver en rubrik per ifyllt stycke, i läsordning", () => {
+    const text = educationText({
+      purpose: "Höjer VO₂max.",
+      description: "Jämnt tryck.",
+      adaptations: "",
+      fueling: "60 g kolhydrater i timmen.",
+      timing: "",
+      progression: "Ett drag till.",
+    });
+    expect(text).toBe(
+      "Syfte\nHöjer VO₂max.\n\nUtförande\nJämnt tryck.\n\nEnergi\n60 g kolhydrater i timmen.\n\nSå byggs det på\nEtt drag till.",
+    );
+  });
+});
+
 describe("blockTotals och amountText", () => {
   it("summerar meter och sekunder var för sig", () => {
     const blocks = blocksOf("3 km @LO; 5x(1000 m @HM + 400 m @MT); 10 min @RK");
@@ -88,11 +191,18 @@ describe("toAdeptWorkout", () => {
   const pass = {
     title: "Tröskeldrag",
     sport: "löpning" as const,
+    kind: "Kvalitet",
+    intensity: "Tröskel",
     basis: "MP" as const,
+    structure: "10 min @LO; 3x(2 km @HM + 2 min @RK)",
     blocks: blocksOf("10 min @LO; 3x(2 km @HM + 2 min @RK)"),
+    levels: [],
     purpose: "Höjer tröskeln.",
     description: "Jämnt.",
     progression: "Ett drag till.",
+    adaptations: "",
+    fueling: "",
+    timing: "",
   };
 
   it("räknar om zoner mot adeptens CS ur formuppskattningen", () => {

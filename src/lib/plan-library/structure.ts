@@ -34,7 +34,11 @@ export type StructureResult =
   | { ok: true; blocks: WorkoutBlock[] }
   | { ok: false; error: string };
 
-const MAX_STEPS = 60;
+/**
+ * Steg efter utrullning, som passbyggarens tak: 3 × 13 × 30/15 är 78 steg
+ * och ska gå att skriva.
+ */
+const MAX_STEPS = 240;
 
 /** Delar på avskiljare som inte står inom parentes. */
 function splitTop(text: string): string[] {

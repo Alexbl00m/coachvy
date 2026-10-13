@@ -8,7 +8,7 @@ import type { Sport } from "@/lib/calculators/lactate";
 import type { TrainingPhase } from "@/lib/tests/phases";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 
-import type { LibrarySession } from "./library";
+import type { LibraryLevel, LibrarySession } from "./library";
 
 type LibraryRow = PlanLibraryTables["session_library"]["Row"];
 
@@ -28,10 +28,16 @@ function toSession(row: LibraryRow, userId: string | null): LibrarySession {
     purpose: row.purpose ?? "",
     description: row.description ?? "",
     progression: row.progression ?? "",
+    adaptations: row.adaptations ?? "",
+    fueling: row.fueling ?? "",
+    timing: row.timing ?? "",
     phases: (row.phases ?? []) as TrainingPhase[],
     basis: row.basis as TargetBasis,
     structure: row.structure,
     blocks: row.blocks as unknown as WorkoutBlock[],
+    levels: (Array.isArray(row.levels)
+      ? row.levels
+      : []) as unknown as LibraryLevel[],
     updatedAt: row.updated_at,
   };
 }

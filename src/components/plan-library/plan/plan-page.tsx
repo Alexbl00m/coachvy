@@ -55,6 +55,7 @@ import {
   SuggestionButtons,
 } from "./plan-controls";
 import { SessionActions } from "./session-actions";
+import { RationaleText } from "@/components/workouts/rationale-text";
 
 const dayMonth = (iso: string) =>
   new Intl.DateTimeFormat("sv-SE", {
@@ -290,20 +291,37 @@ export function PlanPage({
     const items = [
       ...key,
       ...(long
-        ? [longKm > 0 ? `${long.session.title} ${Math.round(longKm * 2) / 2} km`.replace(".", ",") : long.session.title]
+        ? [
+            longKm > 0
+              ? `${long.session.title} ${Math.round(longKm * 2) / 2} km`.replace(
+                  ".",
+                  ",",
+                )
+              : long.session.title,
+          ]
         : []),
     ];
     const phase = spans.find((x) => w.week >= x.fromWeek && w.week <= x.toWeek);
-    const prev = i > 0
-      ? spans.find((x) => schedule[i - 1].week >= x.fromWeek && schedule[i - 1].week <= x.toWeek)
-      : null;
+    const prev =
+      i > 0
+        ? spans.find(
+            (x) =>
+              schedule[i - 1].week >= x.fromWeek &&
+              schedule[i - 1].week <= x.toWeek,
+          )
+        : null;
     const value = hasVolumes
-      ? (w.volume ? (w.volume.max ?? w.volume.min) : 0)
+      ? w.volume
+        ? (w.volume.max ?? w.volume.min)
+        : 0
       : s.plannedSeconds / 3600;
     return {
       key: w.week,
       label: `V${w.week}`,
-      meta: `${dayMonth(w.startsOn)} · ${levelOf(w.levelId)?.key ?? ""}`.replace(".", ""),
+      meta: `${dayMonth(w.startsOn)} · ${levelOf(w.levelId)?.key ?? ""}`.replace(
+        ".",
+        "",
+      ),
       value,
       valueText: hasVolumes
         ? w.volume
@@ -317,7 +335,8 @@ export function PlanPage({
           : w.roundEnd
             ? "Testlopp"
             : null,
-      items: items.length > 0 ? items : live.slice(0, 2).map((x) => x.session.title),
+      items:
+        items.length > 0 ? items : live.slice(0, 2).map((x) => x.session.title),
       quiet: w.kind !== "normal",
       current: w.week === view.currentWeek,
       href: link({ vecka: w.week }),
@@ -328,9 +347,15 @@ export function PlanPage({
             ? phase.name
             : null,
       note: w.checkpoint
-        ? { tone: "info" as const, text: "Avstämning: se över formuppskattningen." }
+        ? {
+            tone: "info" as const,
+            text: "Avstämning: se över formuppskattningen.",
+          }
         : null,
-      aside: w.week <= view.currentWeek ? `${s.done}/${s.planned}` : `${s.planned} pass`,
+      aside:
+        w.week <= view.currentWeek
+          ? `${s.done}/${s.planned}`
+          : `${s.planned} pass`,
     };
   });
   const zonePaceList =
@@ -403,9 +428,11 @@ export function PlanPage({
           </p>
         )}
         {instruction && (
-          <p className="mt-1.5 text-[12px] leading-snug text-text-muted">
-            {instruction}
-          </p>
+          <RationaleText
+            text={instruction}
+            compact
+            className="mt-1.5 text-[12px] leading-snug text-text-muted"
+          />
         )}
         <PacedStructure variant={s.variant} refs={refs} />
         {s.log && !editable && (

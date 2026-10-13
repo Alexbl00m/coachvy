@@ -1611,6 +1611,48 @@ påverkas), **instruktionen** och **hur det byggs på**, en variabel i taget.
   alla coacher; de kan använda och kopiera det men bara ägaren ändrar det.
   RLS säger detsamma.
 
+### Nivåer och passets förklaring
+
+Ett pass kan skrivas i **tre nivåer**, som planmallarna: A (mest), B och C
+(minst) – samma format i olika mängd (`levels`, migrationen
+`20261013090000_session_library_levels.sql`). Med nivåer är passets egen rad
+nivå B, så allt som läser en struktur fungerar som förut. I biblioteket
+bläddrar kortet mellan nivåerna, *Hämta från passbiblioteket* i en planmall
+fyller nivå A, B och C var för sig (efter beteckningen, eller i ordning när
+mallen har tre nivåer), och *Nivå A till passbyggaren* ger adepten passet på
+vald nivå (`?niva=A`).
+
+Passet förklarar sig också för den som tränar: **syfte**, **utförande**,
+**anpassningar**, **energi**, **när passet passar** och **så byggs det på**.
+Förklaringen följer med som passets motivering hos adepten och som passets
+beskrivning i en planmall, ett stycke per rubrik
+(`educationText`, visad med `components/workouts/rationale-text.tsx`).
+Text efter målet i en rad blir stegets etikett, så kadens skrivs
+`6 min 85% 60 rpm`.
+
+### Cykelatlasen
+
+Biblioteket har 44 färdiga cykelpass mot FTP: atlasen över zonerna Z1–Z5 –
+tre återhämtningspass, tre distanspass, tre tempopass, fyra tröskelpass och
+trettio VO₂max-pass (Seiler, Rønnestad, Billat, Helgerud, Tabata m.fl.) –
+och kraftpasset *Subthreshold torque* på låg kadens. Varje pass har tre
+nivåer och hela förklaringen, skriven ur träningsfilosofin
+(`src/lib/session-library/atlas/cycling.ts`). Testerna kontrollerar att
+alla nivåer går att läsa, att nivå A alltid har mest arbete och C minst, att
+intensiteten stämmer med zonen och att varje text är ifylld.
+
+Passen läses in som delade pass ägda av en admin:
+
+```
+node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts > atlas.sql
+node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts --owner-email coach@example.com > atlas.sql
+```
+
+Utan `--owner-email` blir den första admin ägare. Inläsningen går att köra
+igen: ett pass med samma namn hos ägaren hoppas över, så ett pass som
+ändrats skrivs inte över. Skriptet kör appens TypeScript direkt och kräver
+Node 22.18 eller senare.
+
 ## Löpplaneraren
 
 `/app/lopplanerare` räknar fram veckovolym och långpass vecka för vecka

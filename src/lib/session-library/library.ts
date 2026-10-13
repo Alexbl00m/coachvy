@@ -10,6 +10,13 @@
  * som `@LO` och `@HM-10K` mot maratonfart, eller procent av en bas. Raden är
  * originalet; blocken tolkas ur den.
  *
+ * Ett pass kan ha tre nivåer, som planmallarna: A (mest) till C (minst),
+ * samma format i olika mängd. Med nivåer är passets egen rad nivå B.
+ *
+ * Passet förklarar sig också för den som tränar – syfte, utförande,
+ * anpassningar, energi, när det passar och hur det byggs på – och den
+ * förklaringen följer med till adepten.
+ *
  * Modulen är ren.
  */
 
@@ -24,6 +31,21 @@ import {
   type WorkoutBlock,
   type WorkoutStep,
 } from "@/lib/workouts/schema";
+
+export type LibraryLevelKey = "A" | "B" | "C";
+
+/** Nivåerna i mallarnas ordning, högst först. */
+export const LIBRARY_LEVELS: { key: LibraryLevelKey; hint: string }[] = [
+  { key: "A", hint: "mest" },
+  { key: "B", hint: "mellan" },
+  { key: "C", hint: "minst" },
+];
+
+export type LibraryLevel = {
+  key: LibraryLevelKey;
+  structure: string;
+  blocks: WorkoutBlock[];
+};
 
 export type LibrarySession = {
   id: string;
@@ -43,10 +65,19 @@ export type LibrarySession = {
   description: string;
   /** Hur passet byggs på över blocket, en variabel i taget. */
   progression: string;
+  /** Vad kroppen anpassar sig till. */
+  adaptations: string;
+  /** Energi och vätska under passet. */
+  fueling: string;
+  /** När passet passar: fas, hur ofta och var. */
+  timing: string;
   phases: TrainingPhase[];
   basis: TargetBasis;
+  /** Med nivåer: nivå B. */
   structure: string;
   blocks: WorkoutBlock[];
+  /** A, B och C – eller tom när passet bara har en struktur. */
+  levels: LibraryLevel[];
   updatedAt: string;
 };
 
@@ -58,15 +89,22 @@ export type LibraryInput = {
   purpose: string;
   description: string;
   progression: string;
+  adaptations: string;
+  fueling: string;
+  timing: string;
   phases: string[];
   basis: TargetBasis;
+  /** Utan nivåer: passets enda rad. Med nivåer läses nivå B. */
   structure: string;
+  /** Tom, eller en rad per nivå A, B och C. */
+  levels: { key: LibraryLevelKey; structure: string }[];
   shared: boolean;
 };
 
-export type ValidInput = Omit<LibraryInput, "phases"> & {
+export type ValidInput = Omit<LibraryInput, "phases" | "levels"> & {
   phases: TrainingPhase[];
   blocks: WorkoutBlock[];
+  levels: LibraryLevel[];
 };
 
 export const LIBRARY_SPORTS: Sport[] = ["löpning", "cykling", "simning"];
@@ -109,22 +147,50 @@ export function validateLibraryInput(
       error: `${basisName(input.basis)} går inte som bas för ${input.sport}.`,
     };
   }
-  const structure = input.structure.trim();
-  if (!structure) {
-    return { ok: false, error: "Skriv passets struktur." };
+  const check = (raw: string, name: string) => {
+    const structure = raw.trim();
+    if (!structure) {
+      return { ok: false as const, error: `Skriv ${name}.` };
+    }
+    if (structure.length > 2000) {
+      return {
+        ok: false as const,
+        error: `${name[0].toUpperCase()}${name.slice(1)} är för lång.`,
+      };
+    }
+    if (structure.includes("@") && input.basis !== "MP") {
+      return {
+        ok: false as const,
+        error:
+          "Zoner som @LO och @HM står mot maratonfart – välj Maratonfart som bas, eller skriv procent.",
+      };
+    }
+    const parsed = parseStructure(structure);
+    if (!parsed.ok) {
+      return {
+        ok: false as const,
+        error: `${name[0].toUpperCase()}${name.slice(1)}: ${parsed.error}`,
+      };
+    }
+    return { ok: true as const, structure, blocks: parsed.blocks };
+  };
+
+  let levels: LibraryLevel[] = [];
+  let main: { structure: string; blocks: WorkoutBlock[] };
+  if (input.levels.length > 0) {
+    for (const { key } of LIBRARY_LEVELS) {
+      const raw = input.levels.find((l) => l.key === key)?.structure ?? "";
+      const level = check(raw, `strukturen på nivå ${key}`);
+      if (!level.ok) return level;
+      levels.push({ key, structure: level.structure, blocks: level.blocks });
+    }
+    main = levels[1];
+  } else {
+    const only = check(input.structure, "passets struktur");
+    if (!only.ok) return only;
+    main = only;
+    levels = [];
   }
-  if (structure.length > 2000) {
-    return { ok: false, error: "Strukturen är för lång." };
-  }
-  if (structure.includes("@") && input.basis !== "MP") {
-    return {
-      ok: false,
-      error:
-        "Zoner som @LO och @HM står mot maratonfart – välj Maratonfart som bas, eller skriv procent.",
-    };
-  }
-  const parsed = parseStructure(structure);
-  if (!parsed.ok) return { ok: false, error: parsed.error };
 
   const phaseKeys = TRAINING_PHASES.map((p) => p.key);
   const phases = phaseKeys.filter((key) => input.phases.includes(key));
@@ -139,13 +205,67 @@ export function validateLibraryInput(
       purpose: trimmed(input.purpose, 1000),
       description: trimmed(input.description, 2000),
       progression: trimmed(input.progression, 1000),
+      adaptations: trimmed(input.adaptations, 1000),
+      fueling: trimmed(input.fueling, 600),
+      timing: trimmed(input.timing, 600),
       phases,
       basis: input.basis,
-      structure,
+      structure: main.structure,
       shared: input.shared,
-      blocks: parsed.blocks,
+      blocks: main.blocks,
+      levels,
     },
   };
+}
+
+/** Raden och blocken på en nivå – passets egna när nivån saknas. */
+export function levelOf(
+  pass: Pick<LibrarySession, "structure" | "blocks" | "levels">,
+  key: LibraryLevelKey | null,
+): { structure: string; blocks: WorkoutBlock[] } {
+  const level = key ? pass.levels.find((l) => l.key === key) : undefined;
+  return level ?? { structure: pass.structure, blocks: pass.blocks };
+}
+
+/** Rubrikerna i passets förklaring, i den ordning de läses. */
+const EDUCATION: [
+  keyof Pick<
+    LibrarySession,
+    | "purpose"
+    | "description"
+    | "adaptations"
+    | "fueling"
+    | "timing"
+    | "progression"
+  >,
+  string,
+][] = [
+  ["purpose", "Syfte"],
+  ["description", "Utförande"],
+  ["adaptations", "Anpassningar"],
+  ["fueling", "Energi"],
+  ["timing", "När passet passar"],
+  ["progression", "Så byggs det på"],
+];
+
+/**
+ * Passets förklaring som text: en rubrik per stycke, rubriken på egen rad.
+ * Det är vad adepten läser under "Därför det här passet".
+ */
+export function educationText(
+  pass: Pick<
+    LibrarySession,
+    | "purpose"
+    | "description"
+    | "adaptations"
+    | "fueling"
+    | "timing"
+    | "progression"
+  >,
+): string {
+  return EDUCATION.filter(([field]) => pass[field].trim())
+    .map(([field, heading]) => `${heading}\n${pass[field].trim()}`)
+    .join("\n\n");
 }
 
 /** Passets längd: sekunderna i stegen angivna i tid, metrarna i resten. */
@@ -201,11 +321,15 @@ export function fromWorkout(workout: Workout): LibraryInput {
     purpose: workout.rationale,
     description: workout.summary,
     progression: "",
+    adaptations: "",
+    fueling: "",
+    timing: "",
     phases: [],
     basis: workout.basis,
     structure: formatStructure(workout.blocks, {
       zones: workout.basis === "MP",
     }),
+    levels: [],
     shared: false,
   };
 }
@@ -256,14 +380,23 @@ export function toAdeptWorkout(
     LibrarySession,
     | "title"
     | "sport"
+    | "kind"
+    | "intensity"
     | "basis"
+    | "structure"
     | "blocks"
+    | "levels"
     | "purpose"
     | "description"
     | "progression"
+    | "adaptations"
+    | "fueling"
+    | "timing"
   >,
   target: AdeptTarget,
   speeds: ReferenceSpeeds = {},
+  /** Nivån passet ges på; utan nivåer används passets enda rad. */
+  level: LibraryLevelKey | null = null,
 ):
   | { ok: true; workout: Workout; note: string | null }
   | { ok: false; error: string } {
@@ -303,12 +436,16 @@ export function toAdeptWorkout(
     }
   }
 
-  const rationale = [
-    pass.purpose,
-    pass.progression && `Så byggs det på: ${pass.progression}`,
+  const chosen = pass.levels.some((l) => l.key === level) ? level : null;
+  const { blocks } = levelOf(pass, chosen);
+  const summary = [
+    pass.kind,
+    pass.intensity,
+    chosen && `nivå ${chosen}`,
+    amountText(blocks),
   ]
     .filter(Boolean)
-    .join("\n\n");
+    .join(" · ");
 
   return {
     ok: true,
@@ -316,10 +453,10 @@ export function toAdeptWorkout(
     workout: {
       title: pass.title,
       sport: pass.sport,
-      summary: pass.description,
-      rationale,
+      summary,
+      rationale: educationText(pass),
       basis: target.basis,
-      blocks: scaleBlocks(pass.blocks, factor),
+      blocks: scaleBlocks(blocks, factor),
     },
   };
 }

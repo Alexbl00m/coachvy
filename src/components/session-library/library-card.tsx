@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { cn } from "@/lib/cn";
@@ -6,30 +8,55 @@ import { templateProfile } from "@/lib/plan-library/profile";
 import {
   amountText,
   basisName,
+  levelOf,
   phasesText,
+  type LibraryLevelKey,
   type LibrarySession,
 } from "@/lib/session-library/library";
 
 const chip =
   "rounded-sm bg-surface-3 px-1.5 py-px text-[11px] font-medium text-text-muted";
 
+const DETAILS: [
+  "description" | "adaptations" | "fueling" | "timing" | "progression",
+  string,
+][] = [
+  ["description", "Utförande"],
+  ["adaptations", "Anpassningar"],
+  ["fueling", "Energi"],
+  ["timing", "När passet passar"],
+  ["progression", "Så byggs det på"],
+];
+
 /**
- * Ett pass i biblioteket: namn, profil, raden och syftet. Instruktionen och
- * progressionen ligger under "Mer", så att listan går att skumma.
+ * Ett pass i biblioteket: namn, profil, raden och syftet. Har passet nivåer
+ * går de att bläddra mellan, nivå B först. Utförandet, anpassningarna,
+ * energin och progressionen ligger under "Mer", så att listan går att
+ * skumma.
  */
 export function LibraryCard({
   session,
   actions,
   compact = false,
+  level: controlled,
+  onLevel,
 }: {
   session: LibrarySession;
-  actions?: ReactNode;
+  /** Knapparna; får nivån som visas. */
+  actions?: ReactNode | ((level: LibraryLevelKey | null) => ReactNode);
   compact?: boolean;
+  level?: LibraryLevelKey;
+  onLevel?: (level: LibraryLevelKey) => void;
 }) {
-  const profile = templateProfile(session.blocks, session.basis);
-  const amount = amountText(session.blocks);
+  const [own, setOwn] = useState<LibraryLevelKey>("B");
+  const hasLevels = session.levels.length > 0;
+  const level = hasLevels ? (controlled ?? own) : null;
+  const shown = levelOf(session, level);
+  const profile = templateProfile(shown.blocks, session.basis);
+  const amount = amountText(shown.blocks);
   const phases = phasesText(session.phases);
-  const more = session.description || session.progression || phases;
+  const details = DETAILS.filter(([field]) => session[field]);
+  const more = details.length > 0 || phases;
 
   return (
     <article className="flex h-full flex-col gap-2.5 rounded-lg border border-line bg-surface p-4">
@@ -61,13 +88,38 @@ export function LibraryCard({
         )}
       </header>
 
+      {hasLevels && (
+        <div
+          role="group"
+          aria-label="Nivå"
+          className="flex w-fit rounded-md border border-line p-0.5"
+        >
+          {session.levels.map((l) => (
+            <button
+              key={l.key}
+              type="button"
+              aria-pressed={l.key === level}
+              onClick={() => (onLevel ?? setOwn)(l.key)}
+              className={cn(
+                "rounded-sm px-2 py-0.5 text-[12px] font-medium tabular-nums transition-colors",
+                l.key === level
+                  ? "bg-surface-3 text-text"
+                  : "text-text-subtle hover:text-text",
+              )}
+            >
+              Nivå {l.key}
+            </button>
+          ))}
+        </div>
+      )}
+
       <WorkoutStrip blocks={profile} className="h-7" />
 
       <p
         className="font-mono text-[12px] leading-snug break-words text-text-muted"
         title={`Procent av ${basisName(session.basis).toLowerCase()}`}
       >
-        {session.structure}
+        {shown.structure}
       </p>
 
       {session.purpose && (
@@ -87,22 +139,14 @@ export function LibraryCard({
             Mer
           </summary>
           <dl className="mt-2 space-y-2">
-            {session.description && (
-              <div>
+            {details.map(([field, heading]) => (
+              <div key={field}>
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
-                  Instruktion
+                  {heading}
                 </dt>
-                <dd className="whitespace-pre-line">{session.description}</dd>
+                <dd className="whitespace-pre-line">{session[field]}</dd>
               </div>
-            )}
-            {session.progression && (
-              <div>
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
-                  Så byggs det på
-                </dt>
-                <dd className="whitespace-pre-line">{session.progression}</dd>
-              </div>
-            )}
+            ))}
             {phases && (
               <div>
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
@@ -117,7 +161,7 @@ export function LibraryCard({
 
       {actions && (
         <footer className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-          {actions}
+          {typeof actions === "function" ? actions(level) : actions}
         </footer>
       )}
     </article>

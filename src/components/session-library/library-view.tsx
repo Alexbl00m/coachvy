@@ -26,7 +26,7 @@ type Owner = "alla" | "mina" | "delade";
 
 const matches = (s: LibrarySession, q: string) =>
   !q ||
-  [s.title, s.kind, s.intensity, s.purpose, s.structure]
+  [s.title, s.kind, s.intensity, s.purpose, s.adaptations, s.structure]
     .join(" ")
     .toLowerCase()
     .includes(q);
@@ -48,6 +48,7 @@ export function LibraryView({
   const [query, setQuery] = useState("");
   const [sport, setSport] = useState("alla");
   const [phase, setPhase] = useState("alla");
+  const [intensity, setIntensity] = useState("alla");
   const [owner, setOwner] = useState<Owner>("alla");
   const [editing, setEditing] = useState<{
     key: string;
@@ -57,6 +58,15 @@ export function LibraryView({
   const { pending, error, run } = useAction();
 
   const hasShared = sessions.some((s) => !s.own);
+  // Intensiteterna som finns, i bokstavsordning – "Z1 Återhämtning" till
+  // "Z5 VO₂max" hamnar då i zonordning.
+  const intensities = useMemo(
+    () =>
+      [...new Set(sessions.map((s) => s.intensity).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b, "sv"),
+      ),
+    [sessions],
+  );
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return sessions.filter(
@@ -64,9 +74,10 @@ export function LibraryView({
         matches(s, q) &&
         (sport === "alla" || s.sport === sport) &&
         (phase === "alla" || s.phases.includes(phase as never)) &&
+        (intensity === "alla" || s.intensity === intensity) &&
         (owner === "alla" || (owner === "mina" ? s.own : !s.own)),
     );
-  }, [sessions, query, sport, phase, owner]);
+  }, [sessions, query, sport, phase, intensity, owner]);
 
   const openNew = () =>
     setEditing({
@@ -124,6 +135,26 @@ export function LibraryView({
             </option>
           ))}
         </Select>
+        {intensities.length > 1 && (
+          <>
+            <label className="sr-only" htmlFor="bib-intensitet">
+              Intensitet
+            </label>
+            <Select
+              id="bib-intensitet"
+              value={intensity}
+              onChange={(e) => setIntensity(e.target.value)}
+              className="sm:w-auto"
+            >
+              <option value="alla">Alla intensiteter</option>
+              {intensities.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </Select>
+          </>
+        )}
         {hasShared && (
           <>
             <label className="sr-only" htmlFor="bib-agare">
@@ -167,7 +198,7 @@ export function LibraryView({
             <li key={s.id}>
               <LibraryCard
                 session={s}
-                actions={
+                actions={(level) => (
                   <>
                     {s.own && (
                       <Button
@@ -215,6 +246,9 @@ export function LibraryView({
                         className="flex w-full items-center gap-1.5"
                       >
                         <input type="hidden" name="bibliotek" value={s.id} />
+                        {level && (
+                          <input type="hidden" name="niva" value={level} />
+                        )}
                         <label className="sr-only" htmlFor={`adept-${s.id}`}>
                           Adept
                         </label>
@@ -240,12 +274,14 @@ export function LibraryView({
                           variant="secondary"
                           className="shrink-0 whitespace-nowrap"
                         >
-                          Till passbyggaren
+                          {level
+                            ? `Nivå ${level} till passbyggaren`
+                            : "Till passbyggaren"}
                         </Button>
                       </form>
                     )}
                   </>
-                }
+                )}
               />
             </li>
           ))}

@@ -18,9 +18,12 @@ import { sportForBasis, templateProfile } from "@/lib/plan-library/profile";
 import { formatStructure, parseStructure } from "@/lib/plan-library/structure";
 import type { TemplateSession } from "@/lib/plan-library/types";
 import type { Sport } from "@/lib/calculators/lactate";
-import type {
-  LibraryInput,
-  LibrarySession,
+import {
+  educationText,
+  LIBRARY_LEVELS,
+  levelOf,
+  type LibraryInput,
+  type LibrarySession,
 } from "@/lib/session-library/library";
 import {
   BASIS_LABEL,
@@ -155,8 +158,11 @@ export function SessionDialog({
       null) as Sport | null;
 
   /**
-   * Ett biblioteksspass på alla nivåer som är med. Nivåerna skalas sedan
-   * för hand – samma format, olika mängd.
+   * Ett biblioteksspass på alla nivåer som är med. Har passet nivåer får
+   * varje nivå sin egen rad – efter beteckningen, eller i ordning när mallen
+   * har tre nivåer. Annars skalas nivåerna för hand: samma format, olika
+   * mängd. Passets förklaring blir passets beskrivning, så att medlemmen
+   * läser varför.
    */
   const applyPass = (pass: LibrarySession) =>
     setDraft((d) => ({
@@ -166,22 +172,34 @@ export function SessionDialog({
         d.discipline,
       title: pass.title,
       type: pass.kind || d.type,
-      description: pass.purpose || pass.description || d.description,
-      variants: d.variants.map((v) =>
-        v.included
-          ? {
-              ...v,
-              basis: pass.basis,
-              zone: pass.intensity || v.zone,
-              structure: pass.structure,
-              description: v.description || pass.description,
-            }
-          : v,
-      ),
+      description: educationText(pass).slice(0, 2000) || d.description,
+      variants: d.variants.map((v, i) => {
+        if (!v.included) return v;
+        const key =
+          LIBRARY_LEVELS.find((l) => l.key === levels[i]?.key)?.key ??
+          (levels.length === LIBRARY_LEVELS.length
+            ? LIBRARY_LEVELS[i].key
+            : null);
+        return {
+          ...v,
+          basis: pass.basis,
+          zone: pass.intensity || v.zone,
+          structure: levelOf(pass, key).structure,
+          description: "",
+        };
+      }),
     }));
 
+  /**
+   * Varianten till biblioteket. Med tre nivåer som alla har en struktur mot
+   * samma bas följer nivåerna med.
+   */
   const saveToLibrary = (v: VariantInput) => {
     if (!v.basis) return;
+    const all = draft.variants;
+    const threeLevels =
+      all.length === LIBRARY_LEVELS.length &&
+      all.every((x) => x.included && x.structure.trim() && x.basis === v.basis);
     setSaving({
       key: `${v.levelId}-${Date.now()}`,
       initial: {
@@ -192,9 +210,18 @@ export function SessionDialog({
         purpose: draft.description,
         description: v.description,
         progression: "",
+        adaptations: "",
+        fueling: "",
+        timing: "",
         phases: [],
         basis: v.basis,
         structure: v.structure,
+        levels: threeLevels
+          ? LIBRARY_LEVELS.map((l, i) => ({
+              key: l.key,
+              structure: all[i].structure,
+            }))
+          : [],
         shared: false,
       },
     });
@@ -314,8 +341,11 @@ export function SessionDialog({
           </Field>
           <div className="sm:col-span-3">
             <Field label="Om passet" htmlFor="pass-beskrivning" optional>
-              <Input
+              {/* Flera rader: ett pass ur biblioteket har sin förklaring med,
+                  ett stycke per rubrik. */}
+              <Textarea
                 id="pass-beskrivning"
+                rows={draft.description.includes("\n") ? 6 : 2}
                 value={draft.description}
                 onChange={(e) => patch({ description: e.target.value })}
                 placeholder="Syftet, och hur det ska kännas"
@@ -471,7 +501,10 @@ export function SessionDialog({
                       )}
                       {profile.length > 0 && (
                         <div className="mt-2 flex items-center gap-2">
-                          <WorkoutStrip blocks={profile} className="h-6 flex-1" />
+                          <WorkoutStrip
+                            blocks={profile}
+                            className="h-6 flex-1"
+                          />
                           <Button
                             size="sm"
                             variant="ghost"

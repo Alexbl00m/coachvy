@@ -8,8 +8,17 @@ import { ExportWorkout } from "@/components/workouts/export-workout";
 import { WorkoutChart } from "@/components/workouts/workout-chart";
 import { WorkoutSteps } from "@/components/workouts/workout-steps";
 import { cn } from "@/lib/cn";
-import { readBalance, wPrimeBalance, type BalanceModel } from "@/lib/workouts/balance";
-import { formatDuration, resolveWorkout, type Workout } from "@/lib/workouts/schema";
+import {
+  readBalance,
+  wPrimeBalance,
+  type BalanceModel,
+} from "@/lib/workouts/balance";
+import {
+  formatDuration,
+  resolveWorkout,
+  type Workout,
+} from "@/lib/workouts/schema";
+import { RationaleText } from "./rationale-text";
 
 const sv = (value: number, digits: number) =>
   value.toFixed(digits).replace(".", ",");
@@ -86,7 +95,9 @@ export function WorkoutView({
                   label: "Lägsta reserv",
                   value: String(Math.round(balance.minimumFraction * 100)),
                   unit: "%",
-                  hint: balance.depleted ? "tar slut under passet" : "kvar när det är som tommast",
+                  hint: balance.depleted
+                    ? "tar slut under passet"
+                    : "kvar när det är som tommast",
                 },
               ]
             : []),
@@ -133,9 +144,10 @@ export function WorkoutView({
       {workout.rationale && (
         <Card>
           <CardTitle>Därför det här passet</CardTitle>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-text-muted">
-            {workout.rationale}
-          </p>
+          <RationaleText
+            text={workout.rationale}
+            className="text-sm leading-relaxed text-text-muted"
+          />
         </Card>
       )}
 

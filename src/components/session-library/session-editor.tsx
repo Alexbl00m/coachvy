@@ -15,6 +15,7 @@ import {
   amountText,
   BASES_FOR_SPORT,
   basisName,
+  LIBRARY_LEVELS,
   LIBRARY_SPORTS,
   type LibraryInput,
   type LibrarySession,
@@ -48,9 +49,13 @@ export const emptyLibraryInput = (sport: Sport = "löpning"): LibraryInput => ({
   purpose: "",
   description: "",
   progression: "",
+  adaptations: "",
+  fueling: "",
+  timing: "",
   phases: [],
   basis: BASES_FOR_SPORT[sport][0],
   structure: "",
+  levels: [],
   shared: false,
 });
 
@@ -62,9 +67,13 @@ export const inputOf = (s: LibrarySession): LibraryInput => ({
   purpose: s.purpose,
   description: s.description,
   progression: s.progression,
+  adaptations: s.adaptations,
+  fueling: s.fueling,
+  timing: s.timing,
   phases: s.phases,
   basis: s.basis,
   structure: s.structure,
+  levels: s.levels.map((l) => ({ key: l.key, structure: l.structure })),
   shared: s.shared,
 });
 
@@ -106,13 +115,29 @@ export function SessionEditor({
   }, [open]);
 
   const patch = (p: Partial<LibraryInput>) => setDraft((d) => ({ ...d, ...p }));
-  const parsed = useMemo(
-    () => (draft.structure.trim() ? parseStructure(draft.structure) : null),
-    [draft.structure],
-  );
-  const zonesWithoutMp = draft.structure.includes("@") && draft.basis !== "MP";
-  const profile =
-    parsed && parsed.ok ? templateProfile(parsed.blocks, draft.basis) : [];
+  const withLevels = draft.levels.length > 0;
+  const setLevel = (key: string, structure: string) =>
+    setDraft((d) => ({
+      ...d,
+      levels: d.levels.map((l) => (l.key === key ? { ...l, structure } : l)),
+    }));
+  const toggleLevels = (on: boolean) =>
+    setDraft((d) =>
+      on
+        ? {
+            ...d,
+            levels: LIBRARY_LEVELS.map(({ key }) => ({
+              key,
+              structure: d.structure,
+            })),
+          }
+        : {
+            ...d,
+            structure:
+              d.levels.find((l) => l.key === "B")?.structure ?? d.structure,
+            levels: [],
+          },
+    );
   const bases = BASES_FOR_SPORT[draft.sport];
   const id = (name: string) => `bib-${name}`;
 
@@ -239,42 +264,54 @@ export function SessionEditor({
             </Field>
           </div>
 
-          <div className="sm:col-span-6">
-            <Field label="Struktur" htmlFor={id("struktur")}>
-              <Input
-                id={id("struktur")}
-                value={draft.structure}
-                onChange={(e) => patch({ structure: e.target.value })}
-                placeholder={PLACEHOLDER[draft.basis] ?? PLACEHOLDER.MP}
-                className="font-mono text-[13px]"
-                required
-              />
-            </Field>
-            <div className="mt-1.5 min-h-5 text-[12px]">
-              {parsed && !parsed.ok && (
-                <p className="text-warn">{parsed.error}</p>
-              )}
-              {zonesWithoutMp && (
-                <p className="text-warn">
-                  Zoner som @LO och @HM står mot maratonfart – välj Maratonfart
-                  som bas, eller skriv procent.
-                </p>
-              )}
-              {parsed && parsed.ok && !zonesWithoutMp && (
-                <div className="flex items-center gap-3">
-                  <WorkoutStrip blocks={profile} className="h-6 flex-1" />
-                  <span className="shrink-0 tabular-nums text-text-muted">
-                    {amountText(parsed.blocks)}
-                  </span>
-                </div>
-              )}
+          <div className="space-y-3 sm:col-span-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-[13px] font-medium text-text">
+                Struktur
+              </span>
+              <label className="flex items-center gap-2 text-[13px] text-text-muted">
+                <input
+                  type="checkbox"
+                  checked={withLevels}
+                  onChange={(e) => toggleLevels(e.target.checked)}
+                  className="size-4 accent-[var(--accent)]"
+                />
+                Tre nivåer, A–C
+              </label>
             </div>
-            <p className="mt-1 text-[11px] leading-relaxed text-text-subtle">
+            {withLevels ? (
+              LIBRARY_LEVELS.map(({ key, hint }) => (
+                <StructureInput
+                  key={key}
+                  id={id(`struktur-${key}`)}
+                  label={`Nivå ${key} · ${hint}`}
+                  value={
+                    draft.levels.find((l) => l.key === key)?.structure ?? ""
+                  }
+                  onChange={(value) => setLevel(key, value)}
+                  basis={draft.basis}
+                />
+              ))
+            ) : (
+              <StructureInput
+                id={id("struktur")}
+                label="Struktur"
+                hideLabel
+                value={draft.structure}
+                onChange={(value) => patch({ structure: value })}
+                basis={draft.basis}
+              />
+            )}
+            <p className="text-[11px] leading-relaxed text-text-subtle">
               Som i planmallarna: steg skiljs med semikolon, en repetition
-              skrivs <code className="text-text-muted">5x(…)</code>. Med
+              skrivs <code className="text-text-muted">5x(…)</code>. Text efter
+              målet blir stegets etikett, till exempel{" "}
+              <code className="text-text-muted">6 min 85% 60 rpm</code>. Med
               maratonfart som bas går zonerna RK, LO, MT, S, I, loppfarterna HM,
               10K, 5K och spann som{" "}
               <code className="text-text-muted">@HM-10K</code>.
+              {withLevels &&
+                " Nivåerna är samma format i olika mängd – A mest, C minst."}
             </p>
           </div>
 
@@ -287,7 +324,7 @@ export function SessionEditor({
             >
               <Textarea
                 id={id("syfte")}
-                rows={2}
+                rows={3}
                 value={draft.purpose}
                 onChange={(e) => patch({ purpose: e.target.value })}
               />
@@ -295,14 +332,14 @@ export function SessionEditor({
           </div>
           <div className="sm:col-span-3">
             <Field
-              label="Instruktion"
+              label="Utförande"
               htmlFor={id("instruktion")}
-              hint="Till den som tränar: hur det ska kännas."
+              hint="Till den som tränar: hur det ska kännas och vad som är viktigt."
               optional
             >
               <Textarea
                 id={id("instruktion")}
-                rows={3}
+                rows={4}
                 value={draft.description}
                 onChange={(e) => patch({ description: e.target.value })}
               />
@@ -310,14 +347,59 @@ export function SessionEditor({
           </div>
           <div className="sm:col-span-3">
             <Field
+              label="Anpassningar"
+              htmlFor={id("anpassningar")}
+              hint="Vad kroppen anpassar sig till."
+              optional
+            >
+              <Textarea
+                id={id("anpassningar")}
+                rows={4}
+                value={draft.adaptations}
+                onChange={(e) => patch({ adaptations: e.target.value })}
+              />
+            </Field>
+          </div>
+          <div className="sm:col-span-3">
+            <Field
+              label="Energi"
+              htmlFor={id("energi")}
+              hint="Kolhydrater och vätska under passet."
+              optional
+            >
+              <Textarea
+                id={id("energi")}
+                rows={2}
+                value={draft.fueling}
+                onChange={(e) => patch({ fueling: e.target.value })}
+              />
+            </Field>
+          </div>
+          <div className="sm:col-span-3">
+            <Field
+              label="När passet passar"
+              htmlFor={id("nar")}
+              hint="Fas, hur ofta och var – trainer, backe, slätt."
+              optional
+            >
+              <Textarea
+                id={id("nar")}
+                rows={2}
+                value={draft.timing}
+                onChange={(e) => patch({ timing: e.target.value })}
+              />
+            </Field>
+          </div>
+          <div className="sm:col-span-6">
+            <Field
               label="Så byggs det på"
               htmlFor={id("progression")}
-              hint="En variabel i taget: antal drag, draglängd, vila eller fart."
+              hint="En variabel i taget: antal drag, draglängd, vila eller intensitet."
               optional
             >
               <Textarea
                 id={id("progression")}
-                rows={3}
+                rows={2}
                 value={draft.progression}
                 onChange={(e) => patch({ progression: e.target.value })}
               />
@@ -391,5 +473,68 @@ export function SessionEditor({
         </div>
       </form>
     </dialog>
+  );
+}
+
+/** En struktur att skriva, med felet eller profilen direkt under. */
+function StructureInput({
+  id,
+  label,
+  hideLabel = false,
+  value,
+  onChange,
+  basis,
+}: {
+  id: string;
+  label: string;
+  hideLabel?: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  basis: TargetBasis;
+}) {
+  const parsed = useMemo(
+    () => (value.trim() ? parseStructure(value) : null),
+    [value],
+  );
+  const zonesWithoutMp = value.includes("@") && basis !== "MP";
+  const profile =
+    parsed && parsed.ok ? templateProfile(parsed.blocks, basis) : [];
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className={cn(
+          "mb-1 block text-[12px] text-text-muted",
+          hideLabel && "sr-only",
+        )}
+      >
+        {label}
+      </label>
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={PLACEHOLDER[basis] ?? PLACEHOLDER.MP}
+        className="font-mono text-[13px]"
+        required
+      />
+      <div className="mt-1.5 min-h-5 text-[12px]">
+        {parsed && !parsed.ok && <p className="text-warn">{parsed.error}</p>}
+        {zonesWithoutMp && (
+          <p className="text-warn">
+            Zoner som @LO och @HM står mot maratonfart – välj Maratonfart som
+            bas, eller skriv procent.
+          </p>
+        )}
+        {parsed && parsed.ok && !zonesWithoutMp && (
+          <div className="flex items-center gap-3">
+            <WorkoutStrip blocks={profile} className="h-6 flex-1" />
+            <span className="shrink-0 tabular-nums text-text-muted">
+              {amountText(parsed.blocks)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

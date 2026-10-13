@@ -830,6 +830,10 @@ export type PlanLibraryTables = {
       blocks: Json;
       created_at: string;
       updated_at: string;
+      levels: Json;
+      adaptations: string | null;
+      fueling: string | null;
+      timing: string | null;
     };
     Insert: {
       id?: string;
@@ -848,6 +852,10 @@ export type PlanLibraryTables = {
       blocks: Json;
       created_at?: string;
       updated_at?: string;
+      levels?: Json;
+      adaptations?: string | null;
+      fueling?: string | null;
+      timing?: string | null;
     };
     Update: {
       id?: string;
@@ -866,6 +874,10 @@ export type PlanLibraryTables = {
       blocks?: Json;
       created_at?: string;
       updated_at?: string;
+      levels?: Json;
+      adaptations?: string | null;
+      fueling?: string | null;
+      timing?: string | null;
     };
     Relationships: [];
   };

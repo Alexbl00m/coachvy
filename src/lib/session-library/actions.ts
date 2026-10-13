@@ -53,10 +53,14 @@ export async function saveLibrarySession(
     purpose: v.purpose || null,
     description: v.description || null,
     progression: v.progression || null,
+    adaptations: v.adaptations || null,
+    fueling: v.fueling || null,
+    timing: v.timing || null,
     phases: v.phases,
     basis: v.basis,
     structure: v.structure,
     blocks: v.blocks as unknown as Json,
+    levels: v.levels as unknown as Json,
     shared: v.shared,
   };
 

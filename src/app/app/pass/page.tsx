@@ -12,7 +12,7 @@ import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { getWorkout } from "@/lib/workouts/queries";
 import { toWorkout, type Workout } from "@/lib/workouts/schema";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
-import { toAdeptWorkout } from "@/lib/session-library/library";
+import { LIBRARY_LEVELS, toAdeptWorkout } from "@/lib/session-library/library";
 import { getLibrarySession } from "@/lib/session-library/queries";
 
 export const metadata = { title: "Passbyggare" };
@@ -60,6 +60,9 @@ export default async function PassPage({
     !selfService && typeof query.bibliotek === "string"
       ? query.bibliotek
       : null;
+  // Nivån ur biblioteket, `&niva=A`. Utan den: passets rad, nivå B.
+  const libraryLevel =
+    LIBRARY_LEVELS.find((l) => l.key === query.niva)?.key ?? null;
 
   const [adepts, context, saved, libraryPass] = await Promise.all([
     selfService
@@ -111,11 +114,16 @@ export default async function PassPage({
           reference: context.reference,
         },
         speeds,
+        libraryLevel,
       );
       if (result.ok) {
         fromLibrary = result.workout;
+        const level =
+          libraryPass.levels.length > 0
+            ? ` på nivå ${libraryLevel ?? "B"}`
+            : "";
         notice = [
-          `${libraryPass.title} ur passbiblioteket.`,
+          `${libraryPass.title}${level} ur passbiblioteket.`,
           result.note,
           "Ändra stegen nedan och spara på adepten.",
         ]
@@ -154,7 +162,10 @@ export default async function PassPage({
         // Nyckeln tvingar fram en ny montering när ett annat pass öppnas, så
         // att utgångsläget verkligen byts ut.
         key={
-          workoutId ?? (libraryId ? `bibliotek-${libraryId}-${adeptId}` : "nytt")
+          workoutId ??
+          (libraryId
+            ? `bibliotek-${libraryId}-${libraryLevel ?? ""}-${adeptId}`
+            : "nytt")
         }
         adepts={adepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
         adeptId={context ? adeptId : null}
