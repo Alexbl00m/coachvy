@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { blockTotals } from "../library";
 import { CYCLING_ATLAS } from "./cycling";
-import { atlasRows, atlasStatements } from "./seed";
+import { RUNNING_ATLAS } from "./running";
+import { atlasRows, atlasStatements, SESSION_ATLAS } from "./seed";
 
-const rows = atlasRows();
+const rows = atlasRows(CYCLING_ATLAS);
+const runs = atlasRows(RUNNING_ATLAS);
 
 /** Passets tid i sekunder; cykelpassen anges alltid i tid. */
 const seconds = (blocks: Parameters<typeof blockTotals>[0]) =>
@@ -64,7 +66,7 @@ describe("cykelatlasen", () => {
   });
 
   it("förklarar varje pass för den som tränar", () => {
-    for (const input of CYCLING_ATLAS) {
+    for (const input of SESSION_ATLAS) {
       for (const field of [
         "purpose",
         "description",
@@ -84,15 +86,72 @@ describe("cykelatlasen", () => {
   });
 });
 
+describe("löppassen", () => {
+  /** Högsta fart i passets egna steg, utan uppvärmning och stegringar. */
+  const top = (blocks: Parameters<typeof blockTotals>[0]) =>
+    Math.max(
+      ...blocks.flatMap((b) =>
+        (b.type === "steg" ? [b.step] : b.steps)
+          .filter((s) => s.kind !== "uppvärmning" && s.label !== "stegring")
+          .map((s) => s.high),
+      ),
+    );
+
+  it("har 32 pass med unika namn, mot maratonfart", () => {
+    expect(runs).toHaveLength(32);
+    expect(new Set(runs.map((r) => r.title)).size).toBe(32);
+    for (const row of runs) {
+      expect(row.sport).toBe("löpning");
+      expect(row.basis).toBe("MP");
+      expect(row.levels.map((l) => l.key)).toEqual(["A", "B", "C"]);
+    }
+  });
+
+  it("har mest på nivå A och minst på nivå C, i tid eller sträcka", () => {
+    for (const row of runs) {
+      const [a, b, c] = row.levels.map((l) => blockTotals(l.blocks));
+      for (const [more, less] of [
+        [a, b],
+        [b, c],
+      ]) {
+        expect(more.seconds, row.title).toBeGreaterThanOrEqual(less.seconds);
+        expect(more.metres, row.title).toBeGreaterThanOrEqual(less.metres);
+        expect(
+          more.seconds > less.seconds || more.metres > less.metres,
+          row.title,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("håller farten i zonen passet säger", () => {
+    for (const row of runs) {
+      const fastest = Math.max(...row.levels.map((l) => top(l.blocks)));
+      if (row.intensity.startsWith("Z1"))
+        expect(fastest, row.title).toBeLessThanOrEqual(0.83);
+      if (row.intensity.startsWith("Z3"))
+        expect(fastest, row.title).toBeLessThanOrEqual(1.025);
+      if (row.intensity === "Z4 Tröskel") {
+        expect(fastest, row.title).toBeGreaterThanOrEqual(1.01);
+        expect(fastest, row.title).toBeLessThanOrEqual(1.065);
+      }
+      if (row.intensity.startsWith("Z5"))
+        expect(fastest, row.title).toBeGreaterThanOrEqual(1.125);
+    }
+  });
+});
+
 describe("atlasStatements", () => {
   it("gör en insert per pass som hoppar över ett pass som redan finns", () => {
     const statements = atlasStatements(
       "'00000000-0000-0000-0000-000000000000'",
     );
-    expect(statements).toHaveLength(44);
+    expect(statements).toHaveLength(76);
     expect(statements[0]).toContain("not exists");
+    // Samma namn finns i båda grenarna, så grenen ingår i jämförelsen.
+    expect(statements[0]).toContain("and s.sport = 'cykling'");
     expect(statements[0]).toContain("now() - interval '0 seconds'");
-    expect(statements[43]).toContain("now() - interval '43 seconds'");
+    expect(statements[75]).toContain("now() - interval '75 seconds'");
   });
 
   it("dubblar apostrofer i texten", () => {

@@ -1641,6 +1641,22 @@ nivåer och hela förklaringen, skriven ur träningsfilosofin
 alla nivåer går att läsa, att nivå A alltid har mest arbete och C minst, att
 intensiteten stämmer med zonen och att varje text är ifylld.
 
+### Löppassen
+
+Bredvid cykelatlasen finns 32 löppass i samma form, i planernas zoner mot
+maratonfart: två återhämtningspass, fyra distanspass (lugn distans,
+stegringar, långpass, progressivt), fyra i maratontempo (progressivt
+långpass, långpass med maratonfart, block, sammanhängande), sex
+tröskelpass (norska 5 × 6 min och 20 × 400 m, kilometrar, långa drag,
+2 × 15 min, Daniels tempolopp), tre i loppfart (halvmara, mil, växlingar),
+nio intervallpass (bland annat 5 × 1000 m, Helgeruds 4 × 4, 30/15, 15/15,
+pyramid och fartlek), tre backpass och aktiveringen inför lopp
+(`src/lib/session-library/atlas/running.ts`). Varje pass har tre nivåer
+och hela förklaringen. Ges ett löppass till en adept räknas zonerna om mot
+adeptens fart ur formuppskattningen; utan en formuppskattning säger
+passbyggaren till. Testerna kontrollerar att A har mest i tid eller sträcka
+och C minst, och att farten ligger i passets zon.
+
 Passen läses in som delade pass ägda av en admin:
 
 ```
@@ -1649,7 +1665,7 @@ node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts --ow
 ```
 
 Utan `--owner-email` blir den första admin ägare. Inläsningen går att köra
-igen: ett pass med samma namn hos ägaren hoppas över, så ett pass som
+igen: ett pass med samma namn och gren hos ägaren hoppas över, så ett pass som
 ändrats skrivs inte över. Skriptet kör appens TypeScript direkt och kräver
 Node 22.18 eller senare.
 

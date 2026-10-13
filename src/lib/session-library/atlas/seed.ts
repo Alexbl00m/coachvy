@@ -1,9 +1,11 @@
 /**
- * Passbibliotekets färdiga pass som SQL, för att läsa in dem i en databas.
+ * Passbibliotekets färdiga pass som SQL, för att läsa in dem i en databas:
+ * cykelatlasen och löppassen.
  *
  * Passen ägs av en admin och delas med alla coacher. Inläsningen går att
- * köra igen: ett pass med samma namn hos samma ägare hoppas över, så ett
- * pass coachen ändrat skrivs inte över.
+ * köra igen: ett pass med samma namn och gren hos samma ägare hoppas över,
+ * så ett pass coachen ändrat skrivs inte över. Grenen räknas med, eftersom
+ * 4 × 4 min och 30/15 finns både som cykel- och löppass.
  *
  * Modulen är ren. `scripts/session-library-atlas.ts` skriver ut SQL:en.
  */
@@ -14,10 +16,17 @@ import {
   type ValidInput,
 } from "../library";
 import { CYCLING_ATLAS } from "./cycling";
+import { RUNNING_ATLAS } from "./running";
+
+/** Alla färdiga pass, cykel först. */
+export const SESSION_ATLAS: LibraryInput[] = [
+  ...CYCLING_ATLAS,
+  ...RUNNING_ATLAS,
+];
 
 /** Passen tolkade och kontrollerade. Kastar om ett pass inte går igenom. */
 export function atlasRows(
-  sessions: LibraryInput[] = CYCLING_ATLAS,
+  sessions: LibraryInput[] = SESSION_ATLAS,
 ): ValidInput[] {
   return sessions.map((input) => {
     const checked = validateLibraryInput(input);
@@ -73,6 +82,7 @@ export function atlasStatements(
       "  and not exists (",
       "    select 1 from public.session_library s",
       `    where s.owner_id = o.id and s.title = ${literal(row.title)}`,
+      `      and s.sport = ${literal(row.sport)}`,
       "  );",
     ].join("\n");
   });

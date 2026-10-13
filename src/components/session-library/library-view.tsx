@@ -60,12 +60,19 @@ export function LibraryView({
   const hasShared = sessions.some((s) => !s.own);
   // Intensiteterna som finns, i bokstavsordning – "Z1 Återhämtning" till
   // "Z5 VO₂max" hamnar då i zonordning.
+  // Bara den valda grenens intensiteter: cykelns Z5 VO₂max och löpningens
+  // Z5 Intervall är olika val.
   const intensities = useMemo(
     () =>
-      [...new Set(sessions.map((s) => s.intensity).filter(Boolean))].sort(
-        (a, b) => a.localeCompare(b, "sv"),
-      ),
-    [sessions],
+      [
+        ...new Set(
+          sessions
+            .filter((s) => sport === "alla" || s.sport === sport)
+            .map((s) => s.intensity)
+            .filter(Boolean),
+        ),
+      ].sort((a, b) => a.localeCompare(b, "sv")),
+    [sessions, sport],
   );
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -109,7 +116,10 @@ export function LibraryView({
         <Select
           id="bib-gren"
           value={sport}
-          onChange={(e) => setSport(e.target.value)}
+          onChange={(e) => {
+            setSport(e.target.value);
+            setIntensity("alla");
+          }}
           className="sm:w-auto"
         >
           <option value="alla">Alla grenar</option>
