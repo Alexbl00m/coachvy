@@ -1650,26 +1650,32 @@ Text efter målet i en rad blir stegets etikett, så kadens skrivs
 
 ### Cykelatlasen
 
-Biblioteket har 44 färdiga cykelpass mot FTP: atlasen över zonerna Z1–Z5 –
+Biblioteket har 52 färdiga cykelpass mot FTP: atlasen över zonerna Z1–Z5 –
 tre återhämtningspass, tre distanspass, tre tempopass, fyra tröskelpass och
 trettio VO₂max-pass (Seiler, Rønnestad, Billat, Helgerud, Tabata m.fl.) –
-och kraftpasset *Subthreshold torque* på låg kadens. Varje pass har tre
-nivåer och hela förklaringen, skriven ur träningsfilosofin
+och kraftpasset *Subthreshold torque* på låg kadens. Till det kommer åtta
+pass ur proffsens och 70.3-träningen: Pogačars neuromuskulära 7 × 4:50,
+aerob kraft under trötthet, Alpecins laktatpendling, Jayco AlUlas
+VO₂max-långpass, 3 × 60 min metabolt (Swart), 3 × 12 min undertröskel,
+5 × 10 min aerob utveckling och cykeldelen av 70.3-brick-passet. Varje pass
+har tre nivåer och hela förklaringen, skriven ur träningsfilosofin
 (`src/lib/session-library/atlas/cycling.ts`). Testerna kontrollerar att
 alla nivåer går att läsa, att nivå A alltid har mest arbete och C minst, att
 intensiteten stämmer med zonen och att varje text är ifylld.
 
 ### Löppassen
 
-Bredvid cykelatlasen finns 32 löppass i samma form, i planernas zoner mot
+Bredvid cykelatlasen finns 37 löppass i samma form, i planernas zoner mot
 maratonfart: två återhämtningspass, fyra distanspass (lugn distans,
 stegringar, långpass, progressivt), fyra i maratontempo (progressivt
 långpass, långpass med maratonfart, block, sammanhängande), sex
 tröskelpass (norska 5 × 6 min och 20 × 400 m, kilometrar, långa drag,
 2 × 15 min, Daniels tempolopp), tre i loppfart (halvmara, mil, växlingar),
 nio intervallpass (bland annat 5 × 1000 m, Helgeruds 4 × 4, 30/15, 15/15,
-pyramid och fartlek), tre backpass och aktiveringen inför lopp
-(`src/lib/session-library/atlas/running.ts`). Varje pass har tre nivåer
+pyramid och fartlek), tre backpass och aktiveringen inför lopp, och fem
+till: 5 × 2 km cruise-tröskel, 10 × 1 km milfart med 200 m jogg, stegen
+1000–150 m för aerob kraft och fartuthållighet, långpass med 70.3-fart och
+löpdelen av 70.3-brick-passet (`src/lib/session-library/atlas/running.ts`). Varje pass har tre nivåer
 och hela förklaringen. Ges ett löppass till en adept räknas zonerna om mot
 adeptens fart ur formuppskattningen; utan en formuppskattning säger
 passbyggaren till. Testerna kontrollerar att A har mest i tid eller sträcka

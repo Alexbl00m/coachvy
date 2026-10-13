@@ -21,16 +21,20 @@ const peak = (blocks: Parameters<typeof blockTotals>[0]) =>
   );
 
 describe("cykelatlasen", () => {
-  it("har atlasens 43 pass och kraftpasset, med unika namn", () => {
-    expect(rows).toHaveLength(44);
-    expect(new Set(rows.map((r) => r.title)).size).toBe(44);
+  it("har atlasens 43 pass, kraftpasset och åtta proffs- och 70.3-pass, med unika namn", () => {
+    expect(rows).toHaveLength(52);
+    expect(new Set(rows.map((r) => r.title)).size).toBe(52);
     const byZone = (zone: string) =>
       rows.filter((r) => r.intensity.startsWith(zone)).length;
     expect([byZone("Z1"), byZone("Z2"), byZone("Z4"), byZone("Z5")]).toEqual([
-      3, 3, 4, 30,
+      3, 5, 6, 32,
     ]);
-    // Tre tempopass och kraftpasset, vars huvuddel ligger i tempo.
-    expect(byZone("Z3")).toBe(4);
+    // Tre tempopass, kraftpasset, vars huvuddel ligger i tempo, och 5 × 10 min.
+    expect(byZone("Z3")).toBe(5);
+    // Pogačars pass är kraft och sprint, inte en zon.
+    expect(rows.filter((r) => r.intensity === "Kraft och sprint")).toHaveLength(
+      1,
+    );
   });
 
   it("tolkar alla nivåer, i tid och mot FTP", () => {
@@ -97,9 +101,9 @@ describe("löppassen", () => {
       ),
     );
 
-  it("har 32 pass med unika namn, mot maratonfart", () => {
-    expect(runs).toHaveLength(32);
-    expect(new Set(runs.map((r) => r.title)).size).toBe(32);
+  it("har 37 pass med unika namn, mot maratonfart", () => {
+    expect(runs).toHaveLength(37);
+    expect(new Set(runs.map((r) => r.title)).size).toBe(37);
     for (const row of runs) {
       expect(row.sport).toBe("löpning");
       expect(row.basis).toBe("MP");
@@ -146,12 +150,12 @@ describe("atlasStatements", () => {
     const statements = atlasStatements(
       "'00000000-0000-0000-0000-000000000000'",
     );
-    expect(statements).toHaveLength(76);
+    expect(statements).toHaveLength(89);
     expect(statements[0]).toContain("not exists");
     // Samma namn finns i båda grenarna, så grenen ingår i jämförelsen.
     expect(statements[0]).toContain("and s.sport = 'cykling'");
     expect(statements[0]).toContain("now() - interval '0 seconds'");
-    expect(statements[75]).toContain("now() - interval '75 seconds'");
+    expect(statements[88]).toContain("now() - interval '88 seconds'");
   });
 
   it("dubblar apostrofer i texten", () => {

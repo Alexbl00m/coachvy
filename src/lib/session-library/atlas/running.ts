@@ -713,6 +713,130 @@ export const RUNNING_ATLAS: LibraryInput[] = [
     },
   }),
 
+  // Fler pass ur Sisu Endurance Lab -----------------------------------------
+  running({
+    ...Z4,
+    title: "5 × 2 km tröskel · cruise",
+    phases: BUILD,
+    purpose:
+      "Cruise-intervaller: långa drag på LT2 med så kort jogg att belastningen aldrig hinner släppa. Fem gånger två kilometer är en mil i kvalitet – en stor dos tid vid tröskeln, uppdelad så att den går att hålla jämn. Ett återkommande kärnpass i ett tröskelblock.",
+    description:
+      "Uppvärmningen trappar upp genom zonerna, sedan tre stegringar. Dragen i tröskelfart, RPE 7 – kontrollerad andning, du ska kunna säga några ord. 60–75 sekunder jogg mellan. Jämn fart genom alla drag: det sista ska gå som det första, inte fortare. Laktatet ligger runt 2,5–3,5 mmol/l för den som mäter.",
+    progression:
+      "Antalet drag: 4, 5, 6 över blocket. Farten ligger kvar; höj den först efter ett nytt test. Vilan kortas inte – det är tiden på tröskeln som byggs på.",
+    levels: (() => {
+      const wu =
+        "10 min @RK; 5 min @LO uppvärmning; 5 min @MT uppvärmning; 3x(20 s @5K uppvärmning + 40 s @RK uppvärmning)";
+      return {
+        A: `${wu}; 6x(2 km @S + 75 s @RK); 15 min @RK`,
+        B: `${wu}; 5x(2 km @S + 75 s @RK); 15 min @RK`,
+        C: `${wu}; 4x(2 km @S + 75 s @RK); 15 min @RK`,
+      };
+    })(),
+  }),
+  running({
+    ...RACE,
+    title: "10 × 1 km milfart · 200 m jogg",
+    kind: "Kvalitet",
+    phases: BUILD,
+    purpose:
+      "Tio kilometer i milfart med 200 meter jogg emellan. Den korta joggen håller syreupptaget och pulsen uppe mellan dragen, så passet samlar lång tid nära en stor andel av VO₂max, och upprepningen tränar löpsteget i loppfart under växande trötthet. Ett avancerat pass för 5 och 10 km.",
+    description:
+      "Uppvärmningen trappar upp genom zonerna och avslutas med fyra stegringar. Dragen i milfart, puls 88–92 % av max mot slutet av passet, RPE 7–8. 200 meter lugn jogg mellan – jogga, gå inte. Jämnt genom alla tio; behåll steget och avspänningen när det tar emot. Bana passar bäst.",
+    adaptations:
+      "Aerob kraft: lång tid nära VO₂max, både centralt och perifert. Mitokondriell signalering av den höga aeroba belastningen. Joggen håller syreupptaget uppe och hjälper laktatet att förbrännas mellan dragen. Löpekonomi och trötthetsresistens i loppfart.",
+    timing:
+      "Uppbyggnad och tävlingsspecifik period inför 5 och 10 km, en gång i veckan, för löpare med en stabil aerob grund. Bana.",
+    progression:
+      "Antalet drag: 8, 10, 12 över blocket. Farten ligger kvar på milfart, och joggen förblir 200 meter. När tio går jämnt är passet redo för loppet.",
+    levels: (() => {
+      const wu =
+        "10 min @RK; 5 min @LO uppvärmning; 3 min @MT uppvärmning; 4x(20 s @5K uppvärmning + 40 s @RK uppvärmning)";
+      return {
+        A: `${wu}; 12x(1 km @10K + 200 m @RK); 15 min @RK`,
+        B: `${wu}; 10x(1 km @10K + 200 m @RK); 15 min @RK`,
+        C: `${wu}; 8x(1 km @10K + 200 m @RK); 15 min @RK`,
+      };
+    })(),
+  }),
+  running({
+    ...Z5,
+    title: "Aerob kraft och fartuthållighet · stege",
+    phases: ["specifik"],
+    purpose:
+      "En stege där dragen blir kortare och farten högre: från milfart på kilometrarna till fart långt över 5 km-fart på 150 meter. Passet utvecklar aerob kraft och fartuthållighet under trötthet och lär löparen växla rytm – att avsluta snabbt när benen redan är trötta, som i slutet av ett lopp.",
+    description:
+      "Lugn distans, löpskolning och stegringar. Sedan 1000 m i milfart, 800 m mellan mil- och 5 km-fart, 600 m i 5 km-fart, 400 m i intervallfart och 150 m snabbt men avspänt. Kort lugn jogg mellan dragen, lite längre när distansen byts. Starta de långa dragen kontrollerat; tekniken ska bli bättre när dragen blir kortare. Tänk rytmbyte och avslutningsfart, inte panik.",
+    adaptations:
+      "Aerob kraft, fartuthållighet under trötthet och löpekonomi när farten byts. Rekrytering av snabba muskelfibrer sent i passet, och skärpa från milfart mot betydligt snabbare rytm.",
+    fueling:
+      "Ett litet kolhydratintag före passet hjälper kvaliteten. Ligger passet i en större träningsdag: 30–60 g kolhydrater per timme och 400–750 ml vätska efter värme och höjd.",
+    timing:
+      "Sent i den tävlingsspecifika perioden, 2–4 veckor före ett 5- eller 10 km-lopp. För erfarna löpare med en stabil aerob grund. Bana.",
+    progression:
+      "Byggs på med fler drag längst ned i stegen (400 m och 150 m) – där farten är högst och kostnaden lägst. Farterna ligger kvar.",
+    levels: (() => {
+      const wu = "20 min @LO; 4x(20 s @5K uppvärmning + 40 s @RK uppvärmning)";
+      const ladder = (k: number, e: number, s: number, f: number, h: number) =>
+        [
+          k === 1 ? "1 km @10K; 90 s @RK vila" : `${k}x(1 km @10K + 90 s @RK)`,
+          "1 min @RK vila",
+          `${e}x(800 m @10K-5K + 75 s @RK)`,
+          "1 min @RK vila",
+          `${s}x(600 m @5K + 60 s @RK)`,
+          "1 min @RK vila",
+          `${f}x(400 m @I + 60 s @RK)`,
+          "1 min @RK vila",
+          `${h}x(150 m 125-130% snabbt + 60 s @RK)`,
+        ].join("; ");
+      return {
+        A: `${wu}; ${ladder(2, 3, 4, 6, 8)}; 15 min @RK`,
+        B: `${wu}; ${ladder(2, 3, 4, 5, 6)}; 12 min @RK`,
+        C: `${wu}; ${ladder(1, 2, 3, 4, 4)}; 10 min @RK`,
+      };
+    })(),
+  }),
+  running({
+    ...Z3,
+    title: "Långpass med 70.3-fart · 3 × 20 min",
+    kind: "Specifikt",
+    phases: BUILD,
+    purpose:
+      "Långpass med tävlingsfart för 70.3 i slutet: en timme lugnt, sedan tre block i den fart halvmaran ska springas i efter cyklingen. Passet tränar det som avgör löpningen i triathlon – att hålla en kontrollerad fart när timmarna redan har gjort benen trötta.",
+    description:
+      "60 minuter lugn distans. Sedan 3 × 20 minuter i 70.3-fart med två minuter lugn jogg mellan, och fem minuter lugnt på slutet. Styr blocken på puls, 70–78 % av maxpuls – farten är ett riktmärke. Stiger pulsen över spannet, sänk farten. Öva tävlingens energi och vätska under blocken.",
+    timing:
+      "Uppbyggnad och tävlingsspecifik period inför 70.3, varannan vecka i stället för det vanliga långpasset. Inte samma vecka som brick-passet.",
+    progression:
+      "Först blocklängden (15, 20, 25 minuter), sedan den lugna inledningen. Farten ligger kvar. Hela passet 90–120 minuter.",
+    levels: {
+      A: "60 min @LO distans; 3x(25 min @MT + 2 min @RK); 5 min @RK",
+      B: "60 min @LO distans; 3x(20 min @MT + 2 min @RK); 5 min @RK",
+      C: "45 min @LO distans; 2x(20 min @MT + 2 min @RK); 5 min @RK",
+    },
+  }),
+  running({
+    ...Z3,
+    title: "70.3-brick · löpning efter cykel",
+    kind: "Specifikt",
+    phases: ["specifik"],
+    purpose:
+      "Löpdelen av brick-passet: direkt efter 3–4 timmar på cykeln. En stark cykel betyder ingenting om löpningen faller ihop – passet visar om cykelns tempo och energiplan går att följa med en hållbar halvmara, och vänjer benen vid växlingen.",
+    description:
+      "Byt skor och spring direkt efter cykeln. De första tio minuterna i lugn distans tills steget hittat rytmen, sedan 70.3-fart på puls, 70–78 % av maxpuls. Fortsätt äta och dricka som i loppet. Faller farten tydligt mot slutet var cykeln för hård eller energin för liten – det är svaret passet ska ge.",
+    fueling:
+      "Fortsätt tävlingens energiplan från cykeln: 60–90 g kolhydrater per timme och vätska som i loppet. Det du tål på cykeln ska också gå att ta när du springer.",
+    timing:
+      "Tävlingsspecifik period inför 70.3, varannan vecka, 4–8 veckor före loppet. Ger en stor trötthet – lägg en lugn dag efter.",
+    progression:
+      "Löptiden: 30, 45, 60 minuter över blocket. Cykeldelen ligger kvar. Gör inte passet oftare än varannan vecka.",
+    levels: {
+      A: "10 min @LO distans; 50 min @MT distans",
+      B: "10 min @LO distans; 35 min @MT distans",
+      C: "10 min @LO distans; 20 min @MT distans",
+    },
+  }),
+
   // Aktivering --------------------------------------------------------------
   running({
     title: "Aktivering inför lopp",

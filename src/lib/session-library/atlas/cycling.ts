@@ -1034,4 +1034,206 @@ export const CYCLING_ATLAS: LibraryInput[] = [
       };
     })(),
   }),
+  // Fler pass ur Sisu Endurance Lab -----------------------------------------
+  cycling({
+    title: "Neuromuskulär kraft · 7 × 4:50",
+    kind: "Kraft",
+    intensity: "Kraft och sprint",
+    phases: ["uppbyggnad", "specifik"],
+    purpose:
+      "Ur Tadej Pogačars träning i UAE Team Emirates. Varje repetition är fyra minuter aerobt, 35 sekunder tung kraft på låg kadens och 15 sekunder sprint i hög kadens. Kombinationen tränar kraftutveckling, acceleration och förmågan att producera explosiv effekt när den aeroba belastningen redan är förhöjd – som en attack i en stigning.",
+    description:
+      "Uppvärmningen har ett tempoinslag och tre korta snabbsnurr. Sedan 30 minuter lugnt. I serien: fyra minuter kontrollerat på 70 %, 35 sekunder på 130 % i 50 rpm – tungt vridmoment, sittande, jämnt tryck – och sedan 15 sekunders sprint upp i hög kadens. Växla inte för tungt i spurten; mjukt upp i kadens. Kvalitet går före effekt. Blir dragen sämre, avsluta serien tidigare.",
+    adaptations:
+      "Kraftutveckling med högt vridmoment, rekrytering av motoriska enheter med hög tröskel, anaerob kraft och acceleration, aerobt stöd vid varierande effekt, förmågan att upprepa hårda ryck och stigningsspecifik styrka.",
+    fueling:
+      "60–90 g kolhydrater per timme och 500–750 ml vätska per timme. Kom fylld och ät under passet. Anpassa saltet efter värmen.",
+    timing:
+      "Uppbyggnad före tävlingsperioden eller ett stigningsblock, en gång i veckan. Bäst i en jämn stigning eller på trainer. Passar inför lopp med många ryck.",
+    progression:
+      "Antalet repetitioner (5, 7, 8) med samma innehåll. Färre repetitioner när fräschheten är låg – kvaliteten i 35-sekundersdelen är det som räknas.",
+    levels: (() => {
+      const wu =
+        "20 min 60%; 5 min 85% uppvärmning; 10 min 45% uppvärmning; 3x(20 s 70% uppvärmning + 40 s 50% uppvärmning)";
+      const main = (n: number) =>
+        `30 min 55-65% distans; ${n}x(4 min 70% intervall + 35 s 130% intervall + 15 s 150% sprint); 5 min 45% vila; 15 min 45%`;
+      return {
+        A: `${wu}; ${main(8)}`,
+        B: `${wu}; ${main(7)}`,
+        C: `${wu}; ${main(5)}`,
+      };
+    })(),
+  }),
+  cycling({
+    ...Z5,
+    title: "Aerob kraft under trötthet · 2 × 21 min",
+    phases: P5_BUILD,
+    purpose:
+      "Ett långt pass med 24 minuter på hög intensitet medvetet lagda djupt in i det. Målet är inte bara högt syreupptag i utvilat läge, utan att behålla aerob kraft och effektkontroll när timmarna och glykogenförbrukningen redan börjat kosta – det som avgör slutet av ett långt lopp.",
+    description:
+      "Uppvärmningen innehåller 20 minuter på 90 %. Sedan 45 minuter lugnt. Huvudseten är 21 minuter: tre minuter på 110–115 % och tre minuter på 60 % om vartannat, fyra hårda och tre lätta. 25 minuter lugnt mellan seten. Håll VO₂-dragen kontrollerade, inte maximala, och byt effekt mjukt. Ät tidigt och jämnt.",
+    adaptations:
+      "VO₂max-utveckling, ökad plasmavolym, stöd för slagvolym och hjärtminutvolym, kapillarisering i musklerna, förmågan att upprepa hög aerob effekt och trötthetsresistens sent i långa pass.",
+    fueling:
+      "60–90 g kolhydrater per timme och 500–750 ml vätska per timme. Kom fylld och ät från start – passet är över tre timmar. Anpassa saltet efter värmen.",
+    timing:
+      "Uppbyggnad, i ett block för aerob kraft, en gång i veckan eller var 7–10:e dag. Bäst på jämn väg eller trainer.",
+    progression:
+      "Antalet hårda drag per set (3, 4, 5). Effekten ligger kvar. Är fräschheten låg: ett set i stället för två.",
+    levels: (() => {
+      const wu =
+        "30 min 60%; 5 min 85% uppvärmning; 10 min 45% uppvärmning; 20 min 90%; 45 min 50% distans";
+      const set = (n: number) =>
+        `${n}x(3 min 110-115% + 3 min 60%); 3 min 110-115% intervall`;
+      return {
+        A: `${wu}; ${set(4)}; 25 min 45% vila; ${set(4)}; 25 min 45%`,
+        B: `${wu}; ${set(3)}; 25 min 45% vila; ${set(3)}; 25 min 45%`,
+        C: `${wu}; ${set(3)}; 25 min 45%`,
+      };
+    })(),
+  }),
+  cycling({
+    title: "Laktatpendling · 2 × 20 min över och under",
+    kind: "Kvalitet",
+    intensity: "Z4 Tröskel",
+    phases: ["uppbyggnad", "specifik"],
+    purpose:
+      "Ur Alpecins träning: två block där en minut över tröskeln och en minut strax under växlar tio gånger, inne i ett pass på drygt tre timmar. Över-minuterna höjer laktatproduktionen; under-minuterna är tillräckligt hårda för att laktatet ska transporteras och förbrännas i stället för att vila bort. Passet tränar laktatomsättning, tröskelkontroll och förmågan att hantera ryck och lugna ned sig igen utan att tappa pacing.",
+    description:
+      "55 minuter uppvärmning som trappas upp genom Z1–Z2. Blocken: 1 minut på 115 % och 1 minut på 80–85 %, tio gånger, utan paus. 50 minuter aerobt mellan blocken. Efter andra blocket 10 minuter jämnt på 80–85 %, sedan 45 minuter nedvarvning. RPE 7–8. Under-minuterna är arbete, inte vila – håll trycket.",
+    adaptations:
+      "Laktatomsättning och laktatpendling mellan muskelfibrer, tröskelkontroll, metabol uthållighet och förmågan att återställa stabilitet efter ryck när tröttheten, glykogenkostnaden och den kardiovaskulära belastningen redan byggts upp.",
+    fueling:
+      "60–90 g kolhydrater per timme och 500–750 ml vätska per timme. Passet är över tre timmar med mycket arbete över tröskeln – ät från start.",
+    timing:
+      "Uppbyggnad och tävlingsspecifik period, en gång i veckan i ett tröskelblock. Passar inför lopp med ryck och tempoväxlingar. Trainer eller jämn väg.",
+    progression:
+      "Antalet växlingar per block (7, 10, 12). Effekterna ligger kvar. När blocken går jämnt kan över-minuterna höjas till 120 % – en variabel i taget.",
+    levels: (() => {
+      const block = (n: number) =>
+        `${n}x(1 min 115% intervall + 1 min 80-85% intervall)`;
+      const pass = (n: number, mid: number, cd: number) =>
+        `55 min 50-65%; ${block(n)}; ${mid} min 50-70% distans; ${block(n)}; 10 min 80-85% jämnt; ${cd} min 50-70%`;
+      return { A: pass(12, 50, 45), B: pass(10, 50, 45), C: pass(7, 30, 20) };
+    })(),
+  }),
+  cycling({
+    ...Z5,
+    title: "VO₂max i långpass · Jayco AlUla",
+    phases: P5_BUILD,
+    purpose:
+      "Ett elitpass ur Team Jayco AlUlas träning: nära fem timmar där VO₂max-arbetet ligger inne i stor aerob volym. Först fallande fyraminuters drag, sedan två set 30/15, och sent i passet åtta minuter på tröskeln när glykogenet redan är lägre. Kombinationen ger aerob kraft, laktatkontroll och trötthetsresistens i samma pass.",
+    description:
+      "65 minuter uppvärmning som trappas upp genom Z1–Z2. Block 1: 4 minuter på 120, 115 och 110 % med 2 minuter på 50 % efter varje. 35 minuter lugnt. Block 2: 12 × 30 sekunder på 120–125 % och 15 sekunder på 50 %, två gånger med 6 minuter på 65–70 % emellan. 35 minuter lugnt och 50 minuter på 55–60 %. Sedan 8 minuter på 100–105 % och 55 minuter lugnt. Nivå C är en kortare version för den som inte tränar som ett proffs.",
+    adaptations:
+      "Fyraminutersdragen och 30/15-seten samlar mycket tid nära VO₂max och ger central och perifer aerob anpassning. Hårda ryck med ofullständig vila höjer laktatproduktionen och tvingar fram omsättning och återanvändning. Den stora aeroba volymen bygger trötthetsresistens, och tröskelblocket sent tränar kvalitet när glykogenet är lägre.",
+    fueling:
+      "60–90 g kolhydrater per timme från start och 500–750 ml vätska per timme. Med 2 700–4 200 kJ arbete är energin avgörande för kvaliteten i de sena blocken.",
+    timing:
+      "Uppbyggnad och tävlingsspecifik period för den som tränar mycket, högst en gång i veckan. Behöver en lätt dag före och efter.",
+    progression:
+      "Den aeroba volymen runt kvaliteten: först den sista lugna delen, sedan den mellersta. Intervallerna ligger kvar.",
+    levels: (() => {
+      const b1 =
+        "4 min 120% intervall; 2 min 50% vila; 4 min 115% intervall; 2 min 50% vila; 4 min 110% intervall; 2 min 50% vila";
+      const burst = "12x(30 s 120-125% + 15 s 50%)";
+      return {
+        A: `65 min 50-65%; ${b1}; 35 min 60% distans; ${burst}; 6 min 65-70% distans; ${burst}; 35 min 60% distans; 50 min 55-60% distans; 8 min 100-105% intervall; 75 min 55-60%`,
+        B: `65 min 50-65%; ${b1}; 35 min 60% distans; ${burst}; 6 min 65-70% distans; ${burst}; 35 min 60% distans; 50 min 55-60% distans; 8 min 100-105% intervall; 55 min 55-60%`,
+        C: `45 min 50-65%; ${b1}; 20 min 60% distans; ${burst}; 20 min 60% distans; 8 min 100-105% intervall; 30 min 55-60%`,
+      };
+    })(),
+  }),
+  cycling({
+    title: "3 × 60 min metabolt pass",
+    kind: "Distans",
+    intensity: "Z2 Uthållighet",
+    phases: ["grund", "uppbyggnad", "specifik"],
+    purpose:
+      "Ur proffscyklingen: Jeroen Swart beskriver tre entimmesblock på 310–320 W, ungefär 75 % av FTP, för Ben McNulty. Enkelt på papperet, mycket aerobt arbete i praktiken. Blocken ligger i övre Z2 med laktatet kontrollerat runt 1,5–1,8 mmol/l – en stor aerob stimulans till en återhämtningskostnad som går att upprepa i en vecka med mycket volym.",
+    description:
+      "20 minuter uppvärmning: 10 minuter lätt, 5 minuter stegring och tre korta snabbsnurr. Sedan tre block på 72–75 % av FTP med 10 minuter lätt emellan. Puls runt 140–150 för McNulty – styr hellre på laktat eller puls än på watt om de går isär. RPE 6–7. Kadens 85–95 rpm, jämnt tryck. Blocken ska se likadana ut; driver pulsen uppåt mycket i sista blocket, sänk effekten.",
+    adaptations: `${Z2_ADAPT} Det långa, kontrollerade arbetet utmanar den oxidativa metabolismen hårt, förbättrar substratanvändningen och förmågan att prestera sent i långa lopp – med lägre stress än VO₂max-intervaller.`,
+    fueling:
+      "60–90 g kolhydrater per timme och 500–750 ml vätska per timme. Passet är nära fyra timmar – öva tävlingens energiplan.",
+    timing:
+      "Grundperiod och uppbyggnad för den som tränar mycket och mot långa lopp, en gång i veckan. Räknas som lågintensivt i fördelningen, men ligger i övre delen av zonen – inte samma dag som ett annat långpass.",
+    progression:
+      "Blocklängden eller antalet block, aldrig effekten först: 2 × 60, 3 × 60, 3 × 75 minuter. Effekten följer laktat och puls.",
+    levels: (() => {
+      const wu =
+        "10 min 50-55%; 5 min 60-70% uppvärmning; 3x(30 s 70% uppvärmning + 30 s 55% uppvärmning)";
+      const blocks = (n: number, len: number) =>
+        Array.from({ length: n }, () => `${len} min 72-75% distans`).join(
+          "; 10 min 55% vila; ",
+        );
+      return {
+        A: `${wu}; ${blocks(3, 75)}; 15 min 50%`,
+        B: `${wu}; ${blocks(3, 60)}; 15 min 50%`,
+        C: `${wu}; ${blocks(2, 60)}; 15 min 50%`,
+      };
+    })(),
+  }),
+  cycling({
+    title: "3 × 12 min undertröskel · 70.3",
+    kind: "Kvalitet",
+    intensity: "Z4 Tröskel",
+    phases: ["uppbyggnad", "specifik"],
+    purpose:
+      "Tröskelprogression inför 70.3: block strax under tröskeln, 90–95 % av FTP. För en triathlet är det inte den högsta effekten som avgör, utan hur nära tröskeln det går att cykla länge och ändå springa bra efteråt. Passet höjer den hållbara effekten och är ett återkommande format i ett block mot 70.3.",
+    description:
+      "90–95 % av FTP, RPE 7. Hårt men stabilt – andningen djup och rytmisk. Fyra minuter lätt mellan blocken. Tävlingsposition om du kör tempocykel. Samma effekt i alla block.",
+    adaptations: Z4_ADAPT,
+    fueling: Z4_FUEL,
+    timing: `${Z4_TIMING} För 70.3 tillsammans med ett längre pass på tävlingsintensitet, inte i stället för det.`,
+    progression:
+      "Antalet block: två, tre, fyra. Sedan blocklängden till 15 minuter. Effekten ligger kvar tills ett nytt test visar annat.",
+    levels: {
+      A: q4("4x(12 min 90-95% + 4 min 55%)"),
+      B: q4("3x(12 min 90-95% + 4 min 55%)"),
+      C: q4("2x(12 min 90-95% + 4 min 55%)"),
+    },
+  }),
+  cycling({
+    title: "5 × 10 min aerob utveckling · 70.3",
+    kind: "Kvalitet",
+    intensity: "Z3 Tempo",
+    phases: ["uppbyggnad", "specifik"],
+    purpose:
+      "Aerob utveckling för 70.3: många block i övre tempo, 85–90 % av FTP, med bara två minuter lätt emellan. Femtio minuter strax under tröskeln bygger muskulär uthållighet och den effekt som går att hålla länge, med en återhämtningskostnad som går att kombinera med löpning och simning samma vecka.",
+    description:
+      "85–90 % av FTP, RPE 6–7. Två minuter lätt mellan blocken. Jämnt tryck, kadens 85–95 rpm, gärna i tävlingsposition. Avsluta varje block med lite kvar.",
+    adaptations: Z3_ADAPT,
+    fueling: Z3_FUEL,
+    timing: Z3_TIMING,
+    progression:
+      "Antalet block (4, 5, 6). Vilan och effekten ligger kvar. Nästa steg är att slå ihop blocken två och två.",
+    levels: {
+      A: q3("6x(10 min 85-90% + 2 min 55%)"),
+      B: q3("5x(10 min 85-90% + 2 min 55%)"),
+      C: q3("4x(10 min 85-90% + 2 min 55%)"),
+    },
+  }),
+  cycling({
+    title: "70.3-brick · cykeldelen",
+    kind: "Specifikt",
+    intensity: "Z2 Uthållighet",
+    phases: ["specifik"],
+    purpose:
+      'Cykeldelen av 70.3-brick-passet: 3–4 timmar på 65–75 % av FTP, direkt följt av löpdelen ("70.3-brick · löpning efter cykel" i löppassen). Passet prövar om cykelns tempo och energiplan går att följa med en hållbar löpning – en stor cykelkapacitet gör ingen snabbare triathlet om löpningen faller ihop.',
+    description:
+      "15 minuter lugnt, sedan 65–75 % av FTP hela vägen, RPE 4–5. Tävlingsposition och tävlingsutrustning. Ät och drick exakt som i loppet. Ingen nedvarvning – byt till löpskor och spring direkt.",
+    adaptations: `${Z2_ADAPT} Kombinationen med löpning efteråt tränar växlingen och trötthetsresistensen för hela loppet.`,
+    fueling:
+      "Tävlingens energiplan: 60–90 g kolhydrater per timme och 500–750 ml vätska per timme, mer i värme. Det här är generalrepetitionen.",
+    timing:
+      "Tävlingsspecifik period inför 70.3, varannan vecka, 4–8 veckor före loppet. Ute på en bana som liknar tävlingens. Lugn dag efter.",
+    progression:
+      "Cykeltiden (2, 3, 3,5 timmar), sedan löptiden. Effekten ligger kvar i spannet.",
+    levels: {
+      A: "15 min 55-65%; 210 min 65-75% distans",
+      B: "15 min 55-65%; 165 min 65-75% distans",
+      C: "15 min 55-65%; 105 min 65-75% distans",
+    },
+  }),
 ];
