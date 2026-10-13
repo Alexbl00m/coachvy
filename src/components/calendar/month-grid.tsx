@@ -5,11 +5,9 @@ import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
 import {
-  addDays,
-  daysBetween,
   isoWeek,
   longDate,
-  mondayOf,
+  monthDates,
   weekdayName,
 } from "@/lib/season/season";
 import type { TrainingBlockRow } from "@/lib/types/database";
@@ -23,19 +21,6 @@ import {
 
 const WEEKDAYS = ["mån", "tis", "ons", "tor", "fre", "lör", "sön"];
 const MAX_ROWS = 3;
-
-/** Datumen som visas för en månad: hela veckor, måndag till söndag. */
-export function monthDates(month: string): string[] {
-  const first = `${month}-01`;
-  const [y, m] = month.split("-").map(Number);
-  const nextFirst =
-    m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
-  const last = addDays(nextFirst, -1);
-  const start = mondayOf(first);
-  const end = addDays(mondayOf(last), 6);
-  const count = daysBetween(start, end) + 1;
-  return Array.from({ length: count }, (_, i) => addDays(start, i));
-}
 
 function describe(date: string, items: DayItems): string {
   const parts = [

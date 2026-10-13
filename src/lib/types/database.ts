@@ -246,6 +246,8 @@ export type TrainingBlockRow = {
   id: string;
   adept_id: string;
   phase: "grund" | "uppbyggnad" | "specifik" | "topp" | "vila";
+  /** Coachens eget namn på perioden; utan det visas fasens namn. */
+  name: string | null;
   starts_on: string;
   ends_on: string;
   focus: string | null;

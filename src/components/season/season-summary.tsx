@@ -1,4 +1,8 @@
-import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
+import {
+  blockLabel,
+  PHASE_SHORT,
+  phaseFill,
+} from "@/components/season/phase-style";
 import { PriorityBadge } from "@/components/season/priority-badge";
 import {
   blockOn,
@@ -82,8 +86,13 @@ export function SeasonSummary({
                 className="h-3 w-5 rounded-[3px]"
                 style={{ background: phaseFill(current.phase) }}
               />
-              {PHASE_SHORT[current.phase]}
+              {blockLabel(current)}
             </p>
+            {current.name?.trim() && (
+              <p className="text-[12px] text-text-subtle">
+                {PHASE_SHORT[current.phase]}
+              </p>
+            )}
             <p className="mt-1 text-[13px] text-text-muted tabular-nums">
               Till {longDate(current.ends_on, today)} ·{" "}
               {daysBetween(today, current.ends_on) === 0
@@ -103,7 +112,7 @@ export function SeasonSummary({
             </p>
             <p className="mt-1 text-[13px] text-text-subtle">
               {next
-                ? `${PHASE_SHORT[next.phase]} börjar ${longDate(next.starts_on, today)}.`
+                ? `${blockLabel(next)} börjar ${longDate(next.starts_on, today)}.`
                 : "Lägg upp säsongens perioder nedan."}
             </p>
           </>

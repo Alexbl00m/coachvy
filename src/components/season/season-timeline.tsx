@@ -17,15 +17,18 @@ import {
   dateRange,
   dayNumber,
   daysBetween,
+  lengthText,
   longDate,
   monthName,
+  weekSpan,
 } from "@/lib/season/season";
 import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
-import { PHASE_SHORT, phaseFill, phaseText } from "./phase-style";
+import { blockLabel, PHASE_SHORT, phaseFill, phaseText } from "./phase-style";
 
 export type TimelineBlock = {
   id: string;
   phase: TrainingPhase;
+  name?: string | null;
   starts_on: string;
   ends_on: string;
   focus: string | null;
@@ -250,16 +253,19 @@ export function SeasonTimeline({
               const left = frac(start);
               const right = frac(addDays(end, 1));
               const px = (right - left) * width;
-              const label = PHASE_SHORT[block.phase];
+              const label = blockLabel(block);
               const fits = px >= textWidth(label) + 10;
               const cutStart = block.starts_on < from;
               const cutEnd = block.ends_on > to;
               const days = daysBetween(block.starts_on, block.ends_on) + 1;
-              const title =
+              const phase =
                 TRAINING_PHASES.find((p) => p.key === block.phase)?.label ??
                 label;
+              const title = block.name?.trim()
+                ? `${block.name.trim()} · ${phase}`
+                : phase;
               const lines = [
-                `${dateRange(block.starts_on, block.ends_on)} · ${days} dagar`,
+                `${dateRange(block.starts_on, block.ends_on)} · ${weekSpan(block.starts_on, block.ends_on)} · ${lengthText(days)}`,
                 ...(block.focus ? [`Fokus: ${block.focus}`] : []),
               ];
               return (

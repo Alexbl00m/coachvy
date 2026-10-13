@@ -7,7 +7,7 @@ import {
   emptyDay,
 } from "@/components/calendar/calendar-items";
 import { DayPanel, Upcoming } from "@/components/calendar/day-panel";
-import { MonthGrid, monthDates } from "@/components/calendar/month-grid";
+import { MonthGrid } from "@/components/calendar/month-grid";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
 import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
@@ -22,7 +22,13 @@ import {
 import { routes } from "@/lib/routes";
 import { listBlocks, listRacesBetween } from "@/lib/season/queries";
 import { listActivitiesBetween } from "@/lib/activities/queries";
-import { addDays, monthName, todayIso } from "@/lib/season/season";
+import {
+  addDays,
+  blockOn,
+  monthDates,
+  monthName,
+  todayIso,
+} from "@/lib/season/season";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import type { Adept } from "@/lib/types/database";
 
@@ -219,6 +225,9 @@ export default async function KalenderPage({
             items={days.get(selected) ?? emptyDay()}
             today={today}
             phase={phases?.get(selected) ?? null}
+            blockName={
+              adeptId ? (blockOn(blocks, selected)?.name ?? null) : null
+            }
             showNames={showNames}
           />
           <Upcoming

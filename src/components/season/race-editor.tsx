@@ -7,6 +7,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
@@ -23,7 +24,9 @@ import type {
   AdeptRaceRow,
   RacePriority,
   RaceSport,
+  TrainingBlockRow,
 } from "@/lib/types/database";
+import { seasonMarks } from "./marks";
 import { PriorityBadge } from "./priority-badge";
 
 type Draft = {
@@ -55,12 +58,15 @@ const empty = (sport: RaceSport | ""): Draft => ({
 export function RaceEditor({
   adeptId,
   races,
+  blocks = [],
   today,
   defaultSport,
   analyses = {},
 }: {
   adeptId: string;
   races: AdeptRaceRow[];
+  /** Perioderna, för att se vilken fas loppet hamnar i. */
+  blocks?: TrainingBlockRow[];
   today: string;
   defaultSport: RaceSport | "";
   /** Tävlingens uppladdade lopp, när det finns ett. */
@@ -276,13 +282,11 @@ export function RaceEditor({
               />
             </Field>
             <Field label="Datum" htmlFor="race-date">
-              <Input
+              <DatePicker
                 id="race-date"
-                type="date"
                 value={draft.raceDate}
-                onChange={(e) =>
-                  setDraft({ ...draft, raceDate: e.target.value })
-                }
+                marks={seasonMarks({ blocks, races, exceptRace: draft.id })}
+                onChange={(raceDate) => setDraft({ ...draft, raceDate })}
               />
             </Field>
             <Field label="Gren" htmlFor="race-sport" optional>

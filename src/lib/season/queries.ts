@@ -5,7 +5,7 @@ import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
 const RACE_COLUMNS =
   "id, adept_id, name, race_date, sport, distance, priority, target, note, created_by, created_at, updated_at";
 const BLOCK_COLUMNS =
-  "id, adept_id, phase, starts_on, ends_on, focus, created_by, created_at, updated_at";
+  "id, adept_id, phase, name, starts_on, ends_on, focus, created_by, created_at, updated_at";
 
 /** En tävling med adeptens namn, för vyer över flera adepter. */
 export type RaceWithAdept = AdeptRaceRow & { adept_name: string };

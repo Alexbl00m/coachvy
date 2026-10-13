@@ -143,8 +143,8 @@ auth.users
                         sleep, fatigue, soreness, stress
           adept_races   tävlingarna: name, race_date, sport, distance,
                         priority ('A' | 'B' | 'C'), target
-          training_blocks  säsongsplanens perioder: phase, starts_on,
-                        ends_on, focus
+          training_blocks  säsongsplanens perioder: phase, name,
+                        starts_on, ends_on, focus
           coach_messages  tråden mellan coach och adept, med read_at
           ai_conversations  coachens AI-tråd per adept
               └── ai_messages
@@ -1180,6 +1180,24 @@ Tolv månader i taget, ett halvår framåt eller bakåt med pilarna.
   uppbyggnad, specifik, toppning och vila. De får inte överlappa – en dag ska
   ligga i en fas, annars går det inte att säga vilken fas ett test togs i. En
   ny period förifylls där planen slutar, med fasen som brukar komma sedan.
+  En period kan få ett eget namn, som "Vinterbas" eller "Höghöjdsläger"
+  (`20261013150000_training_block_name.sql`). Namnet visas i stället för
+  fasens i listan, tidslinjen, kalendern och sammanfattningen; fasen styr
+  fortfarande färgen, testernas fas och AI-underlaget, som får båda.
+- **En period planeras i veckor**: startdatum och antal veckor, och
+  slutdatumet räknas ut (söndagen när perioden börjar en måndag). Slutdatumet
+  går att välja själv för en period som inte är hela veckor. Formuläret visar
+  veckonumren, föreslår närmaste måndag när starten hamnar mitt i en vecka,
+  och varnar för krockar innan något sparas. "Spara och lägg till nästa"
+  sparar perioden och öppnar nästa fas direkt efter, så att en säsong byggs
+  period för period.
+- **Datumväljaren** (`src/components/ui/date-picker.tsx`) är en svensk
+  kalender: måndag först, veckonummer i vänsterkanten och veckodagen i
+  fältet. Ett klick på veckonumret väljer veckans måndag, ett klick på
+  månaden byter månad och år, och de andra perioderna och tävlingarna syns
+  som färgade linjer under dagarna. Den går att styra med tangentbordet:
+  pilarna, Page Up/Down för månad (med Shift ett år), Home/End och Escape.
+  Tävlingarnas datum väljs med samma kalender.
 - **Att se över** pekar ut det som ser ut som en lucka: ett A-lopp utan
   toppning inom tre veckor före, eller dagar mellan perioderna. 8–14 dagars
   nedtrappning, med volymen sänkt och intensiteten behållen, gav störst effekt

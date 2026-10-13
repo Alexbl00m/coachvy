@@ -2,15 +2,30 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Minus, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Input, Select } from "@/components/ui/field";
 import { deleteBlock, saveBlock } from "@/lib/season/actions";
-import { addDays, dateRange, daysBetween } from "@/lib/season/season";
+import {
+  addDays,
+  blockText,
+  dateRange,
+  daysBetween,
+  lengthText,
+  longDate,
+  mondayOf,
+  overlapping,
+  shortDate,
+  weekdayIndex,
+  weekdayName,
+  weekSpan,
+} from "@/lib/season/season";
 import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
-import type { TrainingBlockRow } from "@/lib/types/database";
+import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
+import { seasonMarks } from "./marks";
 import { PHASE_SHORT, phaseFill } from "./phase-style";
 
 /** Fasen som brukar följa, för att förifylla nästa period. */
@@ -22,56 +37,81 @@ const NEXT: Record<TrainingPhase, TrainingPhase> = {
   vila: "grund",
 };
 
-/** Förslag på längd för en ny period, dagar: åtta veckors grund, sex
+/** Förslag på längd för en ny period, i veckor: åtta veckors grund, sex
  * veckors uppbyggnad, fyra specifika, två veckors toppning och vila. */
-const LENGTH: Record<TrainingPhase, number> = {
-  grund: 56,
-  uppbyggnad: 42,
-  specifik: 28,
-  topp: 14,
-  vila: 14,
+const WEEKS: Record<TrainingPhase, number> = {
+  grund: 8,
+  uppbyggnad: 6,
+  specifik: 4,
+  topp: 2,
+  vila: 2,
 };
+
+/** Längsta period i veckor; servern tillåter ett år. */
+const MAX_WEEKS = 52;
+
+const phaseName = (phase: TrainingPhase) =>
+  TRAINING_PHASES.find((p) => p.key === phase)?.label ?? PHASE_SHORT[phase];
 
 type Draft = {
   id: string | null;
   phase: TrainingPhase;
+  name: string;
   startsOn: string;
   endsOn: string;
   focus: string;
 };
 
+/** En ny period med fasens normala längd, i hela veckor. */
+const fresh = (phase: TrainingPhase, startsOn: string): Draft => ({
+  id: null,
+  phase,
+  name: "",
+  startsOn,
+  endsOn: addDays(startsOn, WEEKS[phase] * 7 - 1),
+  focus: "",
+});
+
 function draftAfter(blocks: TrainingBlockRow[], today: string): Draft {
   const last = [...blocks].sort((a, b) =>
     b.ends_on.localeCompare(a.ends_on),
   )[0];
-  const phase = last ? NEXT[last.phase] : "grund";
-  // Fortsätt där planen slutar, eller i dag om den redan är slut.
-  const startsOn =
-    last && last.ends_on >= today ? addDays(last.ends_on, 1) : today;
-  return {
-    id: null,
-    phase,
-    startsOn,
-    endsOn: addDays(startsOn, LENGTH[phase] - 1),
-    focus: "",
-  };
+  // Fortsätt där planen slutar. Är den redan slut, eller tom, börjar
+  // perioden på veckans måndag – men aldrig inne i en tidigare period.
+  const thisMonday = mondayOf(today);
+  const after = last ? addDays(last.ends_on, 1) : thisMonday;
+  return fresh(
+    last ? NEXT[last.phase] : "grund",
+    after > thisMonday ? after : thisMonday,
+  );
 }
+
+/** Närmaste måndag: den förra i början av veckan, annars nästa. */
+const nearestMonday = (iso: string) =>
+  weekdayIndex(iso) <= 3 ? mondayOf(iso) : addDays(mondayOf(iso), 7);
 
 /**
  * Perioderna i säsongsplanen, som lista och formulär.
  *
- * En ny period förifylls där planen slutar, med fasen som brukar komma sedan.
+ * En period planeras med start och antal veckor; slutdatumet räknas ut och
+ * går att ändra för en period som inte är hela veckor. Datumväljaren visar
+ * veckonummer, de andra perioderna och tävlingarna. En ny period förifylls
+ * där planen slutar, med fasen som brukar komma sedan, och "Spara och lägg
+ * till nästa" bygger säsongen period för period.
+ *
  * Planen är coachens; en adept utan coach planerar sin egen.
  */
 export function BlockEditor({
   adeptId,
   blocks,
+  races = [],
   today,
   canEdit,
   openNew,
 }: {
   adeptId: string;
   blocks: TrainingBlockRow[];
+  races?: AdeptRaceRow[];
   today: string;
   canEdit: boolean;
   /** Öppna formuläret för en ny period direkt, som från "Skapa ny plan". */
@@ -82,7 +122,10 @@ export function BlockEditor({
   const [draft, setDraft] = useState<Draft | null>(
     openNew && canEdit ? draftAfter(blocks, today) : null,
   );
+  // Veckorna medan de skrivs; tomt fält ska inte flytta slutdatumet.
+  const [weeksInput, setWeeksInput] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
   const form = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,7 +139,13 @@ export function BlockEditor({
     a.starts_on.localeCompare(b.starts_on),
   );
 
-  const save = () => {
+  const open = (next: Draft | null) => {
+    setDraft(next);
+    setWeeksInput(null);
+    setError(null);
+  };
+
+  const save = (thenNext: boolean) => {
     if (!draft) return;
     startTransition(async () => {
       setError(null);
@@ -104,6 +153,7 @@ export function BlockEditor({
         id: draft.id,
         adeptId,
         phase: draft.phase,
+        name: draft.name,
         startsOn: draft.startsOn,
         endsOn: draft.endsOn,
         focus: draft.focus,
@@ -112,27 +162,49 @@ export function BlockEditor({
         setError(result.error);
         return;
       }
-      setDraft(null);
+      const label = draft.name.trim() || phaseName(draft.phase);
+      setSaved(
+        `Sparad: ${label}, ${shortDate(draft.startsOn)}–${shortDate(draft.endsOn)}.`,
+      );
+      open(
+        thenNext ? fresh(NEXT[draft.phase], addDays(draft.endsOn, 1)) : null,
+      );
       router.refresh();
     });
   };
 
   const remove = (block: TrainingBlockRow) => {
-    const label = TRAINING_PHASES.find((p) => p.key === block.phase)?.label;
     if (
       !window.confirm(
-        `Ta bort ${label?.toLowerCase()} ${block.starts_on}–${block.ends_on}?`,
+        `Ta bort ${blockText(block)} ${shortDate(block.starts_on)}–${shortDate(block.ends_on)}?`,
       )
     ) {
       return;
     }
     startTransition(async () => {
       setError(null);
+      setSaved(null);
       const result = await deleteBlock(block.id, adeptId);
       if (!result.ok) setError(result.error ?? "Kunde inte ta bort perioden.");
       router.refresh();
     });
   };
+
+  const days = draft ? daysBetween(draft.startsOn, draft.endsOn) + 1 : 0;
+  const weeks = Math.floor(days / 7);
+  const setWeeks = (count: number) => {
+    if (!draft) return;
+    const next = Math.min(Math.max(count, 1), MAX_WEEKS);
+    setDraft({ ...draft, endsOn: addDays(draft.startsOn, next * 7 - 1) });
+  };
+  const clash = draft
+    ? overlapping(blocks, {
+        id: draft.id,
+        starts_on: draft.startsOn,
+        ends_on: draft.endsOn,
+      })
+    : null;
+  const marks = seasonMarks({ blocks, races, exceptBlock: draft?.id });
 
   return (
     <Card className="min-w-0">
@@ -142,7 +214,10 @@ export function BlockEditor({
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => setDraft(draftAfter(blocks, today))}
+              onClick={() => {
+                setSaved(null);
+                open(draftAfter(blocks, today));
+              }}
             >
               <Plus aria-hidden className="size-4" />
               Ny period
@@ -162,7 +237,7 @@ export function BlockEditor({
       ) : (
         <ul className="divide-y divide-line">
           {sorted.map((block) => {
-            const days = daysBetween(block.starts_on, block.ends_on) + 1;
+            const length = daysBetween(block.starts_on, block.ends_on) + 1;
             const now = block.starts_on <= today && today <= block.ends_on;
             const past = block.ends_on < today;
             return (
@@ -177,7 +252,12 @@ export function BlockEditor({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-text">
-                    {TRAINING_PHASES.find((p) => p.key === block.phase)?.label}
+                    {block.name?.trim() || phaseName(block.phase)}
+                    {block.name?.trim() && (
+                      <span className="ml-2 text-[12px] font-normal text-text-subtle">
+                        {PHASE_SHORT[block.phase]}
+                      </span>
+                    )}
                     {now && (
                       <span className="ml-2 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
                         pågår
@@ -185,9 +265,11 @@ export function BlockEditor({
                     )}
                   </p>
                   <p className="text-[12px] text-text-subtle tabular-nums">
-                    {dateRange(block.starts_on, block.ends_on, today)} · {days}{" "}
-                    dagar
-                    {now && ` · ${daysBetween(today, block.ends_on)} kvar`}
+                    {dateRange(block.starts_on, block.ends_on, today)} ·{" "}
+                    {weekSpan(block.starts_on, block.ends_on)} ·{" "}
+                    {lengthText(length)}
+                    {now &&
+                      ` · ${lengthText(daysBetween(today, block.ends_on))} kvar`}
                   </p>
                   {block.focus && (
                     <p className="mt-0.5 text-[13px] text-text-muted">
@@ -201,17 +283,19 @@ export function BlockEditor({
                       size="sm"
                       variant="ghost"
                       className="px-2"
-                      aria-label="Ändra perioden"
+                      aria-label={`Ändra ${blockText(block)}`}
                       disabled={pending}
-                      onClick={() =>
-                        setDraft({
+                      onClick={() => {
+                        setSaved(null);
+                        open({
                           id: block.id,
                           phase: block.phase,
+                          name: block.name ?? "",
                           startsOn: block.starts_on,
                           endsOn: block.ends_on,
                           focus: block.focus ?? "",
-                        })
-                      }
+                        });
+                      }}
                     >
                       <Pencil aria-hidden className="size-4" />
                     </Button>
@@ -219,7 +303,7 @@ export function BlockEditor({
                       size="sm"
                       variant="ghost"
                       className="px-2"
-                      aria-label="Ta bort perioden"
+                      aria-label={`Ta bort ${blockText(block)}`}
                       disabled={pending}
                       onClick={() => remove(block)}
                     >
@@ -233,6 +317,12 @@ export function BlockEditor({
         </ul>
       )}
 
+      {saved && (
+        <p role="status" className="mt-3 text-[13px] text-good">
+          {saved}
+        </p>
+      )}
+
       {draft && (
         <div
           ref={form}
@@ -241,7 +331,7 @@ export function BlockEditor({
           <p className="text-sm font-medium text-text">
             {draft.id ? "Ändra perioden" : "Ny period"}
           </p>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field
               label="Fas"
               htmlFor="block-phase"
@@ -252,6 +342,7 @@ export function BlockEditor({
                 value={draft.phase}
                 onChange={(e) => {
                   const phase = e.target.value as TrainingPhase;
+                  setWeeksInput(null);
                   setDraft({
                     ...draft,
                     phase,
@@ -259,7 +350,7 @@ export function BlockEditor({
                     // behåller sina datum.
                     endsOn: draft.id
                       ? draft.endsOn
-                      : addDays(draft.startsOn, LENGTH[phase] - 1),
+                      : addDays(draft.startsOn, WEEKS[phase] * 7 - 1),
                   });
                 }}
               >
@@ -270,34 +361,145 @@ export function BlockEditor({
                 ))}
               </Select>
             </Field>
-            <Field label="Från" htmlFor="block-start">
+            <Field
+              label="Namn"
+              htmlFor="block-name"
+              optional
+              hint="Visas i stället för fasens namn. Fasen styr färgen och AI-coachen."
+            >
               <Input
+                id="block-name"
+                value={draft.name}
+                maxLength={60}
+                placeholder={phaseName(draft.phase)}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9.5rem]">
+            <Field label="Startar" htmlFor="block-start">
+              <DatePicker
                 id="block-start"
-                type="date"
                 value={draft.startsOn}
-                onChange={(e) =>
-                  setDraft({ ...draft, startsOn: e.target.value })
+                marks={marks}
+                range={{ from: draft.startsOn, to: draft.endsOn }}
+                onChange={(startsOn) =>
+                  // Perioden flyttas med sin längd.
+                  setDraft({
+                    ...draft,
+                    startsOn,
+                    endsOn: addDays(startsOn, days - 1),
+                  })
                 }
               />
             </Field>
             <Field
-              label="Till och med"
-              htmlFor="block-end"
+              label="Veckor"
+              htmlFor="block-weeks"
               hint={
-                draft.startsOn && draft.endsOn >= draft.startsOn
-                  ? `${daysBetween(draft.startsOn, draft.endsOn) + 1} dagar`
-                  : undefined
+                days % 7 === 0
+                  ? undefined
+                  : weeks === 0
+                    ? `Bara ${lengthText(days)}`
+                    : `+ ${lengthText(days % 7)}`
               }
             >
-              <Input
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="secondary"
+                  className="size-10 shrink-0 px-0"
+                  aria-label="En vecka kortare"
+                  disabled={weeks <= 1 && days <= 7}
+                  onClick={() => {
+                    setWeeksInput(null);
+                    setWeeks(days % 7 === 0 ? weeks - 1 : weeks);
+                  }}
+                >
+                  <Minus aria-hidden className="size-4 shrink-0" />
+                </Button>
+                <Input
+                  id="block-weeks"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={MAX_WEEKS}
+                  value={weeksInput ?? String(weeks)}
+                  onChange={(e) => {
+                    setWeeksInput(e.target.value);
+                    const count = Number(e.target.value);
+                    if (Number.isInteger(count) && count >= 1) setWeeks(count);
+                  }}
+                  onBlur={() => setWeeksInput(null)}
+                  className="min-w-0 px-1 text-center tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <Button
+                  variant="secondary"
+                  className="size-10 shrink-0 px-0"
+                  aria-label="En vecka längre"
+                  disabled={weeks >= MAX_WEEKS}
+                  onClick={() => {
+                    setWeeksInput(null);
+                    setWeeks(weeks + 1);
+                  }}
+                >
+                  <Plus aria-hidden className="size-4 shrink-0" />
+                </Button>
+              </div>
+            </Field>
+            <Field
+              label="Slutar"
+              htmlFor="block-end"
+              hint="Räknas ut ur veckorna. Välj ett annat datum för en period som inte är hela veckor."
+            >
+              <DatePicker
                 id="block-end"
-                type="date"
                 value={draft.endsOn}
                 min={draft.startsOn}
-                onChange={(e) => setDraft({ ...draft, endsOn: e.target.value })}
+                max={addDays(draft.startsOn, 365)}
+                marks={marks}
+                range={{ from: draft.startsOn, to: draft.endsOn }}
+                onChange={(endsOn) => {
+                  setWeeksInput(null);
+                  setDraft({ ...draft, endsOn });
+                }}
               />
             </Field>
           </div>
+
+          <div className="space-y-1.5 text-[13px]">
+            <p className="text-text-muted tabular-nums">
+              {lengthText(days)} · {weekSpan(draft.startsOn, draft.endsOn)} ·{" "}
+              {longDate(draft.startsOn, today)} – {weekdayName(draft.endsOn)}{" "}
+              {longDate(draft.endsOn, today)}
+            </p>
+            {weekdayIndex(draft.startsOn) !== 0 && (
+              <p className="text-text-subtle">
+                Startar en {weekdayName(draft.startsOn)}.{" "}
+                <button
+                  type="button"
+                  className="font-medium text-accent-text underline-offset-2 hover:underline"
+                  onClick={() => {
+                    const startsOn = nearestMonday(draft.startsOn);
+                    setDraft({
+                      ...draft,
+                      startsOn,
+                      endsOn: addDays(startsOn, days - 1),
+                    });
+                  }}
+                >
+                  Flytta till måndag {shortDate(nearestMonday(draft.startsOn))}
+                </button>
+              </p>
+            )}
+            {clash && (
+              <p role="alert" className="text-warn">
+                Krockar med {blockText(clash)} {shortDate(clash.starts_on)}–
+                {shortDate(clash.ends_on)}. Perioderna får inte överlappa.
+              </p>
+            )}
+          </div>
+
           <Field label="Fokus" htmlFor="block-focus" optional>
             <Input
               id="block-focus"
@@ -312,17 +514,28 @@ export function BlockEditor({
               {error}
             </p>
           )}
-          <div className="flex gap-2">
-            <Button onClick={save} disabled={pending} className="font-semibold">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => save(false)}
+              disabled={pending || clash !== null}
+              className="font-semibold"
+            >
               {pending ? "Sparar…" : "Spara period"}
             </Button>
+            {!draft.id && (
+              <Button
+                variant="secondary"
+                onClick={() => save(true)}
+                disabled={pending || clash !== null}
+              >
+                Spara och lägg till{" "}
+                {PHASE_SHORT[NEXT[draft.phase]].toLowerCase()}
+              </Button>
+            )}
             <Button
               variant="ghost"
               disabled={pending}
-              onClick={() => {
-                setDraft(null);
-                setError(null);
-              }}
+              onClick={() => open(null)}
             >
               Avbryt
             </Button>

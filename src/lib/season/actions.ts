@@ -5,14 +5,20 @@ import { revalidatePath } from "next/cache";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
-import { phaseLabel, TRAINING_PHASES } from "@/lib/tests/phases";
+import { TRAINING_PHASES } from "@/lib/tests/phases";
 import type {
   RacePriority,
   RaceSport,
   TrainingBlockRow,
 } from "@/lib/types/database";
 import { listBlocks } from "./queries";
-import { RACE_SPORTS, daysBetween, overlapping, shortDate } from "./season";
+import {
+  RACE_SPORTS,
+  blockText,
+  daysBetween,
+  overlapping,
+  shortDate,
+} from "./season";
 
 export type SeasonResult =
   | { ok: true; id: string }
@@ -132,6 +138,8 @@ export type SaveBlockInput = {
   id?: string | null;
   adeptId: string;
   phase: TrainingBlockRow["phase"];
+  /** Eget namn; tomt ger fasens namn. */
+  name?: string | null;
   startsOn: string;
   endsOn: string;
   focus: string | null;
@@ -173,13 +181,14 @@ export async function saveBlock(input: SaveBlockInput): Promise<SeasonResult> {
   if (clash) {
     return {
       ok: false,
-      error: `Krockar med ${phaseLabel(clash.phase)?.toLowerCase()} ${shortDate(clash.starts_on)}–${shortDate(clash.ends_on)}. Perioderna får inte överlappa.`,
+      error: `Krockar med ${blockText(clash)} ${shortDate(clash.starts_on)}–${shortDate(clash.ends_on)}. Perioderna får inte överlappa.`,
     };
   }
 
   const row = {
     adept_id: input.adeptId,
     phase: input.phase,
+    name: trimmed(input.name ?? null, 60),
     starts_on: input.startsOn,
     ends_on: input.endsOn,
     focus: trimmed(input.focus, 300),

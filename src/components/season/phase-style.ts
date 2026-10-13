@@ -16,3 +16,12 @@ export const PHASE_SHORT: Record<TrainingPhase, string> = {
   topp: "Toppning",
   vila: "Vila",
 };
+
+/**
+ * Periodens namn för band och rubriker: coachens eget, annars fasens korta
+ * namn ("Grund").
+ */
+export const blockLabel = (block: {
+  phase: TrainingPhase;
+  name?: string | null;
+}) => block.name?.trim() || PHASE_SHORT[block.phase];

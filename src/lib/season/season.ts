@@ -95,6 +95,23 @@ export const mondayOf = (iso: string) => addDays(iso, -weekdayIndex(iso));
 export const monthName = (month: number) => MONTHS[month] ?? "";
 export const weekdayName = (iso: string) => WEEKDAYS[weekdayIndex(iso)];
 
+/** Månaden `months` bort från YYYY-MM, som YYYY-MM. */
+export function shiftMonth(month: string, months: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const index = y * 12 + (m - 1) + months;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
+/** Datumen som visas för en månad: hela veckor, måndag till söndag. */
+export function monthDates(month: string): string[] {
+  const first = `${month}-01`;
+  const last = addDays(`${shiftMonth(month, 1)}-01`, -1);
+  const start = mondayOf(first);
+  const end = addDays(mondayOf(last), 6);
+  const count = daysBetween(start, end) + 1;
+  return Array.from({ length: count }, (_, i) => addDays(start, i));
+}
+
 /** "3 juli 2027", eller "3 juli" när året är detsamma som `sameYearAs`. */
 export function longDate(iso: string, sameYearAs?: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
@@ -124,6 +141,28 @@ export function isoWeek(iso: string): number {
   const thursday = addDays(iso, 3 - weekdayIndex(iso));
   const yearStart = `${thursday.slice(0, 4)}-01-01`;
   return Math.floor(daysBetween(yearStart, thursday) / 7) + 1;
+}
+
+/** "v. 2–9", eller "v. 2" när perioden ryms i en vecka. */
+export function weekSpan(start: string, end: string): string {
+  const first = isoWeek(start);
+  const last = isoWeek(end);
+  return first === last && daysBetween(start, end) < 7
+    ? `v. ${first}`
+    : `v. ${first}–${last}`;
+}
+
+/**
+ * En längd i dagar som veckor: "8 veckor", "2 veckor och 3 dagar". Under en
+ * vecka blir det dagar.
+ */
+export function lengthText(days: number): string {
+  const weeks = Math.floor(days / 7);
+  const rest = days % 7;
+  const dayText = `${rest} ${rest === 1 ? "dag" : "dagar"}`;
+  if (weeks === 0) return `${days} ${days === 1 ? "dag" : "dagar"}`;
+  const weekText = `${weeks} ${weeks === 1 ? "vecka" : "veckor"}`;
+  return rest === 0 ? weekText : `${weekText} och ${dayText}`;
 }
 
 /** Nedräkningen i ord. */
@@ -163,7 +202,20 @@ export function mainRace<
   return upcoming.find((r) => r.priority === "A") ?? upcoming[0] ?? null;
 }
 
-type BlockLike = Pick<TrainingBlockRow, "starts_on" | "ends_on" | "phase">;
+type BlockLike = Pick<TrainingBlockRow, "starts_on" | "ends_on" | "phase"> & {
+  name?: string | null;
+};
+
+/**
+ * Periodens namn i löptext: coachens eget, annars fasens namn med liten
+ * bokstav ("grundperiod").
+ */
+export function blockText(block: Pick<BlockLike, "phase" | "name">): string {
+  return (
+    block.name?.trim() ||
+    (phaseLabel(block.phase)?.toLowerCase() ?? block.phase)
+  );
+}
 
 /** Perioden ett datum ligger i. Vid överlapp den som började senast. */
 export function blockOn<T extends BlockLike>(
@@ -258,8 +310,8 @@ export function planNotes(
     const gap = daysBetween(previous.ends_on, current.starts_on) - 1;
     if (gap >= 3) {
       notes.push(
-        `${gap} dagar utan period mellan ${phaseLabel(previous.phase)?.toLowerCase()} och ` +
-          `${phaseLabel(current.phase)?.toLowerCase()} (${shortDate(addDays(previous.ends_on, 1))}–` +
+        `${gap} dagar utan period mellan ${blockText(previous)} och ` +
+          `${blockText(current)} (${shortDate(addDays(previous.ends_on, 1))}–` +
           `${shortDate(addDays(current.starts_on, -1))}).`,
       );
     }
@@ -284,11 +336,17 @@ export function seasonToPrompt(
 ): string | null {
   const lines: string[] = [];
 
+  // Ett eget namn står före fasen, som är det modellen ska resonera utifrån.
+  const named = (block: BlockLike) =>
+    block.name?.trim()
+      ? `${block.name.trim()} (${phaseLabel(block.phase)?.toLowerCase()})`
+      : phaseLabel(block.phase)?.toLowerCase();
+
   const current = blockOn(blocks, today);
   if (current) {
     const left = daysBetween(today, current.ends_on);
     lines.push(
-      `- Nu: ${phaseLabel(current.phase)?.toLowerCase()} ${current.starts_on}–${current.ends_on}` +
+      `- Nu: ${named(current)} ${current.starts_on}–${current.ends_on}` +
         ` (${left === 0 ? "sista dagen" : `${left} dagar kvar`})` +
         `${current.focus ? `, fokus: ${current.focus}` : ""}.`,
     );
@@ -296,7 +354,7 @@ export function seasonToPrompt(
   const next = nextBlock(blocks, today);
   if (next) {
     lines.push(
-      `- Därefter: ${phaseLabel(next.phase)?.toLowerCase()} från ${next.starts_on}` +
+      `- Därefter: ${named(next)} från ${next.starts_on}` +
         `${next.focus ? `, fokus: ${next.focus}` : ""}.`,
     );
   }

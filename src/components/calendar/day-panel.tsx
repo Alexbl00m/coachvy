@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { PriorityBadge } from "@/components/season/priority-badge";
-import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
+import { blockLabel, phaseFill } from "@/components/season/phase-style";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatClock } from "@/lib/activities/analysis";
 import type { Sport } from "@/lib/calculators/lactate";
@@ -205,12 +205,15 @@ export function DayPanel({
   items,
   today,
   phase,
+  blockName = null,
   showNames,
 }: {
   date: string;
   items: DayItems;
   today: string;
   phase: TrainingBlockRow["phase"] | null;
+  /** Periodens egna namn, när coachen gett den ett. */
+  blockName?: string | null;
   showNames: boolean;
 }) {
   return (
@@ -230,7 +233,7 @@ export function DayPanel({
                   className="h-2 w-3 rounded-[2px]"
                   style={{ background: phaseFill(phase) }}
                 />
-                {PHASE_SHORT[phase]}
+                {blockLabel({ phase, name: blockName })}
               </span>
             )}
           </p>

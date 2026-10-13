@@ -14,7 +14,13 @@ import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { listBlocks, listRaces } from "@/lib/season/queries";
-import { addDays, monthName, planNotes, todayIso } from "@/lib/season/season";
+import {
+  addDays,
+  monthName,
+  planNotes,
+  shiftMonth,
+  todayIso,
+} from "@/lib/season/season";
 import type { Sport } from "@/lib/calculators/lactate";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
@@ -22,13 +28,6 @@ import { listSessions } from "@/lib/tests/session-queries";
 import type { Adept, RaceSport } from "@/lib/types/database";
 
 export const metadata = { title: "Säsongsplan" };
-
-/** Månaden `months` bort från YYYY-MM, som YYYY-MM. */
-function shiftMonth(month: string, months: number): string {
-  const [y, m] = month.split("-").map(Number);
-  const index = y * 12 + (m - 1) + months;
-  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
-}
 
 const monthLabel = (month: string) =>
   `${monthName(Number(month.slice(5, 7)) - 1)} ${month.slice(0, 4)}`;
@@ -224,6 +223,7 @@ export default async function PlanerPage({
           <BlockEditor
             adeptId={adept.id}
             blocks={blocks}
+            races={races}
             today={today}
             canEdit={canPlan}
             openNew={query.ny === "period"}
@@ -231,6 +231,7 @@ export default async function PlanerPage({
           <RaceEditor
             adeptId={adept.id}
             races={races}
+            blocks={blocks}
             today={today}
             defaultSport={raceSportOf(adept.sport)}
             analyses={analyses}
