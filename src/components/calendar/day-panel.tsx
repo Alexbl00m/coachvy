@@ -207,6 +207,7 @@ export function DayPanel({
   phase,
   blockName = null,
   showNames,
+  action = null,
 }: {
   date: string;
   items: DayItems;
@@ -215,6 +216,8 @@ export function DayPanel({
   /** Periodens egna namn, när coachen gett den ett. */
   blockName?: string | null;
   showNames: boolean;
+  /** Det coachen kan göra med dagen, som att lägga in ett pass. */
+  action?: React.ReactNode;
 }) {
   return (
     // Ankaret dagarna i rutnätet länkar till, så att telefonen scrollar hit.
@@ -239,6 +242,9 @@ export function DayPanel({
           </p>
         </div>
         <DayContent items={items} today={today} showNames={showNames} />
+        {action && (
+          <div className="mt-4 border-t border-line pt-4">{action}</div>
+        )}
       </Card>
     </div>
   );

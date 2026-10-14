@@ -28,7 +28,7 @@ export default async function SessionLibraryPage() {
     <>
       <PageHeader
         title="Passbibliotek"
-        description="Dina återkommande pass, med syfte och hur de byggs på. Hämta dem till en planmall eller öppna dem för en adept i passbyggaren, där zonerna räknas om mot adeptens egna värden."
+        description="Dina återkommande pass, med syfte och hur de byggs på. Lägg dem direkt i en adepts kalender – zonerna räknas om mot adeptens egna värden – eller hämta dem till en planmall."
       />
       <LibraryView
         sessions={sessions}

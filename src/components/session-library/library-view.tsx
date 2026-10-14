@@ -1,13 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useAction } from "@/components/plan-library/use-action";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/field";
-import { routes } from "@/lib/routes";
 import {
   copyLibrarySession,
   deleteLibrarySession,
@@ -15,11 +14,13 @@ import {
 import {
   LIBRARY_SPORTS,
   type LibraryInput,
+  type LibraryLevelKey,
   type LibrarySession,
 } from "@/lib/session-library/library";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 
 import { LibraryCard } from "./library-card";
+import { ScheduleDialog } from "./schedule-dialog";
 import { emptyLibraryInput, inputOf, SessionEditor } from "./session-editor";
 
 type Owner = "alla" | "mina" | "delade";
@@ -32,8 +33,8 @@ const matches = (s: LibrarySession, q: string) =>
     .includes(q);
 
 /**
- * Biblioteket med sök och filter. Ett pass öppnas i passbyggaren för en
- * adept med ett vanligt formulär, så att länken går att spara.
+ * Biblioteket med sök och filter. Ett pass läggs direkt i en adepts
+ * kalender, eller öppnas i passbyggaren för att justeras först.
  */
 export function LibraryView({
   sessions,
@@ -54,6 +55,10 @@ export function LibraryView({
     key: string;
     id: string | null;
     initial: LibraryInput;
+  } | null>(null);
+  const [scheduling, setScheduling] = useState<{
+    session: LibrarySession;
+    level: LibraryLevelKey | null;
   } | null>(null);
   const { pending, error, run } = useAction();
 
@@ -251,44 +256,18 @@ export function LibraryView({
                       </Button>
                     )}
                     {adepts.length > 0 && (
-                      <form
-                        action={routes.workoutBuilder}
-                        className="flex w-full items-center gap-1.5"
+                      <Button
+                        size="sm"
+                        className="font-semibold"
+                        onClick={() =>
+                          setScheduling({ session: s, level: level ?? null })
+                        }
                       >
-                        <input type="hidden" name="bibliotek" value={s.id} />
-                        {level && (
-                          <input type="hidden" name="niva" value={level} />
-                        )}
-                        <label className="sr-only" htmlFor={`adept-${s.id}`}>
-                          Adept
-                        </label>
-                        <Select
-                          id={`adept-${s.id}`}
-                          name="adept"
-                          required
-                          defaultValue=""
-                          className="h-8 min-w-0 flex-1 py-0 text-[13px]"
-                        >
-                          <option value="" disabled>
-                            Adept…
-                          </option>
-                          {adepts.map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.full_name}
-                            </option>
-                          ))}
-                        </Select>
-                        <Button
-                          type="submit"
-                          size="sm"
-                          variant="secondary"
-                          className="shrink-0 whitespace-nowrap"
-                        >
-                          {level
-                            ? `Nivå ${level} till passbyggaren`
-                            : "Till passbyggaren"}
-                        </Button>
-                      </form>
+                        <CalendarPlus aria-hidden className="size-3.5" />
+                        {level
+                          ? `Nivå ${level} i kalendern`
+                          : "Lägg i kalendern"}
+                      </Button>
                     )}
                   </>
                 )}
@@ -297,6 +276,16 @@ export function LibraryView({
           ))}
         </ul>
       )}
+
+      <ScheduleDialog
+        key={
+          scheduling ? `${scheduling.session.id}-${scheduling.level}` : "stängd"
+        }
+        session={scheduling?.session ?? null}
+        initialLevel={scheduling?.level ?? null}
+        adepts={adepts}
+        onClose={() => setScheduling(null)}
+      />
 
       {editing && (
         <SessionEditor

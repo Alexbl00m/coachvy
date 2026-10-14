@@ -1681,6 +1681,17 @@ adeptens fart ur formuppskattningen; utan en formuppskattning säger
 passbyggaren till. Testerna kontrollerar att A har mest i tid eller sträcka
 och C minst, och att farten ligger i passets zon.
 
+### Från biblioteket till kalendern
+
+"Lägg i kalendern" på ett pass i biblioteket öppnar en ruta där coachen
+väljer adept, nivå och datum. Passet räknas om mot adeptens tröskel i
+passets gren – en triathlet får cykelpasset mot sin FTP och löppasset mot
+sin löptröskel – och sparas på datumet som ett vanligt pass, som går att
+öppna och ändra i passbyggaren efteråt
+(`src/lib/session-library/schedule-actions.ts`). Samma sak finns i
+kalendern: med en adept vald har dagen knappen "Lägg till pass ur
+biblioteket", där adepten och dagen redan är ifyllda.
+
 Passen läses in som delade pass ägda av en admin:
 
 ```

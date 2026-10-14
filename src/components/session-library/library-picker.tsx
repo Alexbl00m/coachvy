@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
-import { Input } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/field";
 import { routes } from "@/lib/routes";
 import type { LibrarySession } from "@/lib/session-library/library";
 
@@ -18,14 +18,18 @@ export function LibraryPicker({
   onClose,
   sessions,
   onPick,
+  description = "Namn, typ och struktur fylls i på varje nivå. Skala sedan nivåerna – samma format, olika mängd.",
 }: {
   open: boolean;
   onClose: () => void;
   sessions: LibrarySession[];
   onPick: (session: LibrarySession) => void;
+  description?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [query, setQuery] = useState("");
+  const [sport, setSport] = useState("alla");
+  const sports = [...new Set(sessions.map((s) => s.sport))];
 
   useEffect(() => {
     const dialog = ref.current;
@@ -38,13 +42,14 @@ export function LibraryPicker({
     const q = query.trim().toLowerCase();
     return sessions.filter(
       (s) =>
-        !q ||
-        [s.title, s.kind, s.intensity, s.purpose, s.structure]
-          .join(" ")
-          .toLowerCase()
-          .includes(q),
+        (sport === "alla" || s.sport === sport) &&
+        (!q ||
+          [s.title, s.kind, s.intensity, s.purpose, s.structure]
+            .join(" ")
+            .toLowerCase()
+            .includes(q)),
     );
-  }, [sessions, query]);
+  }, [sessions, query, sport]);
 
   return (
     <dialog
@@ -59,10 +64,7 @@ export function LibraryPicker({
             <h2 id="bib-valj-rubrik" className="text-lg font-semibold">
               Hämta från passbiblioteket
             </h2>
-            <p className="text-[13px] text-text-subtle">
-              Namn, typ och struktur fylls i på varje nivå. Skala sedan nivåerna
-              – samma format, olika mängd.
-            </p>
+            <p className="text-[13px] text-text-subtle">{description}</p>
           </div>
           <Button size="sm" variant="ghost" onClick={onClose}>
             Stäng
@@ -85,14 +87,31 @@ export function LibraryPicker({
             <label htmlFor="bib-valj-sok" className="sr-only">
               Sök
             </label>
-            <Input
-              id="bib-valj-sok"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Sök på namn, syfte eller struktur"
-              autoFocus
-            />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="bib-valj-sok"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Sök på namn, syfte eller struktur"
+                autoFocus
+              />
+              {sports.length > 1 && (
+                <Select
+                  aria-label="Gren"
+                  value={sport}
+                  onChange={(e) => setSport(e.target.value)}
+                  className="sm:w-auto"
+                >
+                  <option value="alla">Alla grenar</option>
+                  {sports.map((g) => (
+                    <option key={g} value={g}>
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </div>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {shown.map((s) => (
                 <li key={s.id}>

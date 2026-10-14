@@ -88,11 +88,16 @@ export type GenerateResult =
 /** Underlaget för en adept, hämtat ur testtillfällena. */
 export async function contextForAdept(
   adeptId: string,
+  /**
+   * Grenen underlaget ska gälla. Utan den adeptens egen gren; en triathlet
+   * kan få ett cykelpass och ett löppass, var för sig mot sin tröskel.
+   */
+  forSport?: Sport,
 ): Promise<AthleteContext | null> {
   const adept = await getAdept(adeptId);
   if (!adept) return null;
 
-  const sport = sportOf(adept.sport);
+  const sport = forSport ?? sportOf(adept.sport);
   const [sessions, efforts, profile, checkins, races, blocks] =
     await Promise.all([
       listSessions(adeptId),

@@ -7,6 +7,7 @@ import {
   emptyDay,
 } from "@/components/calendar/calendar-items";
 import { DayPanel, Upcoming } from "@/components/calendar/day-panel";
+import { AddFromLibrary } from "@/components/session-library/add-from-library";
 import { MonthGrid } from "@/components/calendar/month-grid";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/calendar/queries";
 import { routes } from "@/lib/routes";
 import { listBlocks, listRacesBetween } from "@/lib/season/queries";
+import { listLibrary } from "@/lib/session-library/queries";
 import { listActivitiesBetween } from "@/lib/activities/queries";
 import {
   addDays,
@@ -125,6 +127,8 @@ export default async function KalenderPage({
       adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
       listActivitiesBetween(from, to, adeptId),
     ]);
+  // Biblioteket behövs bara när coachen tittar på en adept och kan lägga in.
+  const library = isCoach && adept ? await listLibrary() : [];
 
   const days = groupByDay({
     workouts,
@@ -227,6 +231,15 @@ export default async function KalenderPage({
             phase={phases?.get(selected) ?? null}
             blockName={
               adeptId ? (blockOn(blocks, selected)?.name ?? null) : null
+            }
+            action={
+              isCoach && adept ? (
+                <AddFromLibrary
+                  sessions={library}
+                  adept={{ id: adept.id, full_name: adept.full_name }}
+                  date={selected}
+                />
+              ) : null
             }
             showNames={showNames}
           />
