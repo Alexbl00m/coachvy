@@ -109,6 +109,19 @@ export function ExportWorkout({
             appar som tar emot strukturerade pass läser också .fit.
           </dd>
         </div>
+        <div className="sm:col-span-2">
+          <dt className="font-medium text-text">Ett pass, inte en aktivitet</dt>
+          <dd className="mt-1 leading-relaxed text-text-muted">
+            Filen beskriver passet som ska köras, så den går inte att ladda upp
+            som en genomförd aktivitet – där svarar intervals.icu &quot;No
+            session start_time found&quot; och Garmin Connect att filen inte
+            godkändes. I intervals.icu lägger du den i passbiblioteket
+            (Workouts, ladda upp i en mapp) och drar passet till kalendern; har
+            du Garmin kopplat skickar intervals det vidare till klockan. Garmin
+            Connects &quot;Importera data&quot; tar bara emot aktiviteter –
+            använd USB-vägen ovan eller intervals.icu.
+          </dd>
+        </div>
         {zwo && (
           <div>
             <dt className="font-medium text-text">.zwo – Zwift med flera</dt>
