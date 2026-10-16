@@ -52,6 +52,7 @@ export function ReportImport({
   const [dragging, setDragging] = useState(false);
   const [pending, start] = useTransition();
   const [reading, setReading] = useState<ReportReading | null>(null);
+  const [source, setSource] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -76,8 +77,10 @@ export function ReportImport({
       form.set("adeptId", adeptId);
       form.set("file", file);
       const result = await readTestReport(form);
-      if (result.ok) setReading(result.reading);
-      else setError(result.error);
+      if (result.ok) {
+        setReading(result.reading);
+        setSource(result.source);
+      } else setError(result.error);
     });
   };
 
@@ -111,13 +114,14 @@ export function ReportImport({
         <span className="min-w-0 flex-1">
           <span className="font-medium text-text">
             {pending
-              ? `Läser ${fileName ?? "rapporten"} … det tar en halv minut`
+              ? `Läser ${fileName ?? "rapporten"} …`
               : "Läs in ur labbets rapport"}
           </span>
           <span className="block text-[12px] text-text-subtle">
             PDF eller ett foto av protokollet. Stegen, pulsen och laktatet läses
-            ut och fylls i nedan, så granskar du innan du sparar. Rapporten
-            skickas till AI-tjänsten för att läsas; Coachvy sparar den inte.
+            ut och fylls i nedan, så granskar du innan du sparar. Rapporter från
+            Aktivitus, Ergonizer (Going Long) och 30K läses direkt ur PDF:en;
+            andra skickas till AI-tjänsten. Coachvy sparar inte rapporten.
           </span>
         </span>
         <input
@@ -166,6 +170,10 @@ export function ReportImport({
               </div>
             ))}
           </dl>
+
+          {source && (
+            <p className="mt-2 text-[12px] text-text-subtle">{source}</p>
+          )}
 
           {r.warnings.length > 0 && (
             <ul className="mt-3 space-y-1 rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[13px] text-text-muted">
