@@ -165,6 +165,20 @@ function aktivitus(pages: string[]): TextReading | null {
   const exhaustion = cycling
     ? match(all, /Utmattning:[\s\S]{0,60}?Effekt:\s*([\d,.]+)\s*W/)
     : match(all, /Utmattning:[\s\S]{0,60}?Hastighet:\s*([\d,.]+)\s*km\/h/);
+  // VO₂max-testet efteråt är en ramp till utmattning. Wmax ur den räknas
+  // som sista hela nivån plus den del av nästa som hanns (Kuipers m.fl.).
+  const ramp = cycling
+    ? all.match(
+        /Starteffekt:\s*(\d+)\s*W\s*\n?\s*Effektökning:\s*(\d+)\s*W\/min[\s\S]{0,40}?Utmattning:\s*\n?\s*Tid:\s*(\d+):(\d{2})/,
+      )
+    : null;
+  const wmax = ramp
+    ? Math.round(
+        Number(ramp[1]) +
+          Math.floor(Number(ramp[3])) * Number(ramp[2]) +
+          (Number(ramp[4]) / 60) * Number(ramp[2]),
+      )
+    : null;
   const sv = (v: number) => String(v).replace(".", ",");
   const labValues = [
     at !== null &&
@@ -188,11 +202,16 @@ function aktivitus(pages: string[]): TextReading | null {
           : null,
       steps,
       peak:
-        maxHr !== null || vo2max !== null
-          ? { intensity: null, heartRate: maxHr, lactate: null, vo2max }
+        maxHr !== null || vo2max !== null || wmax !== null
+          ? { intensity: wmax, heartRate: maxHr, lactate: null, vo2max }
           : null,
       labValues: labValues.length > 0 ? labValues.join(" · ") : null,
-      warnings,
+      warnings: ramp
+        ? [
+            ...warnings,
+            `Wmax ${wmax} W är räknat ur VO₂max-rampen (${ramp[1]} W + ${ramp[2]} W/min till utmattning efter ${ramp[3]}:${ramp[4]}).`,
+          ]
+        : warnings,
     },
   };
 }

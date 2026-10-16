@@ -13,7 +13,7 @@ const AKTIVITUS_TAIL =
 const aktivitusCycling = (chart: string) => [
   "2020-11-27 14:26\nTestrapport\n2020-11-27\nNamn: X Starteffekt: 80 W\nEffektökning: 40 W\nIntervalltid: 3:00 min\nVikt: 78,5 kg\nAktivitus",
   `2020-11-27 14:26\nAnaerob tröskel (AT/FTP): Maxpuls:\nEffekt: 300 W Estimerad: 185 slag/min\nEffekt/kg 3,82 W/kg Högsta puls på test: 180 slag/min\nTröskelpuls: 164 slag/min\nAerob Tröskel (LT), FatMax: Intensitetszoner:\nEffekt: 190 W Högintensiv träningszon: 164 -185 slag/min\nEffekt/kg: 2,42 W/kg Medelintensiv träningszon: 135 -164 slag/min\nTröskelpuls: 135 slag/min Lågintensiv träningszon: 115 -135 slag/min\n${chart}\n${AKTIVITUS_TAIL}`,
-  "Protokoll och testvärden\nUtmattning:\nTid: 07:40 min\nEffekt: 420 W\nTestvärde: 63,5 ml O2/kg/min\nAktivitus",
+  "Protokoll och testvärden\nProtokoll:\nStarteffekt: 260 W\nEffektökning: 20 W/min\nUtmattning:\nTid: 07:40 min\nEffekt: 420 W\nTestvärde: 63,5 ml O2/kg/min\nAktivitus",
 ];
 
 describe("Aktivitus", () => {
@@ -41,15 +41,17 @@ describe("Aktivitus", () => {
     ]);
     expect(r.steps.map((s) => s.rpe)).toEqual([8, 10, 12, 14, 15, 16, 17]);
     expect(r.steps.every((s) => s.durationSeconds === 180)).toBe(true);
+    // Wmax ur rampen: 260 + 7 × 20 + 40/60 × 20.
     expect(r.peak).toEqual({
-      intensity: null,
+      intensity: 413,
       heartRate: 180,
       lactate: null,
       vo2max: 63.5,
     });
     expect(r.labValues).toContain("AT 300 W (164 slag/min)");
     expect(r.labValues).toContain("LT 190 W (135 slag/min)");
-    expect(r.warnings).toEqual([]);
+    expect(r.warnings).toHaveLength(1);
+    expect(r.warnings[0]).toContain("Wmax 413 W");
   });
 
   it("läser ett cykeltest utan kadens", () => {
