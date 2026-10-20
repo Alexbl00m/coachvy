@@ -246,6 +246,20 @@ export type AdeptRaceRow = {
   updated_at: string;
 };
 
+/** Ett loggat styrkepass. Övningarna ligger som jsonb, se migrationen. */
+export type StrengthSessionRow = {
+  id: string;
+  adept_id: string;
+  performed_on: string;
+  title: string | null;
+  exercises: unknown;
+  note: string | null;
+  session_rpe: number | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /** En period i säsongsplanen. Fasen är samma fem som testtillfällets. */
 export type TrainingBlockRow = {
   id: string;
@@ -518,6 +532,13 @@ export type Database = {
         Insert: Pick<AdeptRaceRow, "adept_id" | "name" | "race_date"> &
           Partial<AdeptRaceRow>;
         Update: Partial<AdeptRaceRow>;
+        Relationships: [];
+      };
+      strength_sessions: {
+        Row: StrengthSessionRow;
+        Insert: Pick<StrengthSessionRow, "adept_id" | "performed_on"> &
+          Partial<StrengthSessionRow>;
+        Update: Partial<StrengthSessionRow>;
         Relationships: [];
       };
       training_blocks: {

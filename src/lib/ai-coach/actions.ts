@@ -26,6 +26,8 @@ import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
 import { formatDuration, resolveWorkout, toWorkout } from "@/lib/workouts/schema";
 import { getConversation, listAiMessages } from "./queries";
+import { listStrengthSessions } from "@/lib/strength/queries";
+import { strengthToPrompt } from "@/lib/strength/strength";
 import { philosophyBlocks } from "./philosophy";
 import { coachPhilosophyFor } from "./philosophy-queries";
 
@@ -68,6 +70,7 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
     checkins,
     benchmarks,
     plan,
+    strength,
   ] = await Promise.all([
     listSessions(adeptId),
     listWorkouts(adeptId),
@@ -80,6 +83,8 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
     benchmarkSummaryFor(adept),
     // Planen ur planbiblioteket, nivåhistoriken och vad som genomförts.
     planSummaryFor(adeptId, todayIso()),
+    // Styrkepassen adepten loggat, med progressionen per övning.
+    listStrengthSessions(adeptId),
   ]);
 
   const lines: string[] = [];
@@ -126,6 +131,8 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
   if (digest) lines.push("", digest);
   if (benchmarks) lines.push("", benchmarks);
   if (plan) lines.push("", plan);
+  const strengthText = strengthToPrompt(strength, todayIso());
+  if (strengthText) lines.push("", strengthText);
 
   return lines.length > 0 ? lines.join("\n") : null;
 }

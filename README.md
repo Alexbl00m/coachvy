@@ -836,6 +836,36 @@ Passbiblioteket har LSCT som cykelpass i tre nivåer: testet ensamt, med 30
 eller med 60 minuter lugnt efteråt. Effekten i strukturen är bara ett
 riktvärde – testet styrs på puls, i fritt läge och inte ERG.
 
+## Styrkeloggen
+
+Adepterna planerar ofta i TrainingPeaks och skrev styrkan som en kommentar
+där: "FB 4x8 50 kg, RM 4x8 70 kg, BS 5x5 45 kg. Lats, armhävningar, vadlyft
+och Deadbugg". `/app/styrka` ersätter kommentaren. Adepten loggar passet i
+Coachvy, och både hon och coachen följer progressionen per övning. Coachen
+väljer adept överst och kan också logga och rätta.
+
+- **Skriv som du brukar.** Raden tolkas (`parseStrengthText` i
+  `src/lib/strength/strength.ts`) till övningar med set, repetitioner, per ben
+  och vikt, och läggs i en lista som går att rätta innan passet sparas. Kända
+  förkortningar och namn – FB frontböj, RM/RDL rumänsk marklyft, BS bulgarisk
+  splitböj, KB knäböj, ML marklyft, lats, vadlyft, deadbugg med flera – blir
+  samma övning varje gång; en okänd övning sparas med adeptens namn. Korta
+  förkortningar räknas bara som hela namnet, så "rm" i "armhävningar" är
+  ingen marklyft. Decimalkomma i vikten delar inte raden.
+- **Som förra gången** fyller i det senaste passets övningar.
+- **Progressionen** visar per övning det senaste passets tyngsta set och ett
+  skattat 1RM (Epley), så att 3×10 på 40 kg och 4×8 på 50 kg går att jämföra,
+  med förändringen sedan första passet de senaste sexton veckorna och en
+  kurva. Övningar utan vikt räknas som gjorda. Pass per vecka de senaste åtta
+  veckorna står överst – filosofin (avsnitt 20) vill två till tre i
+  grundperioden och ett för att behålla.
+- **AI-coachen** får antal pass per vecka och de viktade övningarna nu mot för
+  åtta veckor sedan.
+
+Passen ligger i `strength_sessions` (`20261020120000_strength_log.sql`) med
+övningarna som jsonb, och samma åtkomst som incheckningarna: adepten och
+hennes coach läser och skriver.
+
 ## Simning
 
 CSS-testet (två eller fler distanser, t.ex. 200, 400 och 800 m) ger CSS i

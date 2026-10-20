@@ -36,6 +36,7 @@ export const routes = {
   metabolicProfile: "/app/kalkyler/metabolisk-profil",
   vlamax: "/app/kalkyler/vlamax",
   progression: "/app/progression",
+  strength: "/app/styrka",
   calendar: "/app/kalender",
   aiCoach: "/app/ai-coach",
   community: "/app/community",

@@ -1,6 +1,7 @@
 import {
   Activity,
   BarChart3,
+  BicepsFlexed,
   Bot,
   CalendarDays,
   ChartBarBig,
@@ -79,6 +80,7 @@ const allSections: NavSection[] = [
       },
       { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
       { label: "Progression", href: routes.progression, icon: BarChart3 },
+      { label: "Styrka", href: routes.strength, icon: BicepsFlexed },
       { label: "Kalender", href: routes.calendar, icon: CalendarDays },
     ],
   },
