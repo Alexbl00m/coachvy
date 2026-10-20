@@ -17,7 +17,8 @@ import { listBlocks, listRaces } from "@/lib/season/queries";
 import { seasonToPrompt, todayIso } from "@/lib/season/season";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
-import { PHILOSOPHY_PROMPT } from "@/lib/ai-coach/philosophy";
+import { philosophyBlocks } from "@/lib/ai-coach/philosophy";
+import { coachPhilosophyFor } from "@/lib/ai-coach/philosophy-queries";
 import { readBalance, wPrimeBalance } from "./balance";
 import {
   buildAthleteContext,
@@ -271,6 +272,13 @@ export async function generateWorkout(
       : `Coachen vill ha: ${prompt}`,
   ];
 
+  // Coachens filosofi: den som bygger, eller medlemsadeptens coach.
+  const philosophy = await coachPhilosophyFor(
+    access.user.profile?.role === "coach"
+      ? access.user.id
+      : (access.user.adept?.coach_id ?? null),
+  );
+
   const client = new Anthropic();
 
   try {
@@ -289,13 +297,9 @@ export async function generateWorkout(
       fallbacks: "default",
       system: [
         { type: "text", text: SYSTEM_PROMPT },
-        // Filosofin är lika statisk som reglerna; cachepunkten efter den
-        // täcker båda.
-        {
-          type: "text",
-          text: PHILOSOPHY_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
+        // Grundfilosofin är lika för alla och cachas för sig; en coachs egen
+        // filosofi får en egen cachepunkt efter den.
+        ...philosophyBlocks(philosophy),
       ],
       messages: [{ role: "user", content: parts.join("\n") }],
     });

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 
 import { ReferenceLevelsEditor } from "@/components/benchmarks/reference-levels-editor";
+import { PhilosophyEditor } from "@/components/settings/philosophy-editor";
 import { PageHeader } from "@/components/page-header";
 import {
   ConsentToggle,
@@ -10,11 +11,12 @@ import {
 } from "@/components/settings/settings-forms";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
+import { FOUNDATION_TEXT } from "@/lib/ai-coach/philosophy";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { referenceLevelsFor } from "@/lib/benchmarks/queries";
 import { routes } from "@/lib/routes";
-import { longDate } from "@/lib/season/season";
+import { longDate, todayIso } from "@/lib/season/season";
 import { site } from "@/lib/site";
 
 export const metadata = { title: "Inställningar" };
@@ -144,6 +146,49 @@ export default async function InstallningarPage() {
             </p>
           </div>
         </Card>
+
+        {isCoach && (
+          <section id="filosofi" className="min-w-0 lg:col-span-2">
+            <Card className="min-w-0">
+              <CardTitle>Din träningsfilosofi</CardTitle>
+              <p className="mb-4 max-w-3xl text-sm leading-relaxed text-text-muted">
+                AI-coachen och passbyggaren resonerar utifrån Coachvys
+                grundfilosofi: en stor aerob grund, polariserat i grunden och
+                mer tröskel och tävlingsfart när loppet närmar sig, fokuserade
+                block som byggs på en variabel i taget, och planen som en
+                hypotes som responsen prövar. Skriv din egen så svarar de som
+                din assistent i stället – i dina frågor, i dina pass och i
+                passen dina medlemsadepter bygger åt sig själva.
+              </p>
+              <PhilosophyEditor
+                text={user.coach?.philosophy ?? ""}
+                mode={
+                  user.coach?.philosophy_mode === "ersatt"
+                    ? "ersatt"
+                    : "komplettera"
+                }
+                updatedAt={
+                  user.coach?.philosophy_updated_at
+                    ? longDate(
+                        user.coach.philosophy_updated_at.slice(0, 10),
+                        todayIso(),
+                      )
+                    : null
+                }
+              />
+              <details className="mt-6 border-t border-line pt-4">
+                <summary className="cursor-pointer text-[13px] font-medium text-text">
+                  Läs Coachvys grundfilosofi
+                </summary>
+                <div className="mt-3 max-h-[28rem] overflow-y-auto rounded-md border border-line bg-surface-2 p-4">
+                  <p className="max-w-prose whitespace-pre-wrap text-[13px] leading-relaxed text-text-muted">
+                    {FOUNDATION_TEXT}
+                  </p>
+                </div>
+              </details>
+            </Card>
+          </section>
+        )}
 
         {levels && (
           <section id="referensnivaer" className="min-w-0 lg:col-span-2">

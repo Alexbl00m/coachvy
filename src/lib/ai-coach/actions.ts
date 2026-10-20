@@ -26,7 +26,8 @@ import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
 import { formatDuration, resolveWorkout, toWorkout } from "@/lib/workouts/schema";
 import { getConversation, listAiMessages } from "./queries";
-import { PHILOSOPHY_PROMPT } from "./philosophy";
+import { philosophyBlocks } from "./philosophy";
+import { coachPhilosophyFor } from "./philosophy-queries";
 
 const MODEL = "claude-opus-5-5";
 
@@ -188,10 +189,11 @@ export async function askCoach(input: {
     conversationId = data.id;
   }
 
-  const [context, history, previous] = await Promise.all([
+  const [context, history, previous, philosophy] = await Promise.all([
     contextForAdept(input.adeptId),
     historyToPrompt(adept),
     listAiMessages(conversationId),
+    coachPhilosophyFor(user.id),
   ]);
 
   // Namnet skickas inte med: modellen behöver talen, inte vem de tillhör, och
@@ -215,13 +217,9 @@ export async function askCoach(input: {
       fallbacks: "default",
       system: [
         { type: "text", text: SYSTEM_PROMPT },
-        // Filosofin är lika statisk som reglerna; cachepunkten efter den
-        // täcker båda.
-        {
-          type: "text",
-          text: PHILOSOPHY_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
+        // Grundfilosofin är lika för alla och cachas för sig; en coachs egen
+        // filosofi får en egen cachepunkt efter den.
+        ...philosophyBlocks(philosophy),
       ],
       messages: [
         // Underlaget som ett eget första turpar, så att historiken under det

@@ -40,6 +40,11 @@ export type Coach = {
   plan: "bas" | "medlem";
   /** Coachens egna referensgrupper. Null: appens utgångsvärden. */
   reference_levels?: unknown;
+  /** Coachens egen träningsfilosofi till AI:n. Null: grundfilosofin gäller. */
+  philosophy?: string | null;
+  /** komplettera: grundfilosofin plus coachens. ersatt: bara coachens. */
+  philosophy_mode?: "komplettera" | "ersatt";
+  philosophy_updated_at?: string | null;
   created_at: string;
   updated_at: string;
 };

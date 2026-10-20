@@ -1192,6 +1192,23 @@ Vercel via `outputFileTracingIncludes` i `next.config.ts`. Filosofin ändras i
 filen, inte i koden. Samma fil läses in via `CLAUDE.md`, så att den också
 styr arbetet med kodbasen och planerna.
 
+**Coachens egen filosofi.** En ansluten coach kan skriva sin egen under
+Inställningar → Din träningsfilosofi (`coaches.philosophy`,
+`20261020090000_coach_philosophy.sql`) och välja om den
+
+- **kompletterar** grundfilosofin: först grundfilosofin, presenterad som
+  Coachvys grund skriven av Alexander, sedan coachens, som går före där de
+  skiljer sig och fyller i det grundfilosofin inte säger, eller
+- **ersätter** den: bara coachens text.
+
+`philosophyBlocks` i `src/lib/ai-coach/philosophy.ts` gör systemblocken.
+Grundfilosofin är lika för alla och cachas för sig; coachens egen får en
+egen cachepunkt efter den. AI-coachen använder den inloggade coachens
+filosofi, passbyggaren den som bygger – och för en medlemsadept adeptens
+coach, som RLS redan låter adepten läsa. Utan egen text gäller
+grundfilosofin som förut. Coachens text kan inte stänga sin egen tagg i
+prompten, och den är högst 40 000 tecken.
+
 ## Grafen
 
 Testkurvan visar **en testtyp i taget**, valbar med knapparna ovanför

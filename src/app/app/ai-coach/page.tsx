@@ -1,9 +1,12 @@
+import Link from "next/link";
+
 import { AiCoachChat } from "@/components/ai-coach/ai-coach-chat";
 import { PageHeader } from "@/components/page-header";
 import { aiBlockedMessage } from "@/lib/adepts/consent-state";
 import { listAdepts, getAdept, getConsentState } from "@/lib/adepts/queries";
 import { getConversation, listAiMessages } from "@/lib/ai-coach/queries";
 import { requireCoach } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { contextForAdept } from "@/lib/workouts/generate";
 
@@ -43,6 +46,22 @@ export default async function AiCoachPage({
         title="AI Coach Assistant"
         description="Fråga om en adept och få svar som räknar på adeptens egna mätta värden – inte på allmänna träningsråd."
       />
+
+      <p className="-mt-2 mb-5 text-[13px] text-text-subtle">
+        {user.coach?.philosophy?.trim()
+          ? user.coach.philosophy_mode === "ersatt"
+            ? "Svarar utifrån din egen träningsfilosofi."
+            : "Svarar utifrån Coachvys grundfilosofi med din egen ovanpå."
+          : "Svarar utifrån Coachvys grundfilosofi."}{" "}
+        <Link
+          href={`${routes.settings}#filosofi`}
+          className="font-medium text-accent-text underline-offset-2 hover:underline"
+        >
+          {user.coach?.philosophy?.trim()
+            ? "Ändra din filosofi"
+            : "Lägg till din egen"}
+        </Link>
+      </p>
 
       <AiCoachChat
         adepts={adepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
