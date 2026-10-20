@@ -30,6 +30,8 @@ export type EffortRow = {
   date: string;
   /** Fritext som följer med raden, t.ex. pacingen ur en klockfil. */
   comment: string;
+  /** RPE vid stegets slut, där protokollet frågar efter den. */
+  rpe: string;
 };
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
@@ -76,11 +78,20 @@ const emptyRow = (id: number, seconds?: number): EffortRow => ({
   heartRateMax: "",
   date: "",
   comment: "",
+  rpe: "",
 });
 
-/** Rader med innehåll. En förifylld längd utan värde räknas inte. */
-function hasContent(e: Effort): boolean {
-  return e.intensity !== null || e.distanceM !== null || e.lactate !== null;
+/**
+ * Rader med innehåll. En förifylld längd utan värde räknas inte. I protokoll
+ * med fasta rader räcker pulsen – vilan i LSCT har ingen belastning.
+ */
+function hasContent(e: Effort, fixedRows: boolean): boolean {
+  return (
+    e.intensity !== null ||
+    e.distanceM !== null ||
+    e.lactate !== null ||
+    (fixedRows && e.heartRate !== null)
+  );
 }
 
 export type Sex = "man" | "kvinna";
@@ -222,7 +233,11 @@ export function useProtocolCalculator(
           : current;
 
       // Och fyll på om det nya protokollet kräver fler rader än som finns.
-      const wanted = Math.max(spec.minEfforts, spec.template?.length ?? 0);
+      const wanted = Math.max(
+        spec.minEfforts,
+        spec.template?.length ?? 0,
+        spec.rowLabels?.length ?? 0,
+      );
       if (trimmed.length < wanted) {
         const extra = wanted - trimmed.length;
         trimmed = [
@@ -305,11 +320,13 @@ export function useProtocolCalculator(
         heartRateMax: positive(row.heartRateMax),
         performedOn: /^\d{4}-\d{2}-\d{2}$/.test(row.date) ? row.date : null,
         comment: row.comment.trim() || null,
+        rpe: positive(row.rpe),
       };
     });
 
-    return parsed.filter(hasContent);
-  }, [rows]);
+    const fixedRows = Boolean(protocolByKey(protocol)?.rowLabels);
+    return parsed.filter((e) => hasContent(e, fixedRows));
+  }, [rows, protocol]);
 
   const args = useMemo<AnalysisArgs>(
     () => ({

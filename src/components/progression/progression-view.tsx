@@ -10,6 +10,7 @@ import { displayValue } from "@/lib/tests/pace";
 import {
   lactateCurves,
   latestUtilisation,
+  utilisationDiagnosis,
   metricTrends,
   protocolLabel,
   type Trend,
@@ -452,7 +453,12 @@ export function ProgressionView({
 
       {view === "syre" && (
         <div className="space-y-8">
-          {utilisationNow && <UtilisationCard summary={utilisationNow} />}
+          {utilisationNow && (
+            <UtilisationCard
+              summary={utilisationNow}
+              diagnosis={utilisationDiagnosis(utilisationNow)}
+            />
+          )}
           <TrendGroups
             trends={trends}
             sport={sport}

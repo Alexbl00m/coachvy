@@ -22,6 +22,7 @@ import {
 } from "@/lib/calculators/lactate";
 import { CS_RANGE_SECONDS } from "@/lib/calculators/critical-speed";
 import { linearFit } from "@/lib/calculators/regression";
+import { lsctMetrics } from "./lsct";
 import { LAP_PROTOCOLS, protocolByKey, type ProtocolKey } from "./protocols";
 import {
   criticalSpeedZones,
@@ -62,6 +63,8 @@ export type Effort = {
   performedOn?: string | null;
   /** Fritext som följer med raden. Används inte i beräkningen. */
   comment?: string | null;
+  /** Upplevd ansträngning vid stegets slut. LSCT räknar på den. */
+  rpe?: number | null;
 };
 
 export type Metric = {
@@ -745,6 +748,14 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
       zoneUnit: unit,
       warnings,
     };
+  }
+
+  // -------------------------------------------------------------------------
+  // LSCT – submaximalt, inga trösklar och inga zoner
+  // -------------------------------------------------------------------------
+  if (protocol === "lsct") {
+    const { metrics, warnings: lsctWarnings } = lsctMetrics(efforts);
+    return { metrics, zones: [], zoneUnit: unit, warnings: lsctWarnings };
   }
 
   // -------------------------------------------------------------------------

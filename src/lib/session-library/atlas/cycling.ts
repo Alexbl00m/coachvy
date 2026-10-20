@@ -104,6 +104,13 @@ const T5_LONG =
 const P5_BASE = ["grund", "uppbyggnad", "specifik"];
 const P5_BUILD = ["uppbyggnad", "specifik"];
 
+/**
+ * LSCT: tre pulsstyrda steg och 90 sekunder stilla. Effekten är bara ett
+ * riktvärde – testet styrs på puls, och det är effekten vid pulsen som mäts.
+ */
+const LSCT =
+  "6 min 45-55% steg 1 · 60 % av maxpuls; 6 min 68-78% steg 2 · 80 % av maxpuls; 3 min 84-89% steg 3 · 90 % av maxpuls; 90 s 20% vila";
+
 // ---------------------------------------------------------------------------
 // Passen, i atlasens ordning
 // ---------------------------------------------------------------------------
@@ -1234,6 +1241,31 @@ export const CYCLING_ATLAS: LibraryInput[] = [
       A: "15 min 55-65%; 210 min 65-75% distans",
       B: "15 min 55-65%; 165 min 65-75% distans",
       C: "15 min 55-65%; 105 min 65-75% distans",
+    },
+  }),
+
+  // Test – LSCT ---------------------------------------------------------------
+  cycling({
+    title: "LSCT · submaximalt cykeltest",
+    kind: "Test",
+    intensity: "Test · pulsstyrt",
+    phases: ALL_PHASES,
+    purpose:
+      "Lamberts och Lamberts submaximala cykeltest: trötthet och form varje vecka utan att trötta. Effekten vid tre bestämda pulsnivåer, pulsåterhämtningen och RPE jämförs med adeptens egen norm. Testet svarar på om veckans planerade belastning går att genomföra – och om formen rör sig åt rätt håll. Viktigast för de mest tränade, där marginalen mellan produktiv belastning och överbelastning är liten.",
+    description:
+      "Styr på puls, inte på watt: 6 min vid 60 % av maxpuls, 6 min vid 80 %, 3 min vid 90 %, sedan 90 s sittande utan att trampa. Börja varje steg lite hårdare så att pulsen når målet inom första minuten, och justera sedan effekten så att pulsen ligger stilla. Fritt läge på trainern, inte ERG, och ingen autopaus. Notera snitteffekt och snittpuls utan första minuten, tiden till målpulsen och RPE 1–10 i slutet av varje steg, och pulsen efter 60 s vila. Effekten i strukturen är bara ett riktvärde. Lägg in resultatet som ett LSCT-test på adepten.",
+    adaptations:
+      "Testet tränar ingenting särskilt – det mäter. Effekt mot puls följer den aeroba formen, pulsåterhämtningen och RPE fångar trötthet tidigt, och tiden till 90 % visar om pulsen svarar trögt.",
+    fueling:
+      "Samma varje gång: mat två timmar före, inget koffein de sista tre timmarna. Vatten under passet.",
+    timing:
+      "En gång i veckan på samma veckodag och tid, helst efter en vilodag – som uppvärmning före ett lugnt pass eller som ett eget kort pass. Inne på trainer, så att trafik och terräng inte stör pulsen. Tre till fyra veckor ger normen; därefter är varje test en avstämning.",
+    progression:
+      "Byggs inte på. Protokollet är detsamma varje gång – det är det som gör testen jämförbara. Nivåerna skiljer sig bara i den lugna delen efteråt.",
+    levels: {
+      A: `${LSCT}; 60 min 55-70% distans; 5 min 50% nedvarvning`,
+      B: `${LSCT}; 30 min 55-70% distans; 5 min 50% nedvarvning`,
+      C: `${LSCT}; 5 min 50% nedvarvning`,
     },
   }),
 ];

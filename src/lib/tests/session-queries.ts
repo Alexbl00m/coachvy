@@ -45,6 +45,7 @@ export type SessionEffortRow = {
   heart_rate_max: number | null;
   performed_on: string | null;
   comment: string | null;
+  rpe: number | null;
 };
 
 export type SessionWithMetrics = TestSession & {
@@ -82,7 +83,7 @@ export async function getSession(id: string): Promise<FullSession | null> {
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment)",
+      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment, rpe)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -107,7 +108,7 @@ export async function listFullSessions(adeptId: string): Promise<FullSession[]> 
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment)",
+      "*, test_metrics(id, key, value, unit, method, is_primary), test_efforts(id, ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, heart_rate_max, performed_on, comment, rpe)",
     )
     .eq("adept_id", adeptId)
     .order("performed_on", { ascending: true })
@@ -140,7 +141,8 @@ export async function listMaximalEfforts(
     )
     .eq("adept_id", adeptId)
     .eq("sport", sport)
-    .neq("protocol", "laktat-steg");
+    // Stegtest och LSCT har inga maxinsatser.
+    .not("protocol", "in", '("laktat-steg","lsct")');
 
   if (error) throw new Error(`Kunde inte hämta insatser: ${error.message}`);
 
@@ -213,5 +215,6 @@ export function toEfforts(rows: SessionEffortRow[]): Effort[] {
     distanceM: row.distance_m,
     lactate: row.lactate,
     heartRate: row.heart_rate,
+    rpe: row.rpe ?? null,
   }));
 }

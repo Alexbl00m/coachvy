@@ -12,6 +12,7 @@ import {
   rollingCriticalSpeed,
 } from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
+import { sessionGoal } from "@/lib/season/distribution";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import { seasonToPrompt, todayIso } from "@/lib/season/season";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
@@ -25,6 +26,7 @@ import {
   type AthleteContext,
 } from "./context";
 import { requireWorkoutAuthor } from "./access";
+import { listWorkouts } from "./queries";
 import { isAnthropicConfigured } from "./env";
 import { parseWorkout, WORKOUT_JSON_SCHEMA } from "./parse";
 import { formatDuration, resolveWorkout, type Workout } from "./schema";
@@ -98,7 +100,7 @@ export async function contextForAdept(
   if (!adept) return null;
 
   const sport = forSport ?? sportOf(adept.sport);
-  const [sessions, efforts, profile, checkins, races, blocks] =
+  const [sessions, efforts, profile, checkins, races, blocks, workouts] =
     await Promise.all([
       listSessions(adeptId),
       listMaximalEfforts(adeptId, sport),
@@ -106,6 +108,7 @@ export async function contextForAdept(
       listCheckins(adeptId, 60),
       listRaces(adeptId),
       listBlocks(adeptId),
+      listWorkouts(adeptId),
     ]);
 
   const lastFullTestOn = sessions[0]?.performed_on ?? null;
@@ -128,7 +131,16 @@ export async function contextForAdept(
     loadSummary: loadToPrompt(
       buildLoadSeries(checkins.map(toCheckin), { days: 28 }),
     ),
-    season: seasonToPrompt(races, blocks, todayIso()),
+    season: seasonToPrompt(
+      races,
+      blocks,
+      todayIso(),
+      workouts.flatMap((w) =>
+        w.scheduled_for
+          ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
+          : [],
+      ),
+    ),
   });
 }
 

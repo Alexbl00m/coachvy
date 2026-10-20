@@ -1,11 +1,12 @@
 # Alexanders träningsfilosofi
 
-Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak.
+Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak. Tilläggen efter avsnitt 18 är senare ställningstaganden som preciserar den: intensitet per fas, styrketräning, LSCT och underlaget bakom.
 
 ## Så används den i arbetet
 
 - Varje plan, varje pass och varje råd ska gå att motivera ur filosofin: vilken egenskap utvecklas, vilken begränsning påverkas, hur bidrar det till tävlingsprestationen.
-- Intensitetsfördelningen följer fasen: polariserad i grunden (lugnt plus utvald hög intensitet, lite mellanintensitet), mer tröskelorienterad och pyramidal när specificiteten ökar.
+- Intensitetsfördelningen följer fasen: polariserad i grunden (lugnt plus utvald hög intensitet, lite mellanintensitet), mer tröskelorienterad och pyramidal när specificiteten ökar. Den räknas per pass efter passets huvudsyfte, och i den specifika perioden flyttas kvaliteten mot den intensitet tävlingen avgörs i (avsnitt 19).
+- Styrketräning är en del av planen, tung och rörelsenära, uppbyggd i grunden och underhållen därefter (avsnitt 20).
 - Ett utvecklingsblock bygger på ett eller två återkommande kvalitetsformat under tre till fyra veckor. Progressionen ändrar en variabel i taget.
 - Tester placeras där de påverkar beslut, till exempel inför den tävlingsspecifika delen för att kalibrera intensiteterna.
 - Planen är en hypotes. Responsen (genomförande, RPE, återhämtning, tester, lopp) avgör om den fortsätter, justeras eller byts.
@@ -678,3 +679,94 @@ Det är den röda tråden jag ser genom dina tidigare diskussioner – från din
 Min viktigaste nyansering är att det här är min sammanvägda tolkning av din metodik, inte en formellt fastställd tränarmanual som du uttryckligen har definierat i varje detalj. Men jag tycker att den fångar den metodiska riktning du har återkommit till.
 
 Och ärligt talat: det mest utmärkande är inte att du gillar fysiologiska siffror eller strukturerade träningsblock var för sig. Det är att du försöker koppla ihop fysiologi → träningsdesign → adaptation → prestation i ett sammanhängande system. Det är där din träningsfilosofi blir mer än bara en samling träningsprinciper.
+
+---
+
+# Tillägg
+
+Avsnitten nedan preciserar filosofin där den tidigare lämnade öppet. De bygger bland annat på Wilkins & Bell, *Cycling Physiology & Training Science* (2021), och på studierna som anges i avsnitt 22. Texten är egen; ingenting är citerat ur boken.
+
+## 19. Intensitetsfördelningen fas för fas
+
+### Hur fördelningen räknas
+
+- **Tre zoner, avgränsade av LT1 och LT2.** Lugnt under LT1, medel mellan LT1 och LT2, högt över LT2. I sjuzonsskalan motsvarar det ungefär zon 1–2, 3–4 och 5 och uppåt.
+- **Per pass, efter passets huvudsyfte.** Ett VO₂max-pass räknas som ett högintensivt pass även om det mest består av uppvärmning och vila; ett distanspass med några stegringar räknas som lugnt. Det är så polariserad och pyramidal träning har beskrivits i studierna, och det speglar vad passet kostar i återhämtning bättre än minuter i zon. Pulsen underskattar dessutom tiden i hög intensitet, eftersom den ligger efter i korta intervaller.
+- **Fördelningen gäller veckor och block, inte enskilda pass.** Ett pass ska inte byggas för att själv bli polariserat; ett återhämtningspass ska vara lugnt rakt igenom och ett tröskelpass handla om tröskeln.
+
+### Vad "pyramidalt" betyder i den specifika perioden
+
+Pyramidalt säger bara att lugnt är vanligast, sedan medel, sedan högt. Det säger inte vilken kvalitet som växer när tävlingen närmar sig. I cyklingsstudierna är det oftast andelen hög intensitet som ökar, medan filosofin talar om mer tröskel och tävlingsfart. Båda stämmer, för olika tävlingar. Regeln är därför:
+
+> I den specifika perioden flyttas kvaliteten mot den intensitet tävlingen faktiskt avgörs i.
+
+- **Långa tävlingar** – 70.3, Ironman, maraton, halvmaraton, långlopp och långa tempolopp – går till största delen mellan LT1 och LT2. Där växer medelzonen: tävlingsfart, tröskel och långa block i målfart, gärna i kombinationspass och med tävlingens energiplan. Hög intensitet ligger kvar som en underhållsdos, ungefär ett pass var sjunde till tionde dag, så att VO₂max inte sjunker.
+- **Korta tävlingar och lopp som avgörs över LT2** – 5 och 10 km, sprinttriathlon, kriterier, backlopp och linjelopp med avgörande ryck – får en växande andel hög intensitet: VO₂max, upprepade ryck och tävlingsfart över tröskeln. Medelzonen hålls mindre.
+- **Däremellan**, till exempel olympisk distans eller ett 40 km-tempo, ligger tävlingen nära LT2 och kvaliteten fördelas mellan tröskel och VO₂max.
+
+### Riktmärken per fas
+
+Andel av veckans pass. Riktmärkena är till för att upptäcka glidning, inte för att styra varje vecka. Avvikelser är ofta medvetna, och responsen väger tyngre än procenten.
+
+| Fas | Modell | Lugnt | Medel | Högt |
+| --- | --- | --- | --- | --- |
+| Grundperiod | Polariserad | 80 % eller mer | upp till 10 % | 10–20 % |
+| Uppbyggnad | Blockets egenskap styr | 75–85 % | VO₂max-block: upp till 10 %; tröskelblock: 10–20 % | VO₂max-block: 10–20 %; tröskelblock: upp till 10 % |
+| Specifik, lång tävling | Pyramidal, tävlingsfart | 70–80 % | 15–25 % | upp till 10 % |
+| Specifik, kort tävling | Pyramidal, över tröskeln | 70–80 % | 5–15 % | 15–20 % |
+| Toppning | Volym ned, intensitet kvar | lägre andel än vanligt | som i den specifika perioden | som i den specifika perioden |
+| Vila/övergång | Lugnt | nästan allt | – | – |
+
+Sent i grundperioden får tröskelinslag finnas med för laktatomsättningen och utnyttjandegraden; de förbereder för mer tid nära VO₂max i nästa block. I toppningen sjunker volymen men inte intensiteten, så andelen lugna pass blir lägre än annars – det är väntat och inget tecken på att fördelningen spårat ur.
+
+## 20. Styrketräning
+
+Styrketräning hör till planen, men den ska stödja uthålligheten och inte konkurrera med den.
+
+- **Tung styrka, få övningar.** Två till fyra övningar som liknar rörelsen i grenen: halv- eller knäböj, utfall eller bulgarisk knäböj, marklyft, och för löpare även enbensövningar och vadpress. Omkring tre set per övning, två till sex minuters vila mellan seten.
+- **Progression över 12–16 veckor eller längre**, från 10–15 repetitioner per set mot 4–6. Teknik och belastning först, tyngd sedan – en variabel i taget, som i resten av träningen.
+- **Bygg i grundperioden, behåll sedan.** Två till tre pass i veckan när styrkan byggs, ett pass i veckan (gärna med färre set) räcker för att behålla den genom den specifika perioden.
+- **Bålstabilitet** som stöd för position, teknik och skadeprevention.
+- **Explosiv styrka med eftertanke.** Den kan höja maxeffekt och anaerob kapacitet men också VLamax, och därmed sänka tröskeln. Den väljs när prestationsprofilen motiverar det, inte som standard.
+- **Placering.** Där den inte försämrar nyckelpassen, och helst inte på en återhämtningsdag. I triathlon konkurrerar styrkan om samma återhämtning som tre grenar; ett till två pass i veckan är ofta taket.
+- **I toppningen är styrkan det första som tas bort**, eftersom den är minst specifik.
+
+Det som gör tung styrka värdefull för uthållighet är främst bättre rörelseekonomi, högre maxeffekt och starkare senor, inte större muskler.
+
+## 21. LSCT – trötthet och form varje vecka
+
+Lamberts och Lamberts submaximala cykeltest (LSCT) är ett kort, standardiserat test som går att lägga in varje vecka utan att det tröttar. Det är viktigast för de mest tränade, där marginalerna mellan produktiv belastning och överbelastning är små.
+
+**Protokoll** (cykel, helst på trainer, utan autopaus):
+
+1. 6 minuter vid 60 % av maxpuls.
+2. 6 minuter vid 80 % av maxpuls.
+3. 3 minuter vid 90 % av maxpuls.
+4. 90 sekunder sittande utan att trampa.
+
+Varje steg börjar lite hårdare så att pulsen når målet inom första minuten; därefter styrs effekten så att pulsen ligger kvar. RPE (1–10) noteras i slutet av steg 1–3.
+
+**Det testet ger:**
+
+- **Effekt i förhållande till puls** i varje steg, räknat på stegets sista del. En långsam förbättring över veckor tyder på bättre form; ett plötsligt hopp åt något håll tyder på trötthet.
+- **Pulsåterhämtning (HRR)**: pulsen i slutet av steg 3 minus pulsen efter 60 sekunders vila. Snabbare återhämtning över tid tyder på bättre aerob form; en plötslig förändring tyder på trötthet.
+- **RPE i steg 2**: en poäng över det normala är en varningssignal.
+- **Tid till 90 % av maxpuls i steg 3**: över en minut, eller om pulsen aldrig når dit, är en varningssignal.
+
+**Tolkning.** Signalerna läses tillsammans. En enskild avvikelse med i övrigt normala värden ändrar sällan planen. Flera varningssignaler samtidigt talar för ett lugnt pass eller en vilodag innan nästa kvalitetspass. Normen är adeptens egen och kräver tre till fyra veckors baslinje. Koffein, mat, tid på dagen och placering i veckan påverkar pulsen och ska hållas lika. Testet säger att något har ändrats, inte varför – träning, sömn, stress och kost behöver vägas in av tränaren.
+
+För triathleter körs testet på cykeln. För renodlade löpare finns motsvarande submaximala pulstester på löpband eller bana, men LSCT är det som är validerat.
+
+## 22. Underlag och studier
+
+Urvalet nedan är det som filosofin främst vilar på. Studierna anges så att de går att läsa i original.
+
+- **Intensitetsfördelning.** Seiler & Kjerland (2006) och Stöggl & Sperlich (2015) beskriver hur elitidrottare fördelar intensiteten: polariserat eller pyramidalt, med en stor andel lugn träning. I cyklingsdata ökar andelen hög intensitet mot tävling. Stöggl & Sperlich (2014) och Muñoz m.fl. (2014) jämförde upplägg i interventioner och fann polariserat minst lika bra som tröskeltungt. Sylta, Tønnessen & Seiler (2014) jämförde sätten att räkna fördelningen, bland dem per pass efter syfte.
+- **VO₂max-intervaller.** Seiler m.fl. (2013) jämförde 4 × 4, 4 × 8 och 4 × 16 minuter och fann störst utveckling med 4 × 8 minuter, trots lägre intensitet än 4 × 4. Längre intervaller nära tröskeln ger ofta mer tid nära VO₂max till en lägre upplevd kostnad.
+- **VO₂max och VLamax.** Olbrecht (*The Science of Winning*) beskriver balansen mellan den aeroba och den glykolytiska kapaciteten och hur den avgör var tröskeln hamnar.
+- **Utnyttjandegrad.** Tröskeln i procent av VO₂max: ofta 50–60 % hos otränade, 65–70 % hos måttligt tränade och 80–90 % hos elit. Ett lågt värde pekar mot tröskel- och distansträning; ett högt mot VO₂max.
+- **Toppning.** Bosquet m.fl. (2007): 8–14 dagars nedtrappning, volymen sänkt med 41–60 %, intensiteten och frekvensen behållna. I praktiken fungerar ofta en kortare toppning på omkring en vecka.
+- **Styrketräning.** Rønnestad & Mujika (2014) och Beattie m.fl. (2014) sammanfattar hur tung styrketräning förbättrar ekonomi och prestation i cykling och löpning.
+- **LSCT.** Lamberts m.fl. (2011) beskriver testet och dess samband med prestation; senare studier har prövat hur väl det fångar trötthet.
+- **Durability.** Maunder m.fl. (2021) beskriver trötthetsresistens som en egen prestationsfaktor – hur mycket trösklar och effekt sjunker efter timmar av arbete. Den är central för långdistans och triathlon, och här går filosofin längre än de flesta läroböcker.
+- **Översikt.** Wilkins & Bell, *Cycling Physiology & Training Science* (2021), sammanfattar mycket av ovanstående för cykling. Boken saknar triathlon, löpning och simning; där står avsnitt 10 på egna ben.

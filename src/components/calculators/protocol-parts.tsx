@@ -147,7 +147,8 @@ export function EffortTable({
 }) {
   const shape = spec?.shape;
   const stepwise = Boolean(shape?.lactate);
-  const showDates = sessionDate !== undefined && Boolean(shape?.duration);
+  const showDates =
+    sessionDate !== undefined && Boolean(shape?.duration) && !spec?.rowLabels;
   // Raderna räknas från 1; i ett stegtest är rad 0 vilovärdet.
   const firstRow = shape?.lactate ? 0 : 1;
 
@@ -209,6 +210,11 @@ export function EffortTable({
                   {spec?.columnLabels?.heartRate ?? "Puls"}
                 </th>
               )}
+              {shape?.rpe && (
+                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  RPE (1–10)
+                </th>
+              )}
               {showDates && (
                 <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
                   Datum
@@ -220,8 +226,8 @@ export function EffortTable({
           <tbody>
             {rows.map((row, index) => (
               <tr key={row.id} className="border-b border-line last:border-b-0">
-                <td className="py-2 pr-3 text-[13px] text-text-subtle tabular-nums">
-                  {index + firstRow}
+                <td className="py-2 pr-3 text-[13px] text-text-subtle tabular-nums whitespace-nowrap">
+                  {spec?.rowLabels?.[index] ?? index + firstRow}
                 </td>
                 {shape?.intensity && (
                   <td className="py-2 pr-3">
@@ -238,7 +244,7 @@ export function EffortTable({
                     <Input
                       aria-label={`Längd ${index + firstRow}`}
                       value={row.duration}
-                      placeholder="3:00"
+                      placeholder={spec?.rowLabels ? "" : "3:00"}
                       onChange={(e) => onChange(row.id, { duration: e.target.value })}
                     />
                   </td>
@@ -270,6 +276,16 @@ export function EffortTable({
                       inputMode="numeric"
                       value={row.heartRate}
                       onChange={(e) => onChange(row.id, { heartRate: e.target.value })}
+                    />
+                  </td>
+                )}
+                {shape?.rpe && (
+                  <td className="py-2 pr-3">
+                    <Input
+                      aria-label={`RPE ${index + firstRow}`}
+                      inputMode="numeric"
+                      value={row.rpe}
+                      onChange={(e) => onChange(row.id, { rpe: e.target.value })}
                     />
                   </td>
                 )}

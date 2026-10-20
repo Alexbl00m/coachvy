@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
 import { BlockEditor } from "@/components/season/block-editor";
+import { DistributionCard } from "@/components/season/distribution-card";
 import { RaceEditor } from "@/components/season/race-editor";
 import { SeasonSummary } from "@/components/season/season-summary";
 import { SeasonTimeline } from "@/components/season/season-timeline";
@@ -13,6 +14,7 @@ import { listActivities } from "@/lib/activities/queries";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
+import { sessionGoal } from "@/lib/season/distribution";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import {
   addDays,
@@ -26,6 +28,7 @@ import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 import type { Adept, RaceSport } from "@/lib/types/database";
+import { listWorkouts } from "@/lib/workouts/queries";
 
 export const metadata = { title: "Säsongsplan" };
 
@@ -106,11 +109,12 @@ export default async function PlanerPage({
     );
   }
 
-  const [blocks, races, sessions, activities] = await Promise.all([
+  const [blocks, races, sessions, activities, workouts] = await Promise.all([
     listBlocks(adept.id),
     listRaces(adept.id),
     listSessions(adept.id),
     listActivities(adept.id),
+    listWorkouts(adept.id),
   ]);
   // Senast uppladdade loppet per tävling – listan är nyast först.
   const analyses: Record<string, string> = {};
@@ -147,6 +151,13 @@ export default async function PlanerPage({
   }));
 
   const notes = planNotes(blocks, races, today);
+
+  // Inplanerade pass med sitt huvudsyfte, för intensitetsfördelningen.
+  const planned = workouts.flatMap((w) =>
+    w.scheduled_for
+      ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
+      : [],
+  );
 
   return (
     <>
@@ -218,6 +229,15 @@ export default async function PlanerPage({
             </ul>
           </Card>
         )}
+
+        <DistributionCard
+          blocks={blocks}
+          races={races}
+          planned={planned}
+          from={from}
+          to={to}
+          today={today}
+        />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <BlockEditor

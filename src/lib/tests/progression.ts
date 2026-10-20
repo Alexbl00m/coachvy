@@ -625,3 +625,88 @@ export function latestUtilisation(
     sport: newest.vo2max.sport,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Vad utnyttjandegraden säger
+// ---------------------------------------------------------------------------
+
+/** Markörerna för den anaeroba tröskeln, i den ordning de litas på. */
+const LT2_MARKERS = ["LT2", "AT", "CP", "CS", "FTP", "T_speed", "I_4mmol"];
+
+export type UtilisationVerdict = "utnyttjande" | "balans" | "motor";
+
+export type UtilisationDiagnosis = {
+  verdict: UtilisationVerdict;
+  /** Markören diagnosen bygger på. */
+  label: string;
+  pct: number;
+  /** Testet markören kommer ur. */
+  performedOn: string;
+  /** "Motorn begränsar" … */
+  headline: string;
+  text: string;
+};
+
+/**
+ * Var tröskeln begränsas, ur dess andel av VO2max (filosofin, avsnitt 8 och
+ * 22). VO2max sätter taket; utnyttjandegraden säger hur nära taket tröskeln
+ * ligger. Ett lågt värde pekar mot tröskel- och distansarbete – eller en hög
+ * VLamax som drar ned tröskeln – ett högt mot VO2max. Gränserna följer
+ * referensspannet för LT2: under 75 % och från 85 %.
+ *
+ * Markören är den nyaste av tröskelmarkörerna; vid samma dag gäller
+ * ordningen i LT2_MARKERS. Ett gammalt laktattest ska inte styra när ett
+ * nyare test säger något annat.
+ *
+ * Det är en hypotes att pröva mot tester och lopp, inte ett recept.
+ */
+export function utilisationDiagnosis(
+  summary: UtilisationSummary,
+): UtilisationDiagnosis | null {
+  const candidates = LT2_MARKERS.flatMap((key) =>
+    summary.rows.filter((r) => r.key === key),
+  );
+  if (candidates.length === 0) return null;
+  const row = candidates.reduce((best, r) =>
+    r.performedOn > best.performedOn ? r : best,
+  );
+
+  const estimated = row.vo2max.measured
+    ? ""
+    : " VO2max är skattat, så procenten har ett fel på några enheter – pröva hypotesen mot ett laktat- eller VO2-test.";
+
+  if (row.pct < 75) {
+    return {
+      verdict: "utnyttjande",
+      label: row.label,
+      pct: row.pct,
+      performedOn: row.performedOn,
+      headline: "Utnyttjandet begränsar",
+      text:
+        "Motorn räcker, men tröskeln ligger långt under taket. Tröskel- och sweet spot-arbete och mängd i lugn intensitet brukar flytta den – och är VLamax hög drar den ned tröskeln." +
+        estimated,
+    };
+  }
+  if (row.pct >= 85) {
+    return {
+      verdict: "motor",
+      label: row.label,
+      pct: row.pct,
+      performedOn: row.performedOn,
+      headline: "Motorn begränsar",
+      text:
+        "Tröskeln utnyttjar redan en stor del av VO2max, så det som lyfter den vidare är VO2max själv – ett VO2max-block med ett eller två återkommande format." +
+        estimated,
+    };
+  }
+  return {
+    verdict: "balans",
+    label: row.label,
+    pct: row.pct,
+    performedOn: row.performedOn,
+    headline: "Motor och utnyttjande i balans",
+    text:
+      "Båda kan lyfta tröskeln. Prestationsprofilen och loppets krav avgör vilket block som kommer först." +
+      estimated,
+  };
+}

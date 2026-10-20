@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { displayValue } from "@/lib/tests/pace";
 import type {
+  UtilisationDiagnosis,
   UtilisationRange,
   UtilisationRow,
   UtilisationSummary,
@@ -186,7 +187,14 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
  * ger olika markörer, så alla tas med och varje coach väljer vilka som är
  * relevanta för adepten. Valet sparas i webbläsaren.
  */
-export function UtilisationCard({ summary }: { summary: UtilisationSummary }) {
+export function UtilisationCard({
+  summary,
+  diagnosis = null,
+}: {
+  summary: UtilisationSummary;
+  /** Var tröskeln begränsas, räknat på servern. */
+  diagnosis?: UtilisationDiagnosis | null;
+}) {
   const saved = useSyncExternalStore(noSubscription, readHidden, () => null);
   const [override, setOverride] = useState<string[] | null>(null);
   let stored: string[] = [];
@@ -298,6 +306,24 @@ export function UtilisationCard({ summary }: { summary: UtilisationSummary }) {
             />
           )}
       </ul>
+
+      {diagnosis && (
+        <div className="mt-4 rounded-md border border-line bg-surface-2 p-3 sm:p-4">
+          <p className="text-[12px] font-medium text-text-muted">
+            Vad det säger ·{" "}
+            <span className="tabular-nums">
+              {diagnosis.label} {sv(diagnosis.pct, 0)} %
+            </span>{" "}
+            · {formatDate(diagnosis.performedOn)}
+          </p>
+          <p className="mt-1 text-sm font-medium text-text">
+            {diagnosis.headline}
+          </p>
+          <p className="mt-1 max-w-prose text-[13px] text-text-muted">
+            {diagnosis.text}
+          </p>
+        </div>
+      )}
 
       <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
         Syreupptaget vid varje tröskel räknas med ACSM:s ekvation och delas med

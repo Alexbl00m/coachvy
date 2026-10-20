@@ -664,6 +664,15 @@ samma gren. Progressionen visar LT1, LT2 och CP i procent av VO2max mot
 referensspannen LT1 65–75 % och LT2 75–90 %, plus LT1 i procent av LT2 – och
 varje utnyttjandegrad som en egen tidslinje.
 
+**Vad det säger.** Under markörerna står en diagnos ur den nyaste
+tröskelmarkören (LT2, anaerob tröskel, CP, CS, FTP, tröskelfart eller 4 mmol;
+vid samma dag i den ordningen): under 75 % av VO2max begränsar utnyttjandet
+– tröskel, sweet spot och lugn mängd flyttar den, och en hög VLamax drar ned
+den – från 85 % begränsar motorn, och däremellan är de i balans. Ett skattat
+VO2max får en reservation, eftersom felet slår igenom på procenten
+(`utilisationDiagnosis` i `src/lib/tests/progression.ts`). Det är filosofins
+profil A och B (avsnitt 8) som en hypotes att pröva, inte ett recept.
+
 ## Mål och referens
 
 Fliken **Mål och referens** under Progression jämför adepten med vedertagen
@@ -796,6 +805,36 @@ här ritas med Coachvys Mader-modell ur testets egna VO2max och VLamax.
   på 110 % och 3 × 12 min på 104 % av CP.
 - **Effekt och tid** – CP-modellen över 2–20 minuter med testets insatser
   som punkter; en punkt under linjen är en insats som inte var maximal.
+
+## LSCT – trötthet och form varje vecka
+
+Lamberts och Lamberts submaximala cykeltest (Lamberts m.fl. 2011) är ett eget
+testprotokoll, `lsct`: 6 min vid 60 % av maxpuls, 6 vid 80 %, 3 vid 90 % och
+90 s sittande utan att trampa. Det tröttar inte och går att köra varje vecka,
+som uppvärmning eller som ett eget kort pass. Filosofin beskriver det i
+avsnitt 21.
+
+- **Fasta rader.** Protokollet har namngivna rader – steg 1–3 och vilan – i
+  stället för numrerade insatser (`rowLabels` i `protocols.ts`). Steg 1–3 tar
+  snitteffekt och snittpuls utan första minuten, tiden till målpulsen och RPE
+  1–10; vilan tar pulsen efter 60 s. I protokoll med fasta rader räcker
+  pulsen för att en rad ska räknas, och RPE sparas i `test_efforts.rpe`.
+- **Värdena** (`src/lib/tests/lsct.ts`): effekten i varje steg, effekt per
+  pulsslag i steg 3, pulsåterhämtningen (pulsen i steg 3 minus pulsen efter
+  60 s – pulsen i steg 3 styrs mot 90 % och är därför också slutpulsen), RPE i
+  steg 2 och tiden till 90 %. Över en minut till 90 % ger en varning direkt.
+- **Mot normen.** Testsidan jämför med medelvärdet av de senaste, högst sex,
+  testen före. Effekt och återhämtning avviker när ändringen är större än två
+  standardavvikelser i baslinjen, men aldrig mindre än 4 % respektive 4 slag;
+  RPE när den ligger en poäng över normen. Normen räknas från tre tidigare
+  test. Flera avvikelser samtidigt ger "lugnt före nästa kvalitetspass", en
+  ensam "bevaka", och ett ensamt lyft i effekt med i övrigt normala signaler
+  räknas som bättre form.
+- **Inte en maxinsats.** LSCT-stegen räknas aldrig in i den rullande CP-modellen.
+
+Passbiblioteket har LSCT som cykelpass i tre nivåer: testet ensamt, med 30
+eller med 60 minuter lugnt efteråt. Effekten i strukturen är bara ett
+riktvärde – testet styrs på puls, i fritt läge och inte ERG.
 
 ## Simning
 
@@ -1211,6 +1250,33 @@ Coachen planerar perioderna; en adept utan coach planerar sin egen säsong.
 Tävlingarna skriver båda, eftersom atleten ofta vet först att ett lopp
 tillkommit. "Skapa ny plan" i sidhuvudet öppnar planen med formuläret för en
 ny period.
+
+### Intensitetsfördelningen
+
+Under tidslinjen räknas varje periods inplanerade pass efter huvudsyfte –
+lugnt under LT1, medel mellan trösklarna, högt över LT2 – och jämförs med
+fasens riktmärke ur filosofin (avsnitt 19). Det är så fördelningen beskrivs
+i studierna (Seiler & Kjerland 2006; Sylta m.fl. 2014): ett VO2max-pass är
+ett högintensivt pass även om det mest är uppvärmning och vila.
+
+- **Huvudsyftet** (`sessionGoal` i `src/lib/season/distribution.ts`) räknas
+  ur intervallstegen, eller ur distansstegen när passet saknar intervaller.
+  Zonen med mest tid avgör; vid lika den högre. Några minuters stegringar
+  efter ett distanspass gör det inte hårt, men backsprinter utan distansdel
+  är passet. Sexzonsskalans 1–2, 3–4 och 5–6 blir lugnt, medel och högt.
+- **Riktmärkena** följer fasen: grunden polariserad (lugnt minst 80 %, medel
+  högst 10 %, högt 10–20 %), uppbyggnaden efter blockets fokus (står VO2max
+  eller tröskel i fokus jämförs perioden mot det), och den specifika perioden
+  pyramidal mot loppets karaktär. Ett långt lopp (70.3, Ironman, maraton,
+  halvmaraton, långlopp) flyttar kvaliteten mot medel, ett kort (5–10 km,
+  sprint, kriterium, backlopp) mot högt. Karaktären läses ur distans och namn
+  på närmaste A-lopp efter periodens start. Toppningen har inga andelar –
+  där sjunker volymen men inte intensiteten.
+- **Avvikelser** skrivs ut när perioden har minst sex pass. Under det säger
+  andelarna för lite.
+
+AI-coachen och passbyggaren får samma sak i säsongsunderlaget: fasens modell
+och hur många lugna, medel och höga pass som ligger inplanerade.
 
 ### Planen följer med
 

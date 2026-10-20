@@ -39,7 +39,19 @@ export function formatValue(value: number): string {
  * hade glidit isär.
  */
 export function digitsForUnit(unit: string): number {
-  if (["W", "m", "%", "ml/kg/min", "g/h", "slag/min", "J/W"].includes(unit))
+  if (
+    [
+      "W",
+      "m",
+      "%",
+      "ml/kg/min",
+      "g/h",
+      "slag/min",
+      "J/W",
+      "slag",
+      "s",
+    ].includes(unit)
+  )
     return 0;
   if (["kJ", "km/h", "mmol/l", ""].includes(unit)) return 1;
   return 2;

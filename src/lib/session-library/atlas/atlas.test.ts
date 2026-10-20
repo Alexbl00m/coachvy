@@ -21,9 +21,9 @@ const peak = (blocks: Parameters<typeof blockTotals>[0]) =>
   );
 
 describe("cykelatlasen", () => {
-  it("har atlasens 43 pass, kraftpasset och åtta proffs- och 70.3-pass, med unika namn", () => {
-    expect(rows).toHaveLength(52);
-    expect(new Set(rows.map((r) => r.title)).size).toBe(52);
+  it("har atlasens 43 pass, kraftpasset, åtta proffs- och 70.3-pass och LSCT, med unika namn", () => {
+    expect(rows).toHaveLength(53);
+    expect(new Set(rows.map((r) => r.title)).size).toBe(53);
     const byZone = (zone: string) =>
       rows.filter((r) => r.intensity.startsWith(zone)).length;
     expect([byZone("Z1"), byZone("Z2"), byZone("Z4"), byZone("Z5")]).toEqual([
@@ -35,6 +35,8 @@ describe("cykelatlasen", () => {
     expect(rows.filter((r) => r.intensity === "Kraft och sprint")).toHaveLength(
       1,
     );
+    // LSCT styrs på puls och hör inte till någon zon.
+    expect(rows.filter((r) => r.kind === "Test")).toHaveLength(1);
   });
 
   it("tolkar alla nivåer, i tid och mot FTP", () => {
@@ -150,7 +152,7 @@ describe("atlasStatements", () => {
     const statements = atlasStatements(
       "'00000000-0000-0000-0000-000000000000'",
     );
-    expect(statements).toHaveLength(89);
+    expect(statements).toHaveLength(90);
     expect(statements[0]).toContain("not exists");
     // Samma namn finns i båda grenarna, så grenen ingår i jämförelsen.
     expect(statements[0]).toContain("and s.sport = 'cykling'");

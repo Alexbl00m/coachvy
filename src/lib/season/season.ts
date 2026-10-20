@@ -17,6 +17,13 @@ import type {
 } from "@/lib/types/database";
 import { phaseLabel } from "@/lib/tests/phases";
 
+import {
+  blockDistribution,
+  phaseTarget,
+  raceDemand,
+  type PlannedGoal,
+} from "./distribution";
+
 const DAY = 86_400_000;
 
 export const RACE_PRIORITIES: {
@@ -333,6 +340,8 @@ export function seasonToPrompt(
   >[],
   blocks: (BlockLike & { focus: string | null })[],
   today: string,
+  /** Inplanerade pass med huvudsyfte, för periodens intensitetsfördelning. */
+  planned: PlannedGoal[] = [],
 ): string | null {
   const lines: string[] = [];
 
@@ -349,6 +358,16 @@ export function seasonToPrompt(
       `- Nu: ${named(current)} ${current.starts_on}–${current.ends_on}` +
         ` (${left === 0 ? "sista dagen" : `${left} dagar kvar`})` +
         `${current.focus ? `, fokus: ${current.focus}` : ""}.`,
+    );
+    const race =
+      current.phase === "specifik" ? mainRace(races, current.starts_on) : null;
+    const target = phaseTarget(current, race ? raceDemand(race) : null);
+    const counts = blockDistribution(current, planned);
+    lines.push(
+      `- Intensitet i perioden: ${target.model.toLowerCase()} – ${target.text}` +
+        (counts.total > 0
+          ? ` Inplanerat hittills, per pass efter huvudsyfte: ${counts.lugn} lugna, ${counts.medel} medel, ${counts.hög} höga.`
+          : ""),
     );
   }
   const next = nextBlock(blocks, today);

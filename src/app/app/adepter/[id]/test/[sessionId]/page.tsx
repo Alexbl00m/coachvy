@@ -21,6 +21,7 @@ import {
   HeartRateZonesCard,
   IntervalZonesCard,
 } from "@/components/tests/training-zone-cards";
+import { LsctCard } from "@/components/tests/lsct-card";
 import { ZonesCard } from "@/components/tests/zones-card";
 import { linearFit } from "@/lib/calculators/regression";
 import { heartRateAtIntensity } from "@/lib/tests/lactate-points";
@@ -28,6 +29,7 @@ import { fuelByZone, metabolicCurve } from "@/lib/tests/metabolic-curve";
 import { bikeThresholds } from "@/lib/calculators/bike-speed";
 import { displayValue } from "@/lib/tests/pace";
 import { formatDuration } from "@/lib/calculators/time";
+import { assessLsct, lsctResult } from "@/lib/tests/lsct";
 import { protocolByKey } from "@/lib/tests/protocols";
 import {
   getSession,
@@ -83,6 +85,20 @@ export default async function SessionPage({
    * kvar som nödfallsutväg för värden en nyare modell inte längre räknar ut.
    */
   const labels = new Map(recomputed.metrics.map((m) => [m.key, m.label]));
+
+  // LSCT läses mot adeptens egen norm: de tidigare testen i samma protokoll.
+  const lsct =
+    session.protocol === "lsct"
+      ? await (async () => {
+          const history = (await listFullSessions(adept.id))
+            .filter((s) => s.protocol === "lsct" && s.performed_on <= session.performed_on)
+            .map(lsctResult)
+            .sort((a, b) => b.performedOn.localeCompare(a.performedOn));
+          const current =
+            history.find((h) => h.sessionId === session.id) ?? lsctResult(session);
+          return { history, assessment: assessLsct(current, history) };
+        })()
+      : null;
 
   // --- Metabola diagram, puls och bränsle per zon ---------------------------
   const weightKg = session.weight_kg === null ? null : Number(session.weight_kg);
@@ -287,6 +303,10 @@ export default async function SessionPage({
       )}
 
       <div className="space-y-6">
+        {lsct && (
+          <LsctCard assessment={lsct.assessment} history={lsct.history} />
+        )}
+
         {session.notes && (
           <Card>
             <CardTitle>Anteckning</CardTitle>
@@ -317,6 +337,7 @@ export default async function SessionPage({
                 : []),
               ...(shape?.lactate ? ["Laktat"] : []),
               ...(shape?.heartRate ? ["Puls"] : []),
+              ...(shape?.rpe ? ["RPE"] : []),
               ...(hasMaxHr ? ["Maxpuls"] : []),
               ...(hasDates ? ["Datum"] : []),
               ...(hasComments ? ["Kommentar"] : []),
@@ -324,7 +345,8 @@ export default async function SessionPage({
             minWidth={480}
             rows={session.test_efforts.map((e, index) => [
               // Raderna räknas från 1; i ett stegtest är steg 0 vilovärdet.
-              shape?.lactate ? String(e.ordinal) : String(index + 1),
+              spec?.rowLabels?.[e.ordinal] ??
+                (shape?.lactate ? String(e.ordinal) : String(index + 1)),
               ...(shape?.intensity
                 ? [e.intensity === null ? "–" : sv(Number(e.intensity), 1)]
                 : []),
@@ -354,6 +376,7 @@ export default async function SessionPage({
               ...(shape?.heartRate
                 ? [e.heart_rate === null ? "–" : String(e.heart_rate)]
                 : []),
+              ...(shape?.rpe ? [e.rpe === null ? "–" : String(e.rpe)] : []),
               ...(hasMaxHr
                 ? [e.heart_rate_max === null ? "–" : String(e.heart_rate_max)]
                 : []),

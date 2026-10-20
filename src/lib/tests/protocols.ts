@@ -23,7 +23,8 @@ export type ProtocolKey =
   | "lopp-5km"
   | "lopp-20min"
   | "lopp"
-  | "metabol-profil";
+  | "metabol-profil"
+  | "lsct";
 
 /** Vad ett steg i protokollet bär för fält. */
 export type EffortShape = {
@@ -32,6 +33,8 @@ export type EffortShape = {
   distance: boolean;
   lactate: boolean;
   heartRate: boolean;
+  /** RPE vid stegets slut, 1–10. */
+  rpe?: boolean;
 };
 
 export type ZoneScheme = "tröskel" | "critical-speed" | "ftp";
@@ -81,6 +84,11 @@ export type Protocol = {
    * insats var. I de varvbaserade löptesterna är en rad ett varv.
    */
   columnLabels?: { duration?: string; distance?: string; heartRate?: string };
+  /**
+   * Fasta rader med egna namn, när varje rad är en bestämd del av testet. En
+   * rad räknas då även med bara puls – vilan i LSCT har ingen belastning.
+   */
+  rowLabels?: string[];
 };
 
 /**
@@ -361,6 +369,39 @@ export const PROTOCOLS: Protocol[] = [
       duration: "Tid (m:ss eller h:mm:ss)",
       distance: "Sträcka (m)",
     },
+  },
+  {
+    key: "lsct",
+    label: "LSCT – submaximalt cykeltest",
+    sports: ["cykling"],
+    purpose:
+      "Trötthet och form varje vecka utan att trötta: effekt mot puls i tre pulsstyrda steg, pulsåterhämtning och RPE, jämfört med adeptens egen norm. Viktigast för de mest tränade.",
+    howTo:
+      "6 min vid 60 % av maxpuls, 6 min vid 80 %, 3 min vid 90 %, sedan 90 s sittande utan att trampa. Börja varje steg lite hårdare så att pulsen når målet inom en minut, och styr sedan effekten efter pulsen – fritt läge på trainern, inte ERG, och ingen autopaus. Steg 1–3: snitteffekt och snittpuls utan första minuten, tiden till målpulsen och RPE 1–10 i slutet. Vilan: pulsen efter 60 s. Samma förhållanden varje gång – inget koffein tre timmar före, mat två timmar före, samma tid på dagen och plats i veckan.",
+    remote: true,
+    minEfforts: 3,
+    maxEfforts: 4,
+    shape: {
+      intensity: true,
+      duration: true,
+      distance: false,
+      lactate: false,
+      heartRate: true,
+      rpe: true,
+    },
+    produces: [
+      "Effekt mot puls",
+      "Pulsåterhämtning",
+      "RPE",
+      "Tid till 90 %",
+      "Jämförelse med normen",
+    ],
+    zoneScheme: "ftp",
+    columnLabels: {
+      duration: "Tid till målpuls (m:ss)",
+      heartRate: "Puls (snitt; vila: efter 60 s)",
+    },
+    rowLabels: ["Steg 1 · 60 %", "Steg 2 · 80 %", "Steg 3 · 90 %", "Vila 90 s"],
   },
   {
     key: "cs-simning",

@@ -77,10 +77,25 @@ export async function saveTestSession(
     return { ok: false, error: `${spec.label} ingår i medlemskapet.` };
   }
 
-  // En rad med bara en längd är en förifylld mall, ingen insats.
+  // En rad med bara en längd är en förifylld mall, ingen insats. I protokoll
+  // med fasta rader räcker pulsen: vilan i LSCT har ingen belastning.
   const efforts = input.efforts.filter(
-    (e) => e.intensity !== null || e.distanceM !== null || e.lactate !== null,
+    (e) =>
+      e.intensity !== null ||
+      e.distanceM !== null ||
+      e.lactate !== null ||
+      (Boolean(spec.rowLabels) && e.heartRate !== null),
   );
+  if (
+    efforts.some(
+      (e) =>
+        e.rpe !== null &&
+        e.rpe !== undefined &&
+        !(Number.isInteger(e.rpe) && e.rpe >= 1 && e.rpe <= 20),
+    )
+  ) {
+    return { ok: false, error: "RPE anges som ett heltal, 1–10." };
+  }
 
   if (efforts.length < spec.minEfforts) {
     return {
@@ -194,6 +209,7 @@ export async function saveTestSession(
           ? e.performedOn
           : null,
       comment: e.comment ? e.comment.slice(0, 500) : null,
+      rpe: e.rpe ?? null,
     })),
   );
 
@@ -262,7 +278,7 @@ export async function recomputeAdeptSessions(
   const { data, error } = await supabase
     .from("test_sessions")
     .select(
-      "id, protocol, sport, intensity_unit, weight_kg, body_fat_pct, sex, peak_intensity, vo2max, peak_lactate, peak_heart_rate, test_metrics(key), test_efforts(ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate)",
+      "id, protocol, sport, intensity_unit, weight_kg, body_fat_pct, sex, peak_intensity, vo2max, peak_lactate, peak_heart_rate, test_metrics(key), test_efforts(ordinal, intensity, duration_seconds, distance_m, lactate, heart_rate, rpe)",
     )
     .eq("adept_id", adeptId);
 
@@ -288,6 +304,7 @@ export async function recomputeAdeptSessions(
       distance_m: number | null;
       lactate: number | null;
       heart_rate: number | null;
+      rpe: number | null;
     }[];
   };
 
@@ -309,6 +326,7 @@ export async function recomputeAdeptSessions(
             distanceM: n(e.distance_m),
             lactate: n(e.lactate),
             heartRate: n(e.heart_rate),
+            rpe: n(e.rpe),
           })),
         weightKg: n(s.weight_kg),
         bodyFatPct: n(s.body_fat_pct),
