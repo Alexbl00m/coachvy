@@ -8,6 +8,8 @@ const SHORT_LABELS: Record<string, string> = {
   LTHR: "Tröskelpuls",
   W_prime: "W′",
   D_prime: "D′",
+  LSCT_W3: "Steg 3",
+  LSCT_HRR: "HRR",
 };
 
 /** Storhetens korta namn i listor: "W′" i stället för "W_prime". */

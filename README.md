@@ -853,6 +853,9 @@ väljer adept överst och kan också logga och rätta.
   förkortningar räknas bara som hela namnet, så "rm" i "armhävningar" är
   ingen marklyft. Decimalkomma i vikten delar inte raden.
 - **Som förra gången** fyller i det senaste passets övningar.
+- **Adeptens översikt** har ett Styrka-kort med senaste passet, antal pass
+  den här veckan och "Logga styrkepass", så att loggen ligger ett klick bort
+  efter passet.
 - **Progressionen** visar per övning det senaste passets tyngsta set och ett
   skattat 1RM (Epley), så att 3×10 på 40 kg och 4×8 på 50 kg går att jämföra,
   med förändringen sedan första passet de senaste sexton veckorna och en

@@ -14,6 +14,8 @@ import { addDays, longDate, mondayOf, weekdayName } from "@/lib/season/season";
 import type { Sport } from "@/lib/calculators/lactate";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
+import { listStrengthSessions } from "@/lib/strength/queries";
+import { entryText } from "@/lib/strength/strength";
 import { listSessions } from "@/lib/tests/session-queries";
 import {
   READINESS_MAX,
@@ -40,7 +42,7 @@ export async function AdeptOverview({
   consentGiven: boolean;
 }) {
   const monday = mondayOf(today);
-  const [races, blocks, checkins, unread, workouts, sessions] =
+  const [races, blocks, checkins, unread, workouts, sessions, strength] =
     await Promise.all([
       listRaces(adept.id),
       listBlocks(adept.id),
@@ -48,12 +50,17 @@ export async function AdeptOverview({
       countUnread(adept.id, userId),
       listScheduledWorkouts(monday, addDays(monday, 13), adept.id),
       listSessions(adept.id),
+      listStrengthSessions(adept.id),
     ]);
 
   const todays = checkins.find((c) => c.performed_on === today) ?? null;
   const readiness = todays ? readinessScore(toCheckin(todays)) : null;
   const upcoming = workouts.filter((w) => w.date >= today);
   const latest = sessions[0] ?? null;
+  const lastStrength = strength[0] ?? null;
+  const strengthThisWeek = strength.filter(
+    (s) => s.performed_on >= monday && s.performed_on <= today,
+  ).length;
   const own = `${routes.adepts}/${adept.id}`;
 
   return (
@@ -75,7 +82,7 @@ export async function AdeptOverview({
 
       <SeasonSummary blocks={blocks} races={races} today={today} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Card className="min-w-0">
           <CardTitle>Dagens incheckning</CardTitle>
           {todays ? (
@@ -118,6 +125,61 @@ export async function AdeptOverview({
               </ButtonLink>
             </div>
           )}
+        </Card>
+
+        <Card className="min-w-0">
+          <CardTitle>Styrka</CardTitle>
+          <div className="space-y-3">
+            {lastStrength ? (
+              <div className="space-y-1 text-sm text-text-muted">
+                <p className="text-text">
+                  {lastStrength.title || "Styrkepass"}
+                  <span className="ml-1.5 text-[12px] text-text-subtle">
+                    {longDate(lastStrength.performed_on, today)}
+                  </span>
+                </p>
+                <p className="text-[13px]">
+                  {lastStrength.exercises
+                    .filter((e) => e.weightKg !== null)
+                    .slice(0, 3)
+                    .map((e) => `${e.name} ${entryText(e)}`)
+                    .join(" · ") ||
+                    lastStrength.exercises
+                      .slice(0, 4)
+                      .map((e) => e.name)
+                      .join(", ")}
+                </p>
+                <p className="text-[12px] text-text-subtle">
+                  {strengthThisWeek === 0
+                    ? "Inget styrkepass den här veckan."
+                    : `${strengthThisWeek} pass den här veckan.`}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">
+                Logga styrkepassen här i stället för som en kommentar, så ser du
+                och din coach progressionen per övning.
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-3">
+              <ButtonLink
+                href={routes.strength}
+                size="sm"
+                variant={lastStrength ? "secondary" : "primary"}
+                className="font-semibold"
+              >
+                Logga styrkepass
+              </ButtonLink>
+              {lastStrength && (
+                <Link
+                  href={routes.strength}
+                  className="text-[13px] text-accent hover:text-accent-strong"
+                >
+                  Se progressionen
+                </Link>
+              )}
+            </div>
+          </div>
         </Card>
 
         <Card className="min-w-0">
