@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
+import { strainFromSeries } from "@/lib/activities/load";
 import { getActivity, listMultisportLegs } from "@/lib/activities/queries";
 import { KIND_NAME } from "@/lib/activities/multisport";
 import { MultisportStrip } from "@/components/activities/multisport-strip";
@@ -29,7 +30,11 @@ const sv = (v: number, digits = 0) =>
 
 type Tile = { label: string; value: string; unit?: string; hint?: string };
 
-function tilesFor(s: Summary, sport: string): Tile[] {
+function tilesFor(
+  s: Summary,
+  sport: string,
+  strain: { value: number; estimated: boolean } | null,
+): Tile[] {
   const running = sport === "löpning";
   const tiles: (Tile | null)[] = [
     {
@@ -92,6 +97,20 @@ function tilesFor(s: Summary, sport: string): Tile[] {
           value: sv(s.workKj),
           unit: "kJ",
           hint: "≈ lika många kcal",
+        }
+      : null,
+    strain
+      ? {
+          label: "Strain",
+          value: sv(strain.value, 1),
+          unit: running ? "D′" : "W′",
+          hint: strain.estimated
+            ? "uppskattad ur sparad serie"
+            : s.aboveCriticalWork !== null && s.aboveCriticalWork !== undefined
+              ? running
+                ? `${sv(s.aboveCriticalWork)} m över CS`
+                : `${sv(s.aboveCriticalWork / 1000, 1)} kJ över CP`
+              : undefined,
         }
       : null,
   ];
@@ -169,6 +188,21 @@ export default async function ActivityPage({
   const running = activity.sport === "löpning";
   const laps = ((activity.laps ?? []) as Lap[]).filter((l) => l.seconds > 0);
   const ftp = ref?.ftp ?? null;
+  // Strain ur analysen; för pass lästa innan den räknades, ur den sparade
+  // serien mot CP/W′ (CS/D′) som gällde då.
+  const strain =
+    s.strain !== null && s.strain !== undefined
+      ? { value: s.strain, estimated: false }
+      : (() => {
+          const st = activity.streams;
+          const value =
+            activity.sport === "cykling" && ref?.cp && ref.wPrime
+              ? strainFromSeries(st.t, st.power, ref.cp, ref.wPrime, "power")
+              : running && ref?.cs && ref.dPrime
+                ? strainFromSeries(st.t, st.speed, ref.cs, ref.dPrime, "speed")
+                : null;
+          return value === null ? null : { value, estimated: true };
+        })();
   const multi = activity.multisport;
   const legs = multi ? await listMultisportLegs(adept.id, multi.id) : [];
   const legCount = multi
@@ -240,7 +274,7 @@ export default async function ActivityPage({
           </Card>
         )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {tilesFor(s, activity.sport).map((t) => (
+          {tilesFor(s, activity.sport, strain).map((t) => (
             <div
               key={t.label}
               className="min-w-0 rounded-lg border border-line bg-surface p-4"

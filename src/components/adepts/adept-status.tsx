@@ -10,6 +10,7 @@ import {
   MessageSquare,
   MoonStar,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 
 import { SportIcon, TestIcon } from "@/components/calendar/calendar-items";
@@ -20,6 +21,8 @@ import {
 import { blockLabel } from "@/components/season/phase-style";
 import { SeasonSummary } from "@/components/season/season-summary";
 import { Card, CardTitle } from "@/components/ui/card";
+import { loadTrend } from "@/lib/activities/load";
+import { listLoadActivities } from "@/lib/activities/load-queries";
 import { listActivities } from "@/lib/activities/queries";
 import { listScheduledWorkouts } from "@/lib/calendar/queries";
 import { countUnread } from "@/lib/messages/queries";
@@ -81,6 +84,9 @@ const ICONS: Record<AttentionKind, typeof ArrowRight> = {
   tävling: Flag,
 };
 
+/** Strain som nämns: minst 50 % över snittveckan månaden före. */
+const STRAIN_JUMP = 1.5;
+
 /** Ett LSCT säger något om formen den närmaste veckan, inte längre. */
 const LSCT_FRESH_DAYS = 10;
 
@@ -126,6 +132,7 @@ export async function AdeptStatus({
     strength,
     sessions,
     workouts,
+    load,
   ] = await Promise.all([
     listBlocks(adept.id),
     listRaces(adept.id),
@@ -136,6 +143,8 @@ export async function AdeptStatus({
     listStrengthSessions(adept.id),
     listFullSessions(adept.id),
     listWorkouts(adept.id),
+    // Fem veckor: senaste veckan mot de fyra före.
+    listLoadActivities(adept.id, addDays(today, -34)),
   ]);
   const checkins = checkinRows.map(toCheckin);
 
@@ -174,6 +183,25 @@ export async function AdeptStatus({
       });
     }
   }
+  // Strain som stigit tydligt: mer arbete över tröskeln än adepten brukar.
+  const trend = loadTrend(load, today);
+  if (
+    trend.strainRatio !== null &&
+    trend.strainRatio >= STRAIN_JUMP &&
+    trend.recent.strain >= 1
+  ) {
+    items.push({
+      key: "strain",
+      weight: 2,
+      text: `Strain ${trend.recent.strain.toFixed(1).replace(".", ",")} W′ senaste sju dagarna – ${Math.round((trend.strainRatio - 1) * 100)} % över snittveckan månaden före${
+        trend.volumeRatio !== null && trend.volumeRatio < 1.2
+          ? ", med volymen i samma nivå"
+          : ""
+      }.`,
+      icon: Zap,
+      href: adeptHref(adept.id, "traning"),
+    });
+  }
   items.sort((a, b) => b.weight - a.weight);
 
   // Veckan: det planerade och det gjorda, dag för dag.
@@ -187,6 +215,9 @@ export async function AdeptStatus({
   const raceDays = races.filter(
     (r) => r.race_date >= monday && r.race_date <= sunday,
   );
+  const weekStrain = load
+    .filter((a) => a.performed_on >= monday && a.performed_on <= sunday)
+    .reduce((sum, a) => sum + (a.strain ?? 0), 0);
   const doneSeconds = done.reduce(
     (sum, a) => sum + (a.moving_s ?? a.duration_s ?? 0),
     0,
@@ -279,6 +310,9 @@ export async function AdeptStatus({
           · {done.length} {done.length === 1 ? "aktivitet" : "aktiviteter"} ur
           klockan
           {doneSeconds > 0 ? `, ${hours(doneSeconds)}` : ""}
+          {weekStrain > 0
+            ? ` · strain ${weekStrain.toFixed(1).replace(".", ",")} W′`
+            : ""}
           {lifted.length > 0 ? ` · ${lifted.length} styrka` : ""}
         </p>
         <ol className="grid gap-2 sm:grid-cols-7">

@@ -2,15 +2,17 @@ import { ActivityImport } from "@/components/activities/activity-import";
 import { ActivityList } from "@/components/activities/activity-list";
 import { ActivityUpload } from "@/components/activities/activity-upload";
 import { DevelopmentCard } from "@/components/activities/development-card";
+import { LoadCard } from "@/components/activities/load-card";
 import { TrainingProfile } from "@/components/activities/training-profile";
 import { PowerBenchmark } from "@/components/benchmarks/power-benchmark";
 import { analyseTraining } from "@/lib/activities/development";
+import { listLoadActivities } from "@/lib/activities/load-queries";
 import { listActivities } from "@/lib/activities/queries";
 import { candidatesFrom, pickReference } from "@/lib/activities/reference";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { adeptValues } from "@/lib/benchmarks/values";
 import { listRaces } from "@/lib/season/queries";
-import { todayIso } from "@/lib/season/season";
+import { addDays, mondayOf, todayIso } from "@/lib/season/season";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 
@@ -36,13 +38,15 @@ export async function AdeptActivities({
   /** Adressen som visar hela listan. */
   moreHref: string;
 }) {
-  const [activities, races, sessions, profile] = await Promise.all([
+  const today = todayIso();
+  const [activities, races, sessions, profile, load] = await Promise.all([
     listActivities(adept.id),
     listRaces(adept.id),
     listSessions(adept.id),
     getAdeptProfile(adept.id),
+    // Tolv veckor för diagrammen; fem räcker för trenden.
+    listLoadActivities(adept.id, addDays(mondayOf(today), -77)),
   ]);
-  const today = todayIso();
   const candidates = candidatesFrom(
     sessions,
     (key) => protocolByKey(key)?.label ?? key,
@@ -72,6 +76,8 @@ export async function AdeptActivities({
   return (
     <div className="space-y-6">
       <DevelopmentCard reading={development} />
+
+      <LoadCard activities={load} today={today} />
 
       {canUpload && (
         <ActivityUpload

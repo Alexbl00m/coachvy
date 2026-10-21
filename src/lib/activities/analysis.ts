@@ -113,6 +113,16 @@ export type Summary = {
   balanceMin: { fraction: number; at: number; km: number | null } | null;
   /** Tid över CP (CS), sekunder. */
   aboveCriticalS: number | null;
+  /**
+   * Arbetet över CP i joule (cykel), eller sträckan över CS i meter
+   * (löpning): det som tömmer W′ (D′). Saknas i äldre pass.
+   */
+  aboveCriticalWork?: number | null;
+  /**
+   * Strain: arbetet över CP som andel av W′ – 1,0 är en full reserv.
+   * Passets fysiologiska kostnad ovanför tröskeln, skild från volymen.
+   */
+  strain?: number | null;
   best: BestEffort[];
   powerZones: ZoneTime[] | null;
   hrZones: ZoneTime[] | null;
@@ -614,6 +624,7 @@ export function analyse(
   }
   let balanceMin: Summary["balanceMin"] = null;
   let aboveCriticalS: number | null = null;
+  let aboveCriticalWork: number | null = null;
   if (balance && reserve && critical) {
     let minIndex = 0;
     for (let i = 1; i < balance.length; i += 1)
@@ -626,6 +637,10 @@ export function analyse(
     };
     const series = sport === "cykling" ? power : seconds.map((s) => s.speed);
     aboveCriticalS = series.filter((v) => v > (critical as number)).length;
+    aboveCriticalWork = series.reduce(
+      (sum, v) => sum + Math.max(0, v - (critical as number)),
+      0,
+    );
   }
 
   // Bästa insatser: tid över distans i löpning – också med löpeffekt, som
@@ -740,6 +755,11 @@ export function analyse(
     halvesPct,
     balanceMin,
     aboveCriticalS,
+    aboveCriticalWork,
+    strain:
+      aboveCriticalWork !== null && reserve
+        ? aboveCriticalWork / reserve
+        : null,
     best,
     powerZones,
     hrZones,
