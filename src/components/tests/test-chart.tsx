@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { SERIES as CHART_SERIES } from "@/lib/calculators/chart-colors";
 import { formatValue } from "@/lib/format";
 
 /**
@@ -21,9 +22,8 @@ import { formatValue } from "@/lib/format";
  * series is shown instead.
  */
 
-// A step of the brand accent lowered into the lightness band that reads
-// correctly on the dark chart surface (validated for dark mode + #1f1f24).
-const SERIES = "#e07049";
+// Diagrammens huvudserie, se chart-colors.ts.
+const SERIES = CHART_SERIES.primary;
 const GRID = "#2f2f37";
 const AXIS_TEXT = "#7a7a86";
 const SURFACE = "#1f1f24";

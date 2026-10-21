@@ -48,10 +48,10 @@ colors:
     warn: "#8a6100"
     chart-grid: "#e9e9ec"
     chart-axis-text: "#62656d"
-  series:                       # diagramserier, validerade mot båda ytorna
-    primary: "#e07049"
-    secondary: "#3d9ec2"
-    tertiary: "#7fa03f"
+  series:                       # diagramserier, validerade mot båda ytorna (--pairs all)
+    primary: "#8a78ee"          # violett, ton 288°
+    secondary: "#2b9db5"        # cyan, ton 215°
+    tertiary: "#b0902c"         # guld, ton 90°
   phases:                       # säsongens faser, ordinal stege (mörk / ljus)
     grund: ["#89452d", "#e89b81"]
     uppbyggnad: ["#b25535", "#d87756"]
@@ -166,8 +166,9 @@ Ingen text under `text-subtle`.
 - Ikoner, brickor och räknare är inte accent: ikoner i `text-muted`, brickor
   och olästa-räknare i `surface-3` med `text`. Varningar har `warn` eller
   `bad`, aldrig accent.
-- Diagram ritas i zonernas blå stege eller serierna, aldrig i accent. Fasernas
-  orange stege är ett eget, validerat undantag.
+- Diagram ritas i zonernas blå stege eller serierna, aldrig i accent. Serierna
+  är violett, cyan och guld – valda för att inte krocka med accentens orange
+  eller zonernas blå. Fasernas orange stege är ett eget, validerat undantag.
 - `accent-soft` är bakgrunden för en dropzon under drag, inget annat.
 - Bara ett accentelement per vy ska kännas fyllt. Två primärknappar bredvid
   varandra är en för många.

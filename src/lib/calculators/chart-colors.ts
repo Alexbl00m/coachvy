@@ -1,18 +1,24 @@
 /**
- * Seriefärger för kalkylernas diagram, valda mot den mörka ytan (#1f1f24):
- * båda ligger i rätt ljushetsband, har tillräcklig kroma för att inte läsa som
- * grått, och skiljs åt även vid färgblindhet (ΔE 17,6 under deutan).
+ * Seriefärger för diagrammen: violett, cyan och guld – fritt från accentens
+ * orange (ton 40°), som är "gör detta", och från zonernas blå (252°), som
+ * passets intensitet ritas i.
+ *
+ * Samma hex på den mörka appen och den ljusa sajten, så att kartan och andra
+ * ritytor som inte löser CSS-variabler får rätt färg. Validerade med
+ * dataviz-skillens `validate_palette.js --pairs all` mot #111216, #1f1f24 och
+ * #ffffff: alla inom ljushetsbandet, minst 3:1 mot ytan, och sämsta par
+ * ΔE 10,1 under deutanopi (violett–cyan) och 17,0 för normalseende.
+ *
+ * Den förra paletten (#e07049, #3d9ec2, #7fa03f) föll på färgblindhet:
+ * orange och grönt låg på ΔE 1,7 under deutanopi.
  */
 export const SERIES = {
-  /** Brand-accenten, nedsänkt till diagrammens ljushetsband. */
-  primary: "#e07049",
-  secondary: "#3d9ec2",
-  /**
-   * Tredje serien, för effektbudgeten i cykelkalkylen. Sämsta grannpar med de
-   * två ovan är ΔE 18,1 för normalseende och 14,6 under protanopi – båda över
-   * gränsen. Validerad med dataviz-skillens `validate_palette.js` mot #1f1f24.
-   */
-  tertiary: "#7fa03f",
+  /** Huvudserien: en trend, laktatkurvan, effekten. Ton 288°. */
+  primary: "#8a78ee",
+  /** Andra serien: puls, fett. Ton 215°. */
+  secondary: "#2b9db5",
+  /** Tredje serien, som stigningen i cykelkalkylen och belastningen. Ton 90°. */
+  tertiary: "#b0902c",
 } as const;
 
 /**

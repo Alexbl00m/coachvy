@@ -1247,8 +1247,8 @@ prompten, och den är högst 40 000 tecken.
 Testkurvan visar **en testtyp i taget**, valbar med knapparna ovanför
 diagrammet. Det är ett medvetet val: FTP mäts i watt och VO2max i ml/kg/min, och
 att lägga båda i samma diagram skulle kräva två y-axlar — den enskilt mest
-vilseledande diagramformen som finns. Serien har en egen färgnivå av
-accentfärgen (`#e07049`) som ligger i rätt ljushetsband för den mörka ytan.
+vilseledande diagramformen som finns. Serien ritas i diagrammens huvudfärg,
+violett (`#8a78ee`, se `src/lib/calculators/chart-colors.ts`).
 
 ## Säsongen: planer, kalender och översikt
 
