@@ -37,7 +37,8 @@ export function WorkspaceTabs({
       // Sju flikar får inte plats på en telefon. Raden scrollar i sidled i
       // stället för att skjuta ut hela sidan – en sida som går att dra
       // vågrätt känns trasig, en flikrad som gör det är en känd gest.
-      className="mb-6 flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      // Fast under sidhuvudet, så att flikarna finns kvar på långa sidor.
+      className="sticky top-15 z-20 mb-6 flex gap-1 overflow-x-auto border-b border-line bg-canvas [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => {
         const active = isActive(pathname, tab);
@@ -86,7 +87,8 @@ export function WorkspaceSubnav({
   return (
     <nav
       aria-label={label}
-      className="-mt-2 mb-6 flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      // Fast under flikraden (41 px hög), med samma bakgrund som sidan.
+      className="sticky top-[calc(3.75rem+41px)] z-10 -mt-6 mb-4 flex gap-1 overflow-x-auto bg-canvas py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {items.map((item) => {
         const current = item.href === active?.href;

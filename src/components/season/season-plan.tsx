@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BlockEditor } from "@/components/season/block-editor";
 import { DistributionCard } from "@/components/season/distribution-card";
 import { RaceEditor } from "@/components/season/race-editor";
-import { SeasonSummary } from "@/components/season/season-summary";
+import { blockLabel, phaseFill } from "@/components/season/phase-style";
+import { PriorityBadge } from "@/components/season/priority-badge";
 import { SeasonTimeline } from "@/components/season/season-timeline";
 import { Card, CardTitle } from "@/components/ui/card";
 import { listActivities } from "@/lib/activities/queries";
@@ -13,10 +14,15 @@ import { sessionGoal } from "@/lib/season/distribution";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import {
   addDays,
+  blockOn,
+  countdownText,
+  daysBetween,
+  mainRace,
   monthName,
   planNotes,
   shiftMonth,
   todayIso,
+  upcomingRaces,
 } from "@/lib/season/season";
 import type { Sport } from "@/lib/calculators/lactate";
 import { sessionHeadline } from "@/lib/tests/headline";
@@ -101,6 +107,13 @@ export async function SeasonPlan({
 
   const notes = planNotes(blocks, races, today);
 
+  // Läget i en rad överst i tidslinjens kort – fasen, målet och en start före
+  // det – i stället för egna rutor som säger samma sak som tidslinjen.
+  const phaseNow = blockOn(blocks, today);
+  const main = mainRace(races, today);
+  const first = upcomingRaces(races, today)[0] ?? null;
+  const sooner = first && main && first.id !== main.id ? first : null;
+
   // Inplanerade pass med sitt huvudsyfte, för intensitetsfördelningen.
   const planned = workouts.flatMap((w) =>
     w.scheduled_for
@@ -110,9 +123,7 @@ export async function SeasonPlan({
 
   return (
     <div className="space-y-6">
-      <SeasonSummary blocks={blocks} races={races} today={today} />
-
-      <Card className="min-w-0">
+      <Card level="lead" className="min-w-0">
         <CardTitle
           action={
             <nav
@@ -141,6 +152,68 @@ export async function SeasonPlan({
         >
           Säsongen
         </CardTitle>
+        <dl className="-mt-1 mb-5 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          <div className="min-w-0">
+            <dt className="text-[13px] text-text-muted">Fasen nu</dt>
+            <dd className="flex items-center gap-2 font-medium text-text">
+              {phaseNow ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="h-2.5 w-4 rounded-[3px]"
+                    style={{ background: phaseFill(phaseNow.phase) }}
+                  />
+                  {blockLabel(phaseNow)}
+                  <span className="font-normal text-text-muted tabular-nums">
+                    · {daysBetween(today, phaseNow.ends_on)} dagar kvar
+                  </span>
+                </>
+              ) : (
+                <span className="font-normal text-text-muted">
+                  Ingen period
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="min-w-0">
+            <dt className="text-[13px] text-text-muted">
+              {main?.priority === "A" ? "Säsongens mål" : "Nästa tävling"}
+            </dt>
+            <dd className="flex items-center gap-2 font-medium text-text">
+              {main ? (
+                <>
+                  <PriorityBadge
+                    priority={main.priority}
+                    className="size-5 text-[11px]"
+                  />
+                  {main.name}
+                  <span className="font-normal text-text-muted">
+                    · {countdownText(daysBetween(today, main.race_date))}
+                  </span>
+                </>
+              ) : (
+                <span className="font-normal text-text-muted">
+                  Inget inlagt – lägg in målet som A-lopp
+                </span>
+              )}
+            </dd>
+          </div>
+          {sooner && (
+            <div className="min-w-0">
+              <dt className="text-[13px] text-text-muted">Före det</dt>
+              <dd className="flex items-center gap-2 font-medium text-text">
+                <PriorityBadge
+                  priority={sooner.priority}
+                  className="size-5 text-[11px]"
+                />
+                {sooner.name}
+                <span className="font-normal text-text-muted">
+                  · {countdownText(daysBetween(today, sooner.race_date))}
+                </span>
+              </dd>
+            </div>
+          )}
+        </dl>
         <SeasonTimeline
           from={from}
           to={to}
@@ -149,24 +222,23 @@ export async function SeasonPlan({
           races={races}
           tests={tests}
         />
+        {notes.length > 0 && (
+          <div className="mt-5 border-t border-line pt-4">
+            <h3 className="text-[13px] font-medium text-text">Att se över</h3>
+            <ul className="mt-2 space-y-1.5 text-sm text-text-muted">
+              {notes.map((note) => (
+                <li key={note} className="flex gap-2.5">
+                  <span
+                    aria-hidden
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-warn"
+                  />
+                  {note}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Card>
-
-      {notes.length > 0 && (
-        <Card>
-          <CardTitle>Att se över</CardTitle>
-          <ul className="space-y-2 text-sm text-text-muted">
-            {notes.map((note) => (
-              <li key={note} className="flex gap-2.5">
-                <span
-                  aria-hidden
-                  className="mt-2 size-1.5 shrink-0 rounded-full bg-warn"
-                />
-                {note}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
 
       <DistributionCard
         blocks={blocks}

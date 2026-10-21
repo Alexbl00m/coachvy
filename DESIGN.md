@@ -290,6 +290,15 @@ Etikett i `body-sm` `text-muted`, värde i `metric`, en rad sammanhang i
 Text i `body` `text-muted`; vald flik `text` med en 2 px underlinje i
 `accent`. Olästa som en liten pill i `surface-3` med `text`.
 
+På långa sidor sitter flikraden och undermenyn fast under sidhuvudet, på
+sidans egen bakgrund, så att man alltid ser var man är och kan byta vy.
+
+### Sökning (⌘K)
+En dialog mitt i övre delen av skärmen: `surface`, kant `line-strong`, hörn
+`xl`. Fältet utan egen ram, träffarna grupperade under `eyebrow`-rubriker,
+den valda raden i `surface-3`. Knappen i sidhuvudet är sekundär och visar
+genvägen. Ingen accent – sökningen är ett verktyg, inte en handling.
+
 ### Brickor och filter
 Filterbricka: pill med kant `line`, text `text-muted`; vald lyfts till
 `surface-3` med kanten `text-subtle` och text `text`. Prioritetsbricka A/B/C:

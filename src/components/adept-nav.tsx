@@ -75,7 +75,8 @@ export function AdeptSectionNav({ adeptId }: { adeptId: string | null }) {
   return (
     <nav
       aria-label={item?.label}
-      className="-mt-2 mb-5 flex gap-1 overflow-x-auto [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
+      // Fast under sidhuvudet, så att undersidorna finns kvar vid scroll.
+      className="sticky top-15 z-20 -mt-6 mb-4 flex gap-1 overflow-x-auto bg-canvas py-2 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
     >
       {children.map((child) => {
         const selected = hrefsOf(child).includes(current ?? "");

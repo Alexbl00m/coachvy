@@ -1259,7 +1259,9 @@ påhittade. Här räknas allt ur riktiga tester, incheckningar och planer.
 
 ### Säsongsplanen
 
-Säsongsplanen (`src/components/season/season-plan.tsx`) ligger i adeptens
+Säsongsplanen (`src/components/season/season-plan.tsx`) är ett ledkort:
+fasen, målet och en start före det står i en rad överst, sedan tidslinjen och
+under den det som är värt att se över. Den ligger i adeptens
 arbetsyta under Plan › Säsong (`/app/adepter/<id>/plan`), och för adepten
 själv på `/app/planer`. Den samlar säsongen på en tidslinje: perioderna som band,
 tävlingarna som markörer och testerna som punkter, med dagens datum utritat.
@@ -1918,6 +1920,15 @@ Menyn är byggd efter arbetet, inte efter verktygen (`src/lib/nav.ts`).
 - **Gamla adresser leder rätt.** `?vy=` på adeptsidan går till sin flik, och
   för coachen leder `/app/planer`, `/app/progression`, `/app/styrka` och
   `/app/aktiviteter` – med eller utan `?adept=` – till adeptens flik.
+- **Sök med ⌘K** (Ctrl+K utanför Mac) öppnar sökningen var man än står
+  (`src/components/command-palette.tsx`). Den hittar sidorna i menyn,
+  adepterna och en adepts flikar – "tobias tester", "astrid mående" – och de
+  vanligaste handlingarna. Matchningen (`src/lib/command-search.ts`) bryr sig
+  inte om versaler och accenter, så "maende" hittar Mående; ett ensamt ord
+  visar adepternas flikar bara när inget annat passar. Piltangenterna väljer,
+  Enter öppnar och Escape stänger och lämnar fokus på knappen.
+- **Flikarna sitter fast.** Arbetsytans flikrad och undermeny, och adeptens
+  avsnittsmeny i telefonen, följer med under sidhuvudet på långa sidor.
 - **"+ Ny"** i sidhuvudet (`src/components/new-menu.tsx`) föreslår det som går
   att skapa där man står: på en adept pass, test, period och styrkepass för
   den adepten. Knappen finns bara för coachen.

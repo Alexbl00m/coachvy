@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AppShell } from "@/components/app-shell";
+import { listAdepts } from "@/lib/adepts/queries";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -16,6 +17,13 @@ export const metadata: Metadata = {
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await getSessionUser();
+  // Coachens adepter till sökningen i sidhuvudet: namn och id räcker.
+  const adepts =
+    user?.profile?.role === "coach"
+      ? (await listAdepts())
+          .filter((a) => a.coach_id === user.id)
+          .map((a) => ({ id: a.id, name: a.full_name }))
+      : [];
 
   // `src/proxy.ts` already redirects signed-out visitors. When Supabase has no
   // credentials yet the shell still renders so the skeleton can be reviewed.
@@ -31,6 +39,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             : "Adept",
         isAdmin: user.isAdmin,
         adeptId: user.adept?.id ?? null,
+        adepts,
       }
     : {
         name: "Demoläge",

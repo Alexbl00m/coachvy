@@ -6,6 +6,10 @@ import { LogOut, Menu, X } from "lucide-react";
 
 import { AdeptBottomNav, AdeptSectionNav } from "@/components/adept-nav";
 import { AppSidebar } from "@/components/app-sidebar";
+import {
+  CommandPalette,
+  type PaletteAdept,
+} from "@/components/command-palette";
 import { Logo } from "@/components/logo";
 import { NewMenu } from "@/components/new-menu";
 import { Button } from "@/components/ui/button";
@@ -22,6 +26,8 @@ export type AppShellUser = {
   isAdmin?: boolean;
   /** Adeptkontots egen adeptrad, för länkarna till adeptens egna sidor. */
   adeptId?: string | null;
+  /** Coachens adepter, för sökningen. */
+  adepts?: PaletteAdept[];
 };
 
 export function AppShell({
@@ -72,6 +78,12 @@ export function AppShell({
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
+          <CommandPalette
+            role={user.role}
+            isAdmin={user.isAdmin}
+            ownAdeptId={adeptId}
+            adepts={user.adepts}
+          />
           {!adept && <NewMenu />}
 
           <div className="hidden items-center gap-2.5 border-l border-ink-800 pl-3 md:flex">
