@@ -8,7 +8,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { formatDate, digitsForMetric } from "@/lib/format";
-import { routes } from "@/lib/routes";
+import { adeptHref } from "@/lib/routes";
 import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
 import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
@@ -267,7 +267,7 @@ export default async function SessionPage({
   return (
     <>
       <Link
-        href={`${routes.adepts}/${adept.id}?vy=testtillfallen`}
+        href={adeptHref(adept.id, "tester")}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-subtle hover:text-text"
       >
         <ArrowLeft aria-hidden className="size-4" />

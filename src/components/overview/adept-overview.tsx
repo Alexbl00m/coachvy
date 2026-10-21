@@ -8,7 +8,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { listScheduledWorkouts } from "@/lib/calendar/queries";
 import { countUnread } from "@/lib/messages/queries";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import { addDays, longDate, mondayOf, weekdayName } from "@/lib/season/season";
 import type { Sport } from "@/lib/calculators/lactate";
@@ -104,7 +104,7 @@ export async function AdeptOverview({
                 </p>
               )}
               <Link
-                href={`${own}?vy=maende`}
+                href={adeptHref(adept.id, "maende")}
                 className="inline-block pt-1 text-[13px] text-accent hover:text-accent-strong"
               >
                 Ändra
@@ -117,7 +117,7 @@ export async function AdeptOverview({
                 att din coach ser hur träningen landar.
               </p>
               <ButtonLink
-                href={`${own}?vy=maende`}
+                href={adeptHref(adept.id, "maende")}
                 size="sm"
                 className="font-semibold"
               >
@@ -265,7 +265,7 @@ export async function AdeptOverview({
           )}
           <div className="mt-4 border-t border-line pt-3">
             <Link
-              href={`${own}?vy=meddelanden`}
+              href={adeptHref(adept.id, "meddelanden")}
               className="text-[13px] text-text-muted hover:text-text"
             >
               {unread > 0

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { routes } from "@/lib/routes";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -15,8 +16,11 @@ export type SessionUser = {
   isAdmin: boolean;
 };
 
-/** The signed-in user plus their role row, or `null` when signed out. */
-export async function getSessionUser(): Promise<SessionUser | null> {
+/**
+ * The signed-in user plus their role row, or `null` when signed out. Cached
+ * per request, so a layout and its page share one lookup.
+ */
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createClient();
@@ -64,7 +68,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     adept,
     isAdmin: admin === true,
   };
-}
+});
 
 /** Same as `getSessionUser`, but sends signed-out visitors to the login page. */
 export async function requireSessionUser(): Promise<SessionUser> {

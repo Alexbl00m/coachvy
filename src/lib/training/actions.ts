@@ -98,7 +98,7 @@ export async function saveCheckin(
     };
   }
 
-  revalidatePath(`${routes.adepts}/${input.adeptId}`);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   revalidatePath(routes.dashboard);
   return { ok: true, id: data.id };
 }
@@ -113,6 +113,6 @@ export async function deleteCheckin(
   const { error } = await supabase.from("adept_checkins").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { ok: true };
 }

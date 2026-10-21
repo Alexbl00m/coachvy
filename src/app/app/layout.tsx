@@ -30,6 +30,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             ? "Coach"
             : "Adept",
         isAdmin: user.isAdmin,
+        adeptId: user.adept?.id ?? null,
       }
     : {
         name: "Demoläge",

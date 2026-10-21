@@ -70,6 +70,7 @@ export async function saveStrengthSession(input: {
   }
 
   revalidatePath(routes.strength);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   return { ok: true, id };
 }
 
@@ -82,12 +83,13 @@ export async function deleteStrengthSession(
     .from("strength_sessions")
     .delete()
     .eq("id", id)
-    .select("id");
+    .select("id, adept_id");
   if (error)
     return { ok: false, error: `Kunde inte ta bort: ${error.message}` };
   if (!data || data.length === 0) {
     return { ok: false, error: "Passet hittades inte." };
   }
   revalidatePath(routes.strength);
+  revalidatePath(`${routes.adepts}/${data[0].adept_id}`, "layout");
   return { ok: true };
 }

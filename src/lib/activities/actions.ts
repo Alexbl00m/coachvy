@@ -65,7 +65,7 @@ function validStreams(streams: Streams): boolean {
 }
 
 function revalidateActivity(adeptId: string) {
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   revalidatePath(routes.calendar);
   revalidatePath(routes.plans);
   revalidatePath(routes.dashboard);

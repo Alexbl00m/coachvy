@@ -79,7 +79,7 @@ export async function saveWorkout(
     };
   }
 
-  revalidatePath(`${routes.adepts}/${input.adeptId}`);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   revalidatePath(routes.workoutBuilder);
   return { ok: true, id: data.id };
 }
@@ -97,7 +97,7 @@ export async function deleteWorkout(
   const { error } = await supabase.from("workouts").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   revalidatePath(routes.workoutBuilder);
   return { ok: true };
 }
@@ -132,7 +132,7 @@ export async function scheduleWorkout(
     return { ok: false, error: "Passet går inte att flytta härifrån." };
   }
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);
   return { ok: true };

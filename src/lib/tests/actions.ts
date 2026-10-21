@@ -89,7 +89,7 @@ export async function createTestResult(
     return { error: `Kunde inte spara testresultatet: ${error.message}`, values };
   }
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { notice: "Testresultatet är sparat." };
 }
 
@@ -103,5 +103,5 @@ export async function deleteTestResult(formData: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.from("test_results").delete().eq("id", id);
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
 }

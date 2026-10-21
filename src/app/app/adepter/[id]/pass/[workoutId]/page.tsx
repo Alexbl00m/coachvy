@@ -12,7 +12,7 @@ import { getAdept } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { getWorkout } from "@/lib/workouts/queries";
 import { sportOf } from "@/lib/tests/protocols";
 import { toWorkout } from "@/lib/workouts/schema";
@@ -50,7 +50,7 @@ export default async function WorkoutPage({
   return (
     <>
       <Link
-        href={`${routes.adepts}/${adept.id}?vy=pass`}
+        href={adeptHref(adept.id, "pass")}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100"
       >
         <ArrowLeft aria-hidden className="size-4" />

@@ -5,7 +5,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { EmptyState } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { ButtonLink } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 
 export const metadata = { title: "Testresultat" };
 
@@ -18,7 +18,7 @@ export default async function TestresultatPage() {
 
   if (user.profile?.role === "adept") {
     const adept = await getMyAdeptRow(user.id);
-    if (adept) redirect(`${routes.adepts}/${adept.id}?vy=testresultat`);
+    if (adept) redirect(adeptHref(adept.id, "varden"));
   }
 
   if (user.profile?.role === "coach") {

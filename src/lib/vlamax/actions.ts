@@ -148,6 +148,6 @@ export async function saveVlamaxAsTestResult(
     return { error: `Kunde inte spara testresultatet: ${error.message}` };
   }
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { notice: "Sparat som testresultat på adepten." };
 }

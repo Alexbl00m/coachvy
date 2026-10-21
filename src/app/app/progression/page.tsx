@@ -1,24 +1,18 @@
-import { DevelopmentCard } from "@/components/activities/development-card";
-import { ReferenceAndGoals } from "@/components/benchmarks/reference-and-goals";
+import { redirect } from "next/navigation";
+
 import { PageHeader } from "@/components/page-header";
-import { AdeptPicker } from "@/components/progression/adept-picker";
-import {
-  ProgressionView,
-  sportFromSlug,
-} from "@/components/progression/progression-view";
+import { ProgressionSection } from "@/components/progression/progression-section";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
-import { developmentFor } from "@/lib/activities/development-queries";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
-import { routes } from "@/lib/routes";
-import { listFullSessions } from "@/lib/tests/session-queries";
+import { adeptHref, routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const metadata = { title: "Progression" };
 
-/** Antal testtillfällen per adept, för väljaren. */
+/** Antal testtillfällen per adept, för att välja adept när ingen anges. */
 async function countSessions(): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (!isSupabaseConfigured()) return counts;
@@ -30,6 +24,10 @@ async function countSessions(): Promise<Map<string, number>> {
   return counts;
 }
 
+/**
+ * Progressionen för adepten själv. Coachen har den i adeptens arbetsyta under
+ * Tester, så gamla länkar hit leder dit.
+ */
 export default async function ProgressionPage({
   searchParams,
 }: PageProps<"/app/progression">) {
@@ -45,94 +43,60 @@ export default async function ProgressionPage({
     />
   );
 
-  if (user.profile?.role === "adept") {
-    const adept = await getMyAdeptRow(user.id);
-    if (!adept) {
+  if (user.profile?.role === "coach") {
+    const [adepts, counts] = await Promise.all([listAdepts(), countSessions()]);
+    const own = adepts.filter((a) => a.coach_id === user.id);
+    if (own.length === 0) {
       return (
         <>
           {header}
           <EmptyState
-            title="Ingen adeptprofil hittades"
-            description="Ditt konto är inte kopplat till någon coach ännu. Be din coach lägga upp dig."
+            title="Inga adepter ännu"
+            description="Lägg upp en adept och registrera ett test, så syns utvecklingen här."
+            action={
+              <ButtonLink href={routes.adepts}>Till adepterna</ButtonLink>
+            }
           />
         </>
       );
     }
-    const [sessions, development] = await Promise.all([
-      listFullSessions(adept.id),
-      developmentFor(adept.id),
-    ]);
-    return (
-      <>
-        {header}
-        <div className="mb-6">
-          <DevelopmentCard reading={development} />
-        </div>
-        <ProgressionView
-          adeptId={adept.id}
-          sessions={sessions}
-          canEdit={false}
-          sport={sportFromSlug(gren)}
-          view={vy}
-          goals={
-            <ReferenceAndGoals
-              adept={adept}
-              sessions={sessions}
-              canEdit={false}
-            />
-          }
-        />
-      </>
+    const requested = typeof query.adept === "string" ? query.adept : null;
+    // Utan val: den adept som har flest tester – där finns mest att se.
+    const current =
+      own.find((a) => a.id === requested) ??
+      [...own].sort(
+        (a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0),
+      )[0];
+    const params = new URLSearchParams();
+    if (gren) params.set("gren", gren);
+    if (vy) params.set("vy", vy);
+    const search = params.toString();
+    redirect(
+      `${adeptHref(current.id, "progression")}${search ? `?${search}` : ""}`,
     );
   }
 
-  const [adepts, counts] = await Promise.all([listAdepts(), countSessions()]);
-  const own = adepts.filter((a) => a.coach_id === user.id);
-  if (own.length === 0) {
+  const adept = await getMyAdeptRow(user.id);
+  if (!adept) {
     return (
       <>
         {header}
         <EmptyState
-          title="Inga adepter ännu"
-          description="Lägg upp en adept och registrera ett test, så syns utvecklingen här."
-          action={<ButtonLink href={routes.adepts}>Till adepterna</ButtonLink>}
+          title="Ingen adeptprofil hittades"
+          description="Ditt konto är inte kopplat till någon coach ännu. Be din coach lägga upp dig."
         />
       </>
     );
   }
-
-  const requested = typeof query.adept === "string" ? query.adept : null;
-  // Utan val: den adept som har flest tester – där finns mest att se.
-  const current =
-    own.find((a) => a.id === requested) ??
-    [...own].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0))[0];
-  const [sessions, development] = await Promise.all([
-    listFullSessions(current.id),
-    developmentFor(current.id),
-  ]);
-
   return (
     <>
       {header}
-      <div className="mb-6">
-        <AdeptPicker
-          current={current.id}
-          adepts={own.map((a) => ({ id: a.id, name: a.full_name, tests: counts.get(a.id) ?? 0 }))}
-        />
-      </div>
-      <div className="mb-6">
-        <DevelopmentCard reading={development} />
-      </div>
-      <ProgressionView
-        adeptId={current.id}
-        sessions={sessions}
-        canEdit
-        sport={sportFromSlug(gren)}
-        view={vy}
-        query={{ adept: current.id }}
-        goals={
-          <ReferenceAndGoals adept={current} sessions={sessions} canEdit />
-        }
+      <ProgressionSection
+        adept={adept}
+        canEdit={false}
+        basePath={routes.progression}
+        gren={gren}
+        vy={vy}
       />
     </>
   );

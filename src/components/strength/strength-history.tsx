@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
-import { routes } from "@/lib/routes";
 import { deleteStrengthSession } from "@/lib/strength/actions";
 import { entryText, type StrengthSession } from "@/lib/strength/strength";
 
@@ -34,10 +33,11 @@ const dateText = (iso: string) => {
 /** De loggade passen, nyast först, med ändra och ta bort. */
 export function StrengthHistory({
   sessions,
-  adeptId,
+  basePath,
 }: {
   sessions: StrengthSession[];
-  adeptId: string;
+  /** Sidan loggen ligger på; "Ändra" öppnar passet i formuläret där. */
+  basePath: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -75,7 +75,7 @@ export function StrengthHistory({
           </div>
           <div className="flex shrink-0 items-start gap-1">
             <Link
-              href={`${routes.strength}?adept=${adeptId}&andra=${s.id}`}
+              href={`${basePath}?andra=${s.id}`}
               aria-label={`Ändra passet ${dateText(s.performed_on)}`}
               className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text"
             >

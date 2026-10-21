@@ -29,7 +29,7 @@ import {
   type AttentionKind,
 } from "@/lib/overview/attention";
 import { listCheckinsSince, unreadByAdept } from "@/lib/overview/queries";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { listBlocksBetween, listRacesBetween } from "@/lib/season/queries";
 import {
   addDays,
@@ -54,8 +54,7 @@ const ICONS: Record<AttentionKind, typeof ArrowRight> = {
 };
 
 function targetHref(adeptId: string, target: Attention["target"]) {
-  if (target === "plan") return `${routes.plans}?adept=${adeptId}`;
-  return `${routes.adepts}/${adeptId}?vy=${target}`;
+  return adeptHref(adeptId, target);
 }
 
 /**
@@ -198,7 +197,7 @@ export async function CoachOverview({
               ? `${racesSoon[0].name} ${countdownText(daysBetween(today, racesSoon[0].race_date))}`
               : "Inga inlagda"
           }
-          href={routes.plans}
+          href={routes.calendar}
         />
         <StatTile
           label="Olästa meddelanden"
@@ -295,7 +294,7 @@ export async function CoachOverview({
               {ownRaces.slice(0, 8).map((race) => (
                 <li key={race.id}>
                   <Link
-                    href={`${routes.plans}?adept=${race.adept_id}`}
+                    href={adeptHref(race.adept_id, "plan")}
                     className="group flex items-start gap-3"
                   >
                     <PriorityBadge priority={race.priority} />
@@ -386,18 +385,7 @@ export async function CoachOverview({
         </Card>
 
         <Card className="min-w-0">
-          <CardTitle
-            action={
-              <Link
-                href={routes.progression}
-                className="text-[13px] text-accent hover:text-accent-strong"
-              >
-                Progression
-              </Link>
-            }
-          >
-            Senaste tester
-          </CardTitle>
+          <CardTitle>Senaste tester</CardTitle>
           {recent.length === 0 ? (
             <p className="text-sm text-text-muted">
               Inga tester de senaste tre månaderna.

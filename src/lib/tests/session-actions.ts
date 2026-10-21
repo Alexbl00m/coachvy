@@ -235,7 +235,7 @@ export async function saveTestSession(
     return { ok: false, error: `Kunde inte spara värdena: ${metricError.message}` };
   }
 
-  revalidatePath(`${routes.adepts}/${input.adeptId}`);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   return { ok: true, sessionId: session.id };
 }
 
@@ -256,7 +256,7 @@ export async function deleteTestSession(
 
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { ok: true };
 }
 
@@ -366,7 +366,7 @@ export async function recomputeAdeptSessions(
     updated += 1;
   }
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   revalidatePath(routes.progression);
   return { ok: true, updated };
 }

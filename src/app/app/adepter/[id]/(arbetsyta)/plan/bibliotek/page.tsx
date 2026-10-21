@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
 
-import { PageHeader } from "@/components/page-header";
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
 import { EmptyState } from "@/components/ui/card";
-import { getAdept } from "@/lib/adepts/queries";
-import { requireCoach } from "@/lib/auth/session";
+import { loadWorkspace } from "@/lib/adepts/workspace";
 import {
   canEditPlan,
   listWorkoutOptions,
@@ -14,10 +11,10 @@ import {
 } from "@/lib/plan-library/plan-view";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { listInstances } from "@/lib/plan-library/queries";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
 
-export const metadata = { title: "Plan" };
+export const metadata = { title: "Planbiblioteket" };
 
 /**
  * Adeptens plan ur biblioteket, för coachen. Coachen ser samma vy som
@@ -27,14 +24,14 @@ export const metadata = { title: "Plan" };
 export default async function AdeptPlanPage({
   params,
   searchParams,
-}: PageProps<"/app/adepter/[id]/plan">) {
-  const coach = await requireCoach();
-  const { id } = await params;
+}: PageProps<"/app/adepter/[id]/plan/bibliotek">) {
+  const { user, adept, isCoach } = await loadWorkspace(params);
+  // Adepten själv har planen under Min plan.
+  if (!isCoach) redirect(routes.myPlan);
   const query = await searchParams;
-  const adept = await getAdept(id);
-  if (!adept) notFound();
+  const id = adept.id;
   const today = todayIso();
-  const base = `${routes.adepts}/${id}/plan`;
+  const base = adeptHref(id, "bibliotek");
 
   const instances = await listInstances(id);
   const chosen =
@@ -43,23 +40,11 @@ export default async function AdeptPlanPage({
     instances[0];
 
   const header = (
-    <>
-      <Link
-        href={`${routes.adepts}/${id}`}
-        className="mb-3 inline-flex items-center gap-1 text-[13px] text-text-muted hover:text-text"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        {adept.full_name}
-      </Link>
-      <PageHeader
-        title={`Plan · ${adept.full_name}`}
-        description={
-          adept.plan === "medlem"
-            ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
-            : "Adepten är inte medlem just nu, så planen är skrivskyddad."
-        }
-      />
-    </>
+    <p className="mb-4 max-w-2xl text-sm text-text-muted">
+      {adept.plan === "medlem"
+        ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
+        : "Adepten är inte medlem just nu, så planen är skrivskyddad."}
+    </p>
   );
 
   if (!chosen) {
@@ -115,7 +100,7 @@ export default async function AdeptPlanPage({
         workouts={workouts}
         today={today}
         fitness={fitness}
-        userId={coach.id}
+        userId={user.id}
       />
     </>
   );

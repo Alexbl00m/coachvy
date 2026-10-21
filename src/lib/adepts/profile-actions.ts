@@ -85,7 +85,7 @@ export async function saveAdeptProfile(
     return { ok: false, error: `Kunde inte spara profilen: ${error.message}` };
   }
 
-  revalidatePath(`${routes.adepts}/${input.adeptId}`);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   revalidatePath(routes.workoutBuilder);
   return { ok: true };
 }

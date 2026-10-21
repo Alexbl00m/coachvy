@@ -10,7 +10,7 @@ import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import type { Sport } from "@/lib/calculators/lactate";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { listBlocks } from "@/lib/season/queries";
 import { listSessions } from "@/lib/tests/session-queries";
 
@@ -33,7 +33,7 @@ export default async function NewSessionPage({
   // Coachen registrerar på sina adepter; en adept som är medlem på sig själv.
   const selfService = user.profile?.role === "adept";
   if (selfService && !(isMember(user) && user.adept?.id === id)) {
-    redirect(`${routes.adepts}/${id}?vy=testtillfallen`);
+    redirect(adeptHref(id, "tester"));
   }
   if (!selfService && user.profile?.role !== "coach") redirect(routes.dashboard);
 
@@ -57,7 +57,7 @@ export default async function NewSessionPage({
   return (
     <>
       <Link
-        href={`${routes.adepts}/${adept.id}?vy=testtillfallen`}
+        href={adeptHref(adept.id, "tester")}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-text-subtle hover:text-text"
       >
         <ArrowLeft aria-hidden className="size-4" />

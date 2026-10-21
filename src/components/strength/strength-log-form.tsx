@@ -7,7 +7,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { routes } from "@/lib/routes";
 import { saveStrengthSession } from "@/lib/strength/actions";
 import {
   EXERCISES,
@@ -61,8 +60,11 @@ export function StrengthLogForm({
   today,
   editing,
   previous,
+  basePath,
 }: {
   adeptId: string;
+  /** Sidan formuläret ligger på, dit en ändring går tillbaka. */
+  basePath: string;
   today: string;
   /** Passet som ändras, eller null för ett nytt. */
   editing: StrengthSession | null;
@@ -130,7 +132,7 @@ export function StrengthLogForm({
       });
       if (!result.ok) return setError(result.error);
       if (editing) {
-        router.push(`${routes.strength}?adept=${adeptId}`);
+        router.push(basePath);
         router.refresh();
         return;
       }
@@ -364,7 +366,7 @@ export function StrengthLogForm({
           <Button
             type="button"
             variant="ghost"
-            onClick={() => router.push(`${routes.strength}?adept=${adeptId}`)}
+            onClick={() => router.push(basePath)}
           >
             Avbryt
           </Button>

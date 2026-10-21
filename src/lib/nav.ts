@@ -9,6 +9,7 @@ import {
   Dumbbell,
   FlaskConical,
   Gauge,
+  LayoutDashboard,
   LayoutTemplate,
   Library,
   LibraryBig,
@@ -18,6 +19,7 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,12 +30,12 @@ export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Who the item is for. Defaults to everyone. */
-  audience?: Audience;
+  /**
+   * Sidor under posten, visade under den när man är i avsnittet. Posten är
+   * vald också på deras adresser.
+   */
+  children?: NavItem[];
 };
-
-/** `staff`: coacher och admin. */
-type Audience = "coach" | "adept" | "all" | "admin" | "staff";
 
 export type NavSection = {
   /** Rendered above the group; omit for the primary group. */
@@ -41,106 +43,129 @@ export type NavSection = {
   items: NavItem[];
 };
 
-const allSections: NavSection[] = [
-  {
-    items: [
-      { label: "Adepter", href: routes.adepts, icon: Users, audience: "coach" },
-      {
-        label: "Passbyggare",
-        href: routes.workoutBuilder,
-        icon: Dumbbell,
-        // Adepter ser den också: som medlem bygger de egna pass, annars
-        // visar sidan vad medlemskapet ger.
-      },
-      {
-        label: "Passbibliotek",
-        href: routes.sessionLibrary,
-        icon: LibraryBig,
-        audience: "staff",
-      },
-      {
-        label: "Löpplanerare",
-        href: routes.runningPlanner,
-        icon: ChartBarBig,
-        // Adepter ser den också: som medlem planerar de sin egen väg till
-        // loppet, annars visar sidan vad medlemskapet ger.
-      },
-      { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
-      { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
-      {
-        label: "Min plan",
-        href: routes.myPlan,
-        icon: ListChecks,
-        audience: "adept",
-      },
-      {
-        label: "Lopp och aktiviteter",
-        href: routes.activities,
-        icon: Activity,
-      },
-      { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
-      { label: "Progression", href: routes.progression, icon: BarChart3 },
-      { label: "Styrka", href: routes.strength, icon: BicepsFlexed },
-      { label: "Kalender", href: routes.calendar, icon: CalendarDays },
-    ],
-  },
-  {
-    title: "Verktyg",
-    items: [
-      {
-        label: "Kalkyler",
-        href: routes.calculators,
-        icon: Gauge,
-        audience: "coach",
-      },
-      {
-        label: "AI Coach Assistant",
-        href: routes.aiCoach,
-        icon: Bot,
-        audience: "coach",
-      },
-      { label: "Community", href: routes.community, icon: MessagesSquare },
-    ],
-  },
-  {
-    title: "Konto",
-    items: [
-      {
-        label: "Integritetspolicy & villkor",
-        href: routes.privacy,
-        icon: ShieldCheck,
-      },
-      { label: "Inställningar", href: routes.settings, icon: Settings },
-      { label: "Admin", href: routes.admin, icon: UserCog, audience: "admin" },
-      {
-        label: "Planmallar",
-        href: routes.planTemplates,
-        icon: LayoutTemplate,
-        audience: "admin",
-      },
-    ],
-  },
-];
+/**
+ * Coachens meny: sju poster ordnade efter arbetet, inte efter verktygen.
+ * Allt som gäller en adept bor i adeptens arbetsyta under Adepter.
+ */
+function coachSections(isAdmin: boolean): NavSection[] {
+  return [
+    {
+      items: [
+        { label: "Översikt", href: routes.dashboard, icon: LayoutDashboard },
+        { label: "Adepter", href: routes.adepts, icon: Users },
+        { label: "Kalender", href: routes.calendar, icon: CalendarDays },
+        {
+          label: "Bibliotek",
+          href: routes.library,
+          icon: Library,
+          children: [
+            {
+              label: "Passbibliotek",
+              href: routes.sessionLibrary,
+              icon: LibraryBig,
+            },
+            { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
+            ...(isAdmin
+              ? [
+                  {
+                    label: "Planmallar",
+                    href: routes.planTemplates,
+                    icon: LayoutTemplate,
+                  },
+                ]
+              : []),
+          ],
+        },
+        {
+          label: "Verktyg",
+          href: routes.tools,
+          icon: Wrench,
+          children: [
+            {
+              label: "Passbyggare",
+              href: routes.workoutBuilder,
+              icon: Dumbbell,
+            },
+            {
+              label: "Löpplanerare",
+              href: routes.runningPlanner,
+              icon: ChartBarBig,
+            },
+            { label: "Kalkyler", href: routes.calculators, icon: Gauge },
+            { label: "AI-coach", href: routes.aiCoach, icon: Bot },
+          ],
+        },
+        { label: "Community", href: routes.community, icon: MessagesSquare },
+        { label: "Inställningar", href: routes.settings, icon: Settings },
+      ],
+    },
+    ...(isAdmin
+      ? [
+          {
+            title: "Admin",
+            items: [{ label: "Admin", href: routes.admin, icon: UserCog }],
+          },
+        ]
+      : []),
+  ];
+}
 
 /**
- * The menu an account should see. An adept has no roster of their own, so the
- * Adepter entry is a coach-only item rather than a link into an empty page.
+ * Adeptens meny. Den görs om i nästa steg av omtaget – en egen app med fem
+ * flikar – och är tills dess densamma som förut.
+ */
+function adeptSections(): NavSection[] {
+  return [
+    {
+      items: [
+        { label: "Översikt", href: routes.dashboard, icon: LayoutDashboard },
+        { label: "Passbyggare", href: routes.workoutBuilder, icon: Dumbbell },
+        {
+          label: "Löpplanerare",
+          href: routes.runningPlanner,
+          icon: ChartBarBig,
+        },
+        { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
+        { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
+        { label: "Min plan", href: routes.myPlan, icon: ListChecks },
+        {
+          label: "Lopp och aktiviteter",
+          href: routes.activities,
+          icon: Activity,
+        },
+        { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
+        { label: "Progression", href: routes.progression, icon: BarChart3 },
+        { label: "Styrka", href: routes.strength, icon: BicepsFlexed },
+        { label: "Kalender", href: routes.calendar, icon: CalendarDays },
+      ],
+    },
+    {
+      title: "Verktyg",
+      items: [
+        { label: "Community", href: routes.community, icon: MessagesSquare },
+      ],
+    },
+    {
+      title: "Konto",
+      items: [
+        {
+          label: "Integritetspolicy & villkor",
+          href: routes.privacy,
+          icon: ShieldCheck,
+        },
+        { label: "Inställningar", href: routes.settings, icon: Settings },
+      ],
+    },
+  ];
+}
+
+/**
+ * The menu an account should see. Coaches (and the demo shell without a
+ * role) get the coach menu; adepts their own.
  */
 export function getNavSections(
   role: AccountRole | null,
   isAdmin = false,
 ): NavSection[] {
-  return allSections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter(
-        (item) =>
-          !item.audience ||
-          item.audience === "all" ||
-          item.audience === role ||
-          (item.audience === "admin" && isAdmin) ||
-          (item.audience === "staff" && (role === "coach" || isAdmin)),
-      ),
-    }))
-    .filter((section) => section.items.length > 0);
+  return role === "adept" ? adeptSections() : coachSections(isAdmin);
 }

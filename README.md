@@ -1259,7 +1259,9 @@ påhittade. Här räknas allt ur riktiga tester, incheckningar och planer.
 
 ### Säsongsplanen
 
-`/app/planer` samlar en adepts säsong på en tidslinje: perioderna som band,
+Säsongsplanen (`src/components/season/season-plan.tsx`) ligger i adeptens
+arbetsyta under Plan › Säsong (`/app/adepter/<id>/plan`), och för adepten
+själv på `/app/planer`. Den samlar säsongen på en tidslinje: perioderna som band,
 tävlingarna som markörer och testerna som punkter, med dagens datum utritat.
 Tolv månader i taget, ett halvår framåt eller bakåt med pilarna.
 
@@ -1298,8 +1300,8 @@ ordinal ramp mot både den mörka ytan och utskriftens vita.
 
 Coachen planerar perioderna; en adept utan coach planerar sin egen säsong.
 Tävlingarna skriver båda, eftersom atleten ofta vet först att ett lopp
-tillkommit. "Skapa ny plan" i sidhuvudet öppnar planen med formuläret för en
-ny period.
+tillkommit. "+ Ny › Period i säsongsplanen" i sidhuvudet öppnar planen med
+formuläret för en ny period.
 
 ### Intensitetsfördelningen
 
@@ -1369,9 +1371,9 @@ och kolumner för fas, återhämtning mot eget snitt, nästa tävling och oläst
 
 ## Lopp och aktiviteter
 
-**Lopp och aktiviteter** finns i menyn (`/app/aktiviteter`) och som flik på
-adepten – samma innehåll (`src/components/activities/adept-activities.tsx`).
-Coachen väljer adept överst; utan val visas den med senast uppladdade pass.
+**Lopp och aktiviteter** ligger i adeptens arbetsyta under Träning
+(`/app/adepter/<id>/traning`), och för adepten själv på `/app/aktiviteter` –
+samma innehåll (`src/components/activities/adept-activities.tsx`).
 Ett genomfört lopp eller pass laddas upp som .fit-fil – av coachen eller av
 adepten själv. Filen läses och
 analyseras i webbläsaren (`fit-file-parser`, samma tolk som testimporten).
@@ -1886,6 +1888,40 @@ Personuppgiftsansvarig, kontaktuppgifter och biträden står i
 `src/lib/site.ts` och på policysidan. Stäm av texten innan den gäller skarpt –
 till exempel vilken region Supabase-projektet ligger i och att
 biträdesavtalen med Supabase, Vercel och Anthropic finns på plats.
+
+## Navigering och adeptens arbetsyta
+
+Menyn är byggd efter arbetet, inte efter verktygen (`src/lib/nav.ts`).
+
+- **Coachen** har sju poster: Översikt, Adepter, Kalender, Bibliotek
+  (passbibliotek, planbibliotek och – för admin – planmallar), Verktyg
+  (passbyggare, löpplanerare, kalkyler, AI-coach), Community och
+  Inställningar. Bibliotek och Verktyg har egna sidor (`/app/bibliotek`,
+  `/app/verktyg`), och deras undersidor fälls ut i menyn när man är där.
+- **Adeptens arbetsyta** (`src/app/app/adepter/[id]/(arbetsyta)/`) samlar allt
+  som gäller en adept under en layout med namnet, Nytt test, Bygg pass och
+  flikarna:
+
+  | Flik | Adress | Innehåll |
+  | --- | --- | --- |
+  | Läge | `/app/adepter/<id>` | Värt en titt (mående, belastning, LSCT, olästa, lopp), säsongen, veckan dag för dag, periodens fördelning, senaste test och utnyttjandegrad, återhämtning, styrka |
+  | Plan | `/plan`, `/plan/pass`, `/plan/bibliotek` | Säsongsplanen, passen som byggts åt adepten, planen ur planbiblioteket |
+  | Träning | `/traning`, `/traning/styrka` | Lopp och aktiviteter med utvecklingen ur träningen, styrkeloggen |
+  | Tester | `/tester`, `/tester/progression`, `/tester/varden` | Testtillfällen, progressionen, enstaka värden |
+  | Mående | `/maende` | Incheckningar och belastning |
+  | Meddelanden | `/meddelanden` | Tråden, med olästa på fliken |
+  | Profil | `/profil` | Uppgifter, inbjudan och samtycke, bakgrund |
+
+  Adressfunktionen `adeptHref(id, avsnitt)` i `src/lib/routes.ts` ger
+  adresserna. Sessionen och adepten är cachade per förfrågan, så att layouten
+  och fliken delar på samma uppslag.
+- **Gamla adresser leder rätt.** `?vy=` på adeptsidan går till sin flik, och
+  för coachen leder `/app/planer`, `/app/progression`, `/app/styrka` och
+  `/app/aktiviteter` – med eller utan `?adept=` – till adeptens flik. Adepten
+  själv har kvar sidorna; adeptens meny görs om i nästa steg.
+- **"+ Ny"** i sidhuvudet (`src/components/new-menu.tsx`) föreslår det som går
+  att skapa där man står: på en adept pass, test, period och styrkepass för
+  den adepten. För adepten heter knappen "Logga".
 
 ## Nästa steg
 

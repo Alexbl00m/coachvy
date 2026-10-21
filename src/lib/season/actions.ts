@@ -42,7 +42,7 @@ function revalidateSeason(adeptId: string) {
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);
   revalidatePath(routes.adepts);
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
 }
 
 export type SaveRaceInput = {

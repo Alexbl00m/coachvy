@@ -2,7 +2,7 @@ import "server-only";
 
 import type { CalendarWorkout } from "@/lib/calendar/queries";
 import type { Sport } from "@/lib/calculators/lactate";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -191,7 +191,7 @@ export async function listPlanSessionsBetween(
       auth.user?.id;
     const href = own
       ? routes.myPlan
-      : `${routes.adepts}/${instance.adept_id}/plan`;
+      : adeptHref(instance.adept_id, "bibliotek");
     for (const week of view.schedule) {
       if (week.endsOn < from || week.startsOn > to) continue;
       for (const s of week.sessions) {

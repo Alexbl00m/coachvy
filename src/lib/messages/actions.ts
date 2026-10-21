@@ -53,7 +53,7 @@ export async function sendMessage(input: {
     };
   }
 
-  revalidatePath(`${routes.adepts}/${input.adeptId}`);
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   return { ok: true, id: data.id };
 }
 
@@ -73,7 +73,7 @@ export async function markThreadRead(adeptId: string): Promise<number> {
   });
 
   if (error) return 0;
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return (data as number) ?? 0;
 }
 
@@ -87,6 +87,6 @@ export async function deleteMessage(
   const { error } = await supabase.from("coach_messages").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  revalidatePath(`${routes.adepts}/${adeptId}`);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { ok: true };
 }

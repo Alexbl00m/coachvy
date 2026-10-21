@@ -18,7 +18,7 @@ import {
   type ZoneTime,
 } from "@/lib/activities/analysis";
 import { SERIES } from "@/lib/calculators/chart-colors";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { listRaces } from "@/lib/season/queries";
 import { longDate } from "@/lib/season/season";
 
@@ -184,7 +184,7 @@ export default async function ActivityPage({
   return (
     <>
       <Link
-        href={`${routes.adepts}/${adept.id}?vy=aktiviteter`}
+        href={adeptHref(adept.id, "traning")}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100"
       >
         <ArrowLeft aria-hidden className="size-4" />
@@ -207,7 +207,7 @@ export default async function ActivityPage({
         action={
           race ? (
             <Link
-              href={`${routes.plans}?adept=${adept.id}`}
+              href={adeptHref(adept.id, "plan")}
               className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted hover:border-accent hover:text-text"
             >
               <Flag aria-hidden className="size-3.5 text-accent" />

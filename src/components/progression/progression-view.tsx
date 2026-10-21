@@ -259,6 +259,7 @@ export function ProgressionView({
   sport: requestedSport,
   view: requestedView,
   query = {},
+  basePath = routes.progression,
   goals = null,
 }: {
   adeptId: string;
@@ -268,6 +269,8 @@ export function ProgressionView({
   view: string | undefined;
   /** Övriga parametrar i adressen, t.ex. vilken adept. */
   query?: Record<string, string>;
+  /** Adressen vyn ligger på; valen av gren och vy läggs till som parametrar. */
+  basePath?: string;
   /**
    * Fliken Mål och referens. Ett element som hämtar sitt eget underlag, och
    * som därför bara renderas – och hämtar – när fliken är vald.
@@ -339,7 +342,7 @@ export function ProgressionView({
 
   const href = (params: Record<string, string>) => {
     const search = new URLSearchParams({ ...query, ...params });
-    return `${routes.progression}?${search.toString()}`;
+    return `${basePath}?${search.toString()}`;
   };
 
   const analysis = summariseProgress(trends);

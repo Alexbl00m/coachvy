@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { Adept } from "@/lib/types/database";
@@ -22,7 +24,8 @@ export async function listAdepts(): Promise<Adept[]> {
   return data ?? [];
 }
 
-export async function getAdept(id: string): Promise<Adept | null> {
+/** En adept. Cachad per förfrågan: arbetsytans layout och flik läser samma rad. */
+export const getAdept = cache(async (id: string): Promise<Adept | null> => {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createClient();
@@ -34,7 +37,7 @@ export async function getAdept(id: string): Promise<Adept | null> {
 
   if (error) throw new Error(`Kunde inte hämta adepten: ${error.message}`);
   return data ?? null;
-}
+});
 
 /** The adept row belonging to the signed-in adept account, if there is one. */
 export async function getMyAdeptRow(profileId: string): Promise<Adept | null> {

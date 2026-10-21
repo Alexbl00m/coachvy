@@ -105,7 +105,7 @@ export async function updateAdept(
     };
   }
 
-  revalidatePath(`${routes.adepts}/${id}`);
+  revalidatePath(`${routes.adepts}/${id}`, "layout");
   revalidatePath(routes.adepts);
   return { notice: "Ändringarna är sparade." };
 }

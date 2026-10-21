@@ -6,7 +6,7 @@ import { blockLabel, phaseFill } from "@/components/season/phase-style";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatClock } from "@/lib/activities/analysis";
 import type { Sport } from "@/lib/calculators/lactate";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import {
   countdownText,
   daysBetween,
@@ -78,7 +78,7 @@ export function DayContent({
     <ul className="space-y-0.5">
       {items.races.map((race) => (
         <li key={race.id}>
-          <ItemLink href={`${routes.plans}?adept=${race.adept_id}`}>
+          <ItemLink href={adeptHref(race.adept_id, "plan")}>
             <PriorityBadge
               priority={race.priority}
               className="size-5 text-[11px]"

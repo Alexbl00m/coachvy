@@ -16,7 +16,7 @@ import { blockOn, dateRange, mainRace } from "@/lib/season/season";
 import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
 
 /** Lugnt, medel och högt ur passprofilens blå stege, med avstånd emellan. */
-const GOAL_FILL: Record<SessionGoal, string> = {
+export const GOAL_FILL: Record<SessionGoal, string> = {
   lugn: "var(--zone-1)",
   medel: "var(--zone-3)",
   hög: "var(--zone-5)",
@@ -31,7 +31,7 @@ const bandText = ({ min, max }: Band) =>
       : `${Math.round(min * 100)}–${pct(max)}`;
 
 /** Fördelningen som en stapel, med siffrorna bredvid – aldrig färgen ensam. */
-function Bar({ counts }: { counts: Distribution }) {
+export function DistributionBar({ counts }: { counts: Distribution }) {
   return (
     <div
       className="flex h-2.5 overflow-hidden rounded-full bg-surface-2"
@@ -138,7 +138,7 @@ export function DistributionCard({
               <div className="min-w-0 space-y-2">
                 {counts.total > 0 ? (
                   <>
-                    <Bar counts={counts} />
+                    <DistributionBar counts={counts} />
                     <dl className="grid grid-cols-3 gap-2 text-[12px]">
                       {SESSION_GOALS.map(({ key, label }) => (
                         <div key={key} className="min-w-0">

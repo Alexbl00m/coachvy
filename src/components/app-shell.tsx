@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, LogOut, Menu, Plus, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { Logo } from "@/components/logo";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { NewMenu } from "@/components/new-menu";
+import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
-import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
 import type { AccountRole } from "@/lib/types/database";
 
@@ -19,6 +18,8 @@ export type AppShellUser = {
   role: AccountRole | null;
   roleLabel: string;
   isAdmin?: boolean;
+  /** Adeptkontots egen adeptrad, för genvägarna i "Logga". */
+  adeptId?: string | null;
 };
 
 export function AppShell({
@@ -28,7 +29,6 @@ export function AppShell({
   user: AppShellUser;
   children: ReactNode;
 }) {
-  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const initials = user.name
@@ -63,28 +63,8 @@ export function AppShell({
           <Logo />
         </Link>
 
-        <nav aria-label="Genvägar" className="ml-4 hidden items-center sm:flex">
-          <Link
-            href={routes.dashboard}
-            aria-current={pathname === routes.dashboard ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-              pathname === routes.dashboard
-                ? "text-ink-50"
-                : "text-ink-300 hover:text-ink-50",
-            )}
-          >
-            <LayoutDashboard aria-hidden className="size-4" />
-            Min översikt
-          </Link>
-        </nav>
-
         <div className="ml-auto flex items-center gap-2">
-          <ButtonLink href={routes.newPlan} size="sm" className="font-semibold">
-            <Plus aria-hidden className="size-4" />
-            <span className="hidden sm:inline">Skapa ny plan</span>
-            <span className="sr-only sm:hidden">Skapa ny plan</span>
-          </ButtonLink>
+          <NewMenu role={user.role} ownAdeptId={user.adeptId ?? null} />
 
           <div className="hidden items-center gap-2.5 border-l border-ink-800 pl-3 md:flex">
             <span

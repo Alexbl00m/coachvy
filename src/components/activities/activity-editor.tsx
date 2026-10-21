@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { deleteActivity, updateActivity } from "@/lib/activities/actions";
-import { routes } from "@/lib/routes";
+import { adeptHref } from "@/lib/routes";
 import type { RaceChoice } from "./activity-upload";
 
 /**
@@ -59,7 +59,7 @@ export function ActivityEditor({
     startTransition(async () => {
       const result = await deleteActivity(id, adeptId);
       if (result.ok) {
-        router.push(`${routes.adepts}/${adeptId}?vy=aktiviteter`);
+        router.push(adeptHref(adeptId, "traning"));
         return;
       }
       setMessage(result.error ?? "Kunde inte ta bort.");

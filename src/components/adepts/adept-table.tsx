@@ -8,7 +8,7 @@ import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
 import { PriorityBadge } from "@/components/season/priority-badge";
 import { consentLabel, type ConsentState } from "@/lib/adepts/consent-state";
 import { cn } from "@/lib/cn";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import type { TrainingPhase } from "@/lib/tests/phases";
 import type { RacePriority } from "@/lib/types/database";
 
@@ -202,7 +202,7 @@ export function AdeptTable({
                       </Link>
                       {r.unread > 0 && (
                         <Link
-                          href={`${routes.adepts}/${r.id}?vy=meddelanden`}
+                          href={adeptHref(r.id, "meddelanden")}
                           className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-medium text-accent-on tabular-nums"
                           title="Olästa meddelanden"
                         >

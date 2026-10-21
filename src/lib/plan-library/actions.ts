@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { saveRace } from "@/lib/season/actions";
 import { addDays, todayIso } from "@/lib/season/season";
 import { createClient } from "@/lib/supabase/server";
@@ -828,7 +828,7 @@ export async function saveFitnessEstimate(input: {
   });
   if (error) return dbError(error);
   refreshPlan();
-  revalidatePath(`${routes.adepts}/${input.adeptId}/plan`);
+  revalidatePath(adeptHref(input.adeptId, "bibliotek"));
   return { ok: true };
 }
 
@@ -844,7 +844,7 @@ export async function deleteFitnessEstimate(input: {
     .eq("id", input.id);
   if (error) return dbError(error);
   refreshPlan();
-  revalidatePath(`${routes.adepts}/${input.adeptId}/plan`);
+  revalidatePath(adeptHref(input.adeptId, "bibliotek"));
   return { ok: true };
 }
 
@@ -877,6 +877,6 @@ export async function setPaceSource(input: {
     .eq("id", input.instanceId);
   if (error) return dbError(error);
   refreshPlan();
-  revalidatePath(`${routes.adepts}/${ctx.view.instance.adept_id}/plan`);
+  revalidatePath(adeptHref(ctx.view.instance.adept_id, "bibliotek"));
   return { ok: true };
 }
