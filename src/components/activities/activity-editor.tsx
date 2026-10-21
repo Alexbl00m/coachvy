@@ -22,6 +22,8 @@ export function ActivityEditor({
   raceId: initialRace,
   isRace: initialIsRace,
   races,
+  intensity: initialIntensity,
+  automaticLabel,
 }: {
   id: string;
   adeptId: string;
@@ -30,15 +32,21 @@ export function ActivityEditor({
   raceId: string | null;
   isRace: boolean;
   races: RaceChoice[];
+  /** Coachens klassning efter huvudsyfte; null = automatisk. */
+  intensity: "lugn" | "medel" | "hög" | null;
+  /** Vad den automatiska klassningen säger, för valet "Automatisk". */
+  automaticLabel: string | null;
 }) {
   const router = useRouter();
   const nameId = useId();
   const noteId = useId();
   const raceId = useId();
+  const intensityId = useId();
   const [name, setName] = useState(initialName);
   const [note, setNote] = useState(initialNote ?? "");
   const [race, setRace] = useState(initialRace ?? "");
   const [isRace, setIsRace] = useState(initialIsRace || Boolean(initialRace));
+  const [intensity, setIntensity] = useState(initialIntensity ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -50,6 +58,10 @@ export function ActivityEditor({
         note,
         raceId: isRace ? race || null : null,
         isRace,
+        intensity:
+          intensity === "lugn" || intensity === "medel" || intensity === "hög"
+            ? intensity
+            : null,
       });
       setMessage(result.ok ? "Sparat." : (result.error ?? "Kunde inte spara."));
       if (result.ok) router.refresh();
@@ -101,6 +113,25 @@ export function ActivityEditor({
           </Field>
         )}
       </div>
+      <Field
+        label="Intensitet efter huvudsyfte"
+        htmlFor={intensityId}
+        hint="Räknas i periodens fördelning. Automatisk läses ur zonerna, eller ur AI-sammanfattningen om den finns."
+      >
+        <Select
+          id={intensityId}
+          value={intensity}
+          onChange={(e) => setIntensity(e.target.value)}
+          className="sm:max-w-sm"
+        >
+          <option value="">
+            Automatisk{automaticLabel ? ` – ${automaticLabel}` : ""}
+          </option>
+          <option value="lugn">Lugnt – under LT1</option>
+          <option value="medel">Medel – mellan trösklarna</option>
+          <option value="hög">Högt – över LT2</option>
+        </Select>
+      </Field>
       <Field
         label="Anteckning"
         htmlFor={noteId}

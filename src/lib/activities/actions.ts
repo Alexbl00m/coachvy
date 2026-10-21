@@ -119,7 +119,7 @@ function cleanMultisport(raw: unknown): MultisportSummary | null {
  */
 type ActivityInsert = Omit<
   ActivityRow,
-  "id" | "note" | "created_at" | "updated_at"
+  "id" | "note" | "intensity" | "created_at" | "updated_at"
 >;
 
 function rowOf(
@@ -604,12 +604,22 @@ export async function updateActivity(
     note?: string | null;
     raceId?: string | null;
     isRace?: boolean;
+    /** Klassning efter huvudsyfte; null återgår till den automatiska. */
+    intensity?: ActivityRow["intensity"];
   },
 ): Promise<{ ok: boolean; error?: string }> {
   await requireSessionUser();
   const patch: Partial<
-    Pick<ActivityRow, "name" | "note" | "race_id" | "is_race">
+    Pick<ActivityRow, "name" | "note" | "race_id" | "is_race" | "intensity">
   > = {};
+  if (changes.intensity !== undefined) {
+    if (
+      changes.intensity !== null &&
+      !["lugn", "medel", "hög"].includes(changes.intensity)
+    )
+      return { ok: false, error: "Okänd intensitet." };
+    patch.intensity = changes.intensity;
+  }
   if (changes.name !== undefined) {
     const name = changes.name.trim().slice(0, 120);
     if (!name) return { ok: false, error: "Ge aktiviteten ett namn." };

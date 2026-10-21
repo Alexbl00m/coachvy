@@ -9,6 +9,11 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
+import {
+  classifyActivity,
+  effectiveGoal,
+  GOAL_SOURCE_TEXT,
+} from "@/lib/activities/intensity-class";
 import { activityStrain } from "@/lib/activities/load";
 import { getActivity, listMultisportLegs } from "@/lib/activities/queries";
 import { getActivitySummary } from "@/lib/activities/summary-queries";
@@ -32,10 +37,13 @@ const sv = (v: number, digits = 0) =>
 
 type Tile = { label: string; value: string; unit?: string; hint?: string };
 
+const GOAL_LABEL = { lugn: "Lugnt", medel: "Medel", hög: "Högt" } as const;
+
 function tilesFor(
   s: Summary,
   sport: string,
   strain: { value: number; estimated: boolean } | null,
+  goal: ReturnType<typeof effectiveGoal>,
 ): Tile[] {
   const running = sport === "löpning";
   const tiles: (Tile | null)[] = [
@@ -115,6 +123,16 @@ function tilesFor(
               : undefined,
         }
       : null,
+    goal
+      ? {
+          label: "Huvudsyfte",
+          value: GOAL_LABEL[goal.goal],
+          hint:
+            goal.source === "automatisk" && goal.reason
+              ? goal.reason
+              : GOAL_SOURCE_TEXT[goal.source],
+        }
+      : null,
   ];
   return tiles.filter((t): t is Tile => t !== null);
 }
@@ -191,6 +209,18 @@ export default async function ActivityPage({
   const laps = ((activity.laps ?? []) as Lap[]).filter((l) => l.seconds > 0);
   const ftp = ref?.ftp ?? null;
   const strain = activityStrain(activity);
+  // Efter huvudsyfte: coachens klassning, AI-sammanfattningens, annars ur zonerna.
+  const automatic = classifyActivity(s, activity.sport);
+  const goal = effectiveGoal({
+    coach: activity.intensity ?? null,
+    summary: aiSummary?.intensity ?? null,
+    automatic,
+  });
+  const automaticGoal = effectiveGoal({
+    coach: null,
+    summary: aiSummary?.intensity ?? null,
+    automatic,
+  });
   const multi = activity.multisport;
   const legs = multi ? await listMultisportLegs(adept.id, multi.id) : [];
   const legCount = multi
@@ -262,7 +292,7 @@ export default async function ActivityPage({
           </Card>
         )}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {tilesFor(s, activity.sport, strain).map((t) => (
+          {tilesFor(s, activity.sport, strain, goal).map((t) => (
             <div
               key={t.label}
               className="min-w-0 rounded-lg border border-line bg-surface p-4"
@@ -565,6 +595,12 @@ export default async function ActivityPage({
                 name: r.name,
                 race_date: r.race_date,
               }))}
+              intensity={activity.intensity ?? null}
+              automaticLabel={
+                automaticGoal
+                  ? `${GOAL_LABEL[automaticGoal.goal].toLowerCase()}, ${automaticGoal.reason ?? GOAL_SOURCE_TEXT[automaticGoal.source]}`
+                  : null
+              }
             />
           </Card>
         )}

@@ -5,6 +5,7 @@ import type { WorkoutBlock, WorkoutStep } from "@/lib/workouts/schema";
 import {
   blockDistribution,
   distributionNotes,
+  doneDistribution,
   phaseTarget,
   raceDemand,
   sessionGoal,
@@ -205,5 +206,21 @@ describe("seasonToPrompt", () => {
     );
     expect(prompt).toContain("Intensitet i perioden: polariserad");
     expect(prompt).toContain("1 lugna, 0 medel, 1 höga");
+  });
+});
+
+describe("doneDistribution", () => {
+  it("räknar genomförda pass i perioden, tävlingar och oklassade för sig", () => {
+    const block = { starts_on: "2026-10-01", ends_on: "2026-10-31" };
+    const result = doneDistribution(block, [
+      { date: "2026-10-02", goal: "lugn", isRace: false },
+      { date: "2026-10-03", goal: "hög", isRace: false },
+      { date: "2026-10-04", goal: null, isRace: false },
+      { date: "2026-10-05", goal: "hög", isRace: true },
+      { date: "2026-11-01", goal: "lugn", isRace: false },
+    ]);
+    expect(result.counts).toEqual({ lugn: 1, medel: 0, hög: 1, total: 2 });
+    expect(result.races).toBe(1);
+    expect(result.unclassified).toBe(1);
   });
 });

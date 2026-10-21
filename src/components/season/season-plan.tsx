@@ -30,6 +30,7 @@ import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 import type { Adept, RaceSport } from "@/lib/types/database";
 import { listWorkouts } from "@/lib/workouts/queries";
+import { listDoneGoals } from "@/lib/activities/intensity-queries";
 
 const monthLabel = (month: string) =>
   `${monthName(Number(month.slice(5, 7)) - 1)} ${month.slice(0, 4)}`;
@@ -120,6 +121,11 @@ export async function SeasonPlan({
       ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
       : [],
   );
+  // Genomförda pass i de perioder som visas, klassade på samma sätt.
+  const doneFrom = blocks
+    .filter((b) => b.ends_on >= from)
+    .reduce((min, b) => (b.starts_on < min ? b.starts_on : min), from);
+  const done = await listDoneGoals(adept.id, doneFrom, to < today ? to : today);
 
   return (
     <div className="space-y-6">
@@ -244,6 +250,7 @@ export async function SeasonPlan({
         blocks={blocks}
         races={races}
         planned={planned}
+        done={done}
         from={from}
         to={to}
         today={today}

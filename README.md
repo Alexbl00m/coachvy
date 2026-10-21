@@ -145,6 +145,8 @@ auth.users
                         priority ('A' | 'B' | 'C'), target
           training_blocks  säsongsplanens perioder: phase, name,
                         starts_on, ends_on, focus
+          activities.intensity  coachens klassning efter huvudsyfte (null =
+                        automatisk)
           activity_summaries  AI-sammanfattning per pass: headline, purpose,
                         intensity, body, edited, shared_at
           zone_reviews  coachens beslut om zonförslag ur träningen:
@@ -1335,6 +1337,25 @@ ett högintensivt pass även om det mest är uppvärmning och vila.
 
 AI-coachen och passbyggaren får samma sak i säsongsunderlaget: fasens modell
 och hur många lugna, medel och höga pass som ligger inplanerade.
+
+**Genomfört bredvid planerat.** Varje period visar också passen ur klockan,
+klassade efter huvudsyfte på samma tre nivåer
+(`src/lib/activities/intensity-class.ts`):
+
+- **Högt** när minst 8 minuter låg över LT2 – över CP (CS) eller i effektzon
+  5 och uppåt – och det är minst 6 % av passet. Med bara puls räcker 6
+  minuter i pulszon 5, eftersom pulsen ligger efter i korta intervaller.
+- **Medel** när minst 20 minuter låg mellan trösklarna (zon 3–4) och det är
+  minst 15 % av passet.
+- **Lugnt** annars. Ett distanspass med några stegringar blir alltså lugnt,
+  ett 5 × 4-minuterspass högt.
+
+Coachens egen klassning går före – den sätts i passets redigerare och sparas
+i `activities.intensity` (`20261023090000_activity_intensity.sql`) – och
+därefter AI-sammanfattningens. Passets sida visar klassningen och vad den
+bygger på. Tävlingar räknas inte i andelarna, eftersom riktmärkena gäller
+träningen, och pass utan klassning (simning, pass utan zoner) räknas för sig.
+Läge visar samma sak för perioden som pågår.
 
 ### Planen följer med
 

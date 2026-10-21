@@ -328,6 +328,8 @@ export type ActivityRow = {
   streams: ActivityStreams;
   laps: unknown[] | null;
   note: string | null;
+  /** Coachens klassning efter huvudsyfte; null = automatisk. */
+  intensity: "lugn" | "medel" | "hög" | null;
   /** En gren i ett multisportlopp: gemensamt id, grenens plats och delarna. */
   multisport: MultisportSummary | null;
   created_by: string | null;

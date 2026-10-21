@@ -14,13 +14,11 @@ import {
 } from "lucide-react";
 
 import { SportIcon, TestIcon } from "@/components/calendar/calendar-items";
-import {
-  DistributionBar,
-  GOAL_FILL,
-} from "@/components/season/distribution-card";
+import { GoalBreakdown } from "@/components/season/distribution-card";
 import { blockLabel } from "@/components/season/phase-style";
 import { SeasonSummary } from "@/components/season/season-summary";
 import { ZoneSuggestionCard } from "@/components/tests/zone-suggestion-card";
+import { listDoneGoals } from "@/lib/activities/intensity-queries";
 import { Card, CardTitle } from "@/components/ui/card";
 import { loadTrend } from "@/lib/activities/load";
 import { listLoadActivities } from "@/lib/activities/load-queries";
@@ -36,11 +34,10 @@ import {
 import { adeptHref, routes } from "@/lib/routes";
 import {
   blockDistribution,
-  distributionNotes,
+  doneDistribution,
   phaseTarget,
   raceDemand,
   sessionGoal,
-  SESSION_GOALS,
 } from "@/lib/season/distribution";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import {
@@ -100,8 +97,6 @@ const hours = (seconds: number) => {
   const m = Math.round((seconds % 3600) / 60);
   return h > 0 ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min`;
 };
-
-const pct = (n: number) => `${Math.round(n * 100)} %`;
 
 /**
  * Läget hos en adept, för coachen: det som är värt en titt först, sedan var i
@@ -235,6 +230,17 @@ export async function AdeptStatus({
       : [],
   );
   const counts = block ? blockDistribution(block, planned) : null;
+  // Det som faktiskt gjordes i perioden, klassat på samma sätt.
+  const doneInBlock = block
+    ? doneDistribution(
+        block,
+        await listDoneGoals(
+          adept.id,
+          block.starts_on,
+          today < block.ends_on ? today : block.ends_on,
+        ),
+      )
+    : null;
   // I den specifika perioden avgör loppet vilken kvalitet som ska växa.
   const race =
     block?.phase === "specifik" ? mainRace(races, block.starts_on) : null;
@@ -454,45 +460,28 @@ export async function AdeptStatus({
               Ingen period pågår. Lägg upp säsongens perioder under Plan, så
               räknas de planerade passen mot fasens riktmärke.
             </p>
-          ) : counts.total === 0 ? (
-            <p className="text-sm text-text-muted">
-              {blockLabel(block)}: inga pass inplanerade i perioden ännu.
-            </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-sm text-text">
                 {blockLabel(block)}
                 <span className="ml-1.5 text-[13px] text-text-muted">
-                  {target.model} · {counts.total} pass
+                  {target.model}
                 </span>
               </p>
-              <DistributionBar counts={counts} />
-              <dl className="grid grid-cols-3 gap-2 text-[13px]">
-                {SESSION_GOALS.map(({ key, label }) => (
-                  <div key={key} className="min-w-0">
-                    <dt className="flex items-center gap-1.5 text-text-muted">
-                      <span
-                        aria-hidden
-                        className="size-2 shrink-0 rounded-full"
-                        style={{ background: GOAL_FILL[key] }}
-                      />
-                      {label}
-                    </dt>
-                    <dd className="font-semibold text-text tabular-nums">
-                      {pct(counts[key] / counts.total)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              {distributionNotes(counts, target).map((note) => (
-                <p key={note} className="flex gap-2 text-[13px] text-text">
-                  <span
-                    aria-hidden
-                    className="mt-1.5 size-1.5 shrink-0 rounded-full bg-warn"
-                  />
-                  {note}
-                </p>
-              ))}
+              <GoalBreakdown
+                label="Planerat"
+                counts={counts}
+                target={target}
+                empty="Inga pass inplanerade i perioden ännu."
+              />
+              {doneInBlock && (
+                <GoalBreakdown
+                  label="Genomfört"
+                  counts={doneInBlock.counts}
+                  target={target}
+                  empty="Inga klassade pass ur klockan i perioden ännu."
+                />
+              )}
             </div>
           )}
         </Card>

@@ -348,3 +348,30 @@ export function blockDistribution(
       .map((p) => p.goal),
   );
 }
+
+/** Ett genomfört pass som perioden ska räkna. */
+export type DoneGoalLike = {
+  date: string;
+  goal: SessionGoal | null;
+  isRace: boolean;
+};
+
+/**
+ * De genomförda passen i en period, räknade som de planerade. Tävlingar
+ * räknas för sig – riktmärkena gäller träningen – liksom pass utan klassning
+ * (simning, pass utan zoner).
+ */
+export function doneDistribution(
+  block: Pick<TrainingBlockRow, "starts_on" | "ends_on">,
+  done: DoneGoalLike[],
+): { counts: Distribution; races: number; unclassified: number } {
+  const inBlock = done.filter(
+    (d) => block.starts_on <= d.date && d.date <= block.ends_on,
+  );
+  const training = inBlock.filter((d) => !d.isRace);
+  return {
+    counts: distribution(training.map((d) => d.goal)),
+    races: inBlock.length - training.length,
+    unclassified: training.filter((d) => d.goal === null).length,
+  };
+}
