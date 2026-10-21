@@ -145,6 +145,8 @@ auth.users
                         priority ('A' | 'B' | 'C'), target
           training_blocks  säsongsplanens perioder: phase, name,
                         starts_on, ends_on, focus
+          activity_summaries  AI-sammanfattning per pass: headline, purpose,
+                        intensity, body, edited, shared_at
           zone_reviews  coachens beslut om zonförslag ur träningen:
                         sport, decision, proposed_critical, session_id
           coach_messages  tråden mellan coach och adept, med read_at
@@ -1608,6 +1610,34 @@ vilket test som helst. **Inte nu** sparar en avvisning; förslaget kommer
 tillbaka först när träningen ger minst 1 % mer än det avvisade, eller efter
 ett nytt test. Besluten ligger i `zone_reviews`. Förslaget räknas om på
 servern när coachen beslutar, så det som sparas är det som stod i databasen.
+
+### Sammanfattning per pass
+
+Analysen vid uppladdningen säger vad passet var. På passets sida kan coachen
+be AI:n om en **sammanfattning** av vad det betyder i sitt sammanhang
+(`src/lib/activities/summary-actions.ts`). Underlaget byggs av
+`src/lib/activities/session-brief.ts`, ren och testad:
+
+- passets nyckeltal, zoner, bästa insatser mot testets modell, varven och
+  appens egen analys, mot testvärdena som gällde för passet,
+- det som låg i kalendern samma dag, incheckningen, perioden i
+  säsongsplanen och nästa tävling,
+- veckans volym och strain mot månaden före,
+- passet mot bästa-kurvan de 90 dagarna före (nya bästa) och de sex senaste
+  passen i samma gren,
+- adeptens värden och bakgrund som i passbyggaren, och träningsfilosofin.
+
+Modellen är `claude-opus-5-5` med strukturerat svar: en rubrik, passets syfte,
+intensiteten efter huvudsyftet (lugnt, medel, högt – filosofins avsnitt 19)
+och två till fyra korta stycken. Texten skrivs om passet, inte om personen,
+utan namn och pronomen, så att den går att dela. Som AI-coachen kräver den
+adeptens samtycke till hälsouppgifter och `ANTHROPIC_API_KEY`.
+
+Coachen äger texten. En ny sammanfattning är odelad tills coachen delar den;
+coachen kan rätta texten (märks som rättad) och sluta dela. Adepten ser bara
+delade sammanfattningar – det avgör databasen, inte sidan
+(`activity_summaries`, `20261022090000_activity_summaries.sql`). En ny
+sammanfattning ersätter den gamla och delas inte vidare automatiskt.
 
 ### Garmin och direkt synk
 

@@ -215,3 +215,35 @@ export function loadReading(trend: LoadTrend): string[] {
   }
   return lines;
 }
+
+/**
+ * Passets strain: ur analysen, eller för pass lästa innan den räknades ur den
+ * sparade serien mot CP/W′ (CS/D′) som gällde då.
+ */
+export function activityStrain(activity: {
+  sport: string;
+  summary: { strain?: number | null };
+  reference: {
+    cp: number | null;
+    wPrime: number | null;
+    cs: number | null;
+    dPrime: number | null;
+  } | null;
+  streams: {
+    t: number[];
+    power: (number | null)[];
+    speed: (number | null)[];
+  };
+}): { value: number; estimated: boolean } | null {
+  const s = activity.summary.strain;
+  if (s !== null && s !== undefined) return { value: s, estimated: false };
+  const ref = activity.reference;
+  const st = activity.streams;
+  const value =
+    activity.sport === "cykling" && ref?.cp && ref.wPrime
+      ? strainFromSeries(st.t, st.power, ref.cp, ref.wPrime, "power")
+      : activity.sport === "löpning" && ref?.cs && ref.dPrime
+        ? strainFromSeries(st.t, st.speed, ref.cs, ref.dPrime, "speed")
+        : null;
+  return value === null ? null : { value, estimated: true };
+}

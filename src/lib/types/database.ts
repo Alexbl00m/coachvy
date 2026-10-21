@@ -260,6 +260,22 @@ export type StrengthSessionRow = {
   updated_at: string;
 };
 
+/** AI-sammanfattningen av ett pass. Adepten ser den bara när den delats. */
+export type ActivityAiSummaryRow = {
+  activity_id: string;
+  adept_id: string;
+  headline: string;
+  purpose: string | null;
+  intensity: "lugnt" | "medel" | "högt" | null;
+  body: string;
+  model: string | null;
+  edited: boolean;
+  shared_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 /** Coachens beslut om ett zonförslag ur träningen. */
 export type ZoneReviewRow = {
   id: string;
@@ -555,6 +571,16 @@ export type Database = {
         Insert: Pick<StrengthSessionRow, "adept_id" | "performed_on"> &
           Partial<StrengthSessionRow>;
         Update: Partial<StrengthSessionRow>;
+        Relationships: [];
+      };
+      activity_summaries: {
+        Row: ActivityAiSummaryRow;
+        Insert: Pick<
+          ActivityAiSummaryRow,
+          "activity_id" | "adept_id" | "headline" | "body"
+        > &
+          Partial<ActivityAiSummaryRow>;
+        Update: Partial<ActivityAiSummaryRow>;
         Relationships: [];
       };
       zone_reviews: {

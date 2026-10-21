@@ -3,13 +3,15 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Flag } from "lucide-react";
 
 import { ActivityEditor } from "@/components/activities/activity-editor";
+import { ActivitySummary } from "@/components/activities/activity-summary";
 import { ActivityExplorer } from "@/components/activities/activity-explorer";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
-import { strainFromSeries } from "@/lib/activities/load";
+import { activityStrain } from "@/lib/activities/load";
 import { getActivity, listMultisportLegs } from "@/lib/activities/queries";
+import { getActivitySummary } from "@/lib/activities/summary-queries";
 import { KIND_NAME } from "@/lib/activities/multisport";
 import { MultisportStrip } from "@/components/activities/multisport-strip";
 import {
@@ -172,37 +174,23 @@ export default async function ActivityPage({
 }: PageProps<"/app/adepter/[id]/aktivitet/[activityId]">) {
   const user = await requireSessionUser();
   const { id, activityId } = await params;
-  const [adept, activity, races] = await Promise.all([
+  const [adept, activity, races, aiSummary] = await Promise.all([
     getAdept(id),
     getActivity(activityId),
     listRaces(id),
+    getActivitySummary(activityId),
   ]);
   if (!adept || !activity || activity.adept_id !== adept.id) notFound();
 
-  const canEdit =
-    (user.profile?.role === "coach" && adept.coach_id === user.id) ||
-    adept.profile_id === user.id;
+  const isCoach = user.profile?.role === "coach" && adept.coach_id === user.id;
+  const canEdit = isCoach || adept.profile_id === user.id;
   const s = activity.summary;
   const ref = activity.reference;
   const race = races.find((r) => r.id === activity.race_id) ?? null;
   const running = activity.sport === "löpning";
   const laps = ((activity.laps ?? []) as Lap[]).filter((l) => l.seconds > 0);
   const ftp = ref?.ftp ?? null;
-  // Strain ur analysen; för pass lästa innan den räknades, ur den sparade
-  // serien mot CP/W′ (CS/D′) som gällde då.
-  const strain =
-    s.strain !== null && s.strain !== undefined
-      ? { value: s.strain, estimated: false }
-      : (() => {
-          const st = activity.streams;
-          const value =
-            activity.sport === "cykling" && ref?.cp && ref.wPrime
-              ? strainFromSeries(st.t, st.power, ref.cp, ref.wPrime, "power")
-              : running && ref?.cs && ref.dPrime
-                ? strainFromSeries(st.t, st.speed, ref.cs, ref.dPrime, "speed")
-                : null;
-          return value === null ? null : { value, estimated: true };
-        })();
+  const strain = activityStrain(activity);
   const multi = activity.multisport;
   const legs = multi ? await listMultisportLegs(adept.id, multi.id) : [];
   const legCount = multi
@@ -298,6 +286,12 @@ export default async function ActivityPage({
             </div>
           ))}
         </div>
+
+        <ActivitySummary
+          activityId={activity.id}
+          initial={aiSummary}
+          canManage={isCoach}
+        />
 
         {s.insights.length > 0 && (
           <Card>
