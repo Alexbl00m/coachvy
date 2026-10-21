@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, FlaskConical, Plus } from "lucide-react";
 
+import { OwnPageTitle } from "@/components/adepts/own-page-title";
 import { WorkspaceTabs } from "@/components/adepts/workspace-tabs";
 import { ButtonLink } from "@/components/ui/button";
 import { getHealthConsent } from "@/lib/adepts/queries";
@@ -17,7 +18,18 @@ export default async function AdeptWorkspaceLayout({
   params,
   children,
 }: LayoutProps<"/app/adepter/[id]">) {
-  const { user, adept, isCoach, canEdit } = await loadWorkspace(params);
+  const { user, adept, isCoach, canEdit, asAdept } =
+    await loadWorkspace(params);
+
+  // Adepten själv ser sina sidor som en del av sin egen app.
+  if (asAdept) {
+    return (
+      <>
+        <OwnPageTitle />
+        {children}
+      </>
+    );
+  }
 
   const [unread, consent] = await Promise.all([
     countUnread(adept.id, user.id),

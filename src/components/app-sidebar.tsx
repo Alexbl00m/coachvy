@@ -4,36 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/cn";
-import { getNavSections, type NavItem } from "@/lib/nav";
+import { activeHref as findActive, getNavSections, hrefsOf } from "@/lib/nav";
 import type { AccountRole } from "@/lib/types/database";
-
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-/** Posten och dess undersidor, för att avgöra vilken post som är vald. */
-const hrefsOf = (item: NavItem): string[] => [
-  item.href,
-  ...(item.children ?? []).map((c) => c.href),
-];
 
 export function AppSidebar({
   role,
   isAdmin = false,
+  adeptId = null,
   onNavigate,
 }: {
   role: AccountRole | null;
   isAdmin?: boolean;
+  adeptId?: string | null;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const navSections = getNavSections(role, isAdmin);
-  // Den mest specifika länken vinner: Planmallar ligger under Planbiblioteket,
-  // och bara den ena ska vara markerad.
-  const activeHref = navSections
-    .flatMap((section) => section.items.flatMap(hrefsOf))
-    .filter((href) => isActive(pathname, href))
-    .sort((a, b) => b.length - a.length)[0];
+  const navSections = getNavSections(role, isAdmin, adeptId);
+  const activeHref = findActive(navSections, pathname);
 
   return (
     <nav

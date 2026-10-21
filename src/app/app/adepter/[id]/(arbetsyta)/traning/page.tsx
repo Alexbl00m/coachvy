@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
+
 import { AdeptActivities } from "@/components/activities/adept-activities";
 import { getHealthConsent } from "@/lib/adepts/queries";
 import { loadWorkspace } from "@/lib/adepts/workspace";
-import { adeptHref } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 
 export const metadata = { title: "Träning" };
 
@@ -10,8 +12,11 @@ export default async function AdeptTrainingPage({
   params,
   searchParams,
 }: PageProps<"/app/adepter/[id]/traning">) {
-  const { adept, canEdit, isSelf } = await loadWorkspace(params);
+  const { adept, canEdit, isSelf, asAdept } = await loadWorkspace(params);
   const query = await searchParams;
+  if (asAdept) {
+    redirect(`${routes.activities}${query.alla === "1" ? "?alla=1" : ""}`);
+  }
   const consent =
     !isSelf && adept.profile_id
       ? await getHealthConsent(adept.profile_id)

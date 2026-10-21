@@ -5,25 +5,29 @@ import {
   Bot,
   CalendarDays,
   ChartBarBig,
+  CirclePlus,
   ClipboardList,
   Dumbbell,
+  Ellipsis,
   FlaskConical,
   Gauge,
+  HeartPulse,
   LayoutDashboard,
   LayoutTemplate,
   Library,
   LibraryBig,
   ListChecks,
+  MessageSquare,
   MessagesSquare,
   Settings,
-  ShieldCheck,
+  Sun,
   UserCog,
   Users,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
 
-import { routes } from "@/lib/routes";
+import { adeptHref, routes, type AdeptSection } from "@/lib/routes";
 import type { AccountRole } from "@/lib/types/database";
 
 export type NavItem = {
@@ -111,49 +115,79 @@ function coachSections(isAdmin: boolean): NavSection[] {
 }
 
 /**
- * Adeptens meny. Den görs om i nästa steg av omtaget – en egen app med fem
- * flikar – och är tills dess densamma som förut.
+ * Adeptens app: fem avsnitt, samma i sidomenyn och i bottenraden på
+ * telefonen. Idag först – det adepten öppnar appen för – och sedan planen,
+ * det som loggas, utvecklingen och resten under Mer.
+ *
+ * Adeptens egna sidor i arbetsytan (tester, incheckning, meddelanden) nås
+ * med adeptens id; utan adeptrad faller de bort.
  */
-function adeptSections(): NavSection[] {
+function adeptSections(adeptId: string | null): NavSection[] {
+  const own = (section: AdeptSection, label: string, icon: LucideIcon) =>
+    adeptId ? [{ label, href: adeptHref(adeptId, section), icon }] : [];
   return [
     {
       items: [
-        { label: "Översikt", href: routes.dashboard, icon: LayoutDashboard },
-        { label: "Passbyggare", href: routes.workoutBuilder, icon: Dumbbell },
+        { label: "Idag", href: routes.dashboard, icon: Sun },
         {
-          label: "Löpplanerare",
-          href: routes.runningPlanner,
-          icon: ChartBarBig,
+          label: "Plan",
+          href: routes.calendar,
+          icon: CalendarDays,
+          children: [
+            { label: "Kalender", href: routes.calendar, icon: CalendarDays },
+            { label: "Min plan", href: routes.myPlan, icon: ListChecks },
+            { label: "Säsong", href: routes.plans, icon: ClipboardList },
+          ],
         },
-        { label: "Säsongsplan", href: routes.plans, icon: ClipboardList },
-        { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
-        { label: "Min plan", href: routes.myPlan, icon: ListChecks },
         {
-          label: "Lopp och aktiviteter",
-          href: routes.activities,
-          icon: Activity,
+          label: "Logga",
+          href: routes.log,
+          icon: CirclePlus,
+          children: [
+            ...own("maende", "Incheckning", HeartPulse),
+            { label: "Styrka", href: routes.strength, icon: BicepsFlexed },
+            {
+              label: "Lopp och aktiviteter",
+              href: routes.activities,
+              icon: Activity,
+            },
+          ],
         },
-        { label: "Testresultat", href: routes.testResults, icon: FlaskConical },
-        { label: "Progression", href: routes.progression, icon: BarChart3 },
-        { label: "Styrka", href: routes.strength, icon: BicepsFlexed },
-        { label: "Kalender", href: routes.calendar, icon: CalendarDays },
-      ],
-    },
-    {
-      title: "Verktyg",
-      items: [
-        { label: "Community", href: routes.community, icon: MessagesSquare },
-      ],
-    },
-    {
-      title: "Konto",
-      items: [
         {
-          label: "Integritetspolicy & villkor",
-          href: routes.privacy,
-          icon: ShieldCheck,
+          label: "Utveckling",
+          href: routes.progression,
+          icon: BarChart3,
+          children: [
+            { label: "Progression", href: routes.progression, icon: BarChart3 },
+            ...own("tester", "Tester", FlaskConical),
+            ...own("varden", "Enstaka värden", FlaskConical),
+          ],
         },
-        { label: "Inställningar", href: routes.settings, icon: Settings },
+        {
+          label: "Mer",
+          href: routes.more,
+          icon: Ellipsis,
+          children: [
+            ...own("meddelanden", "Meddelanden", MessageSquare),
+            {
+              label: "Community",
+              href: routes.community,
+              icon: MessagesSquare,
+            },
+            {
+              label: "Passbyggare",
+              href: routes.workoutBuilder,
+              icon: Dumbbell,
+            },
+            {
+              label: "Löpplanerare",
+              href: routes.runningPlanner,
+              icon: ChartBarBig,
+            },
+            { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
+            { label: "Inställningar", href: routes.settings, icon: Settings },
+          ],
+        },
       ],
     },
   ];
@@ -166,6 +200,44 @@ function adeptSections(): NavSection[] {
 export function getNavSections(
   role: AccountRole | null,
   isAdmin = false,
+  adeptId: string | null = null,
 ): NavSection[] {
-  return role === "adept" ? adeptSections() : coachSections(isAdmin);
+  return role === "adept" ? adeptSections(adeptId) : coachSections(isAdmin);
+}
+
+function isActive(pathname: string, href: string) {
+  const path = href.split("?")[0];
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+/** Posten och dess undersidor, för att avgöra vilken post som är vald. */
+export const hrefsOf = (item: NavItem): string[] => [
+  item.href,
+  ...(item.children ?? []).map((c) => c.href),
+];
+
+/**
+ * Den länk i menyn som gäller sidan. Den mest specifika vinner: Planmallar
+ * ligger under Planbiblioteket, och bara den ena ska vara markerad.
+ */
+export function activeHref(
+  sections: NavSection[],
+  pathname: string,
+): string | undefined {
+  return sections
+    .flatMap((section) => section.items.flatMap(hrefsOf))
+    .filter((href) => isActive(pathname, href))
+    .sort((a, b) => b.length - a.length)[0];
+}
+
+/** Avsnittet sidan hör till: posten vars egen eller undersidas länk är vald. */
+export function activeItem(
+  sections: NavSection[],
+  pathname: string,
+): NavItem | undefined {
+  const href = activeHref(sections, pathname);
+  if (!href) return undefined;
+  return sections
+    .flatMap((section) => section.items)
+    .find((item) => hrefsOf(item).includes(href));
 }

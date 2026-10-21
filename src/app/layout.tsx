@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -29,6 +29,14 @@ export const metadata: Metadata = {
     locale: "sv_SE",
     siteName: site.name,
   },
+};
+
+// `viewport-fit=cover` låter appens bottenrad räkna med hemindikatorn
+// (`env(safe-area-inset-bottom)`) på telefoner utan hemknapp.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

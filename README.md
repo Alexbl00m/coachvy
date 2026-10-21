@@ -1917,11 +1917,27 @@ Menyn är byggd efter arbetet, inte efter verktygen (`src/lib/nav.ts`).
   och fliken delar på samma uppslag.
 - **Gamla adresser leder rätt.** `?vy=` på adeptsidan går till sin flik, och
   för coachen leder `/app/planer`, `/app/progression`, `/app/styrka` och
-  `/app/aktiviteter` – med eller utan `?adept=` – till adeptens flik. Adepten
-  själv har kvar sidorna; adeptens meny görs om i nästa steg.
+  `/app/aktiviteter` – med eller utan `?adept=` – till adeptens flik.
 - **"+ Ny"** i sidhuvudet (`src/components/new-menu.tsx`) föreslår det som går
   att skapa där man står: på en adept pass, test, period och styrkepass för
-  den adepten. För adepten heter knappen "Logga".
+  den adepten. Knappen finns bara för coachen.
+- **Adeptens app** har fem avsnitt, i sidomenyn på datorn och som en fast
+  bottenrad på telefonen (`src/components/adept-nav.tsx`), med plats för
+  hemindikatorn (`viewport-fit=cover` och `safe-area-inset-bottom`):
+
+  | Avsnitt | Sidor |
+  | --- | --- |
+  | Idag | `/app/oversikt`: dagens pass med profil, incheckningen (sidans enda primära knapp), senaste meddelandet från coachen, kommande pass, säsongen, styrka och senaste test (`src/components/overview/adept-today.tsx`) |
+  | Plan | Kalender, Min plan, Säsong |
+  | Logga | `/app/logga` med incheckning (och om den är gjord i dag), styrkepass, lopp eller pass ur klockan och – som medlem – test |
+  | Utveckling | Progression, Tester, Enstaka värden |
+  | Mer | `/app/mer`: meddelanden, community, passbyggare, löpplanerare, planbibliotek, inställningar, integritet, logga ut |
+
+  I telefonen visas avsnittets undersidor som en rad överst på sidan; på
+  datorn står de i sidomenyn. Adeptens egna sidor i arbetsytan (tester,
+  incheckning, meddelanden) visas utan coachens namnrad och flikar, och de
+  som har en egen adeptsida – läget, säsongen, träningen, styrkan,
+  progressionen – leder dit.
 
 ## Nästa steg
 

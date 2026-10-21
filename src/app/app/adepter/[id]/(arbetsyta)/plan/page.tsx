@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { SeasonPlan } from "@/components/season/season-plan";
 import { loadWorkspace } from "@/lib/adepts/workspace";
-import { adeptHref } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 
 export const metadata = { title: "Plan" };
 
@@ -10,18 +10,21 @@ export default async function AdeptSeasonPage({
   params,
   searchParams,
 }: PageProps<"/app/adepter/[id]/plan">) {
-  const { adept, canEdit, isSelf } = await loadWorkspace(params);
+  const { adept, canEdit, isSelf, asAdept } = await loadWorkspace(params);
   const query = await searchParams;
+  const search = new URLSearchParams(
+    Object.entries(query).flatMap(([k, v]) =>
+      typeof v === "string" ? [[k, v]] : [],
+    ),
+  ).toString();
 
   // Planen ur biblioteket låg tidigare på den här adressen.
   if (query.plan || query.vecka || query.vy === "hela") {
-    const search = new URLSearchParams(
-      Object.entries(query).flatMap(([k, v]) =>
-        typeof v === "string" ? [[k, v]] : [],
-      ),
-    ).toString();
     redirect(`${adeptHref(adept.id, "bibliotek")}?${search}`);
   }
+
+  // Adepten själv har säsongsplanen i sin egen app.
+  if (asAdept) redirect(`${routes.plans}${search ? `?${search}` : ""}`);
 
   return (
     <SeasonPlan

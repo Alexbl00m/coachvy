@@ -8,7 +8,6 @@ import { Plus } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { adeptHref, routes } from "@/lib/routes";
-import type { AccountRole } from "@/lib/types/database";
 
 type Entry = { href: string; label: string; hint?: string };
 
@@ -18,32 +17,7 @@ function adeptInPath(pathname: string): string | null {
   return match && match[1] !== "ny" ? match[1] : null;
 }
 
-function entriesFor(
-  role: AccountRole | null,
-  pathname: string,
-  ownAdeptId: string | null,
-): { title: string; entries: Entry[] }[] {
-  if (role === "adept") {
-    return [
-      {
-        title: "Logga",
-        entries: [
-          ...(ownAdeptId
-            ? [
-                {
-                  href: adeptHref(ownAdeptId, "maende"),
-                  label: "Incheckning",
-                  hint: "Passet i går och hur du mår",
-                },
-              ]
-            : []),
-          { href: routes.strength, label: "Styrkepass" },
-          { href: routes.activities, label: "Lopp eller aktivitet" },
-        ],
-      },
-    ];
-  }
-
+function entriesFor(pathname: string): { title: string; entries: Entry[] }[] {
   const adeptId = adeptInPath(pathname);
   const general: Entry[] = [
     { href: routes.workoutBuilder, label: "Pass", hint: "Passbyggaren" },
@@ -71,17 +45,12 @@ function entriesFor(
 }
 
 /**
- * "+ Ny" i sidhuvudet: det som går att skapa där man står. På en adept gäller
- * valen den adepten; annars de allmänna. Knappen är neutral – den primära
- * handlingen hör till sidan, inte till sidhuvudet.
+ * "+ Ny" i sidhuvudet, för coachen: det som går att skapa där man står. På en
+ * adept gäller valen den adepten; annars de allmänna. Knappen är neutral –
+ * den primära handlingen hör till sidan, inte till sidhuvudet. Adepten har
+ * Logga i sin egen meny i stället.
  */
-export function NewMenu({
-  role,
-  ownAdeptId,
-}: {
-  role: AccountRole | null;
-  ownAdeptId: string | null;
-}) {
+export function NewMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuId = useId();
@@ -115,7 +84,7 @@ export function NewMenu({
     setOpen(false);
   }
 
-  const groups = entriesFor(role, pathname, ownAdeptId);
+  const groups = entriesFor(pathname);
 
   return (
     <div ref={root} className="relative">
@@ -129,12 +98,8 @@ export function NewMenu({
         className={buttonClass({ variant: "secondary", size: "sm" })}
       >
         <Plus aria-hidden className="size-4" />
-        <span className="hidden sm:inline">
-          {role === "adept" ? "Logga" : "Ny"}
-        </span>
-        <span className="sr-only sm:hidden">
-          {role === "adept" ? "Logga" : "Ny"}
-        </span>
+        <span className="hidden sm:inline">Ny</span>
+        <span className="sr-only sm:hidden">Ny</span>
       </button>
       {open && (
         <div

@@ -15,6 +15,8 @@ export type Workspace = {
   isSelf: boolean;
   /** En medlemsadept registrerar egna tester och bygger egna pass. */
   selfMember: boolean;
+  /** Adepten själv, i sin egen app – inte en coach som tittar. */
+  asAdept: boolean;
 };
 
 /**
@@ -41,5 +43,6 @@ export async function loadWorkspace(
     canEdit: isCoach && adept.coach_id === user.id,
     isSelf,
     selfMember: isSelf && isMember(user),
+    asAdept: isSelf && !isCoach,
   };
 }

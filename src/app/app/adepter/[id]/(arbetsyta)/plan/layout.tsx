@@ -6,7 +6,8 @@ export default async function AdeptPlanLayout({
   params,
   children,
 }: LayoutProps<"/app/adepter/[id]/plan">) {
-  const { adept, isCoach } = await loadWorkspace(params);
+  const { adept, isCoach, asAdept } = await loadWorkspace(params);
+  if (asAdept) return children;
   return (
     <>
       <WorkspaceSubnav

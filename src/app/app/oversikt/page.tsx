@@ -1,15 +1,15 @@
 import { PageHeader } from "@/components/page-header";
 import { CoachInvitations } from "@/components/adepts/coach-invitations";
-import { AdeptOverview } from "@/components/overview/adept-overview";
+import { AdeptToday } from "@/components/overview/adept-today";
 import { CoachOverview } from "@/components/overview/coach-overview";
 import { EmptyState } from "@/components/ui/card";
 import { listCoachInvitations } from "@/lib/adepts/invitations";
 import { getMyAdeptRow } from "@/lib/adepts/queries";
 import { getSessionUser } from "@/lib/auth/session";
-import { todayIso } from "@/lib/season/season";
+import { isoWeek, longDate, todayIso, weekdayName } from "@/lib/season/season";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
-export const metadata = { title: "Min översikt" };
+export const metadata = { title: "Översikt" };
 
 export default async function OversiktPage() {
   const user = await getSessionUser();
@@ -28,14 +28,18 @@ export default async function OversiktPage() {
 
   return (
     <>
-      <PageHeader
-        title={firstName ? `Hej ${firstName}` : "Min översikt"}
-        description={
-          isCoach
-            ? "Läget hos dina adepter: vem som är värd en titt, vad som ligger framför och vad som hänt."
-            : "Var du är i säsongen, dagens incheckning och passen som ligger framför."
-        }
-      />
+      {adept ? (
+        // Adeptens Idag: dagen och veckan, inte en hälsning.
+        <PageHeader
+          title="Idag"
+          description={`${weekdayName(today).replace(/^./, (c) => c.toUpperCase())} ${longDate(today, today)} · vecka ${isoWeek(today)}`}
+        />
+      ) : (
+        <PageHeader
+          title={firstName ? `Hej ${firstName}` : "Översikt"}
+          description="Läget hos dina adepter: vem som är värd en titt, vad som ligger framför och vad som hänt."
+        />
+      )}
 
       <CoachInvitations invitations={invitations} />
 
@@ -56,7 +60,7 @@ export default async function OversiktPage() {
       {user && isCoach ? (
         <CoachOverview coachId={user.id} today={today} />
       ) : user && adept ? (
-        <AdeptOverview
+        <AdeptToday
           userId={user.id}
           adept={adept}
           today={today}

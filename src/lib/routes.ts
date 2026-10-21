@@ -22,6 +22,8 @@ export const routes = {
   activities: "/app/aktiviteter",
   newPlan: "/app/planer/ny",
   library: "/app/bibliotek",
+  log: "/app/logga",
+  more: "/app/mer",
   tools: "/app/verktyg",
   workoutBuilder: "/app/pass",
   sessionLibrary: "/app/passbibliotek",
