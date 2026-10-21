@@ -55,7 +55,7 @@ export function IntervalZonesCard({
           r.purpose,
         ])}
       />
-      <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         Vilan är{" "}
         {sport === "simning"
           ? "stillastående på kanten"

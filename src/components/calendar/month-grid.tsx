@@ -171,7 +171,7 @@ export function MonthGrid({
                             ? "rotate-45 rounded-[1px] bg-text"
                             : "rounded-full",
                           row.kind === "workout" && "bg-text-muted",
-                          row.kind === "activity" && "bg-accent",
+                          row.kind === "activity" && "bg-good",
                         )}
                         style={
                           row.kind === "test"
@@ -220,7 +220,7 @@ export function MonthGrid({
                         >
                           <SportIcon
                             sport={row.activity.sport as Sport}
-                            className="size-3 shrink-0 text-accent"
+                            className="size-3 shrink-0 text-text"
                           />
                           <span className="truncate">
                             {who(row.activity.adept_name)}

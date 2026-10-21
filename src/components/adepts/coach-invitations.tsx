@@ -31,7 +31,7 @@ export function CoachInvitations({ invitations }: { invitations: Invitation[] })
       {invitations.map((inv) => (
         <Card key={inv.id} className="border-accent/40">
           <div className="flex flex-wrap items-center gap-4">
-            <UserPlus aria-hidden className="size-5 shrink-0 text-accent" />
+            <UserPlus aria-hidden className="size-5 shrink-0 text-text-muted" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-text">
                 {inv.coach_name}

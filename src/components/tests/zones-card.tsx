@@ -353,7 +353,7 @@ export function ZonesCard({
         />
       )}
 
-      <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         {hasHr &&
           "Pulsen är den testet gav vid zonens gränser – ur atletens egen pulskurva, inte ur procent av maxpuls. "}
         {hasFuel &&

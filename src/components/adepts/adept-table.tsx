@@ -196,14 +196,14 @@ export function AdeptTable({
                     <td className="px-4 py-3">
                       <Link
                         href={`${routes.adepts}/${r.id}`}
-                        className="font-medium text-text hover:text-accent"
+                        className="font-medium text-text hover:underline"
                       >
                         {r.name}
                       </Link>
                       {r.unread > 0 && (
                         <Link
                           href={adeptHref(r.id, "meddelanden")}
-                          className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-medium text-accent-on tabular-nums"
+                          className="ml-2 inline-flex items-center gap-1 rounded-full bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-text tabular-nums"
                           title="Olästa meddelanden"
                         >
                           <MessageSquare aria-hidden className="size-3" />
@@ -220,7 +220,7 @@ export function AdeptTable({
                           className={cn(
                             "mt-1 block text-[12px]",
                             r.attention[0].weight === 3
-                              ? "text-accent"
+                              ? "text-bad"
                               : "text-text-muted",
                           )}
                         >
@@ -313,7 +313,7 @@ export function AdeptTable({
                       <Link
                         href={`${routes.adepts}/${r.id}`}
                         aria-label={`Öppna ${r.name}`}
-                        className="inline-flex text-text-subtle hover:text-accent"
+                        className="inline-flex text-text-subtle hover:text-text"
                       >
                         <ChevronRight aria-hidden className="size-4" />
                       </Link>

@@ -107,11 +107,11 @@ export function WorkoutPanel({
                   <div className="min-w-0 space-y-1">
                     <Link
                       href={`${routes.adepts}/${adeptId}/pass/${saved.id}`}
-                      className="flex items-baseline gap-2 text-sm font-medium text-text hover:text-accent"
+                      className="flex items-baseline gap-2 text-sm font-medium text-text hover:underline"
                     >
                       <Dumbbell
                         aria-hidden
-                        className="size-4 shrink-0 translate-y-0.5 text-accent"
+                        className="size-4 shrink-0 translate-y-0.5 text-text-muted"
                       />
                       {saved.title}
                     </Link>
@@ -141,7 +141,7 @@ export function WorkoutPanel({
                       aria-label={`Ta bort ${saved.title}`}
                       onClick={() => remove(saved.id)}
                       disabled={pending && removing === saved.id}
-                      className="shrink-0 rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-40"
+                      className="shrink-0 rounded-md p-1.5 text-text-subtle transition-colors hover:text-text disabled:opacity-40"
                     >
                       <Trash2 aria-hidden className="size-4" />
                     </button>

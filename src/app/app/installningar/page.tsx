@@ -131,14 +131,14 @@ export default async function InstallningarPage() {
               Vill du att kontot och uppgifterna raderas, skriv till{" "}
               <a
                 href={`mailto:${site.email}`}
-                className="text-accent hover:text-accent-strong"
+                className="text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
               >
                 {site.email}
               </a>
               . Mer om hur uppgifterna behandlas står i{" "}
               <Link
                 href={routes.privacy}
-                className="text-accent hover:text-accent-strong"
+                className="text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
               >
                 integritetspolicyn
               </Link>

@@ -257,7 +257,7 @@ export function ScheduleDialog({
               {adeptId ? (
                 <Link
                   href={builderHref()}
-                  className="text-[13px] font-medium text-accent-text underline-offset-2 hover:underline"
+                  className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
                 >
                   Anpassa i passbyggaren först
                 </Link>

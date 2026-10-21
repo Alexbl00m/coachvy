@@ -89,7 +89,7 @@ export function SessionPanel({
           {rolling.updatedByNewBest && (
             <Card>
               <div className="flex items-start gap-3">
-                <TrendingUp aria-hidden className="mt-0.5 size-5 shrink-0 text-accent" />
+                <TrendingUp aria-hidden className="mt-0.5 size-5 shrink-0 text-text-muted" />
                 <div>
                   <p className="text-sm font-medium text-text">
                     Nytt bästavärde sedan senaste hela testet
@@ -162,7 +162,7 @@ export function SessionPanel({
                   >
                     <FlaskConical
                       aria-hidden
-                      className="size-4 shrink-0 self-center text-text-subtle group-hover:text-accent"
+                      className="size-4 shrink-0 self-center text-text-subtle group-hover:text-text"
                     />
                     <span className="text-sm font-medium text-text">
                       {spec?.label ?? session.protocol}

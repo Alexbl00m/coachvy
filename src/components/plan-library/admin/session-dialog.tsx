@@ -354,7 +354,7 @@ export function SessionDialog({
           </div>
         </div>
 
-        <p className="mt-5 max-w-3xl text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-5 max-w-3xl text-[13px] leading-relaxed text-text-muted">
           Strukturen skrivs som en rad:{" "}
           <code className="text-text-muted">
             15 min 65%; 5x(4 min 105% + 2 min 60%); 10 min 60%

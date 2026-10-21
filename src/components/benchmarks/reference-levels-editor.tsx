@@ -194,7 +194,7 @@ export function ReferenceLevelsEditor({
                         setMessage(null);
                         setDrafts((list) => list.filter((_, j) => j !== i));
                       }}
-                      className="ml-auto rounded p-1 text-text-subtle hover:text-accent disabled:opacity-30"
+                      className="ml-auto rounded p-1 text-text-subtle hover:text-text disabled:opacity-30"
                     >
                       <Trash2 aria-hidden className="size-3.5" />
                     </button>

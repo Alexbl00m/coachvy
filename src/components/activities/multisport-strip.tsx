@@ -77,7 +77,7 @@ export function MultisportStrip({
             )}
           >
             {href ? (
-              <Link href={href} className="block hover:text-accent">
+              <Link href={href} className="block hover:underline">
                 {body}
               </Link>
             ) : (

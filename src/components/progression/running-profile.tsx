@@ -371,7 +371,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
               : []),
           ])}
         />
-        <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
           Den egna kurvan bygger på hur just den här atleten tappar fart. VDOT
           antar en genomsnittlig löpares kurva, och CS-modellen gäller bara lopp
           på ungefär 2–20 minuter. Där de skiljer sig mycket saknas oftast ett

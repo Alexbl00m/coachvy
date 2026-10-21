@@ -174,7 +174,7 @@ export function AiCoachChat({
                 <>
                   <Bubble role="user" content={optimistic} fresh />
                   <li className="flex items-center gap-2 text-[13px] text-text-subtle">
-                    <Bot aria-hidden className="size-4 animate-pulse text-accent" />
+                    <Bot aria-hidden className="size-4 animate-pulse text-text-muted" />
                     Räknar igenom talen …
                   </li>
                 </>

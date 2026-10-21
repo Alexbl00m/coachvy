@@ -131,7 +131,7 @@ export function MemberList({ members }: { members: AdminMember[] }) {
                         <span
                           className={cn(
                             "rounded px-1.5 py-0.5 text-[11px] font-normal",
-                            member ? "bg-accent-soft text-accent" : "bg-surface-2 text-text-muted",
+                            member ? "bg-surface-3 text-text" : "bg-surface-2 text-text-muted",
                           )}
                         >
                           {member ? "Medlem" : "Bas"}

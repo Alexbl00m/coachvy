@@ -58,7 +58,7 @@ function Author({
       <span
         className={cn(
           "rounded px-1.5 py-0.5 text-[10px] uppercase tracking-[0.08em]",
-          role === "coach" || admin ? "bg-accent-soft text-accent" : "bg-surface-2 text-text-muted",
+          role === "coach" || admin ? "bg-surface-3 text-text" : "bg-surface-2 text-text-muted",
         )}
       >
         {admin ? "Admin" : role === "coach" ? "Coach" : "Adept"}
@@ -73,7 +73,7 @@ function Attachment({ item }: { item: CommunityAttachment }) {
   return (
     <div className="mt-3 rounded-md border border-line bg-surface-2/60 p-3">
       <p className="flex items-center gap-2 text-sm font-medium text-text">
-        <Icon aria-hidden className="size-4 text-accent" />
+        <Icon aria-hidden className="size-4 text-text-muted" />
         {item.title}
       </p>
       {item.subtitle && <p className="mt-0.5 text-[12px] text-text-subtle">{item.subtitle}</p>}

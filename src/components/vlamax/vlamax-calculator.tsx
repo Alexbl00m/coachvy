@@ -121,7 +121,7 @@ export function VlamaxCalculator({
 
         </div>
 
-        <p className="mt-5 border-t border-line pt-4 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-5 border-t border-line pt-4 text-[13px] leading-relaxed text-text-muted">
           Modellen läser sprinteffekten per kilo fettfri massa, plus kön. VLamax
           är glykolytisk förmåga per muskelmassa, och det är det måttet som
           följer den – en tung atlet med stor sprint kan ha lägre VLamax än en
@@ -160,7 +160,7 @@ export function VlamaxCalculator({
               {prediction.outOfRange.length > 0 && (
                 <div className="mt-4 rounded-md border border-accent/40 bg-accent-soft p-3">
                   <p className="flex items-center gap-2 text-[13px] font-medium text-text">
-                    <AlertTriangle aria-hidden className="size-4 text-accent" />
+                    <AlertTriangle aria-hidden className="size-4 text-warn" />
                     Utanför referensdatan
                   </p>
                   <ul className="mt-2 space-y-1 text-[12px] text-text-muted">

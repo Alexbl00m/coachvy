@@ -116,7 +116,7 @@ export async function AdeptToday({
               key={r.id}
               className="mt-2 flex items-center gap-2 text-lg font-semibold text-text"
             >
-              <Flag aria-hidden className="size-5 text-accent" />
+              <Flag aria-hidden className="size-5 text-text" />
               {r.name}
             </p>
           ))}
@@ -273,7 +273,7 @@ export async function AdeptToday({
                       className="size-4 shrink-0 text-text-subtle"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm text-text group-hover:text-accent-text">
+                      <span className="block truncate text-sm text-text group-hover:underline">
                         {w.title}
                       </span>
                       <WorkoutStrip
@@ -368,7 +368,7 @@ export async function AdeptToday({
             >
               <TestIcon className="mt-0.5 size-4 shrink-0" />
               <span className="min-w-0">
-                <span className="block text-sm text-text group-hover:text-accent-text">
+                <span className="block text-sm text-text group-hover:underline">
                   {protocolByKey(latest.protocol)?.label ?? latest.protocol}
                 </span>
                 <span className="block text-[13px] text-text-muted">

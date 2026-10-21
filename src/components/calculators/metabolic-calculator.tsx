@@ -207,7 +207,7 @@ export function MetabolicCalculator() {
               <p className="text-[13px] font-medium text-text">
                 Löpekonomi ur ett löpbandstest
               </p>
-              <p className="mt-1 text-[12px] leading-relaxed text-text-subtle">
+              <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
                 Syreupptaget vid en jämn fart under tröskeln. Löpekonomin skiljer
                 mycket mellan löpare, så ett uppmätt värde gör mer för
                 precisionen än något annat här.
@@ -248,7 +248,7 @@ export function MetabolicCalculator() {
               <button
                 type="button"
                 onClick={() => setShowConstants((v) => !v)}
-                className="text-[12px] font-medium text-accent hover:text-accent-strong"
+                className="text-[12px] font-medium text-text-muted hover:text-text"
               >
                 {showConstants ? "Dölj" : "Visa"}
               </button>

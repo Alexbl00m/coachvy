@@ -210,12 +210,12 @@ export default async function ActivityPage({
               href={adeptHref(adept.id, "plan")}
               className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted hover:border-accent hover:text-text"
             >
-              <Flag aria-hidden className="size-3.5 text-accent" />
+              <Flag aria-hidden className="size-3.5 text-text" />
               {race.name} · {race.priority}-lopp
             </Link>
           ) : activity.is_race ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted">
-              <Flag aria-hidden className="size-3.5 text-accent" />
+              <Flag aria-hidden className="size-3.5 text-text" />
               Oplanerad tävling
             </span>
           ) : undefined
@@ -273,7 +273,7 @@ export default async function ActivityPage({
                 <li key={line} className="flex gap-3">
                   <span
                     aria-hidden
-                    className="mt-2.5 size-1.5 shrink-0 rounded-full bg-accent"
+                    className="mt-2.5 size-1.5 shrink-0 rounded-full bg-text-subtle"
                   />
                   <span>{line}</span>
                 </li>

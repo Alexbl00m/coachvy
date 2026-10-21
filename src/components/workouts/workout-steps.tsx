@@ -316,7 +316,7 @@ export function WorkoutSteps({
                         type="button"
                         aria-label={`Ta bort ${step.kind}`}
                         onClick={() => removeStep(address)}
-                        className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent"
+                        className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text"
                       >
                         <Trash2 aria-hidden className="size-4" />
                       </button>

@@ -40,7 +40,7 @@ const plural = (n: number, one: string, many: string) =>
 function WhereToFind() {
   return (
     <details className="group mt-3 text-[13px] text-text-muted">
-      <summary className="cursor-pointer text-accent-text hover:text-accent-hover">
+      <summary className="cursor-pointer text-text-muted hover:text-text">
         Var hittar man filerna?
       </summary>
       <ul className="mt-2 space-y-2 leading-relaxed">

@@ -68,7 +68,7 @@ export function SwimPredictionsCard({
             : `${formatDuration(r.css)}${r.cssBeyondModel ? " *" : ""}`,
         ])}
       />
-      <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         Bassängtider: i öppet vatten tillkommer navigering, vågor och start –
         och våtdräkt åt andra hållet. * CSS-modellen gäller ungefär 2–20
         minuter.

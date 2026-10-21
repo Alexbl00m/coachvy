@@ -96,7 +96,7 @@ export function ProtocolPicker({
                   {item.remote ? "på distans" : "på plats"}
                 </span>
                 {item.membersOnly && (
-                  <span className="inline-flex items-center gap-1 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] text-accent">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] text-text">
                     <Lock aria-hidden className="size-3" />
                     {locked ? "Ingår i medlemskapet" : "Medlem"}
                   </span>
@@ -310,7 +310,7 @@ export function EffortTable({
                     aria-label={`Ta bort rad ${index + firstRow}`}
                     onClick={() => onRemove(row.id)}
                     disabled={rows.length <= 1}
-                    className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-30"
+                    className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text disabled:opacity-30"
                   >
                     <Trash2 aria-hidden className="size-4" />
                   </button>
@@ -486,7 +486,7 @@ export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
 
       <div className="mt-5 border-t border-line pt-4">
         <p className="text-[13px] font-medium text-text">{peakName} ur rampen</p>
-        <p className="mt-1 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
           Sista nivån atleten klarade helt, plus den del av nästa som hanns med.
         </p>
         <div className="mt-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">

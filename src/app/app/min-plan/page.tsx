@@ -69,7 +69,7 @@ export default async function MyPlanPage({
           <li key={i.id}>
             <Link
               href={`${routes.myPlan}?plan=${i.id}`}
-              className="flex justify-between gap-3 py-2.5 text-sm hover:text-accent"
+              className="flex justify-between gap-3 py-2.5 text-sm hover:underline"
             >
               <span>{i.title}</span>
               <span className="text-text-subtle">

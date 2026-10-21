@@ -93,7 +93,7 @@ export function StrengthHistory({
                   router.refresh();
                 });
               }}
-              className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-40"
+              className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text disabled:opacity-40"
             >
               <Trash2 aria-hidden className="size-4" />
             </button>

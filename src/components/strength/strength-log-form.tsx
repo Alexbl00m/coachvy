@@ -212,7 +212,7 @@ export function StrengthLogForm({
           <button
             type="button"
             onClick={copyPrevious}
-            className="text-[13px] font-medium text-accent-text underline-offset-2 hover:underline"
+            className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
           >
             Som förra gången{previous.title ? ` (${previous.title})` : ""}
           </button>
@@ -292,7 +292,7 @@ export function StrengthLogForm({
                           current.filter((r) => r.id !== row.id),
                         )
                       }
-                      className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent"
+                      className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text"
                     >
                       <Trash2 aria-hidden className="size-4" />
                     </button>

@@ -225,7 +225,7 @@ export function MethodSpread({
 
   return (
     <div className="space-y-3">
-      <p className="text-[12px] leading-relaxed text-text-subtle">
+      <p className="text-[13px] leading-relaxed text-text-muted">
         Ett stegtest ger inte ett tröskelvärde utan ett spann. Här ligger de{" "}
         {usable.length} metoderna på {sv(span, digits)} {unit}.
       </p>
@@ -269,7 +269,7 @@ export function MethodSpread({
         ))}
       </ol>
 
-      <p className="border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
         Det skuggade fältet är spannet mellan LT1 och LT2 – där det mesta av
         träningen styrs.
       </p>

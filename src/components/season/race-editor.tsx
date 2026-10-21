@@ -145,7 +145,7 @@ export function RaceEditor({
           {analyses[race.id] && (
             <Link
               href={`${routes.adepts}/${adeptId}/aktivitet/${analyses[race.id]}`}
-              className="mt-1 inline-block text-[13px] font-medium text-accent hover:text-accent-strong"
+              className="mt-1 inline-block text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
             >
               Se loppanalysen
             </Link>

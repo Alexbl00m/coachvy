@@ -259,7 +259,7 @@ export function BlockEditor({
                       </span>
                     )}
                     {now && (
-                      <span className="ml-2 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                      <span className="ml-2 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-text">
                         pågår
                       </span>
                     )}
@@ -478,7 +478,7 @@ export function BlockEditor({
                 Startar en {weekdayName(draft.startsOn)}.{" "}
                 <button
                   type="button"
-                  className="font-medium text-accent-text underline-offset-2 hover:underline"
+                  className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
                   onClick={() => {
                     const startsOn = nearestMonday(draft.startsOn);
                     setDraft({

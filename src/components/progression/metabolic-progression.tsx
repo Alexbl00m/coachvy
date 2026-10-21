@@ -157,7 +157,7 @@ export function MetabolicProgression({
             watts(e.thresholds.carbMax),
           ])}
         />
-        <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
           Varje test räknas om ur rådatan med dagens modell, så att profiler
           från olika år går att jämföra.
         </p>

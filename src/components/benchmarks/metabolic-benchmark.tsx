@@ -160,7 +160,7 @@ export function MetabolicBenchmark({
             </table>
           </div>
 
-          <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+          <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
             {levels.isDefault
               ? "Utgångsnivåerna är Coachvys egna, satta ur de spann som brukar anges för uthållighetsinriktade cyklister – det finns ingen publicerad standardtabell för de här måtten. "
               : "Nivåerna är satta av coachen. "}

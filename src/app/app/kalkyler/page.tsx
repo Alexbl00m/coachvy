@@ -88,20 +88,20 @@ export default async function KalkylerPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-lg border border-line bg-surface p-6 transition-colors hover:border-accent"
+              className="group rounded-lg border border-line bg-surface p-6 transition-colors hover:border-line-strong hover:bg-surface-2"
             >
-              <Icon aria-hidden className="size-6 text-accent" />
+              <Icon aria-hidden className="size-5 text-text-muted" />
               <h2 className="mt-4 flex flex-wrap items-center gap-2 text-lg font-semibold text-text">
                 {item.title}
                 {"membersOnly" in item && item.membersOnly && (
-                  <span className="inline-flex items-center gap-1 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-normal text-accent">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-normal text-text">
                     <Lock aria-hidden className="size-3" />
                     {member ? "Medlem" : "Ingår i medlemskapet"}
                   </span>
                 )}
                 <ArrowRight
                   aria-hidden
-                  className="size-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+                  className="size-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-text"
                 />
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-text-muted">

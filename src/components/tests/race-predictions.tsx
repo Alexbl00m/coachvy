@@ -44,7 +44,7 @@ export function RacePredictionsCard({
         ])}
       />
       {(note || rows.some((r) => r.uncertain)) && (
-        <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
           {rows.some((r) => r.uncertain) && "* Utanför modellens säkra spann. "}
           {note}
         </p>

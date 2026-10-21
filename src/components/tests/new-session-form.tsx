@@ -240,7 +240,7 @@ export function NewSessionForm({
           </div>
 
           {calc.spec && (
-            <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
+            <p className="mt-4 border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
               {calc.spec.howTo}
             </p>
           )}

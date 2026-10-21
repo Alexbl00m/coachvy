@@ -178,7 +178,7 @@ export function ActivityUpload({
             : "border-line-strong hover:border-accent/60",
         )}
       >
-        <FileUp aria-hidden className="size-5 shrink-0 text-accent" />
+        <FileUp aria-hidden className="size-5 shrink-0 text-text-muted" />
         <span className="min-w-0 flex-1">
           <span className="font-medium text-text">
             {reading
@@ -209,7 +209,7 @@ export function ActivityUpload({
           {existing && (
             <a
               href={`${routes.adepts}/${adeptId}/aktivitet/${existing}`}
-              className="font-medium text-accent hover:text-accent-strong"
+              className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
             >
               Öppna den
             </a>

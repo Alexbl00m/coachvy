@@ -41,7 +41,7 @@ function ItemLink({
       {children}
       <ChevronRight
         aria-hidden
-        className="ml-auto mt-0.5 size-4 shrink-0 text-text-subtle group-hover:text-accent"
+        className="ml-auto mt-0.5 size-4 shrink-0 text-text-subtle group-hover:text-text"
       />
     </Link>
   );
@@ -104,7 +104,7 @@ export function DayContent({
           <ItemLink href={`${routes.adepts}/${a.adept_id}/aktivitet/${a.id}`}>
             <SportIcon
               sport={a.sport as Sport}
-              className="mt-0.5 size-4 shrink-0 text-accent"
+              className="mt-0.5 size-4 shrink-0 text-text"
             />
             <span className="min-w-0">
               <span className="block text-sm font-medium text-text">

@@ -238,7 +238,7 @@ export async function AdeptStatus({
                 <li key={item.key}>
                   <Link
                     href={item.href}
-                    className="group flex items-start gap-2.5 text-sm text-text hover:text-accent-text"
+                    className="group flex items-start gap-2.5 text-sm text-text hover:underline"
                   >
                     <Icon
                       aria-hidden
@@ -348,7 +348,7 @@ export async function AdeptStatus({
                       <Link
                         href={`${routes.adepts}/${adept.id}/aktivitet/${a.id}`}
                         title={a.name}
-                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:text-accent-text"
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:underline"
                       >
                         <Check
                           aria-hidden
@@ -371,7 +371,7 @@ export async function AdeptStatus({
                     <li key={s.id}>
                       <Link
                         href={adeptHref(adept.id, "styrka")}
-                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:text-accent-text"
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:underline"
                       >
                         <Check
                           aria-hidden
@@ -477,7 +477,7 @@ export async function AdeptStatus({
             >
               <TestIcon className="mt-0.5 size-4 shrink-0" />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-text group-hover:text-accent-text">
+                <span className="block text-sm font-medium text-text group-hover:underline">
                   {protocolByKey(latest.protocol)?.label ?? latest.protocol}
                 </span>
                 <span className="block text-[13px] text-text-muted">

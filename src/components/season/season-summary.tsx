@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import {
   blockLabel,
   PHASE_SHORT,
@@ -54,8 +55,8 @@ export function Countdown({ days }: { days: number }) {
 }
 
 /**
- * Läget i säsongen i tre rutor: fasen som pågår, nedräkningen till loppet
- * planen byggs mot, och nästa start när den kommer före.
+ * Läget i säsongen: fasen som pågår och nedräkningen till loppet planen
+ * byggs mot, och nästa start när den kommer före.
  */
 export function SeasonSummary({
   blocks,
@@ -75,7 +76,7 @@ export function SeasonSummary({
   return (
     <section
       aria-label="Läget i säsongen"
-      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      className={cn("grid gap-4 sm:grid-cols-2", sooner && "lg:grid-cols-3")}
     >
       <Tile label="Fasen nu">
         {current ? (
@@ -147,27 +148,23 @@ export function SeasonSummary({
         )}
       </Tile>
 
-      <Tile label="Före det">
-        {sooner ? (
-          <>
-            <p className="flex items-center gap-2 text-[15px] font-semibold text-text">
-              <PriorityBadge
-                priority={sooner.priority}
-                className="size-5 text-[11px]"
-              />
-              <span className="truncate">{sooner.name}</span>
-            </p>
-            <p className="mt-1 text-[13px] text-text-muted">
-              {longDate(sooner.race_date, today)} ·{" "}
-              {countdownText(daysBetween(today, sooner.race_date))}
-            </p>
-          </>
-        ) : (
-          <p className="text-[13px] text-text-subtle">
-            {main ? "Inga starter före det." : "–"}
+      {/* En start före målet visas bara när den finns – en tom ruta säger
+          ingenting. */}
+      {sooner && (
+        <Tile label="Före det">
+          <p className="flex items-center gap-2 text-[15px] font-semibold text-text">
+            <PriorityBadge
+              priority={sooner.priority}
+              className="size-5 text-[11px]"
+            />
+            <span className="truncate">{sooner.name}</span>
           </p>
-        )}
-      </Tile>
+          <p className="mt-1 text-[13px] text-text-muted">
+            {longDate(sooner.race_date, today)} ·{" "}
+            {countdownText(daysBetween(today, sooner.race_date))}
+          </p>
+        </Tile>
+      )}
     </section>
   );
 }

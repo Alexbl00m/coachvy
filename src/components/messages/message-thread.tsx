@@ -127,7 +127,7 @@ export function MessageThread({
                       {timestamp(message.created_at)}
                     </span>
                     {!mine && message.read_at === null && (
-                      <span className="rounded bg-accent/20 px-1 text-accent">
+                      <span className="rounded bg-surface-3 px-1 text-text">
                         ny
                       </span>
                     )}
@@ -136,7 +136,7 @@ export function MessageThread({
                         type="button"
                         aria-label="Ta bort meddelandet"
                         onClick={() => remove(message.id)}
-                        className="ml-auto rounded p-0.5 text-text-subtle opacity-0 transition-opacity hover:text-accent focus:opacity-100 group-hover:opacity-100"
+                        className="ml-auto rounded p-0.5 text-text-subtle opacity-0 transition-opacity hover:text-text focus:opacity-100 group-hover:opacity-100"
                       >
                         <Trash2 aria-hidden className="size-3.5" />
                       </button>

@@ -159,7 +159,7 @@ export function LsctCard({
         </div>
       )}
 
-      <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         Normen är medelvärdet av de senaste testen före det här, högst sex. En
         avvikelse är en ändring större än två standardavvikelser, men minst 4 %
         i effekt och 4 slag i återhämtning; RPE räknas som avvikande en poäng

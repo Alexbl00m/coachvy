@@ -159,7 +159,7 @@ export async function SeasonPlan({
               <li key={note} className="flex gap-2.5">
                 <span
                   aria-hidden
-                  className="mt-2 size-1.5 shrink-0 rounded-full bg-accent"
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-warn"
                 />
                 {note}
               </li>

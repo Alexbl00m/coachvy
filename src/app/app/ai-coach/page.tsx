@@ -55,7 +55,7 @@ export default async function AiCoachPage({
           : "Svarar utifrån Coachvys grundfilosofi."}{" "}
         <Link
           href={`${routes.settings}#filosofi`}
-          className="font-medium text-accent-text underline-offset-2 hover:underline"
+          className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
         >
           {user.coach?.philosophy?.trim()
             ? "Ändra din filosofi"

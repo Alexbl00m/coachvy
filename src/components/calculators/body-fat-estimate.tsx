@@ -41,7 +41,7 @@ export function BodyFatEstimate({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-[12px] text-accent underline-offset-2 hover:underline"
+        className="text-[12px] text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
       >
         Inget mätt värde? Uppskatta ur BMI
       </button>

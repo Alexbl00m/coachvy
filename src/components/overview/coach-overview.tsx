@@ -167,7 +167,7 @@ export async function CoachOverview({
           </span>
           <Link
             href={`${routes.adepts}?samtycke=saknas`}
-            className="font-medium text-accent hover:text-accent-strong"
+            className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
           >
             Visa vilka
           </Link>
@@ -207,7 +207,7 @@ export async function CoachOverview({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <Card className="min-w-0">
+        <Card level="lead" className="min-w-0">
           <CardTitle>Värt en titt</CardTitle>
           {rows.length === 0 ? (
             <p className="text-sm text-text-muted">
@@ -222,7 +222,7 @@ export async function CoachOverview({
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`${routes.adepts}/${adept.id}`}
-                      className="text-sm font-medium text-text hover:text-accent"
+                      className="text-sm font-medium text-text hover:underline"
                     >
                       {adept.full_name}
                     </Link>
@@ -250,7 +250,7 @@ export async function CoachOverview({
                               aria-hidden
                               className={
                                 item.weight === 3
-                                  ? "mt-0.5 size-3.5 shrink-0 text-accent"
+                                  ? "mt-0.5 size-3.5 shrink-0 text-bad"
                                   : "mt-0.5 size-3.5 shrink-0 text-text-subtle"
                               }
                             />
@@ -264,7 +264,7 @@ export async function CoachOverview({
               ))}
             </ul>
           )}
-          <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
+          <p className="mt-4 border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
             Återhämtningen jämförs med adeptens eget snitt den senaste månaden,
             belastningen med månaden före. Det som nämns är sådant som skiljer
             sig tydligt – vad det betyder är din bedömning.
@@ -276,7 +276,7 @@ export async function CoachOverview({
             action={
               <Link
                 href={routes.calendar}
-                className="text-[13px] text-accent hover:text-accent-strong"
+                className="text-[13px] text-text-muted hover:text-text"
               >
                 Kalender
               </Link>
@@ -299,7 +299,7 @@ export async function CoachOverview({
                   >
                     <PriorityBadge priority={race.priority} />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-text group-hover:text-accent">
+                      <span className="block truncate text-sm font-medium text-text group-hover:text-text">
                         {race.name}
                       </span>
                       <span className="block text-[12px] text-text-subtle">
@@ -321,7 +321,7 @@ export async function CoachOverview({
             action={
               <Link
                 href={routes.calendar}
-                className="text-[13px] text-accent hover:text-accent-strong"
+                className="text-[13px] text-text-muted hover:text-text"
               >
                 Hela veckan
               </Link>
@@ -343,7 +343,7 @@ export async function CoachOverview({
                     <p
                       className={
                         d === today
-                          ? "text-[12px] font-semibold text-accent"
+                          ? "text-[12px] font-semibold text-text"
                           : "text-[12px] font-medium text-text-subtle"
                       }
                     >
@@ -400,7 +400,7 @@ export async function CoachOverview({
                   >
                     <TestIcon className="mt-0.5 size-4 shrink-0" />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm text-text group-hover:text-accent">
+                      <span className="block truncate text-sm text-text group-hover:text-text">
                         {t.adeptName} · {t.label}
                       </span>
                       <span className="block truncate text-[12px] text-text-subtle">

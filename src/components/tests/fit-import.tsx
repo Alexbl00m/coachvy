@@ -148,7 +148,7 @@ export function FitImport({
             : "border-line-strong hover:border-accent/60",
         )}
       >
-        <FileUp aria-hidden className="size-5 shrink-0 text-accent" />
+        <FileUp aria-hidden className="size-5 shrink-0 text-text-muted" />
         <span className="min-w-0 flex-1">
           <span className="font-medium text-text">
             {busy ? "Läser filerna …" : "Hämta insatserna ur cykeldatorn"}
@@ -237,7 +237,7 @@ export function FitImport({
                           <span className="mt-1 flex items-start gap-1.5 text-[12px] text-text-muted">
                             <TriangleAlert
                               aria-hidden
-                              className="mt-0.5 size-3.5 shrink-0 text-accent"
+                              className="mt-0.5 size-3.5 shrink-0 text-text-muted"
                             />
                             Ingen egen insats på den här längden – bästa
                             fönstret i passet, troligen en del av en längre

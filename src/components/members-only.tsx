@@ -19,7 +19,7 @@ export function MembersOnly({
 }) {
   return (
     <div className="rounded-lg border border-dashed border-line-strong bg-surface-2/60 px-6 py-12 text-center">
-      <Lock aria-hidden className="mx-auto size-6 text-accent" />
+      <Lock aria-hidden className="mx-auto size-6 text-text-muted" />
       <p className="mt-4 text-sm font-medium text-text">{feature} ingår i medlemskapet</p>
       <p className="mx-auto mt-1 max-w-md text-sm text-text-muted">{description}</p>
       <div className="mt-5 flex justify-center">

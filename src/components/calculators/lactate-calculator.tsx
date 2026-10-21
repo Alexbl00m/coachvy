@@ -267,7 +267,7 @@ export function LactateCalculator() {
                           setRows((current) => current.filter((r) => r.id !== row.id))
                         }
                         disabled={rows.length <= 4}
-                        className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-accent disabled:opacity-30 disabled:hover:text-text-subtle"
+                        className="rounded-md p-1.5 text-text-subtle transition-colors hover:text-text disabled:opacity-30 disabled:hover:text-text-subtle"
                       >
                         <Trash2 aria-hidden className="size-4" />
                       </button>
@@ -467,7 +467,7 @@ export function LactateCalculator() {
                   ],
                 ]}
               />
-              <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+              <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
                 Trezonsmodellen är det trösklarna faktiskt definierar: under
                 LT1, mellan trösklarna, över LT2. Vill du ha din egen
                 femzonsindelning behöver jag procentsatserna du använder – de
@@ -488,13 +488,13 @@ export function LactateCalculator() {
             </div>
           ))}
         </dl>
-        <p className="mt-5 border-t border-line pt-4 text-[12px] leading-relaxed text-text-subtle">
+        <p className="mt-5 border-t border-line pt-4 text-[13px] leading-relaxed text-text-muted">
           Beräkningarna är portade från R-paketet{" "}
           <a
             href="https://github.com/fmmattioni/lactater"
             target="_blank"
             rel="noreferrer"
-            className="text-text-muted underline underline-offset-2 hover:text-accent"
+            className="text-text-muted underline decoration-line-strong underline-offset-2 hover:text-text"
           >
             lactater
           </a>{" "}

@@ -52,7 +52,7 @@ export function WeekBars({
           const width = (r.value / max) * 100;
           const inner = r.inner ? Math.min(100, (r.inner / r.value) * 100) : 0;
           const label = r.href ? (
-            <Link href={r.href} className="hover:text-accent">
+            <Link href={r.href} className="hover:underline">
               {r.label}
             </Link>
           ) : (

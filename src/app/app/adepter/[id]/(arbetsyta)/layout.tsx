@@ -69,7 +69,7 @@ export default async function AdeptWorkspaceLayout({
 
       <div className="flex flex-wrap items-start justify-between gap-4 pb-5">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-text">
+          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-text">
             {adept.full_name}
           </h1>
           {meta && <p className="text-sm text-text-muted">{meta}</p>}
@@ -105,7 +105,7 @@ export default async function AdeptWorkspaceLayout({
           AI-funktionerna används inte för hen så länge.{" "}
           <Link
             href={adeptHref(adept.id, "profil")}
-            className="font-medium text-accent-text hover:underline"
+            className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
           >
             {adept.profile_id ? "Skicka en påminnelse" : "Bjud in till appen"}
           </Link>

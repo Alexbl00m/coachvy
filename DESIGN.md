@@ -73,11 +73,12 @@ typography:
     brand: "Montserrat"         # bara i Lindblom Coachings logotyp
   styles:                       # px: storlek / radhöjd / vikt / spärrning
     display: "32 / 36 / 600 / -0.022em"   # sidrubrik på översikter
-    title: "24 / 30 / 600 / -0.018em"     # sidrubrik (PageHeader)
+    title: "28 / 34 / 600 / -0.02em"      # sidrubrik (PageHeader, adeptens namn)
     heading: "18 / 24 / 600 / -0.012em"   # rubrik i en panel med eget innehåll
+    card-title: "16 / 22 / 600 / -0.005em" # kortrubrik (CardTitle)
     metric: "28 / 32 / 600 / -0.02em"     # nyckeltal, tabulära siffror
     body: "14 / 20 / 400 / 0"             # brödtext, rader, kontroller
-    body-sm: "13 / 18 / 400 / 0"          # metadata, kortrubriker, hjälptext
+    body-sm: "13 / 18 / 400 / 0"          # etiketter, förklaringar, hjälptext
     label: "12 / 16 / 500 / 0"            # fältetiketter, tabellhuvud
     eyebrow: "11 / 14 / 600 / 0.08em"     # versaler, sparsamt: sektionsetikett i sidomenyn
     data: "13 / 18 / 500 / 0"             # Geist Mono, tabulära siffror
@@ -156,7 +157,17 @@ Ingen text under `text-subtle`.
 - `accent` fyller primärknappen och ritar fokusringen (2px, 2px avstånd).
 - Text på accent är `accent-on`, inte vit: mörk text på den ljusa orangen i
   mörkt läge, vit på den mörkare orangen i ljust.
-- Accentfärgad text – länkar, "Visa vilka" – är `accent-text`.
+- **Accenten betyder "gör detta" eller "det här är valt".** Den används för
+  sidans primära knapp, vald flik, vald post i menyn, valt alternativ,
+  fokusringen och dagens markering i kalendrar och tidslinjer. Inget annat.
+- Länkar är inte accent. En länk i löptext står i `text` med understrykning i
+  `line-strong` som blir `text` vid hover; en åtgärd bredvid en kortrubrik –
+  "Kalender", "Alla tester" – står i `text-muted` och blir `text` vid hover.
+- Ikoner, brickor och räknare är inte accent: ikoner i `text-muted`, brickor
+  och olästa-räknare i `surface-3` med `text`. Varningar har `warn` eller
+  `bad`, aldrig accent.
+- Diagram ritas i zonernas blå stege eller serierna, aldrig i accent. Fasernas
+  orange stege är ett eget, validerat undantag.
 - `accent-soft` är bakgrunden för en dropzon under drag, inget annat.
 - Bara ett accentelement per vy ska kännas fyllt. Två primärknappar bredvid
   varandra är en för många.
@@ -212,9 +223,22 @@ och bär stora rubriker. Geist Mono används för siffror som står i kolumner �
 tider, tempo, watt i tabeller. Montserrat lever bara i Lindblom Coachings
 logotyp.
 
+En skala, sex steg i appen – inget däremellan:
+
+| Steg | Storlek | Används till |
+| --- | --- | --- |
+| Sidrubrik | 28 px, semibold | `PageHeader`, adeptens namn i arbetsytan |
+| Avsnitt | 18–20 px, semibold | rubrik i en panel med eget innehåll |
+| Korttitel | 16 px, semibold, `text` | `CardTitle` |
+| Brödtext | 14 px | rader, tabeller, kontroller; 15 px för sidbeskrivningar |
+| Etikett och förklaring | 13 px, `text-muted` | fältetiketter, text som förklarar hur ett tal ska läsas |
+| Metadata | 12 px, `text-subtle` | datum, källa, antal – aldrig förklaringar |
+
 - Brödtext och rader i `body` (14 px). Det är appens grundstorlek.
-- Kortrubriker i `body-sm`, medium, `text-muted`, vanlig skiftläge – inte
-  versaler.
+- Kortrubriker i `card-title`: 16 px semibold i `text`, vanlig skiftläge –
+  inte versaler. De är det ögat landar på i ett kort.
+- Text som förklarar ett tal är 13 px i `text-muted`, inte 12 px i
+  `text-subtle`. Den som behöver förklaringen ska kunna läsa den i telefonen.
 - Sidrubrik i `title`; översiktens hälsning i `display`.
 - Nyckeltal i `metric` med tabulära siffror.
 - `eyebrow` (versaler, spärrat) bara för sektionsetiketterna i sidomenyn och
@@ -247,8 +271,16 @@ Etiketten säger vad som händer: "Spara", "Bjud in", "Ta bort aktiviteten".
 hjälptext under i `text-subtle`.
 
 ### Kort
-`surface` med kant `line`. Rubrik i `body-sm` medium `text-muted`, en åtgärd
-till höger på samma rad i `accent-text`.
+Tre nivåer (`Card level`), så att ögat får en startpunkt:
+- **Ledkort** (`lead`): `surface-2` med kant `line-strong`. Det sidan handlar
+  om – "Värt en titt", "Dagens pass". Högst ett eller två per sida.
+- **Kort** (`default`): `surface` med kant `line`. Stöd och detaljer.
+- **Platt grupp** (`flat`): ingen ram och ingen yta – listor och metadata
+  inne i ett annat kort eller direkt på sidan.
+
+Rubrik i `card-title`, en åtgärd till höger på samma rad i `text-muted`. En
+ruta som inte har något att säga visas inte: "Inga starter före det" är ingen
+ruta.
 
 ### Nyckeltal
 Etikett i `body-sm` `text-muted`, värde i `metric`, en rad sammanhang i
@@ -256,7 +288,7 @@ Etikett i `body-sm` `text-muted`, värde i `metric`, en rad sammanhang i
 
 ### Flikar
 Text i `body` `text-muted`; vald flik `text` med en 2 px underlinje i
-`accent`. Olästa som en liten pill i `accent` med `accent-on`.
+`accent`. Olästa som en liten pill i `surface-3` med `text`.
 
 ### Brickor och filter
 Filterbricka: pill med kant `line`, text `text-muted`; vald lyfts till
@@ -270,7 +302,7 @@ Godkänt i `good` med en bock; "Ej inbjuden" i `text`; övriga i
 
 ### Notis
 Rad över sidans innehåll: `surface-2`, kant `line-strong`, hörn `md`, `body` i
-`text-muted`, siffror och namn i `text`, en länk i `accent-text`.
+`text-muted`, siffror och namn i `text`, en länk i `text` med understrykning.
 
 ## 6. Rörelse
 

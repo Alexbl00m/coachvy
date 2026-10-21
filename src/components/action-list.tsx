@@ -55,7 +55,7 @@ export function ActionList({
                     className={cn(
                       "mt-1 block text-[12px] tabular-nums",
                       item.pending
-                        ? "font-medium text-accent-text"
+                        ? "font-medium text-warn"
                         : "text-text-subtle",
                     )}
                   >

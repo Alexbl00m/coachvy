@@ -144,7 +144,7 @@ export function PhilosophyEditor({
             <button
               type="button"
               onClick={() => setText(TEMPLATE)}
-              className="text-[13px] font-medium text-accent-text underline-offset-2 hover:underline"
+              className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
             >
               Börja från en mall
             </button>

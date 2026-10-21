@@ -56,7 +56,7 @@ export function ActivityList({
                   {(a.race_id || a.is_race) && (
                     <Flag
                       aria-label="Tävling"
-                      className="size-3.5 shrink-0 text-accent"
+                      className="size-3.5 shrink-0 text-text"
                     />
                   )}
                   <span className="truncate">{a.name}</span>
@@ -90,7 +90,7 @@ export function ActivityList({
       {hidden > 0 && moreHref && (
         <Link
           href={moreHref}
-          className="mt-3 inline-block text-[13px] text-accent-text hover:text-accent-hover"
+          className="mt-3 inline-block text-[13px] text-text-muted hover:text-text"
         >
           Visa alla {total} aktiviteter
         </Link>

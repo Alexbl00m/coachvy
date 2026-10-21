@@ -226,7 +226,7 @@ export default async function LibraryPlanPage({
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-[12px] leading-relaxed text-text-subtle">
+            <p className="mt-4 text-[13px] leading-relaxed text-text-muted">
               Du väljer nivå när du startar och byter när du vill – från nästa
               vecka, stegvis eller tillfälligt, till exempel under en resa.
             </p>

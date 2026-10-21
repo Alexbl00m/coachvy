@@ -242,7 +242,7 @@ export function PowerBenchmark({
             </table>
           </div>
 
-          <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+          <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
             Källa: Allen &amp; Coggan,{" "}
             <i>Training and Racing with a Power Meter</i> – kategoriernas nedre
             gränser. 20 minuter jämförs mot tröskelns gränser delade med 0,95.

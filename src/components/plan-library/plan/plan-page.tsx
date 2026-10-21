@@ -650,7 +650,7 @@ export function PlanPage({
                     <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
                       <Flag
                         aria-hidden
-                        className="mt-0.5 size-4 shrink-0 text-accent"
+                        className="mt-0.5 size-4 shrink-0 text-text-muted"
                       />
                       <span>
                         Sista veckan i varv {week.round}: den slutar med ett
@@ -663,7 +663,7 @@ export function PlanPage({
                     <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
                       <Gauge
                         aria-hidden
-                        className="mt-0.5 size-4 shrink-0 text-accent"
+                        className="mt-0.5 size-4 shrink-0 text-text-muted"
                       />
                       <span>
                         Avstämning i slutet av veckan: stämmer

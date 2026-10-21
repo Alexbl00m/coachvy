@@ -50,7 +50,7 @@ function Track({
       <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line-strong" />
       {range && (
         <span
-          className="absolute inset-y-1 rounded-[3px] bg-accent-soft"
+          className="absolute inset-y-1 rounded-[3px] bg-surface-3"
           style={{
             left: at(range.from),
             width: `calc(${at(range.to)} - ${at(range.from)})`,
@@ -58,7 +58,7 @@ function Track({
         />
       )}
       <span
-        className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-surface"
+        className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-text ring-2 ring-surface"
         style={{ left: at(pct) }}
       />
     </div>
@@ -134,7 +134,7 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
         {[UTILISATION_RANGES.LT1, UTILISATION_RANGES.LT2].map((r) => (
           <span
             key={r.from}
-            className="absolute top-8 h-1.5 rounded-full bg-accent-soft"
+            className="absolute top-8 h-1.5 rounded-full bg-surface-3"
             style={{
               left: at(r.from),
               width: `calc(${at(r.to)} - ${at(r.from)})`,
@@ -156,7 +156,7 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
             )}
             <span
               className={cn(
-                "size-3 rounded-full bg-accent ring-2 ring-surface",
+                "size-3 rounded-full bg-text ring-2 ring-surface",
                 i % 2 === 0 ? "mt-2" : "-mt-[6px]",
               )}
             />
@@ -325,7 +325,7 @@ export function UtilisationCard({
         </div>
       )}
 
-      <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
         Syreupptaget vid varje tröskel räknas med ACSM:s ekvation och delas med
         VO2max. Banden är referensspann: FatMax 50–70 %, LT1 65–75 %, och LT2
         75–90 % – som också gäller anaerob tröskel, FTP, 4 mmol och CP, som alla
