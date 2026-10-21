@@ -145,6 +145,8 @@ auth.users
                         priority ('A' | 'B' | 'C'), target
           training_blocks  säsongsplanens perioder: phase, name,
                         starts_on, ends_on, focus
+          zone_reviews  coachens beslut om zonförslag ur träningen:
+                        sport, decision, proposed_critical, session_id
           coach_messages  tråden mellan coach och adept, med read_at
           ai_conversations  coachens AI-tråd per adept
               └── ai_messages
@@ -1564,6 +1566,48 @@ allt), jämförd med lika lång tid före (`src/lib/activities/profile.ts`):
 - För löpning snabbaste tid på distanserna 400 m–maraton.
 
 Listan visar de 20 senaste passen, med en länk till alla.
+
+### Belastning: volym och strain
+
+En sammanslagen poäng som TSS säger hur mycket ett pass kostade, men inte
+varför – tre lugna timmar och en timme hårda intervaller kan ge samma tal.
+Därför hålls belastningen isär i två delar (`src/lib/activities/load.ts`):
+
+- **Volym** är tiden, arbetet i kJ (cykel) och sträckan.
+- **Strain** är arbetet över CP räknat i W′ (sträckan över CS i D′): 1,0 är
+  arbete ovanför tröskeln som motsvarar en full anaerob reserv. Analysen räknar
+  den när passet läses in (`summary.aboveCriticalWork` och `summary.strain`)
+  mot CP/W′ som gällde för passet. Äldre pass får den uppskattad ur den
+  sparade, nedsamplade serien och märks som uppskattade – korta toppar jämnas
+  ut, så värdet blir där något lågt.
+
+Träningsfliken visar volym och strain per vecka i tolv veckor, som två
+diagram (olika enheter, ingen dubbel axel), och senaste sju dagarna mot
+snittveckan månaden före i ord: drivs en ökning av mer träning eller av
+tätare intensitet? Passets sida har strain som egen ruta, och Läge visar
+veckans strain och lägger en rad under Värt en titt när strain senaste veckan
+är minst 50 % över snittet (och minst 1 W′).
+
+### Zonförslag ur träningen
+
+När bästa-kurvan ur de senaste 90 dagarnas pass ger en CP (CS) tydligt över
+senaste testet föreslår appen nya zoner (`src/lib/tests/zone-suggestion.ts`).
+Förslaget visas för coachen överst i Läge och på Tester, och kräver att:
+
+- CP (CS) räknas ur högst sex insatser på 3–20 minuter (helst 3, 5, 7, 10, 15
+  och 20 min) med samma modell som CP-testet, och att anpassningen är god
+  (R² ≥ 0,95, W′ 5–40 kJ eller D′ 50–400 m),
+- minst en insats är gjord efter testet,
+- värdet ligger minst 3 % över testet. Förslaget går aldrig nedåt: en kurva ur
+  träning visar vad adepten minst klarar.
+
+**Uppdatera zonerna** sparar insatserna som ett vanligt CP-test (cykling) eller
+CS-test (löpning) daterat i dag, med varje insats eget datum och passet i
+kommentaren, så att zonerna, passbyggaren och progressionen läser det som
+vilket test som helst. **Inte nu** sparar en avvisning; förslaget kommer
+tillbaka först när träningen ger minst 1 % mer än det avvisade, eller efter
+ett nytt test. Besluten ligger i `zone_reviews`. Förslaget räknas om på
+servern när coachen beslutar, så det som sparas är det som stod i databasen.
 
 ### Garmin och direkt synk
 

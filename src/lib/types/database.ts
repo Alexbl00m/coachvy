@@ -260,6 +260,22 @@ export type StrengthSessionRow = {
   updated_at: string;
 };
 
+/** Coachens beslut om ett zonförslag ur träningen. */
+export type ZoneReviewRow = {
+  id: string;
+  adept_id: string;
+  sport: "cykling" | "löpning";
+  decision: "godkänd" | "avvisad";
+  /** CP i W, eller CS i m/s. */
+  proposed_critical: number;
+  /** W′ i J, eller D′ i m. */
+  proposed_reserve: number | null;
+  previous_critical: number | null;
+  session_id: string | null;
+  decided_by: string | null;
+  created_at: string;
+};
+
 /** En period i säsongsplanen. Fasen är samma fem som testtillfällets. */
 export type TrainingBlockRow = {
   id: string;
@@ -539,6 +555,16 @@ export type Database = {
         Insert: Pick<StrengthSessionRow, "adept_id" | "performed_on"> &
           Partial<StrengthSessionRow>;
         Update: Partial<StrengthSessionRow>;
+        Relationships: [];
+      };
+      zone_reviews: {
+        Row: ZoneReviewRow;
+        Insert: Pick<
+          ZoneReviewRow,
+          "adept_id" | "sport" | "decision" | "proposed_critical"
+        > &
+          Partial<ZoneReviewRow>;
+        Update: Partial<ZoneReviewRow>;
         Relationships: [];
       };
       training_blocks: {

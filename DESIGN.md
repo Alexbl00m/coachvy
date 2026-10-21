@@ -310,6 +310,15 @@ kant.
 Godkänt i `good` med en bock; "Ej inbjuden" i `text`; övriga i
 `text-muted`. Datum under i `text-subtle`.
 
+### Förslag att besluta om
+När appen föreslår något som ändrar adeptens underlag – nya zoner ur
+träningen – är det ett vanligt kort som bara visas när det finns något att
+besluta. Först värdet och skillnaden mot det som gäller, sedan underlaget i
+en tabell med länk till varje pass, sist två knappar: sekundär för att
+genomföra ("Uppdatera zonerna") och spöke för att avstå ("Inte nu"), med en
+rad under som säger vad var och en gör. Ingen accent: sidans primära handling
+är fortfarande "Bygg pass", och förslaget är coachens beslut, inte appens.
+
 ### Notis
 Rad över sidans innehåll: `surface-2`, kant `line-strong`, hörn `md`, `body` i
 `text-muted`, siffror och namn i `text`, en länk i `text` med understrykning.

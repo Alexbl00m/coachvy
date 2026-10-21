@@ -20,6 +20,7 @@ import {
 } from "@/components/season/distribution-card";
 import { blockLabel } from "@/components/season/phase-style";
 import { SeasonSummary } from "@/components/season/season-summary";
+import { ZoneSuggestionCard } from "@/components/tests/zone-suggestion-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { loadTrend } from "@/lib/activities/load";
 import { listLoadActivities } from "@/lib/activities/load-queries";
@@ -115,10 +116,13 @@ export async function AdeptStatus({
   adept,
   viewerId,
   today,
+  canDecide = false,
 }: {
   adept: Adept;
   viewerId: string;
   today: string;
+  /** Coachen som får godkänna zonförslag ur träningen. */
+  canDecide?: boolean;
 }) {
   const monday = mondayOf(today);
   const sunday = addDays(monday, 6);
@@ -289,6 +293,8 @@ export async function AdeptStatus({
           </ul>
         )}
       </section>
+
+      {canDecide && <ZoneSuggestionCard adeptId={adept.id} today={today} />}
 
       <SeasonSummary blocks={blocks} races={races} today={today} />
 

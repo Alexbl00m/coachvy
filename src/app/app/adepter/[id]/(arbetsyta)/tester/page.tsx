@@ -1,6 +1,8 @@
 import { CompareToggle } from "@/components/progression/compare-toggle";
 import { SessionPanel } from "@/components/tests/session-panel";
+import { ZoneSuggestionCard } from "@/components/tests/zone-suggestion-card";
 import { loadWorkspace } from "@/lib/adepts/workspace";
+import { todayIso } from "@/lib/season/season";
 import { lactateCurves } from "@/lib/tests/progression";
 import { sportOf } from "@/lib/tests/protocols";
 import {
@@ -39,6 +41,7 @@ export default async function AdeptTestsPage({
 
   return (
     <div className="space-y-6">
+      {canEdit && <ZoneSuggestionCard adeptId={adept.id} today={todayIso()} />}
       {curves.length >= 2 && <CompareToggle curves={curves} />}
       <SessionPanel
         adeptId={adept.id}

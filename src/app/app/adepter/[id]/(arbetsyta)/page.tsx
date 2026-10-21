@@ -19,7 +19,7 @@ export default async function AdeptLagePage({
   params,
   searchParams,
 }: PageProps<"/app/adepter/[id]">) {
-  const { user, adept, asAdept } = await loadWorkspace(params);
+  const { user, adept, asAdept, canEdit } = await loadWorkspace(params);
   const query = await searchParams;
 
   // Flikarna låg tidigare i `?vy=`; gamla länkar och bokmärken leder rätt.
@@ -34,5 +34,12 @@ export default async function AdeptLagePage({
   // Adepten själv har Idag i stället för coachens läge.
   if (asAdept) redirect(routes.dashboard);
 
-  return <AdeptStatus adept={adept} viewerId={user.id} today={todayIso()} />;
+  return (
+    <AdeptStatus
+      adept={adept}
+      viewerId={user.id}
+      today={todayIso()}
+      canDecide={canEdit}
+    />
+  );
 }
