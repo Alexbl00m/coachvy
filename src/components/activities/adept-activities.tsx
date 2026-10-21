@@ -2,10 +2,12 @@ import { ActivityImport } from "@/components/activities/activity-import";
 import { ActivityList } from "@/components/activities/activity-list";
 import { ActivityUpload } from "@/components/activities/activity-upload";
 import { DevelopmentCard } from "@/components/activities/development-card";
+import { DurabilityCard } from "@/components/activities/durability-card";
 import { LoadCard } from "@/components/activities/load-card";
 import { TrainingProfile } from "@/components/activities/training-profile";
 import { PowerBenchmark } from "@/components/benchmarks/power-benchmark";
 import { analyseTraining } from "@/lib/activities/development";
+import { listDurabilitySources } from "@/lib/activities/durability-queries";
 import { listLoadActivities } from "@/lib/activities/load-queries";
 import { listActivities } from "@/lib/activities/queries";
 import { candidatesFrom, pickReference } from "@/lib/activities/reference";
@@ -39,14 +41,17 @@ export async function AdeptActivities({
   moreHref: string;
 }) {
   const today = todayIso();
-  const [activities, races, sessions, profile, load] = await Promise.all([
-    listActivities(adept.id),
-    listRaces(adept.id),
-    listSessions(adept.id),
-    getAdeptProfile(adept.id),
-    // Tolv veckor för diagrammen; fem räcker för trenden.
-    listLoadActivities(adept.id, addDays(mondayOf(today), -77)),
-  ]);
+  const [activities, races, sessions, profile, load, durability] =
+    await Promise.all([
+      listActivities(adept.id),
+      listRaces(adept.id),
+      listSessions(adept.id),
+      getAdeptProfile(adept.id),
+      // Tolv veckor för diagrammen; fem räcker för trenden.
+      listLoadActivities(adept.id, addDays(mondayOf(today), -77)),
+      // Två perioder om 90 dagar: den senaste och den före.
+      listDurabilitySources(adept.id, addDays(today, -179)),
+    ]);
   const candidates = candidatesFrom(
     sessions,
     (key) => protocolByKey(key)?.label ?? key,
@@ -78,6 +83,12 @@ export async function AdeptActivities({
       <DevelopmentCard reading={development} />
 
       <LoadCard activities={load} today={today} />
+
+      <DurabilityCard
+        sources={durability}
+        today={today}
+        weightKg={body.weightKg}
+      />
 
       {canUpload && (
         <ActivityUpload

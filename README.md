@@ -1611,6 +1611,28 @@ tillbaka först när träningen ger minst 1 % mer än det avvisade, eller efter
 ett nytt test. Besluten ligger i `zone_reviews`. Förslaget räknas om på
 servern när coachen beslutar, så det som sparas är det som stod i databasen.
 
+### Durability
+
+Bästa-kurvan säger vad adepten klarar utvilad, men långa lopp avgörs efter
+timmar av arbete (Maunder m.fl. 2021). Analysen räknar därför också bästa
+medel över 1, 5 och 20 minuter för insatser som *börjar* efter en viss mängd
+arbete (`src/lib/activities/durability.ts`, `summary.durability`):
+
+- **Cykling** mot utfört arbete, i steg om 250 kJ.
+- **Löpning** mot minuter i rörelse, i steg om 15 minuter – också med
+  löpeffekt, så att löppassen jämförs med varandra.
+
+Träningsfliken visar de senaste 90 dagarna som andel av utvilad, cyklingen i
+kJ/kg (vikten ur senaste testet; utan vikt i kJ), med ett diagram, en tabell
+med värden och antal pass per nivå, var tappet passerar 5 % och hur det
+ändrats mot 90 dagar före. Utvilat bästa tas ur bästa-kurvan. Pass lästa
+innan durability räknades får nivåerna ur den sparade serien, märkta som
+uppskattade – men bara pass långa nog att nå första nivån (500 kJ, 30 min).
+
+Som bästa-kurvan visar den vad adepten minst klarar: värdena blir
+rättvisande först med lopp och långa pass med kvalitet mot slutet. Passets
+durability följer också med i underlaget till AI-sammanfattningen.
+
 ### Sammanfattning per pass
 
 Analysen vid uppladdningen säger vad passet var. På passets sida kan coachen

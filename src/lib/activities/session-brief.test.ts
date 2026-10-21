@@ -205,3 +205,24 @@ describe("sessionBrief", () => {
     expect(text).not.toContain("NP");
   });
 });
+
+describe("sessionBrief med durability", () => {
+  it("tar med bästa efter utfört arbete", () => {
+    const input = base();
+    input.activity.summary.durability = {
+      axis: "kJ",
+      points: [
+        [0, 1200, 300],
+        [1000, 1200, 285],
+        [2000, 1200, 270],
+        [0, 300, 360],
+      ],
+    };
+    const text = sessionBrief(input);
+    expect(text).toContain("utfört arbete (durability)");
+    expect(text).toContain(
+      "20 min: 0 kJ: 300 W, 1000 kJ: 285 W, 2000 kJ: 270 W",
+    );
+    expect(text).not.toContain("5 min: 0 kJ");
+  });
+});

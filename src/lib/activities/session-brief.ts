@@ -140,6 +140,29 @@ function newBests(input: BriefInput): string[] {
   return lines;
 }
 
+/** Passets durability på några nivåer, för 5 och 20 minuter. */
+function durabilityLines(a: BriefActivity): string[] {
+  const d = a.summary.durability;
+  if (!d) return [];
+  const steps =
+    d.axis === "kJ" ? [0, 1000, 2000, 3000, 4000] : [0, 60, 120, 180];
+  const show = (v: number) =>
+    d.axis === "kJ" ? `${sv(v)} W` : `${paceOf(v)} /km`;
+  const out: string[] = [];
+  for (const span of [300, 1200]) {
+    const parts = steps
+      .map((after) => {
+        const v = d.points.find((p) => p[0] === after && p[1] === span)?.[2];
+        return v
+          ? `${after} ${d.axis === "kJ" ? "kJ" : "min"}: ${show(v)}`
+          : null;
+      })
+      .filter(Boolean);
+    if (parts.length >= 2) out.push(`${spanLabel(span)}: ${parts.join(", ")}`);
+  }
+  return out;
+}
+
 export function sessionBrief(input: BriefInput): string {
   const { activity: a, strain } = input;
   const s = a.summary;
@@ -272,6 +295,16 @@ export function sessionBrief(input: BriefInput): string {
       lines.push("Belastningen de sju dagarna till och med passet:");
       for (const line of reading) lines.push(`- ${line}`);
     }
+  }
+
+  const durable = durabilityLines(a);
+  if (durable.length > 0) {
+    lines.push(
+      a.summary.durability?.axis === "min"
+        ? "Bästa insats som börjar efter så många minuter i rörelse (durability):"
+        : "Bästa insats som börjar efter så mycket utfört arbete (durability):",
+    );
+    for (const line of durable) lines.push(`- ${line}`);
   }
 
   const bests = newBests(input);

@@ -11,6 +11,8 @@
  * riktig fil utan app.
  */
 
+import { durabilityFromSeries, type Durability } from "./durability";
+
 export type Sample = {
   /** Sekunder från start, klocktid. */
   t: number;
@@ -132,6 +134,8 @@ export type Summary = {
   curve?: Curve;
   /** Lagt in i en historikimport: sparat med en glesare serie. */
   imported?: boolean;
+  /** Bästa efter utfört arbete (kJ) eller tid i rörelse. Saknas i äldre pass. */
+  durability?: Durability | null;
 };
 
 /**
@@ -356,6 +360,35 @@ export function curveOf(
     power: powerCurve.length > 0 ? powerCurve : null,
     speed: speedCurve.length > 0 ? speedCurve : null,
   };
+}
+
+/**
+ * Durability för passet: effekt mot utfört arbete på cykeln, löpfart ur
+ * distansen mot tid i rörelse i löpningen – också med löpeffekt (Stryd), så
+ * att löppassen jämförs med varandra.
+ */
+function durabilityOf(
+  seconds: Second[],
+  sport: ActivitySport,
+): Durability | null {
+  const t = seconds.map((_, i) => i);
+  if (sport !== "löpning") {
+    const power = seconds.map((s) => (s.power > MAX_POWER_W ? 0 : s.power));
+    return power.some((p) => p > 0)
+      ? durabilityFromSeries(t, power, "kJ")
+      : null;
+  }
+  let last = 0;
+  const distance = seconds.map((s) => {
+    if (s.distance !== null && s.distance >= last) last = s.distance;
+    return last;
+  });
+  if (last <= 0) return null;
+  const speed = distance.map((d, i) => {
+    const v = i + 1 < distance.length ? distance[i + 1] - d : 0;
+    return v <= MAX_RUN_SPEED_MS ? v : 0;
+  });
+  return durabilityFromSeries(t, speed, "min");
 }
 
 /** Snabbaste tid över en sträcka, ur den kumulativa distansen. */
@@ -766,6 +799,7 @@ export function analyse(
     splits: splitsOf(seconds, sport),
     insights: [],
     curve: curveOf(seconds, sport),
+    durability: durabilityOf(seconds, sport),
   };
   summary.insights = insightsFor(summary, sport, reference, ftp);
   return { summary, streams: downsample(seconds, balance, reserve, points) };
