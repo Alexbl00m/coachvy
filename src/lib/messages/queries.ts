@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CoachMessageRow } from "@/lib/types/database";
 
 const COLUMNS =
-  "id, adept_id, sender_id, body, read_at, workout_id, session_id, created_at";
+  "id, adept_id, sender_id, body, read_at, workout_id, session_id, call_id, created_at";
 
 /** Tråden för en adept, äldst först så att den läses uppifrån och ned. */
 export async function listMessages(

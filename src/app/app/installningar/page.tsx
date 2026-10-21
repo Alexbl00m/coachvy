@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 
 import { ReferenceLevelsEditor } from "@/components/benchmarks/reference-levels-editor";
+import { MeetingRoomForm } from "@/components/settings/meeting-room-form";
 import { PhilosophyEditor } from "@/components/settings/philosophy-editor";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -146,6 +147,21 @@ export default async function InstallningarPage() {
             </p>
           </div>
         </Card>
+
+        {isCoach && (
+          <section id="videosamtal" className="min-w-0">
+            <Card className="min-w-0">
+              <CardTitle>Videosamtal</CardTitle>
+              <p className="mb-4 text-sm leading-relaxed text-text-muted">
+                Samtalen med adepterna går i ditt eget mötesrum. Från en adepts
+                meddelanden ringer du direkt eller bokar en tid; adepten får ett
+                kort i tråden att gå med från, och bokade samtal syns i
+                kalendern och i adeptens Idag.
+              </p>
+              <MeetingRoomForm url={user.coach?.meeting_url ?? null} />
+            </Card>
+          </section>
+        )}
 
         {isCoach && (
           <section id="filosofi" className="min-w-0 lg:col-span-2">

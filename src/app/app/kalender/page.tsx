@@ -24,6 +24,7 @@ import { routes } from "@/lib/routes";
 import { listBlocks, listRacesBetween } from "@/lib/season/queries";
 import { listLibrary } from "@/lib/session-library/queries";
 import { listActivitiesBetween } from "@/lib/activities/queries";
+import { listCallsBetween } from "@/lib/calls/queries";
 import {
   addDays,
   blockOn,
@@ -118,7 +119,7 @@ export default async function KalenderPage({
   const to =
     dates[dates.length - 1] > lastSoon ? dates[dates.length - 1] : lastSoon;
 
-  const [workouts, tests, races, blocks, checkins, activities] =
+  const [workouts, tests, races, blocks, checkins, activities, calls] =
     await Promise.all([
       listScheduledWorkouts(from, to, adeptId),
       listSessionsBetween(from, to, adeptId),
@@ -126,6 +127,12 @@ export default async function KalenderPage({
       adeptId ? listBlocks(adeptId) : Promise.resolve([]),
       adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
       listActivitiesBetween(from, to, adeptId),
+      // Samtalen räknas i svensk tid; en dags marginal åt båda hållen.
+      listCallsBetween(
+        `${addDays(from, -1)}T00:00:00Z`,
+        `${addDays(to, 1)}T23:59:59Z`,
+        adeptId,
+      ),
     ]);
   // Biblioteket behövs bara när coachen tittar på en adept och kan lägga in.
   const library = isCoach && adept ? await listLibrary() : [];
@@ -135,6 +142,7 @@ export default async function KalenderPage({
     tests,
     races: adeptId ? races.filter((r) => r.adept_id === adeptId) : races,
     activities,
+    calls,
     checkins,
   });
   const phases = adeptId ? phaseByDay(blocks, [...dates, ...soon]) : null;

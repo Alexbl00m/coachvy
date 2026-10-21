@@ -2,12 +2,15 @@ import Link from "next/link";
 import { Flag, MessageSquare } from "lucide-react";
 
 import { SportIcon, TestIcon } from "@/components/calendar/calendar-items";
+import { CallCard } from "@/components/calls/call-card";
 import { SeasonSummary } from "@/components/season/season-summary";
 import { ConsentToggle } from "@/components/settings/settings-forms";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { listScheduledWorkouts } from "@/lib/calendar/queries";
+import { listCallsBetween } from "@/lib/calls/queries";
+import { callState } from "@/lib/calls/time";
 import { countUnread, listMessages } from "@/lib/messages/queries";
 import { adeptHref, routes } from "@/lib/routes";
 import { listBlocks, listRaces } from "@/lib/season/queries";
@@ -46,6 +49,9 @@ export async function AdeptToday({
   consentGiven: boolean;
 }) {
   const monday = mondayOf(today);
+  // Serverns tid, så att samtalens läge blir detsamma i webbläsaren.
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const [
     races,
     blocks,
@@ -55,6 +61,7 @@ export async function AdeptToday({
     sessions,
     strength,
     thread,
+    calls,
   ] = await Promise.all([
     listRaces(adept.id),
     listBlocks(adept.id),
@@ -64,7 +71,17 @@ export async function AdeptToday({
     listSessions(adept.id),
     listStrengthSessions(adept.id),
     listMessages(adept.id, 20),
+    // Samtal som pågår eller kommer de närmaste två veckorna.
+    listCallsBetween(
+      new Date(now - 2 * 3600_000).toISOString(),
+      `${addDays(today, 14)}T23:59:59Z`,
+      adept.id,
+    ),
   ]);
+  const nextCalls = calls.filter((c) => {
+    const state = callState(c, now);
+    return state !== "avslutat" && state !== "avbokat";
+  });
 
   const todays = checkins.find((c) => c.performed_on === today) ?? null;
   const readiness = todays ? readinessScore(toCheckin(todays)) : null;
@@ -97,6 +114,30 @@ export async function AdeptToday({
             </p>
             <ConsentToggle given={false} />
           </div>
+        </Card>
+      )}
+
+      {nextCalls.length > 0 && (
+        <Card className="min-w-0">
+          <CardTitle
+            action={
+              <Link
+                href={adeptHref(adept.id, "meddelanden")}
+                className="text-[13px] text-text-muted hover:text-text"
+              >
+                Meddelanden
+              </Link>
+            }
+          >
+            {nextCalls.length === 1 ? "Videosamtal" : "Videosamtal med coachen"}
+          </CardTitle>
+          <ul className="divide-y divide-line">
+            {nextCalls.slice(0, 3).map((call) => (
+              <li key={call.id} className="py-3 first:pt-0 last:pb-0">
+                <CallCard call={call} now={now} compact />
+              </li>
+            ))}
+          </ul>
         </Card>
       )}
 

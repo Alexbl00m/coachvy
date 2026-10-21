@@ -10,6 +10,7 @@ import {
   MessageSquare,
   MoonStar,
   TrendingUp,
+  Video,
   Zap,
 } from "lucide-react";
 
@@ -19,6 +20,8 @@ import { blockLabel } from "@/components/season/phase-style";
 import { SeasonSummary } from "@/components/season/season-summary";
 import { ZoneSuggestionCard } from "@/components/tests/zone-suggestion-card";
 import { listDoneGoals } from "@/lib/activities/intensity-queries";
+import { listCallsBetween } from "@/lib/calls/queries";
+import { callDate, callTime } from "@/lib/calls/time";
 import { Card, CardTitle } from "@/components/ui/card";
 import { loadTrend } from "@/lib/activities/load";
 import { listLoadActivities } from "@/lib/activities/load-queries";
@@ -132,6 +135,7 @@ export async function AdeptStatus({
     sessions,
     workouts,
     load,
+    calls,
   ] = await Promise.all([
     listBlocks(adept.id),
     listRaces(adept.id),
@@ -144,6 +148,12 @@ export async function AdeptStatus({
     listWorkouts(adept.id),
     // Fem veckor: senaste veckan mot de fyra före.
     listLoadActivities(adept.id, addDays(today, -34)),
+    // Bokade samtal i dag och i morgon.
+    listCallsBetween(
+      `${addDays(today, -1)}T00:00:00Z`,
+      `${addDays(today, 2)}T23:59:59Z`,
+      adept.id,
+    ),
   ]);
   const checkins = checkinRows.map(toCheckin);
 
@@ -199,6 +209,18 @@ export async function AdeptStatus({
       }.`,
       icon: Zap,
       href: adeptHref(adept.id, "traning"),
+    });
+  }
+  // Videosamtal i dag eller i morgon, i svensk tid.
+  for (const call of calls) {
+    const day = callDate(call.starts_at);
+    if (day !== today && day !== addDays(today, 1)) continue;
+    items.push({
+      key: `call-${call.id}`,
+      weight: 1,
+      text: `Videosamtal ${day === today ? "i dag" : "i morgon"} kl. ${callTime(call.starts_at)}${call.topic ? ` – ${call.topic}` : ""}.`,
+      icon: Video,
+      href: adeptHref(adept.id, "meddelanden"),
     });
   }
   items.sort((a, b) => b.weight - a.weight);

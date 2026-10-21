@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Video } from "lucide-react";
 
 import { phaseFill } from "@/components/season/phase-style";
 import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
+import { callTime } from "@/lib/calls/time";
 import { cn } from "@/lib/cn";
 import {
   isoWeek,
@@ -31,6 +33,7 @@ function describe(date: string, items: DayItems): string {
     items.workouts.length > 0 && `${items.workouts.length} pass`,
     items.tests.length > 0 &&
       `${items.tests.length} ${items.tests.length === 1 ? "test" : "tester"}`,
+    items.calls.length > 0 && `${items.calls.length} videosamtal`,
     items.checkin && "incheckning",
   ].filter(Boolean);
   return `${weekdayName(date)} ${longDate(date)}${parts.length ? `: ${parts.join(", ")}` : ""}`;
@@ -114,6 +117,11 @@ export function MonthGrid({
                 key: t.id,
                 test: t,
               })),
+              ...items.calls.map((c) => ({
+                kind: "call" as const,
+                key: c.id,
+                call: c,
+              })),
             ];
             const more = rows.length - MAX_ROWS;
             return (
@@ -172,6 +180,7 @@ export function MonthGrid({
                             : "rounded-full",
                           row.kind === "workout" && "bg-text-muted",
                           row.kind === "activity" && "bg-good",
+                          row.kind === "call" && "bg-text",
                         )}
                         style={
                           row.kind === "test"
@@ -208,6 +217,23 @@ export function MonthGrid({
                           <span className="truncate">
                             {who(row.race.adept_name)}
                             {row.race.name}
+                          </span>
+                        </span>
+                      );
+                    }
+                    if (row.kind === "call") {
+                      return (
+                        <span
+                          key={row.key}
+                          className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text"
+                        >
+                          <Video
+                            aria-hidden
+                            className="size-3 shrink-0 text-text"
+                          />
+                          <span className="truncate">
+                            {who(row.call.adeptName)}
+                            {callTime(row.call.starts_at)} samtal
                           </span>
                         </span>
                       );

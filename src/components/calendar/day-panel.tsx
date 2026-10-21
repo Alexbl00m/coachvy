@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ExternalLink, Video } from "lucide-react";
 
 import { PriorityBadge } from "@/components/season/priority-badge";
 import { blockLabel, phaseFill } from "@/components/season/phase-style";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatClock } from "@/lib/activities/analysis";
+import { callTime } from "@/lib/calls/time";
 import type { Sport } from "@/lib/calculators/lactate";
 import { adeptHref, routes } from "@/lib/routes";
 import {
@@ -69,6 +70,7 @@ export function DayContent({
     items.activities.length === 0 &&
     items.workouts.length === 0 &&
     items.tests.length === 0 &&
+    items.calls.length === 0 &&
     !checkin
   ) {
     return <p className="text-sm text-text-subtle">Inget inlagt.</p>;
@@ -97,6 +99,32 @@ export function DayContent({
               </span>
             </span>
           </ItemLink>
+        </li>
+      ))}
+      {items.calls.map((c) => (
+        <li key={c.id}>
+          <a
+            href={c.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group -mx-2 flex items-start gap-2.5 rounded-md px-2 py-2 transition-colors hover:bg-surface-2"
+          >
+            <Video aria-hidden className="mt-0.5 size-4 shrink-0 text-text" />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-text">
+                Videosamtal {callTime(c.starts_at)}
+              </span>
+              <span className="block text-[12px] text-text-subtle">
+                {who(c.adeptName)}
+                {c.duration_minutes} min
+                {c.topic ? ` · ${c.topic}` : ""} · gå med
+              </span>
+            </span>
+            <ExternalLink
+              aria-hidden
+              className="ml-auto mt-0.5 size-4 shrink-0 text-text-subtle group-hover:text-text"
+            />
+          </a>
         </li>
       ))}
       {items.activities.map((a) => (
@@ -269,7 +297,8 @@ export function Upcoming({
       (items.races.length > 0 ||
         items.activities.length > 0 ||
         items.workouts.length > 0 ||
-        items.tests.length > 0)
+        items.tests.length > 0 ||
+        items.calls.length > 0)
     );
   });
   return (

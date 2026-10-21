@@ -45,6 +45,8 @@ export type Coach = {
   /** komplettera: grundfilosofin plus coachens. ersatt: bara coachens. */
   philosophy_mode?: "komplettera" | "ersatt";
   philosophy_updated_at?: string | null;
+  /** Mötesrummet för videosamtal: en https-länk till Meet, Zoom, Teams … */
+  meeting_url?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -435,6 +437,21 @@ export type CoachMessageRow = {
   read_at: string | null;
   workout_id: string | null;
   session_id: string | null;
+  /** Ett videosamtal meddelandet bär: tråden visar det som ett kort. */
+  call_id?: string | null;
+  created_at: string;
+};
+
+/** Ett videosamtal mellan coach och adept, i coachens mötesrum. */
+export type CoachCallRow = {
+  id: string;
+  adept_id: string;
+  coach_id: string;
+  starts_at: string;
+  duration_minutes: number;
+  topic: string | null;
+  url: string;
+  cancelled_at: string | null;
   created_at: string;
 };
 
@@ -573,6 +590,13 @@ export type Database = {
         Insert: Pick<StrengthSessionRow, "adept_id" | "performed_on"> &
           Partial<StrengthSessionRow>;
         Update: Partial<StrengthSessionRow>;
+        Relationships: [];
+      };
+      coach_calls: {
+        Row: CoachCallRow;
+        Insert: Pick<CoachCallRow, "adept_id" | "starts_at" | "url"> &
+          Partial<CoachCallRow>;
+        Update: Partial<CoachCallRow>;
         Relationships: [];
       };
       activity_summaries: {

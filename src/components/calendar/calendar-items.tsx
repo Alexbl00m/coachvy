@@ -4,6 +4,8 @@ import type { Sport } from "@/lib/calculators/lactate";
 import { SERIES } from "@/lib/calculators/chart-colors";
 import type { ActivityInRange } from "@/lib/activities/queries";
 import type { CalendarTest, CalendarWorkout } from "@/lib/calendar/queries";
+import type { CallWithAdept } from "@/lib/calls/queries";
+import { callDate } from "@/lib/calls/time";
 import type { RaceWithAdept } from "@/lib/season/queries";
 import type { AdeptCheckinRow, TrainingBlockRow } from "@/lib/types/database";
 
@@ -14,6 +16,8 @@ export type DayItems = {
   races: RaceWithAdept[];
   /** Genomförda pass och lopp, uppladdade ur klockan. */
   activities: ActivityInRange[];
+  /** Bokade videosamtal som inte avbokats. */
+  calls: CallWithAdept[];
   checkin: AdeptCheckinRow | null;
 };
 
@@ -22,6 +26,7 @@ export const emptyDay = (): DayItems => ({
   tests: [],
   races: [],
   activities: [],
+  calls: [],
   checkin: null,
 });
 
@@ -31,12 +36,14 @@ export function groupByDay({
   tests,
   races,
   activities = [],
+  calls = [],
   checkins,
 }: {
   workouts: CalendarWorkout[];
   tests: CalendarTest[];
   races: RaceWithAdept[];
   activities?: ActivityInRange[];
+  calls?: CallWithAdept[];
   checkins: AdeptCheckinRow[];
 }): Map<string, DayItems> {
   const days = new Map<string, DayItems>();
@@ -52,6 +59,7 @@ export function groupByDay({
   for (const t of tests) day(t.date).tests.push(t);
   for (const r of races) day(r.race_date).races.push(r);
   for (const a of activities) day(a.performed_on).activities.push(a);
+  for (const c of calls) day(callDate(c.starts_at)).calls.push(c);
   for (const c of checkins) day(c.performed_on).checkin = c;
   return days;
 }

@@ -151,7 +151,10 @@ auth.users
                         intensity, body, edited, shared_at
           zone_reviews  coachens beslut om zonförslag ur träningen:
                         sport, decision, proposed_critical, session_id
-          coach_messages  tråden mellan coach och adept, med read_at
+          coach_messages  tråden mellan coach och adept, med read_at och
+                        call_id för ett videosamtal
+          coach_calls   videosamtal: starts_at, duration_minutes, topic,
+                        url, cancelled_at
           ai_conversations  coachens AI-tråd per adept
               └── ai_messages
 
@@ -1171,6 +1174,29 @@ att hälsenan och veckans belastning går med, inte behöva lita på det.
 
 Ett testtillfälle bär också vilken **träningsfas** det togs i. Ett tapp mitt i
 ett uppbyggnadsblock betyder inte samma sak som ett tapp i tävlingsperioden.
+
+### Videosamtal
+
+Coachen skriver till adepten i tråden och ringer på video därifrån. Samtalet
+går i coachens eget mötesrum – länken till Google Meet, Zoom eller Teams,
+sparad en gång under Inställningar (`coaches.meeting_url`). Coachvy håller
+ordning på samtalen; själva videon går i mötestjänsten, så inget nytt konto
+eller ny kostnad behövs.
+
+- **Ring videosamtal** öppnar rummet för coachen och lägger ett samtalskort i
+  tråden. Adepten ser det som ett oläst meddelande och trycker **Gå med**.
+- **Boka samtal** sätter dag, klockslag (svensk tid), längd och ämne. Det
+  bokade samtalet syns i tråden, i båda kalendrarna, i adeptens Idag och
+  under Värt en titt i Läge dagen före och samma dag.
+- **Avboka** markerar samtalet som avbokat och säger det i tråden; samtal tas
+  inte bort, så tråden behåller sin historia.
+
+Samtalen ligger i `coach_calls` (`20261024090000_video_calls.sql`), med länken
+sparad på samtalet – ett bokat samtal leder rätt även om coachen byter rum,
+och adepten behöver ingen läsrätt på coachens konto. Coachen bokar och
+avbokar; coachen och adepten läser. Tiderna räknas om mellan svensk tid och
+UTC via Intl, så att sommar- och vintertid blir rätt
+(`src/lib/calls/time.ts`).
 
 ## AI Coach
 

@@ -4,12 +4,14 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Trash2 } from "lucide-react";
 
+import { CallActions } from "@/components/calls/call-actions";
+import { CallCard } from "@/components/calls/call-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { deleteMessage, markThreadRead, sendMessage } from "@/lib/messages/actions";
-import type { CoachMessageRow } from "@/lib/types/database";
+import type { CoachCallRow, CoachMessageRow } from "@/lib/types/database";
 
 /**
  * Samtalet mellan coach och adept.
@@ -37,6 +39,9 @@ export function MessageThread({
   viewerId,
   adeptProfileId,
   adeptName,
+  calls = [],
+  now,
+  coach = null,
 }: {
   adeptId: string;
   /** Äldst först. */
@@ -45,12 +50,24 @@ export function MessageThread({
   /** Adeptens profil-id, för att kunna skilja parterna åt. */
   adeptProfileId: string | null;
   adeptName: string;
+  /** Videosamtalen som meddelandena kan bära. */
+  calls?: CoachCallRow[];
+  /** Serverns tid, så att samtalens läge blir lika på båda sidor. */
+  now: number;
+  /** Adeptens coach: får ringa, boka och avboka. */
+  coach?: { meetingUrl: string | null; today: string } | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  const firstCallMessage = new Map<string, string>();
+  for (const m of messages) {
+    if (m.call_id && !firstCallMessage.has(m.call_id))
+      firstCallMessage.set(m.call_id, m.id);
+  }
 
   const unread = messages.filter(
     (m) => m.sender_id !== viewerId && m.read_at === null,
@@ -145,6 +162,22 @@ export function MessageThread({
                   <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-text">
                     {message.body}
                   </p>
+                  {(() => {
+                    // Kortet står vid första meddelandet om samtalet; en
+                    // avbokning längre ned säger det i text.
+                    const call =
+                      message.call_id &&
+                      firstCallMessage.get(message.call_id) === message.id
+                        ? calls.find((c) => c.id === message.call_id)
+                        : undefined;
+                    return call ? (
+                      <CallCard
+                        call={call}
+                        now={now}
+                        canCancel={coach !== null}
+                      />
+                    ) : null;
+                  })()}
                 </div>
               </li>
             );
@@ -154,6 +187,13 @@ export function MessageThread({
       )}
 
       <div className="mt-4 space-y-3 border-t border-line pt-4">
+        {coach && (
+          <CallActions
+            adeptId={adeptId}
+            meetingUrl={coach.meetingUrl}
+            today={coach.today}
+          />
+        )}
         <Textarea
           aria-label="Nytt meddelande"
           rows={3}
