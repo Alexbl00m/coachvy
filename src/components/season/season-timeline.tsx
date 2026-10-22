@@ -63,21 +63,28 @@ type Tip = {
 /** Ungefärlig höjd för en tooltip med rubrik och tre rader. */
 const TIP_ROOM = 90;
 
-// Lodrät layout, px. Tävlingarnas etiketter på två rader för att undvika
-// krockar, markörerna under dem, sedan faserna och testerna.
+// Lodrät layout, px: månaderna överst, sedan en rad per slag – perioderna
+// som höga band med namn och veckor, tävlingarna och testerna.
 const Y = {
-  month: 0,
-  raceRow: [22, 38] as const,
-  raceMarker: 62,
-  band: 74,
-  bandHeight: 24,
-  test: 112,
-  today: 126,
-  height: 142,
+  month: 6,
+  band: 34,
+  bandHeight: 54,
+  race: 126,
+  test: 178,
+  height: 204,
 };
 
-/** Ungefärlig bredd för en etikett i 11 px Montserrat. */
-const textWidth = (text: string) => text.length * 6.4 + 6;
+/** Raderna, med etikett i vänsterkanten. */
+const ROWS = [
+  { label: "Perioder", center: Y.band + Y.bandHeight / 2 },
+  { label: "Tävlingar", center: Y.race },
+  { label: "Tester", center: Y.test },
+];
+
+/** Ungefärlig bredd för en etikett i 12 px Geist. */
+const textWidth = (text: string) => text.length * 6.6 + 6;
+/** Ungefärlig bredd för en etikett i 10,5 px Geist Mono i versaler. */
+const monoWidth = (text: string) => text.length * 7.4 + 6;
 
 const MARKER_SIZE = { A: 12, B: 10, C: 8 } as const;
 
@@ -96,6 +103,7 @@ export function SeasonTimeline({
   blocks,
   races,
   tests,
+  newPeriodHref,
 }: {
   from: string;
   to: string;
@@ -103,6 +111,8 @@ export function SeasonTimeline({
   blocks: TimelineBlock[];
   races: TimelineRace[];
   tests: TimelineTest[];
+  /** Länken för en ny period, när den som tittar får planera. */
+  newPeriodHref?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   /** Ramen runt scrollytan. Tooltipen ligger här så att den inte klipps. */
@@ -178,12 +188,13 @@ export function SeasonTimeline({
     }
   }
 
-  // Etikettrader för tävlingarna: A-loppen först, sedan i datumordning. Ryms
-  // en etikett inte på någon rad får hovringen och listan bära den.
+  // Tävlingarnas namn står till vänster om markören, eller till höger när
+  // det inte ryms. A-loppen får plats först; ryms en etikett inte alls får
+  // hovringen och listan bära den.
   const visibleRaces = races.filter((r) => inside(r.race_date));
-  const labelled = new Map<string, { row: 0 | 1; left: number }>();
+  const labelled = new Map<string, { left: number }>();
   if (width > 0) {
-    const taken: [number, number][][] = [[], []];
+    const taken: [number, number][] = [];
     const order = [...visibleRaces].sort(
       (a, b) =>
         a.priority.localeCompare(b.priority) ||
@@ -192,27 +203,60 @@ export function SeasonTimeline({
     for (const race of order) {
       const w = textWidth(race.name);
       const center = mid(race.race_date) * width;
-      const left = Math.min(
-        Math.max(center - w / 2, 0),
-        Math.max(width - w, 0),
-      );
-      const span: [number, number] = [left - 8, left + w + 8];
-      for (const row of [0, 1] as const) {
-        if (taken[row].every(([a, b]) => span[1] < a || span[0] > b)) {
-          taken[row].push(span);
-          labelled.set(race.id, { row, left });
+      for (const left of [center - 14 - w, center + 14]) {
+        const span: [number, number] = [left - 6, left + w + 6];
+        const free =
+          left >= 0 &&
+          left + w <= width &&
+          taken.every(([a, b]) => span[1] < a || span[0] > b) &&
+          visibleRaces.every(
+            (r) =>
+              r.id === race.id ||
+              Math.abs(mid(r.race_date) * width - (left + w / 2)) > w / 2 + 8,
+          );
+        if (free) {
+          taken.push(span);
+          labelled.set(race.id, { left });
           break;
         }
       }
     }
   }
 
+  // Det som inte är planerat: från sista periodens slut till fönstrets slut.
+  const lastEnd = blocks.reduce<string | null>(
+    (max, b) => (max === null || b.ends_on > max ? b.ends_on : max),
+    null,
+  );
+  const openFrom =
+    lastEnd && lastEnd >= today
+      ? addDays(lastEnd, 1)
+      : today > from
+        ? today
+        : from;
+  const showOpen = openFrom <= to && daysBetween(openFrom, to) >= 28;
+
   const todayInside = inside(today);
 
   return (
     <div>
-      <div ref={frame} className="relative">
-        <div className="overflow-x-auto pb-1 [scrollbar-width:thin]">
+      <div ref={frame} className="relative flex">
+        <div
+          aria-hidden
+          className="relative hidden w-24 shrink-0 sm:block"
+          style={{ height: Y.height }}
+        >
+          {ROWS.map((row) => (
+            <span
+              key={row.label}
+              className="eyebrow absolute left-0 -translate-y-1/2 text-[11px] text-text-subtle"
+              style={{ top: row.center }}
+            >
+              {row.label}
+            </span>
+          ))}
+        </div>
+        <div className="min-w-0 flex-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
           <div
             ref={box}
             className="relative min-w-[720px] select-none"
@@ -227,13 +271,13 @@ export function SeasonTimeline({
                   className="absolute w-px"
                   style={{
                     left: pct(frac(month.iso)),
-                    top: 16,
-                    bottom: 18,
+                    top: 26,
+                    bottom: 6,
                     background: "var(--chart-grid)",
                   }}
                 />
                 <span
-                  className="absolute whitespace-nowrap text-[11px] tabular-nums"
+                  className="absolute whitespace-nowrap font-mono text-[11px] tabular-nums"
                   style={{
                     left: `calc(${pct(frac(month.iso))} + 4px)`,
                     top: Y.month,
@@ -254,7 +298,12 @@ export function SeasonTimeline({
               const right = frac(addDays(end, 1));
               const px = (right - left) * width;
               const label = blockLabel(block);
-              const fits = px >= textWidth(label) + 10;
+              const weeks = Math.round(
+                (daysBetween(block.starts_on, block.ends_on) + 1) / 7,
+              );
+              const sub = `${block.name?.trim() ? `${PHASE_SHORT[block.phase]} · ` : ""}${weekSpan(block.starts_on, block.ends_on).replace("v. ", "v")} · ${weeks} v`;
+              const fits = px >= textWidth(label) + 18;
+              const subFits = px >= monoWidth(sub) + 18;
               const cutStart = block.starts_on < from;
               const cutEnd = block.ends_on > to;
               const days = daysBetween(block.starts_on, block.ends_on) + 1;
@@ -273,7 +322,7 @@ export function SeasonTimeline({
                   key={block.id}
                   type="button"
                   aria-label={`${title}, ${lines.join(", ")}`}
-                  className="absolute flex items-center overflow-hidden px-1.5 text-left text-[11px] font-medium transition-[filter] hover:brightness-110 focus-visible:brightness-110"
+                  className="absolute flex flex-col items-start justify-center gap-0.5 overflow-hidden px-3 text-left transition-[filter] hover:brightness-110 focus-visible:brightness-110"
                   style={{
                     left: pct(left),
                     // Två pixlars glapp i ytans färg skiljer perioder som
@@ -284,16 +333,56 @@ export function SeasonTimeline({
                     background: phaseFill(block.phase),
                     color: phaseText(block.phase),
                     // Ett band som fortsätter utanför fönstret får rak kant.
-                    borderRadius: `${cutStart ? 0 : 4}px ${cutEnd ? 0 : 4}px ${cutEnd ? 0 : 4}px ${cutStart ? 0 : 4}px`,
+                    borderRadius: `${cutStart ? 0 : 8}px ${cutEnd ? 0 : 8}px ${cutEnd ? 0 : 8}px ${cutStart ? 0 : 8}px`,
                   }}
                   {...hover(title, lines)}
                 >
-                  {fits && <span className="truncate">{label}</span>}
+                  {fits && (
+                    <span className="max-w-full truncate text-[13px] font-semibold">
+                      {label}
+                    </span>
+                  )}
+                  {subFits && (
+                    <span className="max-w-full truncate font-mono text-[10.5px] uppercase tracking-[0.06em] opacity-80">
+                      {sub}
+                    </span>
+                  )}
                 </button>
               );
             })}
 
-            {/* Tävlingarna: en hårlinje ned genom perioden, markören ovanför */}
+            {/* Det som inte är planerat än */}
+            {showOpen &&
+              (() => {
+                const style = {
+                  left: `calc(${pct(frac(openFrom))} + 4px)`,
+                  width: `calc(${pct(frac(addDays(to, 1)) - frac(openFrom))} - 4px)`,
+                  top: Y.band,
+                  height: Y.bandHeight,
+                };
+                const text = `Inget planerat efter ${longDate(addDays(openFrom, -1), today)}`;
+                const className =
+                  "absolute flex items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-line-strong px-3 text-[13px] text-text-muted";
+                return newPeriodHref ? (
+                  <Link
+                    href={newPeriodHref}
+                    className={cn(
+                      className,
+                      "transition-colors hover:border-text-subtle hover:text-text",
+                    )}
+                    style={style}
+                  >
+                    <span aria-hidden>+</span>
+                    <span className="truncate">{text}</span>
+                  </Link>
+                ) : (
+                  <span className={className} style={style}>
+                    <span className="truncate">{text}</span>
+                  </span>
+                );
+              })()}
+
+            {/* Tävlingarna: en markör på sin rad, namnet bredvid */}
             {visibleRaces.map((race) => {
               const x = pct(mid(race.race_date));
               const size = MARKER_SIZE[race.priority];
@@ -306,21 +395,10 @@ export function SeasonTimeline({
               ];
               return (
                 <div key={race.id}>
-                  <span
-                    aria-hidden
-                    className="absolute w-px -translate-x-1/2"
-                    style={{
-                      left: x,
-                      top: Y.raceMarker + size / 2,
-                      height:
-                        Y.band + Y.bandHeight + 4 - Y.raceMarker - size / 2,
-                      background: "var(--text-muted)",
-                    }}
-                  />
                   {label && (
                     <span
-                      className="absolute whitespace-nowrap text-[11px] text-text-muted"
-                      style={{ left: label.left, top: Y.raceRow[label.row] }}
+                      className="absolute -translate-y-1/2 whitespace-nowrap text-[12px] text-text-muted"
+                      style={{ left: label.left, top: Y.race }}
                     >
                       {race.name}
                     </span>
@@ -329,7 +407,7 @@ export function SeasonTimeline({
                     type="button"
                     aria-label={`${race.name}, ${lines.join(", ")}`}
                     className="absolute grid size-6 -translate-x-1/2 -translate-y-1/2 place-items-center"
-                    style={{ left: x, top: Y.raceMarker }}
+                    style={{ left: x, top: Y.race }}
                     {...hover(race.name, lines)}
                   >
                     <span
@@ -387,18 +465,18 @@ export function SeasonTimeline({
               <>
                 <span
                   aria-hidden
-                  className="absolute w-px -translate-x-1/2 bg-accent"
+                  className="absolute w-0.5 -translate-x-1/2 rounded-full bg-accent"
                   style={{
                     left: pct(mid(today)),
-                    top: 16,
-                    height: Y.today - 16,
+                    top: 4,
+                    height: Y.height - 8,
                   }}
                 />
                 <span
-                  className="absolute -translate-x-1/2 whitespace-nowrap text-[11px] font-medium text-text"
-                  style={{ left: pct(mid(today)), top: Y.today }}
+                  className="eyebrow absolute whitespace-nowrap bg-surface pr-1 pl-1.5 text-[11px] text-accent-text"
+                  style={{ left: pct(mid(today)), top: Y.month - 2 }}
                 >
-                  i dag
+                  I dag
                 </span>
               </>
             )}

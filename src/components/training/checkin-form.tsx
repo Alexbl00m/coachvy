@@ -69,10 +69,16 @@ export function CheckinForm({
   adeptId,
   existing,
   onSaved,
+  logSession = false,
 }: {
   adeptId: string;
   /** Dagens rad, om adepten redan checkat in. Formuläret skriver över den. */
   existing: AdeptCheckinRow | null;
+  /**
+   * Kommer från "Logga passet" efter morgonens incheckning på Idag: raden
+   * finns men saknar pass, och det är passet som ska läggas till.
+   */
+  logSession?: boolean;
   onSaved?: () => void;
 }) {
   const router = useRouter();
@@ -81,7 +87,9 @@ export function CheckinForm({
   const [performedOn, setPerformedOn] = useState(
     existing?.performed_on ?? new Date().toISOString().slice(0, 10),
   );
-  const [trained, setTrained] = useState(existing ? existing.session_rpe !== null : true);
+  const [trained, setTrained] = useState(
+    logSession || !existing ? true : existing.session_rpe !== null,
+  );
   const [rpe, setRpe] = useState<number | null>(
     existing?.session_rpe === null || existing?.session_rpe === undefined
       ? null
@@ -219,7 +227,9 @@ export function CheckinForm({
 
         <div className="space-y-4 border-t border-line pt-4">
           <span className="flex items-baseline justify-between">
-            <span className="text-[13px] font-medium text-text">Hur mår du?</span>
+            <span className="text-[13px] font-medium text-text">
+              Hur mår du?
+            </span>
             {readiness !== null && (
               <span className="text-[12px] text-text-muted tabular-nums">
                 {readiness} av {READINESS_MAX} · {readReadiness(readiness)}

@@ -17,12 +17,15 @@ import {
 import { SportIcon, TestIcon } from "@/components/calendar/calendar-items";
 import { GoalBreakdown } from "@/components/season/distribution-card";
 import { blockLabel } from "@/components/season/phase-style";
-import { SeasonSummary } from "@/components/season/season-summary";
+import { NextRaceCard } from "@/components/season/next-race-card";
+import { PhaseNow } from "@/components/season/phase-now";
+import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { ZoneSuggestionCard } from "@/components/tests/zone-suggestion-card";
 import { listDoneGoals } from "@/lib/activities/intensity-queries";
 import { listCallsBetween } from "@/lib/calls/queries";
 import { callDate, callTime } from "@/lib/calls/time";
-import { Card, CardTitle } from "@/components/ui/card";
+import { Card, CardHeadline, CardLabel, CardTitle } from "@/components/ui/card";
+import { Unit } from "@/components/ui/metric";
 import { loadTrend } from "@/lib/activities/load";
 import { listLoadActivities } from "@/lib/activities/load-queries";
 import { listActivities } from "@/lib/activities/queries";
@@ -282,26 +285,33 @@ export async function AdeptStatus({
     <div className="space-y-6">
       <section
         aria-labelledby="att-titta-pa"
-        className="rounded-lg border border-line-strong bg-surface-2 p-5 sm:p-6"
+        className="lift rounded-lg border border-line-strong bg-surface-2 p-5 sm:p-7"
       >
-        <h2 id="att-titta-pa" className="text-base font-semibold text-text">
+        <h2 id="att-titta-pa" className="eyebrow text-text-subtle">
           Värt en titt
         </h2>
+        <p className="headline mt-3 text-[clamp(1.75rem,1.4rem+1vw,2.25rem)] leading-[1.05] text-text">
+          {items.length === 0
+            ? "Inget som sticker ut."
+            : items.length === 1
+              ? "En sak att titta på."
+              : `${items.length} saker att titta på.`}
+        </p>
         {items.length === 0 ? (
-          <p className="mt-2 text-sm text-text-muted">
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-text-muted">
             Inget som sticker ut just nu: återhämtningen ligger kring sitt
             vanliga, belastningen har inte ändrats tydligt och det finns inga
             olästa meddelanden.
           </p>
         ) : (
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 space-y-2.5">
             {items.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.key}>
                   <Link
                     href={item.href}
-                    className="group flex items-start gap-2.5 text-sm text-text hover:underline"
+                    className="group flex items-start gap-2.5 text-[15px] text-text hover:underline"
                   >
                     <Icon
                       aria-hidden
@@ -324,7 +334,16 @@ export async function AdeptStatus({
 
       {canDecide && <ZoneSuggestionCard adeptId={adept.id} today={today} />}
 
-      <SeasonSummary blocks={blocks} races={races} today={today} />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="min-w-0">
+          <PhaseNow blocks={blocks} today={today} />
+        </Card>
+        <NextRaceCard
+          races={races}
+          today={today}
+          href={adeptHref(adept.id, "plan")}
+        />
+      </div>
 
       <Card className="min-w-0">
         <CardTitle
@@ -333,13 +352,13 @@ export async function AdeptStatus({
               href={routes.calendar}
               className="text-[13px] text-text-muted hover:text-text"
             >
-              Kalender
+              Kalender →
             </Link>
           }
         >
           Vecka {isoWeek(today)}
         </CardTitle>
-        <p className="-mt-2 mb-4 text-[13px] text-text-muted tabular-nums">
+        <p className="-mt-3 mb-5 text-sm text-text-muted tabular-nums">
           {week.length} {week.length === 1 ? "pass planerat" : "pass planerade"}{" "}
           · {done.length} {done.length === 1 ? "aktivitet" : "aktiviteter"} ur
           klockan
@@ -362,23 +381,20 @@ export async function AdeptStatus({
                 key={day}
                 className={
                   day === today
-                    ? "grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-2 rounded-md border border-line-strong bg-surface-2 p-2 sm:block"
-                    : "grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-2 rounded-md border border-line p-2 sm:block"
+                    ? "grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-2 rounded-md border border-line-strong bg-surface-2 p-2.5 sm:block sm:min-h-32"
+                    : "grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-2 rounded-md border border-line bg-canvas/30 p-2.5 sm:block sm:min-h-32"
                 }
               >
                 <p
                   className={
                     day === today
-                      ? "text-[12px] font-semibold text-text"
-                      : "text-[12px] text-text-subtle"
+                      ? "eyebrow text-accent-text"
+                      : "eyebrow text-text-subtle"
                   }
                 >
-                  {day === today ? "I dag" : weekdayName(day)}{" "}
-                  <span className="font-normal text-text-subtle tabular-nums">
-                    {Number(day.slice(8))}
-                  </span>
+                  {weekdayName(day).slice(0, 3)} {Number(day.slice(8))}
                 </p>
-                <ul className="space-y-1 sm:mt-1.5">
+                <ul className="space-y-1.5 sm:mt-3">
                   {race.map((r) => (
                     <li key={r.id}>
                       <Link
@@ -399,14 +415,20 @@ export async function AdeptStatus({
                           w.href ?? `${routes.adepts}/${adept.id}/pass/${w.id}`
                         }
                         title={w.title}
-                        className="flex items-start gap-1.5 rounded bg-surface-2 px-1.5 py-1 text-[12px] leading-snug text-text-muted hover:text-text"
+                        className="block rounded px-0.5 py-0.5 text-[12px] leading-snug text-text-muted hover:text-text"
                       >
-                        <SportIcon
-                          sport={w.sport}
-                          className="mt-0.5 size-3 shrink-0 text-text-subtle"
+                        <WorkoutStrip
+                          blocks={w.profile}
+                          className="mb-1.5 h-4"
                         />
-                        <span className="line-clamp-2 break-words">
-                          {w.title}
+                        <span className="flex items-start gap-1.5">
+                          <SportIcon
+                            sport={w.sport}
+                            className="mt-0.5 size-3 shrink-0 text-text-subtle"
+                          />
+                          <span className="line-clamp-2 break-words">
+                            {w.title}
+                          </span>
                         </span>
                       </Link>
                     </li>
@@ -557,27 +579,25 @@ export async function AdeptStatus({
         </Card>
 
         <Card className="min-w-0">
-          <CardTitle
-            action={
+          <CardLabel
+            aside={
               <Link
                 href={adeptHref(adept.id, "maende")}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="hover:text-text"
               >
-                Mående
+                Mående →
               </Link>
             }
           >
             Återhämtning
-          </CardTitle>
+          </CardLabel>
           {readiness ? (
             <>
-              <p className="text-2xl font-semibold tracking-tight text-text tabular-nums">
+              <p className="mt-4 text-[2.75rem] font-light leading-none tracking-[-0.035em] text-text tabular-nums">
                 {readiness.score}
-                <span className="ml-1 text-base font-normal text-text-muted">
-                  av {READINESS_MAX}
-                </span>
+                <Unit>av {READINESS_MAX}</Unit>
               </p>
-              <p className="mt-1 text-[13px] text-text-muted">
+              <p className="mt-3 text-[13px] text-text-muted">
                 {daysAgo(readiness.date, today)}
                 {readiness.baseline !== null
                   ? ` · brukar ligga runt ${readiness.baseline.toFixed(1).replace(".", ",")}`
@@ -585,43 +605,39 @@ export async function AdeptStatus({
               </p>
             </>
           ) : (
-            <p className="text-sm text-text-muted">
+            <p className="mt-3 text-sm text-text-muted">
               Inga incheckningar de senaste två månaderna.
             </p>
           )}
         </Card>
 
         <Card className="min-w-0">
-          <CardTitle
-            action={
+          <CardLabel
+            aside={
               <Link
                 href={adeptHref(adept.id, "styrka")}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="hover:text-text"
               >
-                Styrkeloggen
+                Styrkeloggen →
               </Link>
             }
           >
             Styrka
-          </CardTitle>
+          </CardLabel>
           {lastStrength ? (
             <>
-              <p className="text-sm font-medium text-text">
-                {lastStrength.title || "Styrkepass"}
-                <span className="ml-1.5 text-[13px] font-normal text-text-muted">
-                  {longDate(lastStrength.performed_on, today)}
-                </span>
-              </p>
-              <p className="mt-1 text-[13px] text-text-muted">
+              <CardHeadline>
                 {lifted.length === 0
-                  ? "Inget styrkepass den här veckan."
+                  ? "Inget pass den här veckan."
                   : `${lifted.length} pass den här veckan.`}
+              </CardHeadline>
+              <p className="mt-3 text-[13px] text-text-muted">
+                Senast {longDate(lastStrength.performed_on, today)}:{" "}
+                {lastStrength.title || "styrkepass"}.
               </p>
             </>
           ) : (
-            <p className="text-sm text-text-muted">
-              Inga styrkepass loggade ännu.
-            </p>
+            <CardHeadline>Inga pass loggade än.</CardHeadline>
           )}
         </Card>
       </div>

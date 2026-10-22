@@ -16,6 +16,7 @@ export async function ProgressionSection({
   basePath,
   gren,
   vy,
+  header,
 }: {
   adept: Adept;
   canEdit: boolean;
@@ -23,6 +24,8 @@ export async function ProgressionSection({
   basePath: string;
   gren: string | undefined;
   vy: string | undefined;
+  /** Sidans huvud, när avsnittet är hela sidan (se ProgressionView). */
+  header?: { eyebrow: string; title: string; description: string };
 }) {
   const sessions = await listFullSessions(adept.id);
   return (
@@ -33,6 +36,7 @@ export async function ProgressionSection({
       sport={sportFromSlug(gren)}
       view={vy}
       basePath={basePath}
+      header={header}
       goals={
         <ReferenceAndGoals
           adept={adept}

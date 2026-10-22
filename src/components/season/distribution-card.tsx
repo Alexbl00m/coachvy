@@ -18,10 +18,10 @@ import {
 import { blockOn, dateRange, mainRace } from "@/lib/season/season";
 import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
 
-/** Lugnt, medel och högt ur passprofilens blå stege, med avstånd emellan. */
+/** Lugnt, medel och högt i zonernas domänfärger: blått, guld och rött. */
 export const GOAL_FILL: Record<SessionGoal, string> = {
-  lugn: "var(--zone-1)",
-  medel: "var(--zone-3)",
+  lugn: "var(--zone-2)",
+  medel: "var(--zone-4)",
   hög: "var(--zone-5)",
 };
 

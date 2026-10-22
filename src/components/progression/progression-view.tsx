@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 
-import { Card, CardTitle, EmptyState } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { ButtonLink } from "@/components/ui/button";
+import {
+  Card,
+  CardHeadline,
+  CardLabel,
+  CardTitle,
+  EmptyState,
+} from "@/components/ui/card";
+import { Unit } from "@/components/ui/metric";
 import type { Sport } from "@/lib/calculators/lactate";
 import { cn } from "@/lib/cn";
-import { digitsForMetric, formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
-import { displayValue } from "@/lib/tests/pace";
+import { longDate } from "@/lib/season/season";
 import {
   lactateCurves,
   latestUtilisation,
@@ -18,12 +26,20 @@ import {
 import type { FullSession } from "@/lib/tests/session-queries";
 import { metabolicHistory } from "@/lib/tests/metabolic-curve";
 import { speedProfile } from "@/lib/tests/speed-profile";
+import {
+  analysisHeadline,
+  latestOf,
+  thresholdInsight,
+} from "@/lib/tests/threshold-summary";
 import { summariseProgress } from "@/lib/tests/trend-analysis";
+import { BeforeAfter } from "./before-after";
 import { LactateCompare } from "./lactate-compare";
 import { MetabolicProgression } from "./metabolic-progression";
 import { MetricTrends } from "./metric-trends";
 import { RecomputeButton } from "./recompute-button";
 import { RunningProfile } from "./running-profile";
+import { SessionList } from "./session-list";
+import { ThresholdChart, ThresholdLegend } from "./threshold-chart";
 import { UtilisationCard } from "./utilisation-card";
 
 /** Grenarna i adressen, utan å och ö. */
@@ -91,64 +107,47 @@ const headlineLabel = (trend: Trend, sport: Sport) =>
     ? "CSS – critical swim speed"
     : trend.label;
 
+/** Ett nyckeltal i raden överst: värdet stort, datum och förändring under. */
 function Headline({ trend, sport }: { trend: Trend; sport: Sport }) {
-  const digits = digitsForMetric(trend.key, trend.unit);
-  const last = trend.points[trend.points.length - 1];
-  // Jämför med ett tidigare test, inte med ett annat protokoll samma dag.
-  const previous =
-    [...trend.points].reverse().find((p) => p.performedOn < last.performedOn) ??
-    null;
-  const shown = displayValue(last.value, trend.unit, sport, digits);
-  const change =
-    previous && previous.value !== 0
-      ? ((last.value - previous.value) / previous.value) * 100
-      : null;
-  const flat = change === null || Math.abs(change) < 0.05;
-  const tone =
-    flat || trend.higherIsBetter === null
-      ? "neutral"
-      : (change as number) > 0 === trend.higherIsBetter
-        ? "good"
-        : "bad";
+  const latest = latestOf(trend, sport);
+  const change = latest.change;
+  const flat = !change || Math.abs(change.percent) < 0.05;
   const Icon = flat
     ? Minus
-    : (change as number) > 0
+    : change.percent > 0
       ? ArrowUpRight
       : ArrowDownRight;
 
   return (
-    <div className="flex flex-col rounded-lg border border-line bg-surface p-4">
-      <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
-        {headlineLabel(trend, sport)}
+    <div className="flex min-w-0 flex-col bg-surface p-4 sm:p-6">
+      <p className="eyebrow truncate text-text-subtle">
+        {headlineLabel(trend, sport).replace(" – ", " · ")}
       </p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-text tabular-nums">
-        {shown.value}
-        <span className="ml-1.5 text-sm font-normal text-text-muted">
-          {shown.unit}
+      <p className="mt-4 text-[clamp(2rem,1.6rem+1.8vw,3.25rem)] font-light leading-none tracking-[-0.035em] text-text tabular-nums">
+        {latest.shown.value}
+        {latest.shown.unit && <Unit>{latest.shown.unit}</Unit>}
+      </p>
+      <div className="mt-4 flex items-baseline justify-between gap-3 text-[12px] tabular-nums">
+        <span className="truncate text-text-subtle">
+          {longDate(latest.last.performedOn)}
         </span>
-      </p>
-      <p className="mt-0.5 text-[12px] text-text-subtle tabular-nums">
-        {[shown.speed, formatDate(last.performedOn)]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
-      {change !== null && (
-        <p
-          className={cn(
-            "mt-3 inline-flex items-center gap-1 text-[12px] font-medium tabular-nums",
-            tone === "good"
-              ? "text-good"
-              : tone === "bad"
-                ? "text-bad"
-                : "text-text-muted",
-          )}
-        >
-          <Icon aria-hidden className="size-3.5" />
-          {(change as number) > 0 ? "+" : ""}
-          {(change as number).toFixed(1).replace(".", ",")} % sedan{" "}
-          {formatDate(previous?.performedOn ?? null)}
-        </p>
-      )}
+        {change && (
+          <span
+            className={cn(
+              "inline-flex shrink-0 items-center gap-0.5 font-medium",
+              flat || change.tone === "neutral"
+                ? "text-text-muted"
+                : change.tone === "good"
+                  ? "text-good"
+                  : "text-bad",
+            )}
+          >
+            <Icon aria-hidden className="size-3.5" />
+            {change.percent > 0 ? "+" : change.percent < 0 ? "−" : ""}
+            {Math.abs(change.percent).toFixed(1).replace(".", ",")} %
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -214,7 +213,7 @@ function Tabs({
     <nav aria-label={label} className="-mx-1 overflow-x-auto px-1">
       <ul
         className={cn(
-          "inline-flex gap-1 rounded-lg border border-line bg-surface p-1",
+          "inline-flex gap-1 rounded-full border border-line bg-surface p-1",
           size === "sm" && "border-transparent bg-transparent p-0",
         )}
       >
@@ -225,16 +224,23 @@ function Tabs({
               aria-current={item.active ? "page" : undefined}
               scroll={false}
               className={cn(
-                "inline-flex items-center gap-2 whitespace-nowrap rounded-md transition-colors",
-                size === "md" ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-[13px]",
+                "inline-flex items-center gap-2 whitespace-nowrap rounded-full transition-colors",
+                size === "md" ? "h-9 px-4 text-sm" : "h-9 px-3.5 text-[13px]",
                 item.active
-                  ? "bg-surface-2 font-medium text-text shadow-sm"
+                  ? size === "md"
+                    ? "bg-text font-medium text-canvas"
+                    : "bg-surface-2 font-medium text-text"
                   : "text-text-muted hover:bg-surface-2/60 hover:text-text",
               )}
             >
               {item.label}
               {item.count !== undefined && (
-                <span className="rounded bg-canvas/60 px-1.5 text-[11px] text-text-subtle tabular-nums">
+                <span
+                  className={cn(
+                    "font-mono text-[11px] tabular-nums",
+                    item.active ? "text-canvas/60" : "text-text-subtle",
+                  )}
+                >
                   {item.count}
                 </span>
               )}
@@ -261,6 +267,7 @@ export function ProgressionView({
   query = {},
   basePath = routes.progression,
   goals = null,
+  header,
 }: {
   adeptId: string;
   sessions: FullSession[];
@@ -276,13 +283,28 @@ export function ProgressionView({
    * som därför bara renderas – och hämtar – när fliken är vald.
    */
   goals?: React.ReactNode;
+  /**
+   * Sidans huvud, när vyn är hela sidan: rubriken blir påståendet om
+   * tröskeln. Utan står påståendet som en rubrik överst i vyn.
+   */
+  header?: { eyebrow: string; title: string; description: string };
 }) {
   if (sessions.length === 0) {
     return (
-      <EmptyState
-        title="Inga tester ännu"
-        description="Progressionen byggs av testtillfällena. Registrera ett test – också ett gammalt, med datumet det gjordes – så börjar kurvorna fyllas."
-      />
+      <>
+        {header && (
+          <PageHeader
+            size="lg"
+            eyebrow={header.eyebrow}
+            title={header.title}
+            description={header.description}
+          />
+        )}
+        <EmptyState
+          title="Inga tester ännu"
+          description="Progressionen byggs av testtillfällena. Registrera ett test – också ett gammalt, med datumet det gjordes – så börjar kurvorna fyllas."
+        />
+      </>
     );
   }
 
@@ -346,6 +368,7 @@ export function ProgressionView({
   };
 
   const analysis = summariseProgress(trends);
+  const insight = thresholdInsight(trends, sport);
   const headline = HEADLINE[sport]
     .map(
       (key) =>
@@ -363,7 +386,27 @@ export function ProgressionView({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {header ? (
+        <PageHeader
+          size="lg"
+          eyebrow={`${header.eyebrow} · ${SPORT_LABELS[sport]}`}
+          title={insight?.title ?? header.title}
+          description={insight?.lead ?? header.description}
+        />
+      ) : (
+        insight && (
+          <div className="pb-2">
+            <h2 className="headline text-[clamp(2rem,1.5rem+1.8vw,3.25rem)] text-text">
+              {insight.title}
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-text-muted">
+              {insight.lead}
+            </p>
+          </div>
+        )
+      )}
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Tabs
           label="Gren"
           items={available.map((s) => ({
@@ -374,17 +417,6 @@ export function ProgressionView({
             active: s === sport,
           }))}
         />
-        <p className="text-[13px] text-text-subtle">
-          {inSport.length} {inSport.length === 1 ? "test" : "tester"} sedan{" "}
-          {formatDate(
-            [...inSport].sort((a, b) =>
-              a.performed_on.localeCompare(b.performed_on),
-            )[0].performed_on,
-          )}
-        </p>
-      </div>
-
-      <div className="border-b border-line pb-2">
         <Tabs
           label="Vy"
           size="sm"
@@ -398,9 +430,9 @@ export function ProgressionView({
       </div>
 
       {view === "oversikt" && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {headline.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="lift grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line xl:grid-cols-4">
               {headline.map((t) => (
                 <Headline key={t.id} trend={t} sport={sport} />
               ))}
@@ -411,31 +443,72 @@ export function ProgressionView({
               description="Testerna i den här grenen har inga värden att följa. Räkna om dem under Alla värden om de registrerades innan metoderna fanns."
             />
           )}
-          {analysis.length > 0 && (
-            <Card>
-              <CardTitle>Kort analys</CardTitle>
-              <ul className="max-w-3xl space-y-2 text-sm leading-relaxed text-text-muted">
-                {analysis.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-              <p className="mt-3 text-[12px] text-text-subtle">
-                Räknat ur tidslinjerna, första mot senaste test. Streckade
-                linjer i graferna är trenden över alla tester.
+
+          {trends.some((t) => ["LT2", "LT1", "CP", "CS"].includes(t.key)) && (
+            <Card className="min-w-0">
+              <CardTitle
+                action={<ThresholdLegend trends={trends} sport={sport} />}
+              >
+                Trösklar över tid
+              </CardTitle>
+              <ThresholdChart trends={trends} sport={sport} />
+              <p className="mt-4 text-[13px] text-text-muted">
+                {thresholdNote(trends, sport)}
               </p>
             </Card>
           )}
-          <TrendGroups trends={trends} sport={sport} only={["Trösklar"]} />
-          {views.length > 2 && (
-            <p className="text-[13px] text-text-muted">
-              Mer i flikarna ovan:{" "}
-              {views
-                .filter((v) => v.key !== "oversikt")
-                .map((v) => v.label.toLowerCase())
-                .join(", ")}
-              .
-            </p>
+
+          {(analysis.length > 0 || trends.length > 0) && (
+            <div className="grid gap-6 lg:grid-cols-2">
+              {analysis.length > 0 && (
+                <Card className="min-w-0">
+                  <CardLabel>Kort analys</CardLabel>
+                  <CardHeadline>{analysisHeadline(trends, sport)}</CardHeadline>
+                  <div className="mt-4 max-w-2xl space-y-2 text-[15px] leading-relaxed text-text-muted">
+                    {analysis.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-[12px] text-text-subtle">
+                    Första mot senaste test i varje serie.
+                  </p>
+                </Card>
+              )}
+              <BeforeAfter trends={trends} sport={sport} />
+            </div>
           )}
+
+          <Card className="min-w-0">
+            <CardTitle
+              action={
+                <div className="flex flex-wrap gap-2">
+                  {curves.length > 1 && (
+                    <ButtonLink
+                      href={href({ gren: SPORT_SLUGS[sport], vy: "laktat" })}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      Jämför laktatkurvor
+                    </ButtonLink>
+                  )}
+                  {canEdit && (
+                    <ButtonLink
+                      href={`${routes.adepts}/${adeptId}/test/nytt`}
+                      size="sm"
+                    >
+                      Nytt testtillfälle
+                    </ButtonLink>
+                  )}
+                </div>
+              }
+            >
+              Testtillfällen
+            </CardTitle>
+            <SessionList
+              sessions={inSport}
+              hrefFor={(s) => `${routes.adepts}/${adeptId}/test/${s.id}`}
+            />
+          </Card>
         </div>
       )}
 
@@ -489,4 +562,17 @@ export function ProgressionView({
       )}
     </div>
   );
+}
+
+/** Raden under tröskeldiagrammet: hur mycket trenden går att lita på. */
+function thresholdNote(trends: Trend[], sport: Sport): string {
+  const counts = trends
+    .filter((t) => ["LT2", "LT1", "CP", "CS"].includes(t.key))
+    .map((t) => t.points.length);
+  const fewest = Math.min(...counts);
+  if (fewest <= 1)
+    return "En punkt är ett läge, inte en trend. Nästa test visar riktningen.";
+  if (fewest === 2)
+    return "Två punkter per tröskel. Ett tredje test gör trenden pålitlig.";
+  return `Upp till ${Math.max(...counts)} tester per tröskel${sport === "cykling" ? "" : ", farten ritad uppåt"}.`;
 }

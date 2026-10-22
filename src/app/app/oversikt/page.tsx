@@ -28,15 +28,12 @@ export default async function OversiktPage() {
 
   return (
     <>
-      {adept ? (
-        // Adeptens Idag: dagen och veckan, inte en hälsning.
+      {/* Adeptens Idag sätter sin egen rubrik: dagens pass. */}
+      {!adept && (
         <PageHeader
-          title="Idag"
-          description={`${weekdayName(today).replace(/^./, (c) => c.toUpperCase())} ${longDate(today, today)} · vecka ${isoWeek(today)}`}
-        />
-      ) : (
-        <PageHeader
-          title={firstName ? `Hej ${firstName}` : "Översikt"}
+          size="lg"
+          eyebrow={`${weekdayName(today)} ${longDate(today, today)} · vecka ${isoWeek(today)}`}
+          title={firstName ? `Hej ${firstName}.` : "Översikt"}
           description="Läget hos dina adepter: vem som är värd en titt, vad som ligger framför och vad som hänt."
         />
       )}

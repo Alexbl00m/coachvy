@@ -4,9 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listPlanSessionsBetween } from "@/lib/plan-library/plan-view";
+import { formatStructure } from "@/lib/plan-library/structure";
+import {
+  mainZone,
+  sessionGoal,
+  type SessionGoal,
+} from "@/lib/season/distribution";
 import { todayIso } from "@/lib/season/season";
 import type { AdeptCheckinRow } from "@/lib/types/database";
 import { profileBlocks, type ProfileBlock } from "@/lib/workouts/blocks";
+import type { IntensityZone } from "@/lib/workouts/intensity";
+import { workText } from "@/lib/workouts/summary";
 import {
   formatDuration,
   resolveWorkout,
@@ -44,6 +52,17 @@ export type CalendarWorkout = {
   /** Ett pass ur planbiblioteket: länken går till planen, inte till passet. */
   href?: string;
   fromPlan?: boolean;
+  /** Huvudsyftet och huvudzonen, räknade som i fördelningen (distribution.ts). */
+  goal?: SessionGoal | null;
+  zone?: IntensityZone | null;
+  /** Passets typ i planen: "Distans", "Kvalitet". */
+  type?: string | null;
+  /** Vad passet ska vara, i en mening eller två. */
+  intent?: string | null;
+  /** Strukturen som en rad: "2 km @LO; 3x(5 min @HM-10K + 2 min @RK)". */
+  structure?: string | null;
+  /** Arbetet i passets repetition: "3×5 min". */
+  work?: string | null;
 };
 
 export type CalendarTest = {
@@ -102,6 +121,7 @@ export async function listScheduledWorkouts(
     } catch {
       // Ett pass som inte går att lösa upp visas ändå, utan längd och profil.
     }
+    const workout = toWorkout(saved);
     return {
       id: saved.id,
       adeptId: saved.adept_id,
@@ -112,6 +132,11 @@ export async function listScheduledWorkouts(
       duration,
       summary: saved.summary,
       profile,
+      goal: sessionGoal(workout, saved.reference),
+      zone: mainZone(workout, saved.reference),
+      intent: saved.summary,
+      structure: saved.blocks?.length ? formatStructure(saved.blocks) : null,
+      work: saved.blocks?.length ? workText(saved.blocks) : null,
     };
   });
   return [...own, ...fromPlans].sort((a, b) => a.date.localeCompare(b.date));

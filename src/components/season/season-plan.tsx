@@ -4,9 +4,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BlockEditor } from "@/components/season/block-editor";
 import { DistributionCard } from "@/components/season/distribution-card";
 import { RaceEditor } from "@/components/season/race-editor";
-import { blockLabel, phaseFill } from "@/components/season/phase-style";
+import { blockLabel } from "@/components/season/phase-style";
 import { PriorityBadge } from "@/components/season/priority-badge";
 import { SeasonTimeline } from "@/components/season/season-timeline";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { listActivities } from "@/lib/activities/queries";
 import { routes } from "@/lib/routes";
@@ -17,8 +18,10 @@ import {
   blockOn,
   countdownText,
   daysBetween,
+  longDate,
   mainRace,
   monthName,
+  nextBlock,
   planNotes,
   shiftMonth,
   todayIso,
@@ -28,6 +31,7 @@ import type { Sport } from "@/lib/calculators/lactate";
 import { sessionHeadline } from "@/lib/tests/headline";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
+import type { TrainingPhase } from "@/lib/tests/phases";
 import type { Adept, RaceSport } from "@/lib/types/database";
 import { listWorkouts } from "@/lib/workouts/queries";
 import { listDoneGoals } from "@/lib/activities/intensity-queries";
@@ -59,6 +63,7 @@ export async function SeasonPlan({
   basePath,
   fran: requestedFrom,
   openNew,
+  header,
 }: {
   adept: Adept;
   /** Coachen planerar; en adept utan coach planerar sin egen säsong. */
@@ -69,6 +74,8 @@ export async function SeasonPlan({
   fran: string | undefined;
   /** Öppna formuläret för en ny period direkt. */
   openNew: boolean;
+  /** Sidans huvud, när planen är hela sidan. Utan står rubriken i vyn. */
+  header?: { eyebrow: string };
 }) {
   const today = todayIso();
   const [blocks, races, sessions, activities, workouts] = await Promise.all([
@@ -111,9 +118,23 @@ export async function SeasonPlan({
   // Läget i en rad överst i tidslinjens kort – fasen, målet och en start före
   // det – i stället för egna rutor som säger samma sak som tidslinjen.
   const phaseNow = blockOn(blocks, today);
+  const next = nextBlock(blocks, today);
   const main = mainRace(races, today);
   const first = upcomingRaces(races, today)[0] ?? null;
   const sooner = first && main && first.id !== main.id ? first : null;
+  const lastRace =
+    [...races]
+      .filter((r) => r.race_date < today)
+      .sort((a, b) => b.race_date.localeCompare(a.race_date))[0] ?? null;
+  const title = seasonHeadline({ phaseNow, next, main, today });
+  const lead = "Perioder, tävlingar och tester på en tidslinje.";
+  const newPeriodHref = canPlan
+    ? (() => {
+        const params = new URLSearchParams(basePath.split("?")[1]);
+        params.set("ny", "period");
+        return `${basePath.split("?")[0]}?${params.toString()}#perioder`;
+      })()
+    : undefined;
 
   // Inplanerade pass med sitt huvudsyfte, för intensitetsfördelningen.
   const planned = workouts.flatMap((w) =>
@@ -129,27 +150,121 @@ export async function SeasonPlan({
 
   return (
     <div className="space-y-6">
-      <Card level="lead" className="min-w-0">
+      {header ? (
+        <PageHeader
+          size="lg"
+          eyebrow={header.eyebrow}
+          title={title}
+          description={lead}
+        />
+      ) : (
+        <div className="pb-2">
+          <h2 className="headline text-[clamp(2rem,1.5rem+1.8vw,3.25rem)] text-text">
+            {title}
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-text-muted">
+            {lead}
+          </p>
+        </div>
+      )}
+
+      <section
+        aria-label="Läget i säsongen"
+        className={`lift grid gap-px overflow-hidden rounded-lg border border-line bg-line ${sooner || lastRace ? "md:grid-cols-3" : "md:grid-cols-2"}`}
+      >
+        <SummaryCell label="Fasen nu">
+          <p className="headline text-[2rem] leading-tight text-text">
+            {phaseNow
+              ? blockLabel(phaseNow)
+              : next
+                ? "Övergång"
+                : "Ingen period"}
+          </p>
+          <p className="mt-2 text-sm text-text-muted">
+            {phaseNow
+              ? `${daysBetween(today, phaseNow.ends_on)} dagar kvar · till ${longDate(phaseNow.ends_on, today)}`
+              : next
+                ? `${blockLabel(next)} börjar ${longDate(next.starts_on, today)}`
+                : "Börja med grundperioden."}
+          </p>
+        </SummaryCell>
+        <SummaryCell
+          label={main?.priority === "A" ? "Säsongens mål" : "Nästa tävling"}
+        >
+          {main ? (
+            <>
+              <p className="headline flex items-center gap-3 text-[2rem] leading-tight text-text">
+                <span className="min-w-0 truncate">{main.name}</span>
+                <PriorityBadge
+                  priority={main.priority}
+                  className="size-5 shrink-0 text-[11px]"
+                />
+              </p>
+              <p className="mt-2 text-sm text-text-muted">
+                {capitalise(countdownText(daysBetween(today, main.race_date)))}{" "}
+                · {longDate(main.race_date, today)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="headline text-[2rem] leading-tight text-text-muted">
+                Inget A-lopp
+              </p>
+              <a
+                href="#tavlingar"
+                className="mt-2 inline-block text-sm font-medium text-accent-text hover:text-accent"
+              >
+                Lägg in säsongens mål →
+              </a>
+            </>
+          )}
+        </SummaryCell>
+        {sooner ? (
+          <SummaryCell label="Före det">
+            <p className="headline text-[2rem] leading-tight text-text">
+              {sooner.name}
+            </p>
+            <p className="mt-2 text-sm text-text-muted">
+              {capitalise(countdownText(daysBetween(today, sooner.race_date)))}{" "}
+              · {sooner.priority}-lopp
+            </p>
+          </SummaryCell>
+        ) : (
+          lastRace && (
+            <SummaryCell label="Senast">
+              <p className="headline text-[2rem] leading-tight text-text">
+                {lastRace.name}
+              </p>
+              <p className="mt-2 text-sm text-text-muted">
+                Genomfört ·{" "}
+                {monthName(Number(lastRace.race_date.slice(5, 7)) - 1)}
+              </p>
+            </SummaryCell>
+          )
+        )}
+      </section>
+
+      <Card className="min-w-0">
         <CardTitle
           action={
             <nav
               aria-label="Flytta tidslinjen"
-              className="flex items-center gap-1"
+              className="flex items-center gap-2"
             >
               <Link
                 href={link(shiftMonth(fran, -6))}
                 aria-label="Ett halvår bakåt"
-                className="grid size-8 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
+                className="grid size-9 place-items-center rounded-full border border-line-strong text-text-muted transition-colors hover:border-text-subtle hover:text-text"
               >
                 <ChevronLeft aria-hidden className="size-4" />
               </Link>
-              <span className="min-w-[10rem] text-center text-[12px] text-text-muted tabular-nums">
+              <span className="hidden min-w-[9.5rem] text-center text-[13px] text-text-muted tabular-nums sm:inline">
                 {monthLabel(fran)} – {monthLabel(shiftMonth(fran, 11))}
               </span>
               <Link
                 href={link(shiftMonth(fran, 6))}
                 aria-label="Ett halvår framåt"
-                className="grid size-8 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
+                className="grid size-9 place-items-center rounded-full border border-line-strong text-text-muted transition-colors hover:border-text-subtle hover:text-text"
               >
                 <ChevronRight aria-hidden className="size-4" />
               </Link>
@@ -158,68 +273,6 @@ export async function SeasonPlan({
         >
           Säsongen
         </CardTitle>
-        <dl className="-mt-1 mb-5 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-          <div className="min-w-0">
-            <dt className="text-[13px] text-text-muted">Fasen nu</dt>
-            <dd className="flex items-center gap-2 font-medium text-text">
-              {phaseNow ? (
-                <>
-                  <span
-                    aria-hidden
-                    className="h-2.5 w-4 rounded-[3px]"
-                    style={{ background: phaseFill(phaseNow.phase) }}
-                  />
-                  {blockLabel(phaseNow)}
-                  <span className="font-normal text-text-muted tabular-nums">
-                    · {daysBetween(today, phaseNow.ends_on)} dagar kvar
-                  </span>
-                </>
-              ) : (
-                <span className="font-normal text-text-muted">
-                  Ingen period
-                </span>
-              )}
-            </dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-[13px] text-text-muted">
-              {main?.priority === "A" ? "Säsongens mål" : "Nästa tävling"}
-            </dt>
-            <dd className="flex items-center gap-2 font-medium text-text">
-              {main ? (
-                <>
-                  <PriorityBadge
-                    priority={main.priority}
-                    className="size-5 text-[11px]"
-                  />
-                  {main.name}
-                  <span className="font-normal text-text-muted">
-                    · {countdownText(daysBetween(today, main.race_date))}
-                  </span>
-                </>
-              ) : (
-                <span className="font-normal text-text-muted">
-                  Inget inlagt – lägg in målet som A-lopp
-                </span>
-              )}
-            </dd>
-          </div>
-          {sooner && (
-            <div className="min-w-0">
-              <dt className="text-[13px] text-text-muted">Före det</dt>
-              <dd className="flex items-center gap-2 font-medium text-text">
-                <PriorityBadge
-                  priority={sooner.priority}
-                  className="size-5 text-[11px]"
-                />
-                {sooner.name}
-                <span className="font-normal text-text-muted">
-                  · {countdownText(daysBetween(today, sooner.race_date))}
-                </span>
-              </dd>
-            </div>
-          )}
-        </dl>
         <SeasonTimeline
           from={from}
           to={to}
@@ -227,6 +280,7 @@ export async function SeasonPlan({
           blocks={blocks}
           races={races}
           tests={tests}
+          newPeriodHref={newPeriodHref}
         />
         {notes.length > 0 && (
           <div className="mt-5 border-t border-line pt-4">
@@ -257,23 +311,86 @@ export async function SeasonPlan({
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <BlockEditor
-          adeptId={adept.id}
-          blocks={blocks}
-          races={races}
-          today={today}
-          canEdit={canPlan}
-          openNew={openNew}
-        />
-        <RaceEditor
-          adeptId={adept.id}
-          races={races}
-          blocks={blocks}
-          today={today}
-          defaultSport={raceSportOf(adept.sport)}
-          analyses={analyses}
-        />
+        <div id="perioder" className="min-w-0 scroll-mt-24">
+          <BlockEditor
+            adeptId={adept.id}
+            blocks={blocks}
+            races={races}
+            today={today}
+            canEdit={canPlan}
+            openNew={openNew}
+          />
+        </div>
+        <div id="tavlingar" className="min-w-0 scroll-mt-24">
+          <RaceEditor
+            adeptId={adept.id}
+            races={races}
+            blocks={blocks}
+            today={today}
+            defaultSport={raceSportOf(adept.sport)}
+            analyses={analyses}
+          />
+        </div>
       </div>
     </div>
   );
+}
+
+const capitalise = (text: string) => text.replace(/^./, (c) => c.toUpperCase());
+
+/** En cell i sammanfattningen: etiketten i versaler, läget i serif. */
+function SummaryCell({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0 bg-surface p-5 sm:p-6">
+      <p className="eyebrow text-text-subtle">{label}</p>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Rubriken över säsongen: det som ligger närmast. Ett A-lopp inom ett halvår
+ * räknas ned; annars perioden som pågår eller nästa som börjar.
+ */
+function seasonHeadline({
+  phaseNow,
+  next,
+  main,
+  today,
+}: {
+  phaseNow: {
+    phase: TrainingPhase;
+    name?: string | null;
+    ends_on: string;
+  } | null;
+  next: {
+    phase: TrainingPhase;
+    name?: string | null;
+    starts_on: string;
+  } | null;
+  main: { name: string; priority: string; race_date: string } | null;
+  today: string;
+}): string {
+  const amount = (days: number) =>
+    days < 21
+      ? `${days} ${days === 1 ? "dag" : "dagar"}`
+      : `${Math.floor(days / 7)} veckor`;
+  if (main?.priority === "A") {
+    const days = daysBetween(today, main.race_date);
+    if (days === 0) return `${main.name} i dag.`;
+    if (days <= 182) return `${amount(days)} till ${main.name}.`;
+  }
+  if (phaseNow) {
+    const left = daysBetween(today, phaseNow.ends_on);
+    return `${amount(left)} kvar av ${blockLabel(phaseNow)}.`;
+  }
+  if (next)
+    return `${amount(daysBetween(today, next.starts_on))} till ${blockLabel(next)}.`;
+  return "Säsongen är inte planerad än.";
 }

@@ -6,8 +6,16 @@ export const metadata = { title: "Mående" };
 
 export default async function AdeptMaendePage({
   params,
+  searchParams,
 }: PageProps<"/app/adepter/[id]/maende">) {
   const { adept } = await loadWorkspace(params);
+  const query = await searchParams;
   const checkins = await listCheckins(adept.id);
-  return <LoadPanel adeptId={adept.id} checkins={checkins} />;
+  return (
+    <LoadPanel
+      adeptId={adept.id}
+      checkins={checkins}
+      logSession={query.pass === "1"}
+    />
+  );
 }

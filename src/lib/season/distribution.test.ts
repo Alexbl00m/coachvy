@@ -6,6 +6,7 @@ import {
   blockDistribution,
   distributionNotes,
   doneDistribution,
+  mainZone,
   phaseTarget,
   raceDemand,
   sessionGoal,
@@ -222,5 +223,29 @@ describe("doneDistribution", () => {
     expect(result.counts).toEqual({ lugn: 1, medel: 0, hög: 1, total: 2 });
     expect(result.races).toBe(1);
     expect(result.unclassified).toBe(1);
+  });
+});
+
+describe("mainZone", () => {
+  it("ger tröskelzonen för ett tröskelpass, inte uppvärmningens", () => {
+    const blocks = [
+      single(step("uppvärmning", 900, 0.6)),
+      reps(3, [step("intervall", 300, 1.0), step("vila", 120, 0.55)]),
+      single(step("nedvarvning", 600, 0.6)),
+    ];
+    expect(mainZone({ basis: "FTP", blocks }, 300)).toBe(4);
+  });
+
+  it("ger distanszonen för ett distanspass med stegringar", () => {
+    const blocks = [
+      single(step("distans", 3000, 0.7)),
+      reps(6, [step("intervall", 20, 1.3), step("vila", 60, 0.5)]),
+    ];
+    expect(mainZone({ basis: "FTP", blocks }, 300)).toBe(2);
+  });
+
+  it("saknar zon när passet bara är uppvärmning och vila", () => {
+    const blocks = [single(step("uppvärmning", 600, 0.6))];
+    expect(mainZone({ basis: "FTP", blocks }, 300)).toBeNull();
   });
 });

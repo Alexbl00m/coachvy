@@ -4,10 +4,10 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "ghost";
-type Size = "sm" | "md";
+type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-[color,background-color,border-color,transform] duration-120 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:active:scale-100";
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[color,background-color,border-color,transform] duration-120 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:active:scale-100";
 
 // Semantic tokens only: these render on the light public site and the dark
 // app, and must not assume either.
@@ -18,9 +18,12 @@ const variants: Record<Variant, string> = {
   ghost: "text-text-muted hover:bg-surface-2 hover:text-text",
 };
 
+// Pillor: knappen är det enda runda på en sida av raka kort, så den syns
+// som något man trycker på.
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px]",
-  md: "h-10 px-4 text-sm",
+  sm: "h-8 px-3.5 text-[13px]",
+  md: "h-10 px-5 text-sm",
+  lg: "h-12 px-6 text-[15px] font-semibold",
 };
 
 export function buttonClass({

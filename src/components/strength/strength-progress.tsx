@@ -20,12 +20,12 @@ function Spark({ values }: { values: number[] }) {
       <path
         d={path}
         fill="none"
-        stroke="var(--zone-4)"
+        stroke="var(--text-muted)"
         strokeWidth="1.75"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={x(last)} cy={y(values[last])} r="2.6" fill="var(--zone-4)" />
+      <circle cx={x(last)} cy={y(values[last])} r="2.6" fill="var(--text)" />
     </svg>
   );
 }
@@ -62,7 +62,7 @@ export function StrengthProgress({
               key={i}
               className={cn(
                 "flex-1 rounded-t-[3px]",
-                count > 0 ? "bg-[var(--zone-3)]" : "bg-surface-2",
+                count > 0 ? "bg-text-muted" : "bg-surface-2",
               )}
               style={{ height: `${count > 0 ? (count / top) * 100 : 8}%` }}
             />

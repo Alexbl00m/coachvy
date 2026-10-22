@@ -67,12 +67,14 @@ export default async function AdeptWorkspaceLayout({
         </Link>
       )}
 
-      <div className="flex flex-wrap items-start justify-between gap-4 pb-5">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-text">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-6">
+        <div className="min-w-0">
+          <p className="eyebrow mb-3 text-text-subtle">
+            {meta ? `Adept · ${meta}` : "Adept"}
+          </p>
+          <h1 className="headline text-[clamp(2.25rem,1.6rem+2vw,3.5rem)] text-text">
             {adept.full_name}
           </h1>
-          {meta && <p className="text-sm text-text-muted">{meta}</p>}
         </div>
         {canEdit && (
           <div className="flex flex-wrap items-center gap-2">

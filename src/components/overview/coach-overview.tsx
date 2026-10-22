@@ -175,7 +175,7 @@ export async function CoachOverview({
       )}
       <section
         aria-label="Nyckeltal"
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="lift grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-4"
       >
         <StatTile
           label="Adepter"

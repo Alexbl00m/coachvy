@@ -10,21 +10,21 @@
  */
 
 @theme {
-  /* Neutral scale: a cool near-black with a faint blue cast, stepped so
-     that each surface reads as a plane above the last (DESIGN.md). Text
-     steps are checked to 4.5:1 on every surface they sit on. */
-  --color-ink-950: #08090b;
-  --color-ink-900: #08090b;
-  --color-ink-850: #111216;
-  --color-ink-800: #1f2027;
-  --color-ink-700: #23242b;
-  --color-ink-600: #2c2d35;
-  --color-ink-500: #666a77;
-  --color-ink-400: #878a95;
-  --color-ink-300: #a0a3ad;
-  --color-ink-200: #c9cbd2;
-  --color-ink-100: #e1e3e8;
-  --color-ink-50: #eceef2;
+  /* Neutral skala: nästan svart utan blå ton, med text i en varm off-white,
+     så att ytorna läses som plan och rubrikerna som papper (DESIGN.md).
+     Textstegen håller 4.5:1 mot varje yta de står på. */
+  --color-ink-950: #0a0a0c;
+  --color-ink-900: #0a0a0c;
+  --color-ink-850: #121216;
+  --color-ink-800: #1e1e24;
+  --color-ink-700: #25252b;
+  --color-ink-600: #2e2e36;
+  --color-ink-500: #67676f;
+  --color-ink-400: #8f8d8a;
+  --color-ink-300: #a8a6a3;
+  --color-ink-200: #cbc9c5;
+  --color-ink-100: #e3e1dd;
+  --color-ink-50: #f2f0ec;
 
   /* Warm neutrals carried over from the Lindblom brand palette. */
   --color-sand-50: #faf7f4;
@@ -33,18 +33,22 @@
   --color-burgundy: #4d1414;
   --color-mauve: #83627c;
 
-  /* Geist sätter både sajten och appen: en tät grotesk som håller vid
-     12–14 px och bär stora rubriker. Montserrat lever kvar i logotypen. */
+  /* Tre röster (DESIGN.md): Instrument Serif säger vad sidan handlar om,
+     Geist bär text och siffror, Geist Mono sätter etiketterna i versaler
+     och siffrorna i kolumner. */
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo,
     monospace;
+  --font-display: var(--font-instrument-serif), "Iowan Old Style",
+    "Palatino Linotype", Georgia, serif;
 
-  /* Hörn som hos Linear: knappar och fält 8 px (rounded-md), kort och
-     paneler 12 px (rounded-lg), dialoger och kartan 16 px (rounded-xl). */
+  /* Hörn: fält och små kontroller 8 px (rounded-md), kort och paneler
+     16 px (rounded-lg), dialoger och kartan 20 px (rounded-xl). Knappar och
+     brickor är pillor (rounded-full). */
   --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 
   /* Rörelse (DESIGN.md): `fast` 120 ms ease-out för tryck och färg, `base`
      180 ms för det som dyker upp, `drawer` för menyn som glider in. */
@@ -76,26 +80,26 @@
 /* Dark is the default: the app is the larger surface and never flips.
    Values and their rules live in DESIGN.md; keep the two in step. */
 :root {
-  --canvas: #08090b;
-  --surface: #111216;
-  --surface-2: #17181d;
-  --surface-3: #1e1f25;
-  --line: #1f2027;
-  --line-strong: #2c2d35;
+  --canvas: #0a0a0c;
+  --surface: #121216;
+  --surface-2: #18181d;
+  --surface-3: #202026;
+  --line: #1e1e24;
+  --line-strong: #2e2e36;
   /* Inmatningsfältens kant: 3:1 mot ytan, så att fältet syns som ett fält. */
-  --line-control: #666a77;
-  --text: #eceef2;
-  --text-muted: #a0a3ad;
-  --text-subtle: #878a95;
+  --line-control: #67676f;
+  --text: #f2f0ec;
+  --text-muted: #a8a6a3;
+  --text-subtle: #8f8d8a;
   /* En svag ljus kant i överkanten på upphöjda paneler, som ljus uppifrån. */
-  --edge: rgb(255 255 255 / 0.04);
+  --edge: rgb(255 255 255 / 0.035);
 
-  /* Accenten används sparsamt: primärknappen, fokus, det valda. */
-  --accent: #ec7a52;
-  --accent-hover: #f48d68;
-  --accent-text: #f39470;
-  --accent-soft: #2a1811;
-  --accent-on: #170d08;
+  /* Accenten används sparsamt: primärknappen, fokus, dagens markering. */
+  --accent: #ed683b;
+  --accent-hover: #f47d54;
+  --accent-text: #f2875f;
+  --accent-soft: #2b150c;
+  --accent-on: #160a05;
 
   /* Riktning i en jämförelse: framåt och bakåt. Visas alltid med en pil
      bredvid, aldrig med färgen ensam. */
@@ -105,9 +109,9 @@
 
   /* Diagrammens ram. Serierna själva är validerade mot båda ytorna och byts
      inte; det är rutnätet, axeltexten och ytan bakom som måste vända. */
-  --chart-grid: #23242b;
-  --chart-axis-text: #878a95;
-  --chart-surface: #111216;
+  --chart-grid: #232329;
+  --chart-axis-text: #8f8d8a;
+  --chart-surface: #121216;
 
   /* Säsongens faser: en stege i accentens ton från grund till toppning, så
      att ordningen syns i färgen, och vila som neutral grå utanför stegen.
@@ -124,17 +128,23 @@
   --phase-vila: #55555f;
   --phase-vila-text: #ffffff;
 
-  /* Passets intensitetszoner: en blå stege från återhämtning till anaerobt,
-     så att ordningen syns i färgen och inte krockar med fasernas orange.
-     Lika ljushetssteg i OKLCH (ton 252), validerad som ordinal ramp mot
-     ytan (dataviz-skillens validate_palette.js --ordinal). I mörkt läge är
-     den lägsta zonen mörkast och den högsta ljusast. */
-  --zone-1: #035397;
-  --zone-2: #1d6cb7;
-  --zone-3: #3a85d3;
-  --zone-4: #55a0f0;
-  --zone-5: #7ebbfe;
-  --zone-6: #b0d5fe;
+  /* Passets intensitetszoner i filosofins tre domäner (avsnitt 19): lugnt
+     under LT1 i skiffer och blått, medel mellan LT1 och LT2 i guld, högt
+     över LT2 i rött. Ett pass läses då på ett ögonkast – ett tröskelpass är
+     guld, ett VO2max-pass rött – och ordningen inom domänen syns i
+     ljusheten. `-text` är samma ton ljusare, för text i zonens färg. */
+  --zone-1: #4a5466;
+  --zone-2: #3a6c9f;
+  --zone-3: #ae944a;
+  --zone-4: #e0bc5a;
+  --zone-5: #d9543f;
+  --zone-6: #b8395e;
+  --zone-1-text: #9ba5b6;
+  --zone-2-text: #82a8d8;
+  --zone-3-text: #cbb26c;
+  --zone-4-text: #e6c56e;
+  --zone-5-text: #ef826f;
+  --zone-6-text: #e584a1;
 }
 
 html,
@@ -158,6 +168,29 @@ body {
 /* Upphöjd panel: ytan bär djupet, kanten i överkanten ger det ljus. */
 .lift {
   box-shadow: inset 0 1px 0 0 var(--edge);
+}
+
+/*
+ * Etikett i versaler: Geist Mono, spärrad. Sidans sammanhang ovanför rubriken
+ * ("ONSDAG 21 OKTOBER · VECKA 43") och kortens etiketter ("FASEN NU",
+ * "ARBETE"). Färgen sätts bredvid, oftast text-subtle.
+ */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Rubriken i serif: påståendet en sida eller ett kort handlar om. */
+@utility headline {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-wrap: balance;
 }
 
 /*
@@ -287,13 +320,19 @@ body {
     --phase-vila: #9a9aa5;
     --phase-vila-text: #121216;
 
-    /* Samma stege vänd för papper: ljusast för den lägsta zonen. */
-    --zone-1: #73b5ff;
-    --zone-2: #509bea;
-    --zone-3: #3580ce;
-    --zone-4: #1667b2;
-    --zone-5: #014f90;
-    --zone-6: #023869;
+    /* Samma domäner, mörkare för papper. */
+    --zone-1: #8a94a6;
+    --zone-2: #3b6ea6;
+    --zone-3: #9c8233;
+    --zone-4: #b08a1c;
+    --zone-5: #c4442f;
+    --zone-6: #a3325a;
+    --zone-1-text: #5d6678;
+    --zone-2-text: #2f5f94;
+    --zone-3-text: #7a6420;
+    --zone-4-text: #7f6210;
+    --zone-5-text: #a8361f;
+    --zone-6-text: #8a2449;
   }
 
   /*

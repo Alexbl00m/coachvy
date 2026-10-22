@@ -1,40 +1,72 @@
 import Link from "next/link";
-import { Flag, MessageSquare } from "lucide-react";
 
-import { SportIcon, TestIcon } from "@/components/calendar/calendar-items";
 import { CallCard } from "@/components/calls/call-card";
-import { SeasonSummary } from "@/components/season/season-summary";
+import { PageHeader } from "@/components/page-header";
+import { NextRaceCard } from "@/components/season/next-race-card";
+import { PhaseNow } from "@/components/season/phase-now";
 import { ConsentToggle } from "@/components/settings/settings-forms";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, CardTitle } from "@/components/ui/card";
-import { WorkoutStrip } from "@/components/workouts/workout-strip";
-import { listScheduledWorkouts } from "@/lib/calendar/queries";
+import { Chip } from "@/components/ui/chip";
+import { Card, CardHeadline, CardLabel, CardTitle } from "@/components/ui/card";
+import { Metric } from "@/components/ui/metric";
+import { FitButton } from "@/components/workouts/fit-button";
+import { StructureText } from "@/components/workouts/structure-text";
+import { WorkoutProfileChart } from "@/components/workouts/workout-profile-chart";
+import {
+  listScheduledWorkouts,
+  type CalendarWorkout,
+} from "@/lib/calendar/queries";
+import type { Sport } from "@/lib/calculators/lactate";
 import { listCallsBetween } from "@/lib/calls/queries";
 import { callState } from "@/lib/calls/time";
 import { countUnread, listMessages } from "@/lib/messages/queries";
+import { hoursMinutes } from "@/lib/plan-library/labels";
 import { adeptHref, routes } from "@/lib/routes";
 import { listBlocks, listRaces } from "@/lib/season/queries";
-import { addDays, longDate, mondayOf, weekdayName } from "@/lib/season/season";
-import { sessionHeadline } from "@/lib/tests/headline";
-import { protocolByKey } from "@/lib/tests/protocols";
+import {
+  addDays,
+  isoWeek,
+  longDate,
+  mondayOf,
+  weekdayName,
+} from "@/lib/season/season";
 import { listStrengthSessions } from "@/lib/strength/queries";
 import { entryText } from "@/lib/strength/strength";
-import { listSessions } from "@/lib/tests/session-queries";
+import { lactateCurves, metricTrends } from "@/lib/tests/progression";
+import { listFullSessions } from "@/lib/tests/session-queries";
 import {
   READINESS_MAX,
   readReadiness,
   readinessScore,
 } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
-import type { Adept } from "@/lib/types/database";
+import type { Adept, AdeptCheckinRow } from "@/lib/types/database";
+import { ZONE_NAMES } from "@/lib/workouts/intensity";
+import { getWorkout } from "@/lib/workouts/queries";
+import { BASIS_LABEL, toWorkout, unitForSport } from "@/lib/workouts/schema";
+import { formatPace } from "@/lib/tests/pace";
+import { profileSeconds } from "@/lib/workouts/summary";
+import { QuickCheckin } from "./quick-checkin";
+import { ThresholdsCard } from "./thresholds-card";
+import { WeekStrip } from "./week-strip";
+
+const SPORT_TEXT: Record<Sport | "annat", string> = {
+  löpning: "Löpning",
+  cykling: "Cykel",
+  simning: "Simning",
+  annat: "Pass",
+};
+
+/** Passets längd: ur profilen när den finns, annars som den sparades. */
+const timeOf = (w: CalendarWorkout) =>
+  w.profile.length > 0
+    ? hoursMinutes(profileSeconds(w.profile))
+    : (w.duration ?? null);
 
 /**
- * Adeptens Idag: det adepten öppnar appen för står först – dagens pass och
- * incheckningen – sedan det coachen skrivit, och därefter veckan som kommer,
- * säsongen, styrkan och senaste testet.
- *
- * Incheckningen är sidans enda primära knapp: den är det enda här som väntar
- * på adepten.
+ * Adeptens Idag: dagens pass står överst som sidans rubrik och första kort,
+ * bredvid incheckningen – det enda här som väntar på adepten. Sedan veckan
+ * dag för dag, och sist läget: trösklarna, nästa tävling och styrkan.
  */
 export async function AdeptToday({
   userId,
@@ -49,6 +81,7 @@ export async function AdeptToday({
   consentGiven: boolean;
 }) {
   const monday = mondayOf(today);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   // Serverns tid, så att samtalens läge blir detsamma i webbläsaren.
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
@@ -67,8 +100,8 @@ export async function AdeptToday({
     listBlocks(adept.id),
     listCheckins(adept.id, 14),
     countUnread(adept.id, userId),
-    listScheduledWorkouts(today, addDays(today, 13), adept.id),
-    listSessions(adept.id),
+    listScheduledWorkouts(monday, addDays(today, 13), adept.id),
+    listFullSessions(adept.id),
     listStrengthSessions(adept.id),
     listMessages(adept.id, 20),
     // Samtal som pågår eller kommer de närmaste två veckorna.
@@ -83,350 +116,483 @@ export async function AdeptToday({
     return state !== "avslutat" && state !== "avbokat";
   });
 
+  const own = `${routes.adepts}/${adept.id}`;
+  const hrefFor = (w: CalendarWorkout) => w.href ?? `${own}/pass/${w.id}`;
   const todays = checkins.find((c) => c.performed_on === today) ?? null;
-  const readiness = todays ? readinessScore(toCheckin(todays)) : null;
   const passToday = workouts.filter((w) => w.date === today);
   const upcoming = workouts.filter((w) => w.date > today);
-  const raceToday = races.filter((r) => r.race_date === today);
-  const latest = sessions[0] ?? null;
+  const raceToday = races.find((r) => r.race_date === today) ?? null;
+  const thisWeek = workouts.filter((w) => w.date <= days[6]);
+  const quality = thisWeek.filter(
+    (w) => w.goal === "medel" || w.goal === "hög",
+  ).length;
+  const restDays = days.filter(
+    (d) => !thisWeek.some((w) => w.date === d),
+  ).length;
+  const done = new Set(
+    checkins.filter((c) => c.session_rpe !== null).map((c) => c.performed_on),
+  );
+
+  // Passen i dag som är coachens eller egna: de går till klockan härifrån.
+  const saved = await Promise.all(
+    passToday.filter((w) => !w.fromPlan).map((w) => getWorkout(w.id)),
+  );
+
+  // Trösklarna i grenen adepten senast testade.
+  const latestTest = [...sessions].sort((a, b) =>
+    b.performed_on.localeCompare(a.performed_on),
+  )[0];
+  const testSport = latestTest?.sport ?? null;
+  const inSport = sessions.filter((s) => s.sport === testSport);
+  const trends = testSport ? metricTrends(inSport, lactateCurves(inSport)) : [];
+
   const lastStrength = strength[0] ?? null;
   const strengthThisWeek = strength.filter(
     (s) => s.performed_on >= monday && s.performed_on <= today,
   ).length;
-  // Det senaste coachen skrivit; adeptens egna svar står i tråden.
   const fromCoach =
     [...thread].reverse().find((m) => m.sender_id !== userId) ?? null;
-  const own = `${routes.adepts}/${adept.id}`;
-  const dayText = (date: string) =>
-    `${weekdayName(date)} ${longDate(date, today)}`;
+  const main = passToday[0] ?? null;
+  const next = upcoming[0] ?? null;
+
+  const title = raceToday
+    ? `${raceToday.name} i dag.`
+    : main
+      ? `${main.title} i dag.`
+      : next
+        ? "Vila i dag."
+        : "Inget pass i dag.";
+  const lead = raceToday
+    ? raceToday.target
+      ? `Målet: ${raceToday.target}.`
+      : undefined
+    : main
+      ? (main.intent ?? main.summary ?? undefined)
+      : next
+        ? `Nästa pass: ${next.title.toLowerCase()}, ${weekdayName(next.date)}.`
+        : "Inga pass med datum de närmaste två veckorna.";
 
   return (
-    <div className="space-y-6">
-      {!consentGiven && (
-        <Card className="min-w-0 border-accent/50">
-          <CardTitle>Samtycke till hälsouppgifter</CardTitle>
-          <div className="space-y-4">
-            <p className="max-w-3xl text-sm leading-relaxed text-text-muted">
-              Laktat, puls, syreupptag, kroppssammansättning, sömn och skador är
-              hälsouppgifter. För att din coach ska få följa dem i appen behöver
-              du samtycka till det. Samtycket kan tas tillbaka när som helst
-              under Inställningar.
-            </p>
-            <ConsentToggle given={false} />
-          </div>
-        </Card>
-      )}
+    <>
+      <PageHeader
+        size="lg"
+        eyebrow={`${weekdayName(today)} ${longDate(today, today)} · vecka ${isoWeek(today)}`}
+        title={title}
+        description={lead}
+      />
 
-      {nextCalls.length > 0 && (
-        <Card className="min-w-0">
-          <CardTitle
-            action={
-              <Link
-                href={adeptHref(adept.id, "meddelanden")}
-                className="text-[13px] text-text-muted hover:text-text"
-              >
-                Meddelanden
-              </Link>
-            }
-          >
-            {nextCalls.length === 1 ? "Videosamtal" : "Videosamtal med coachen"}
-          </CardTitle>
-          <ul className="divide-y divide-line">
-            {nextCalls.slice(0, 3).map((call) => (
-              <li key={call.id} className="py-3 first:pt-0 last:pb-0">
-                <CallCard call={call} now={now} compact />
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <div className="space-y-6">
+        {!consentGiven && (
+          <Card className="min-w-0 border-accent/50">
+            <CardTitle>Samtycke till hälsouppgifter</CardTitle>
+            <div className="space-y-4">
+              <p className="max-w-3xl text-sm leading-relaxed text-text-muted">
+                Laktat, puls, syreupptag, kroppssammansättning, sömn och skador
+                är hälsouppgifter. För att din coach ska få följa dem i appen
+                behöver du samtycka till det. Samtycket kan tas tillbaka när som
+                helst under Inställningar.
+              </p>
+              <ConsentToggle given={false} />
+            </div>
+          </Card>
+        )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section
-          aria-labelledby="dagens-pass"
-          className="min-w-0 rounded-lg border border-line-strong bg-surface-2 p-5 sm:p-6 lg:col-span-2"
-        >
-          <h2
-            id="dagens-pass"
-            className="text-[13px] font-medium text-text-muted"
-          >
-            {raceToday.length > 0 ? "Tävlingsdag" : "Dagens pass"}
-          </h2>
-          {raceToday.map((r) => (
-            <p
-              key={r.id}
-              className="mt-2 flex items-center gap-2 text-lg font-semibold text-text"
+        {nextCalls.length > 0 && (
+          <Card className="min-w-0">
+            <CardLabel
+              aside={
+                <Link
+                  href={adeptHref(adept.id, "meddelanden")}
+                  className="hover:text-text"
+                >
+                  Meddelanden →
+                </Link>
+              }
             >
-              <Flag aria-hidden className="size-5 text-text" />
-              {r.name}
-            </p>
-          ))}
-          {passToday.length > 0 ? (
-            <ul className="mt-3 space-y-4">
-              {passToday.map((w) => (
-                <li key={w.id} className="min-w-0">
-                  <p className="flex items-start gap-2 text-lg font-semibold leading-snug text-text">
-                    <SportIcon
-                      sport={w.sport}
-                      className="mt-1 size-5 shrink-0 text-text-muted"
-                    />
-                    {w.title}
-                  </p>
-                  {(w.duration || w.summary) && (
-                    <p className="mt-1 text-sm text-text-muted">
-                      {[w.duration, w.summary].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <WorkoutStrip blocks={w.profile} className="mt-3 h-8" />
-                  <ButtonLink
-                    href={w.href ?? `${own}/pass/${w.id}`}
-                    variant="secondary"
-                    size="sm"
-                    className="mt-3"
-                  >
-                    Visa passet
-                  </ButtonLink>
+              Videosamtal
+            </CardLabel>
+            <ul className="mt-4 divide-y divide-line">
+              {nextCalls.slice(0, 3).map((call) => (
+                <li key={call.id} className="py-3 first:pt-0 last:pb-0">
+                  <CallCard call={call} now={now} compact />
                 </li>
               ))}
             </ul>
-          ) : raceToday.length === 0 ? (
-            <div className="mt-2 space-y-1">
-              <p className="text-lg font-semibold text-text">
-                Inget pass inlagt i dag
-              </p>
-              <p className="text-sm text-text-muted">
-                {upcoming[0]
-                  ? `Nästa: ${upcoming[0].title}, ${dayText(upcoming[0].date)}.`
-                  : "Inga pass med datum de närmaste två veckorna."}
-              </p>
-            </div>
-          ) : null}
-        </section>
+          </Card>
+        )}
 
-        <Card className="min-w-0">
-          <CardTitle>Incheckning</CardTitle>
-          {todays ? (
-            <div className="space-y-1 text-sm text-text-muted">
-              <p className="font-medium text-text">Klar för i dag.</p>
-              {todays.session_rpe !== null &&
-              todays.duration_minutes !== null ? (
-                <p>
-                  Pass: RPE {Number(todays.session_rpe)} ·{" "}
-                  {Number(todays.duration_minutes)} min
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
+            {main ? (
+              passToday.map((w, i) => (
+                <TodayWorkout
+                  key={w.id}
+                  workout={w}
+                  href={hrefFor(w)}
+                  saved={saved.find((s) => s?.id === w.id) ?? null}
+                  ownWorkout={
+                    saved.find((s) => s?.id === w.id)?.created_by ===
+                    adept.profile_id
+                  }
+                  primary={i === 0}
+                />
+              ))
+            ) : next ? (
+              <TodayWorkout
+                workout={next}
+                href={hrefFor(next)}
+                saved={null}
+                upcomingLabel={`Nästa pass · ${weekdayName(next.date)} ${longDate(next.date, today)}`}
+              />
+            ) : (
+              <Card level="lead">
+                <CardLabel>Dagens pass</CardLabel>
+                <CardHeadline>Inga pass inlagda.</CardHeadline>
+                <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-text-muted">
+                  När din coach lägger in pass, eller du startar en plan ur
+                  planbiblioteket, står dagens pass här.
                 </p>
-              ) : (
-                <p>Vilodag</p>
-              )}
-              {readiness !== null && (
-                <p>
-                  Återhämtning {readiness} av {READINESS_MAX} ·{" "}
-                  {readReadiness(readiness).toLowerCase()}
-                </p>
-              )}
-              <Link
-                href={adeptHref(adept.id, "maende")}
-                className="inline-block pt-1 text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
-              >
-                Ändra
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-text-muted">
-                Hur kändes passet, och hur har du sovit? Två minuter i dag gör
-                att din coach ser hur träningen landar.
-              </p>
-              <ButtonLink
-                href={adeptHref(adept.id, "maende")}
-                className="w-full font-semibold sm:w-auto"
-              >
-                Checka in
-              </ButtonLink>
-            </div>
-          )}
-        </Card>
+              </Card>
+            )}
+          </div>
+
+          <div className="min-w-0 space-y-6">
+            <Card className="min-w-0">
+              <CheckinPanel
+                adeptId={adept.id}
+                today={today}
+                todays={todays}
+                trainsToday={passToday.length > 0}
+              />
+            </Card>
+            <Card className="min-w-0">
+              <PhaseNow blocks={blocks} today={today} />
+            </Card>
+          </div>
+        </div>
 
         {fromCoach && (
           <Card className="min-w-0">
-            <CardTitle
-              action={
-                unread > 0 ? (
-                  <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[12px] font-medium text-text tabular-nums">
-                    {unread} {unread === 1 ? "oläst" : "olästa"}
-                  </span>
-                ) : undefined
+            <CardLabel
+              aside={
+                <span className="flex items-center gap-3">
+                  {unread > 0 && (
+                    <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[12px] font-medium text-text tabular-nums">
+                      {unread} {unread === 1 ? "oläst" : "olästa"}
+                    </span>
+                  )}
+                  {longDate(fromCoach.created_at.slice(0, 10), today)}
+                </span>
               }
             >
               Från din coach
-            </CardTitle>
+            </CardLabel>
             <Link
               href={adeptHref(adept.id, "meddelanden")}
-              className="group block"
+              className="group mt-3 block"
             >
-              <p className="line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-text group-hover:text-text">
+              <p className="line-clamp-3 max-w-3xl whitespace-pre-line text-base leading-relaxed text-text">
                 {fromCoach.body}
               </p>
-              <p className="mt-2 flex items-center gap-1.5 text-[13px] text-text-muted group-hover:text-text">
-                <MessageSquare aria-hidden className="size-3.5" />
-                {longDate(fromCoach.created_at.slice(0, 10), today)} · Svara
+              <p className="mt-2 text-[13px] text-text-muted group-hover:text-text">
+                Svara →
               </p>
             </Link>
           </Card>
         )}
 
-        <Card
-          className={
-            fromCoach ? "min-w-0 lg:col-span-2" : "min-w-0 lg:col-span-3"
-          }
-        >
-          <CardTitle
-            action={
-              <Link
-                href={routes.calendar}
-                className="text-[13px] text-text-muted hover:text-text"
-              >
-                Kalender
-              </Link>
-            }
-          >
-            Kommande pass
-          </CardTitle>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-text-muted">
-              Inga pass med datum de närmaste två veckorna.
-            </p>
-          ) : (
-            <ul className="divide-y divide-line">
-              {upcoming.slice(0, 6).map((w) => (
-                <li key={w.id}>
-                  <Link
-                    href={w.href ?? `${own}/pass/${w.id}`}
-                    className="group flex items-center gap-3 py-2.5"
-                  >
-                    <span className="w-24 shrink-0 text-[13px] text-text-muted">
-                      {weekdayName(w.date)}{" "}
-                      <span className="tabular-nums text-text-subtle">
-                        {Number(w.date.slice(8))}/{Number(w.date.slice(5, 7))}
-                      </span>
-                    </span>
-                    <SportIcon
-                      sport={w.sport}
-                      className="size-4 shrink-0 text-text-subtle"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm text-text group-hover:underline">
-                        {w.title}
-                      </span>
-                      <WorkoutStrip
-                        blocks={w.profile}
-                        className="mt-1 h-4 max-w-sm"
-                      />
-                    </span>
-                    {w.duration && (
-                      <span className="shrink-0 text-[13px] text-text-muted tabular-nums">
-                        {w.duration}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
-
-      <SeasonSummary blocks={blocks} races={races} today={today} />
-
-      <div className="grid gap-6 md:grid-cols-2">
         <Card className="min-w-0">
-          <CardTitle
-            action={
-              <Link
-                href={routes.strength}
-                className="text-[13px] text-text-muted hover:text-text"
-              >
-                Progressionen
-              </Link>
-            }
-          >
-            Styrka
-          </CardTitle>
-          <div className="space-y-3">
-            {lastStrength ? (
-              <div className="space-y-1 text-sm text-text-muted">
-                <p className="text-text">
-                  {lastStrength.title || "Styrkepass"}
-                  <span className="ml-1.5 text-[13px] text-text-muted">
-                    {longDate(lastStrength.performed_on, today)}
-                  </span>
-                </p>
-                <p className="text-[13px]">
-                  {lastStrength.exercises
-                    .filter((e) => e.weightKg !== null)
-                    .slice(0, 3)
-                    .map((e) => `${e.name} ${entryText(e)}`)
-                    .join(" · ") ||
-                    lastStrength.exercises
-                      .slice(0, 4)
-                      .map((e) => e.name)
-                      .join(", ")}
-                </p>
-                <p className="text-[13px]">
-                  {strengthThisWeek === 0
-                    ? "Inget styrkepass den här veckan."
-                    : `${strengthThisWeek} pass den här veckan.`}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-text-muted">
-                Logga styrkepassen här i stället för som en kommentar, så ser du
-                och din coach progressionen per övning.
-              </p>
-            )}
-            <ButtonLink href={routes.strength} size="sm" variant="secondary">
-              Logga styrkepass
-            </ButtonLink>
-          </div>
-        </Card>
-
-        <Card className="min-w-0">
-          <CardTitle
-            action={
-              <Link
-                href={routes.progression}
-                className="text-[13px] text-text-muted hover:text-text"
-              >
-                Utveckling
-              </Link>
-            }
-          >
-            Senaste test
-          </CardTitle>
-          {latest ? (
-            <Link
-              href={`${own}/test/${latest.id}`}
-              className="group flex items-start gap-2.5"
-            >
-              <TestIcon className="mt-0.5 size-4 shrink-0" />
-              <span className="min-w-0">
-                <span className="block text-sm text-text group-hover:underline">
-                  {protocolByKey(latest.protocol)?.label ?? latest.protocol}
-                </span>
-                <span className="block text-[13px] text-text-muted">
-                  {longDate(latest.performed_on, today)}
-                  {sessionHeadline(latest.test_metrics, latest.sport)
-                    ? ` · ${sessionHeadline(latest.test_metrics, latest.sport)}`
-                    : ""}
-                </span>
+          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="flex flex-wrap items-baseline gap-x-3 text-[17px] font-semibold tracking-[-0.01em] text-text">
+              Veckan
+              <span className="text-sm font-normal text-text-muted">
+                {thisWeek.length} pass · {quality} kvalitet · {restDays}{" "}
+                {restDays === 1 ? "vilodag" : "vilodagar"}
               </span>
+            </h2>
+            <Link
+              href={routes.calendar}
+              className="text-[13px] text-text-muted hover:text-text"
+            >
+              Kalender →
             </Link>
-          ) : (
-            <p className="text-sm text-text-muted">
-              Inga tester registrerade ännu.
-            </p>
-          )}
+          </div>
+          <WeekStrip
+            days={days}
+            workouts={thisWeek}
+            done={done}
+            today={today}
+            hrefFor={hrefFor}
+          />
         </Card>
+
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <ThresholdsCard
+            trends={trends}
+            sport={testSport}
+            today={today}
+            href={routes.progression}
+          />
+
+          <NextRaceCard races={races} today={today} href={routes.plans} />
+
+          <Card className="flex min-w-0 flex-col md:col-span-2 xl:col-span-1">
+            <CardLabel
+              aside={
+                <Link href={routes.strength} className="hover:text-text">
+                  Progressionen →
+                </Link>
+              }
+            >
+              Styrka
+            </CardLabel>
+            <CardHeadline>
+              {lastStrength
+                ? strengthThisWeek === 0
+                  ? "Inget styrkepass än den här veckan."
+                  : `${strengthThisWeek} ${strengthThisWeek === 1 ? "pass" : "pass"} den här veckan.`
+                : "Logga styrkan här, inte i en kommentar."}
+            </CardHeadline>
+            <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
+              {lastStrength
+                ? `Senast ${longDate(lastStrength.performed_on, today)}: ${
+                    lastStrength.exercises
+                      .filter((e) => e.weightKg !== null)
+                      .slice(0, 2)
+                      .map((e) => `${e.name.toLowerCase()} ${entryText(e)}`)
+                      .join(", ") ||
+                    lastStrength.exercises
+                      .slice(0, 3)
+                      .map((e) => e.name.toLowerCase())
+                      .join(", ")
+                  }.`
+                : "Då ser du och din coach progressionen per övning."}
+            </p>
+            <div className="mt-auto pt-6">
+              <ButtonLink href={routes.strength} variant="secondary">
+                Logga styrkepass
+              </ButtonLink>
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+/** Dagens pass som ledkort: brickor, nyckeltal, profil, struktur, knappar. */
+function TodayWorkout({
+  workout: w,
+  href,
+  saved,
+  ownWorkout = false,
+  primary = true,
+  upcomingLabel,
+}: {
+  workout: CalendarWorkout;
+  href: string;
+  saved: Awaited<ReturnType<typeof getWorkout>>;
+  ownWorkout?: boolean;
+  primary?: boolean;
+  /** Ett kommande pass i stället för dagens: etiketten säger när. */
+  upcomingLabel?: string;
+}) {
+  const zoneName = w.zone ? ZONE_NAMES[w.zone] : null;
+  const typeText =
+    w.type ?? (w.goal === "lugn" ? "Lugnt" : w.goal ? "Kvalitet" : null);
+  // "Distans" som typ och "Z2 Distans" som zon säger samma sak två gånger.
+  const kind =
+    typeText && typeText.toLowerCase() !== zoneName?.toLowerCase()
+      ? typeText
+      : null;
+  const target = w.work && w.structure ? workTarget(w.structure) : null;
+  const source = w.fromPlan
+    ? "Från planen"
+    : saved
+      ? ownWorkout
+        ? "Eget pass"
+        : "Från coachen"
+      : null;
+  const time = timeOf(w);
+  const reference =
+    saved && saved.reference > 0
+      ? unitForSport(saved.sport) === "W"
+        ? `${Math.round(saved.reference)} W`
+        : `${formatPace(saved.reference, saved.sport)} ${saved.sport === "simning" ? "/100 m" : "/km"}`
+      : null;
+
+  return (
+    <section
+      aria-label={upcomingLabel ?? "Dagens pass"}
+      className="lift flex min-w-0 flex-1 flex-col rounded-lg border border-line-strong bg-surface-2 p-5 sm:p-7"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip>{SPORT_TEXT[w.sport]}</Chip>
+          {kind && <Chip>{kind}</Chip>}
+          {w.zone && (
+            <Chip zone={w.zone}>
+              Z{w.zone} {ZONE_NAMES[w.zone]}
+            </Chip>
+          )}
+        </div>
+        {(upcomingLabel || source) && (
+          <p className="eyebrow text-text-subtle">{upcomingLabel ?? source}</p>
+        )}
+      </div>
+
+      {upcomingLabel && (
+        <p className="headline mt-5 text-[clamp(1.75rem,1.4rem+1vw,2.25rem)] text-text">
+          {w.title}
+        </p>
+      )}
+
+      <div className="mt-7 grid grid-cols-2 gap-x-6 gap-y-6 sm:flex sm:flex-wrap sm:gap-x-10">
+        {w.work && (
+          <Metric
+            label="Arbete"
+            value={splitUnit(w.work).value}
+            unit={splitUnit(w.work).unit}
+            size="xl"
+          />
+        )}
+        {time && (
+          <Metric
+            label={w.work ? "Totalt" : "Tid"}
+            value={splitUnit(time).value}
+            unit={splitUnit(time).unit}
+            size="xl"
+          />
+        )}
+        {target && (
+          <Metric
+            label="Mål"
+            value={target.replace(/ %$/, "")}
+            unit={
+              target.endsWith("%")
+                ? saved
+                  ? `% av ${BASIS_LABEL[saved.basis]}`
+                  : "%"
+                : undefined
+            }
+            size="xl"
+          />
+        )}
+      </div>
+
+      <WorkoutProfileChart blocks={w.profile} className="mt-8" />
+
+      {w.structure && (
+        <div className="mt-5">
+          <StructureText text={w.structure} basis={saved?.basis ?? null} />
+        </div>
+      )}
+
+      <div className="mt-auto flex flex-wrap items-center gap-3 pt-7">
+        {saved && primary && !upcomingLabel && (
+          <FitButton workout={toWorkout(saved)} reference={saved.reference} />
+        )}
+        <ButtonLink href={href} variant="secondary">
+          Öppna passet
+        </ButtonLink>
+        {reference && saved && (
+          <p className="ml-auto text-[13px] text-text-subtle">
+            Zonerna räknas mot {BASIS_LABEL[saved.basis]} {reference}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Talet och enheten isär, så att enheten kan stå liten bredvid:
+ * "3×5 min" → "3×5" och "min", "1 h 15 min" → "1 h 15" och "min".
+ */
+function splitUnit(text: string): { value: string; unit?: string } {
+  const match = text.match(/^(.*\S)\s+(min|h|s|m|km)$/);
+  return match ? { value: match[1], unit: match[2] } : { value: text };
+}
+
+/**
+ * Målet för arbetet ur strukturraden: det första målet i repetitionen, som
+ * "HM–10K" eller "105 %".
+ */
+function workTarget(structure: string): string | null {
+  const inner = structure.match(/\d+x\(([^)]*)\)/)?.[1];
+  const token = inner?.match(
+    /@[A-Za-z0-9]+(?:-[A-Za-z0-9]+)?|\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?%/,
+  )?.[0];
+  if (!token) return null;
+  return token.startsWith("@")
+    ? token.slice(1).replace("-", "–")
+    : token.replace("-", "–").replace("%", " %");
+}
+
+/** Incheckningen: frågorna när den inte är gjord, läget när den är det. */
+function CheckinPanel({
+  adeptId,
+  today,
+  todays,
+  trainsToday,
+}: {
+  adeptId: string;
+  today: string;
+  todays: AdeptCheckinRow | null;
+  trainsToday: boolean;
+}) {
+  const readiness = todays ? readinessScore(toCheckin(todays)) : null;
+  if (!todays || readiness === null) {
+    return (
+      <>
+        <CardLabel aside="≈ 1 min">Incheckning</CardLabel>
+        <CardHeadline>Hur mår du i dag?</CardHeadline>
+        <QuickCheckin
+          adeptId={adeptId}
+          today={today}
+          initial={
+            todays
+              ? {
+                  sleep: todays.sleep,
+                  fatigue: todays.fatigue,
+                  soreness: todays.soreness,
+                  stress: todays.stress,
+                }
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+  const logged = todays.session_rpe !== null;
+  return (
+    <>
+      <CardLabel aside="klar">Incheckning</CardLabel>
+      <CardHeadline>
+        {readiness} av {READINESS_MAX}.
+      </CardHeadline>
+      <p className="mt-3 text-[15px] text-text-muted">
+        {readReadiness(readiness)} i dag.
+        {logged
+          ? ` Passet: RPE ${Number(todays.session_rpe)} i ${Number(todays.duration_minutes)} min.`
+          : ""}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {!logged && trainsToday && (
+          <ButtonLink
+            href={`${adeptHref(adeptId, "maende")}?pass=1#incheckning`}
+            variant="secondary"
+          >
+            Logga passet
+          </ButtonLink>
+        )}
+        <ButtonLink
+          href={`${adeptHref(adeptId, "maende")}#incheckning`}
+          variant="ghost"
+        >
+          Ändra
+        </ButtonLink>
+      </div>
+    </>
   );
 }

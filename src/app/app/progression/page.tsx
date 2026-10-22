@@ -38,6 +38,7 @@ export default async function ProgressionPage({
 
   const header = (
     <PageHeader
+      eyebrow="Utveckling"
       title="Progression"
       description="Utvecklingen ur träningen och testerna över tid, en gren i taget."
     />
@@ -89,15 +90,17 @@ export default async function ProgressionPage({
     );
   }
   return (
-    <>
-      {header}
-      <ProgressionSection
-        adept={adept}
-        canEdit={false}
-        basePath={routes.progression}
-        gren={gren}
-        vy={vy}
-      />
-    </>
+    <ProgressionSection
+      adept={adept}
+      canEdit={false}
+      basePath={routes.progression}
+      gren={gren}
+      vy={vy}
+      header={{
+        eyebrow: "Utveckling",
+        title: "Utveckling",
+        description: "Utvecklingen ur testerna över tid, en gren i taget.",
+      }}
+    />
   );
 }

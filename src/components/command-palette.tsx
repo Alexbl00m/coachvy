@@ -259,15 +259,17 @@ export function CommandPalette({
         }}
         aria-haspopup="dialog"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-8 items-center gap-2 rounded-md border border-line-strong bg-surface-2 px-2 text-[13px] text-text-muted transition-colors hover:bg-surface-3 hover:text-text sm:w-56 sm:px-2.5"
+        className="flex h-9 items-center gap-2.5 rounded-full border border-line-strong bg-surface px-2.5 text-[13px] text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:h-10 sm:w-72 sm:px-4"
       >
         <Search aria-hidden className="size-4 shrink-0" />
-        <span className="sr-only sm:not-sr-only sm:flex-1 sm:text-left">
-          Sök
+        <span className="sr-only sm:not-sr-only sm:flex-1 sm:truncate sm:text-left">
+          {role === "coach"
+            ? "Sök adept eller sida"
+            : "Sök sida eller handling"}
         </span>
         <kbd
           suppressHydrationWarning
-          className="hidden rounded border border-line-strong px-1.5 font-mono text-[11px] text-text-subtle sm:inline"
+          className="hidden font-mono text-[11px] text-text-subtle sm:inline"
         >
           {mac ? "⌘K" : "Ctrl K"}
         </kbd>

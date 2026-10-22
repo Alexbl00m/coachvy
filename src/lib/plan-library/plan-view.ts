@@ -18,8 +18,19 @@ import {
   type DisciplineRow,
   type InstanceContent,
 } from "./queries";
+import { mainZone, sessionGoal } from "@/lib/season/distribution";
+import { workText } from "@/lib/workouts/summary";
+
 import { buildSchedule, currentPlanWeek, type ScheduleWeek } from "./schedule";
-import type { Level, LevelChange, Override, SessionLog } from "./types";
+import { formatStructure } from "./structure";
+import type {
+  Level,
+  LevelChange,
+  Override,
+  SessionLog,
+  TemplateSession,
+  Variant,
+} from "./types";
 
 /**
  * Allt planvyn, kalendern, översikten och AI-underlaget behöver om en
@@ -222,6 +233,7 @@ export async function listPlanSessionsBetween(
           profile: templateProfile(s.variant.blocks, s.variant.basis),
           href: `${href}?vecka=${s.week}`,
           fromPlan: true,
+          ...planDetail(s.session, s.variant),
         });
       }
     }
@@ -286,4 +298,27 @@ export async function canEditPlan(adeptId: string): Promise<boolean> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("can_edit_plan", { adept: adeptId });
   return data === true;
+}
+
+/**
+ * Det som står om ett planpass utöver profilen: typen, syftet, strukturen och
+ * huvudsyftet. Strukturen skrivs med zonnamn (`@LO`) bara när passet räknas
+ * mot maratonfart – där är zonerna definierade.
+ */
+function planDetail(session: TemplateSession, variant: Variant) {
+  const blocks = variant.blocks ?? [];
+  const workout =
+    blocks.length > 0 && variant.basis
+      ? { basis: variant.basis, blocks }
+      : null;
+  return {
+    type: session.type,
+    intent: session.description ?? variant.description,
+    structure: blocks.length
+      ? formatStructure(blocks, { zones: variant.basis === "MP" })
+      : null,
+    goal: workout ? sessionGoal(workout, 0) : null,
+    zone: workout ? mainZone(workout, 0) : null,
+    work: blocks.length ? workText(blocks) : null,
+  };
 }

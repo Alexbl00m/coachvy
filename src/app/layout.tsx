@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 import { site } from "@/lib/site";
 
-// Geist för sajten och appen, Geist Mono för siffror i kolumner. Se DESIGN.md.
+// Geist för text och siffror, Geist Mono för etiketter och siffror i kolumner,
+// Instrument Serif för sidornas rubriker – påståendet sidan handlar om. Se
+// DESIGN.md.
 const geist = Geist({
   variable: "--font-geist",
   subsets: ["latin"],
@@ -14,6 +16,14 @@ const geist = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -43,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="sv"
-      className={`${geist.variable} ${geistMono.variable} h-full`}
+      className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full`}
     >
       <body className="min-h-full bg-canvas text-text">{children}</body>
     </html>

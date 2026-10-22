@@ -116,3 +116,78 @@ export async function deleteCheckin(
   revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
   return { ok: true };
 }
+
+export type SaveReadinessInput = {
+  adeptId: string;
+  performedOn: string;
+  sleep: number;
+  fatigue: number;
+  soreness: number;
+  stress: number;
+};
+
+/**
+ * Dagens mående ensamt, från Idag: de fyra frågorna utan passet.
+ *
+ * Finns dagens rad redan ändras bara måendet, så att ett loggat pass ligger
+ * kvar. Annars skapas raden utan pass; passet loggas efteråt under Mående.
+ */
+export async function saveReadiness(
+  input: SaveReadinessInput,
+): Promise<SaveCheckinResult> {
+  await requireSessionUser();
+
+  if (!input.performedOn) return { ok: false, error: "Datum saknas." };
+  for (const value of [
+    input.sleep,
+    input.fatigue,
+    input.soreness,
+    input.stress,
+  ]) {
+    if (!Number.isInteger(value) || value < 1 || value > 5) {
+      return { ok: false, error: "Svara på alla fyra frågorna, 1 till 5." };
+    }
+  }
+
+  const wellness = {
+    sleep: input.sleep,
+    fatigue: input.fatigue,
+    soreness: input.soreness,
+    stress: input.stress,
+  };
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("adept_checkins")
+    .select("id")
+    .eq("adept_id", input.adeptId)
+    .eq("performed_on", input.performedOn)
+    .maybeSingle();
+
+  const { data, error } = existing
+    ? await supabase
+        .from("adept_checkins")
+        .update(wellness)
+        .eq("id", existing.id)
+        .select("id")
+        .single()
+    : await supabase
+        .from("adept_checkins")
+        .insert({
+          adept_id: input.adeptId,
+          performed_on: input.performedOn,
+          ...wellness,
+        })
+        .select("id")
+        .single();
+
+  if (error || !data) {
+    return {
+      ok: false,
+      error: `Kunde inte spara incheckningen: ${error?.message ?? "okänt fel"}`,
+    };
+  }
+
+  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
+  revalidatePath(routes.dashboard);
+  return { ok: true, id: data.id };
+}

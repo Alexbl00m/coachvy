@@ -13,7 +13,7 @@
  */
 
 import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
-import { zoneOf } from "@/lib/workouts/intensity";
+import { zoneOf, type IntensityZone } from "@/lib/workouts/intensity";
 import {
   flattenWorkout,
   type Workout,
@@ -49,6 +49,44 @@ export function sessionGoal(
   workout: Pick<Workout, "basis" | "blocks">,
   reference: number,
 ): SessionGoal | null {
+  const time: Record<SessionGoal, number> = { lugn: 0, medel: 0, hög: 0 };
+  for (const [zone, seconds] of mainZoneTime(workout, reference)) {
+    time[goalOfZone(zone)] += seconds;
+  }
+
+  let best: SessionGoal | null = null;
+  for (const goal of ["lugn", "medel", "hög"] as SessionGoal[]) {
+    if (time[goal] <= 0) continue;
+    if (!best || time[goal] >= time[best]) best = goal;
+  }
+  return best;
+}
+
+/**
+ * Huvuddelens zon: den med mest tid, och vid lika den högre. Det är zonen
+ * passet handlar om – tröskelzonen i ett tröskelpass, distanszonen i ett
+ * distanspass med stegringar.
+ */
+export function mainZone(
+  workout: Pick<Workout, "basis" | "blocks">,
+  reference: number,
+): IntensityZone | null {
+  let best: IntensityZone | null = null;
+  let most = 0;
+  for (const [zone, seconds] of mainZoneTime(workout, reference)) {
+    if (seconds > most || (seconds === most && best !== null && zone > best)) {
+      best = zone;
+      most = seconds;
+    }
+  }
+  return best;
+}
+
+/** Tiden per zon i passets huvuddel, enligt reglerna ovan. */
+function mainZoneTime(
+  workout: Pick<Workout, "basis" | "blocks">,
+  reference: number,
+): Map<IntensityZone, number> {
   const steps = flattenWorkout(workout as Workout).map((f) => f.step);
   const secondsOf = (step: WorkoutStep) => {
     if (step.durationSeconds && step.durationSeconds > 0)
@@ -77,22 +115,15 @@ export function sessionGoal(
             s.kind !== "nedvarvning" &&
             s.kind !== "vila",
         );
-  if (main.length === 0) return null;
 
-  const time: Record<SessionGoal, number> = { lugn: 0, medel: 0, hög: 0 };
+  const time = new Map<IntensityZone, number>();
   for (const step of main) {
     const seconds = secondsOf(step);
     if (!(seconds > 0)) continue;
-    const mid = (step.low + step.high) / 2;
-    time[goalOfZone(zoneOf(mid, workout.basis))] += seconds;
+    const zone = zoneOf((step.low + step.high) / 2, workout.basis);
+    time.set(zone, (time.get(zone) ?? 0) + seconds);
   }
-
-  let best: SessionGoal | null = null;
-  for (const goal of ["lugn", "medel", "hög"] as SessionGoal[]) {
-    if (time[goal] <= 0) continue;
-    if (!best || time[goal] >= time[best]) best = goal;
-  }
-  return best;
+  return time;
 }
 
 export type Distribution = Record<SessionGoal, number> & { total: number };

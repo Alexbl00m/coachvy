@@ -65,11 +65,8 @@ export default async function PlanerPage({
 
   return (
     <>
-      <PageHeader
-        title="Säsongsplan"
-        description="Perioder, tävlingar och tester på en tidslinje."
-      />
       <SeasonPlan
+        header={{ eyebrow: "Säsongsplan" }}
         adept={adept}
         canPlan={adept.profile_id === user.id && adept.coach_id === null}
         basePath={routes.plans}
