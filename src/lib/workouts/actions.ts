@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { MAX_DATES } from "@/lib/calendar/recurrence";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import { requireWorkoutAuthor } from "./access";
@@ -136,4 +137,57 @@ export async function scheduleWorkout(
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);
   return { ok: true };
+}
+
+/**
+ * Kopierar ett sparat pass till fler datum – samma pass varje onsdag i fyra
+ * veckor. Varje kopia är ett eget pass som går att ändra eller flytta för
+ * sig; originalet rörs inte.
+ */
+export async function copyWorkoutToDates(
+  id: string,
+  adeptId: string,
+  dates: string[],
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  const access = await requireWorkoutAuthor(adeptId);
+  if (!access.ok) return access;
+
+  const unique = [...new Set(dates)].sort();
+  if (
+    unique.length === 0 ||
+    unique.length > MAX_DATES ||
+    unique.some((d) => !/^\d{4}-\d{2}-\d{2}$/.test(d))
+  ) {
+    return { ok: false, error: "Välj minst ett datum." };
+  }
+
+  const supabase = await createClient();
+  const { data: original, error: readError } = await supabase
+    .from("workouts")
+    .select(
+      "title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt",
+    )
+    .eq("id", id)
+    .eq("adept_id", adeptId)
+    .maybeSingle();
+  if (readError || !original) {
+    return { ok: false, error: "Passet hittades inte." };
+  }
+
+  const { error } = await supabase.from("workouts").insert(
+    unique.map((date) => ({
+      ...original,
+      adept_id: adeptId,
+      scheduled_for: date,
+      created_by: access.user.id,
+    })),
+  );
+  if (error) {
+    return { ok: false, error: `Kunde inte kopiera passet: ${error.message}` };
+  }
+
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
+  revalidatePath(routes.calendar);
+  revalidatePath(routes.dashboard);
+  return { ok: true, count: unique.length };
 }

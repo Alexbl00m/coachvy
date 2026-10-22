@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
+import { MAX_DATES } from "@/lib/calendar/recurrence";
 import { routes } from "@/lib/routes";
 import { saveWorkout } from "@/lib/workouts/actions";
 import { requireWorkoutAuthor } from "@/lib/workouts/access";
@@ -18,10 +19,15 @@ export type ScheduleLibraryInput = {
   level: string | null;
   /** YYYY-MM-DD. */
   date: string;
+  /**
+   * Fler datum för ett återkommande pass (calendar/recurrence.ts). Utan
+   * läggs passet bara på `date`.
+   */
+  dates?: string[];
 };
 
 export type ScheduleLibraryResult =
-  | { ok: true; id: string; note: string | null }
+  | { ok: true; id: string; count: number; note: string | null }
   | { ok: false; error: string };
 
 /**
@@ -38,7 +44,12 @@ export async function scheduleLibrarySession(
   const access = await requireWorkoutAuthor(input.adeptId);
   if (!access.ok) return access;
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
+  const dates = [...new Set(input.dates?.length ? input.dates : [input.date])];
+  if (
+    dates.length === 0 ||
+    dates.length > MAX_DATES ||
+    dates.some((d) => !/^\d{4}-\d{2}-\d{2}$/.test(d))
+  ) {
     return { ok: false, error: "Välj ett datum." };
   }
 
@@ -73,18 +84,28 @@ export async function scheduleLibrarySession(
   );
   if (!converted.ok) return converted;
 
-  const saved = await saveWorkout({
-    adeptId: input.adeptId,
-    workout: converted.workout,
-    reference: context.reference ?? 0,
-    critical: context.balance?.critical ?? null,
-    reserve: context.balance?.reserve ?? null,
-    prompt: null,
-    scheduledFor: input.date,
-  });
-  if (!saved.ok) return saved;
+  // Ett pass per datum, omräknat en gång: varje kopia går att ändra för sig.
+  let firstId: string | null = null;
+  for (const date of dates.sort()) {
+    const saved = await saveWorkout({
+      adeptId: input.adeptId,
+      workout: converted.workout,
+      reference: context.reference ?? 0,
+      critical: context.balance?.critical ?? null,
+      reserve: context.balance?.reserve ?? null,
+      prompt: null,
+      scheduledFor: date,
+    });
+    if (!saved.ok) return saved;
+    firstId ??= saved.id;
+  }
 
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);
-  return { ok: true, id: saved.id, note: converted.note };
+  return {
+    ok: true,
+    id: firstId as string,
+    count: dates.length,
+    note: converted.note,
+  };
 }

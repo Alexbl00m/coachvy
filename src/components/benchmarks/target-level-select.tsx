@@ -27,7 +27,7 @@ export function TargetLevelSelect({
       </label>
       <Select
         id="malniva"
-        className="h-8 w-auto py-1 text-[0.8125rem]"
+        className="h-8 w-auto! py-1! text-[0.8125rem]"
         value={value ?? ""}
         disabled={pending}
         onChange={(event) => {

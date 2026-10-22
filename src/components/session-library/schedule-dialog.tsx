@@ -5,12 +5,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarPlus } from "lucide-react";
 
+import {
+  datesFor,
+  RepeatPicker,
+  repeatFor,
+  type Repeat,
+} from "@/components/calendar/repeat-picker";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, Select } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { routes } from "@/lib/routes";
-import { longDate, todayIso, weekdayName } from "@/lib/season/season";
+import {
+  longDate,
+  shortDate,
+  todayIso,
+  weekdayName,
+} from "@/lib/season/season";
 import {
   amountText,
   levelOf,
@@ -24,6 +35,8 @@ type Done = {
   adeptId: string;
   adeptName: string;
   date: string;
+  /** Alla datum, när passet lades in återkommande. */
+  dates: string[];
   level: LibraryLevelKey | null;
   note: string | null;
 };
@@ -58,6 +71,9 @@ export function ScheduleDialog({
   );
   const [level, setLevel] = useState<LibraryLevelKey | null>(initialLevel);
   const [date, setDate] = useState(initialDate ?? todayIso());
+  const [repeat, setRepeat] = useState<Repeat>(() =>
+    repeatFor(initialDate ?? todayIso()),
+  );
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Done | null>(null);
 
@@ -77,6 +93,7 @@ export function ScheduleDialog({
   const chosen = hasLevels ? (level ?? "B") : null;
   const locked = initialAdeptId !== null;
   const adeptName = adepts.find((a) => a.id === adeptId)?.full_name ?? "";
+  const dates = datesFor(date, repeat);
 
   const builderHref = () => {
     const params = new URLSearchParams({
@@ -99,6 +116,7 @@ export function ScheduleDialog({
         adeptId,
         level: chosen,
         date,
+        dates,
       });
       if (!result.ok) {
         setError(result.error);
@@ -108,7 +126,8 @@ export function ScheduleDialog({
         id: result.id,
         adeptId,
         adeptName,
-        date,
+        date: dates[0] ?? date,
+        dates,
         level: chosen,
         note: result.note,
       });
@@ -137,8 +156,9 @@ export function ScheduleDialog({
         {done ? (
           <div className="space-y-3">
             <p role="status" className="text-sm text-text">
-              Inlagt för {done.adeptName}, {weekdayName(done.date)}{" "}
-              {longDate(done.date, todayIso())}
+              {done.dates.length > 1
+                ? `Inlagt för ${done.adeptName}: ${done.dates.length} pass, ${weekdayName(done.date)} ${shortDate(done.date)} till ${weekdayName(done.dates[done.dates.length - 1])} ${shortDate(done.dates[done.dates.length - 1])}`
+                : `Inlagt för ${done.adeptName}, ${weekdayName(done.date)} ${longDate(done.date, todayIso())}`}
               {done.level ? `, nivå ${done.level}` : ""}.
             </p>
             {done.note && (
@@ -233,6 +253,8 @@ export function ScheduleDialog({
               </Field>
             </div>
 
+            <RepeatPicker start={date} value={repeat} onChange={setRepeat} />
+
             <p className="text-[0.75rem] text-text-subtle">
               Zonerna räknas om mot adeptens tröskel i passets gren – löpzonerna
               mot formuppskattningen. Passet går att ändra i passbyggaren
@@ -248,11 +270,15 @@ export function ScheduleDialog({
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 onClick={submit}
-                disabled={pending || !adeptId}
+                disabled={pending || !adeptId || dates.length === 0}
                 className="font-semibold"
               >
                 <CalendarPlus aria-hidden className="size-4" />
-                {pending ? "Lägger in…" : "Lägg i kalendern"}
+                {pending
+                  ? "Lägger in…"
+                  : dates.length > 1
+                    ? `Lägg in ${dates.length} pass`
+                    : "Lägg i kalendern"}
               </Button>
               {adeptId ? (
                 <Link
