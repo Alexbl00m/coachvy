@@ -7,7 +7,7 @@ import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { BikeFitRow } from "@/lib/types/database";
 import type { BikeFitAnalysis } from "./fit";
-import { BUCKET } from "./queries";
+import { BUCKET } from "./storage";
 import {
   DISCIPLINES,
   TEMPLATES,

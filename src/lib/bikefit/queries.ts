@@ -1,8 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { BikeFitRow } from "@/lib/types/database";
-
-export const BUCKET = "bikefits";
+import { BUCKET } from "./storage";
 
 /** En adepts fits, nyast först. Databasen avgör vad den inloggade ser. */
 export async function listFits(adeptId: string): Promise<BikeFitRow[]> {

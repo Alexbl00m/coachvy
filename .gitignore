@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MediaPipes wasm, kopieras ur node_modules före dev och build
+/public/mediapipe/

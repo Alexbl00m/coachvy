@@ -14,9 +14,11 @@ import {
   assessFit,
   DISCIPLINES,
   TEMPLATES,
+  type Assessment,
   type Bands,
   type Discipline,
 } from "@/lib/bikefit/templates";
+import type { RenderedMedia } from "@/lib/bikefit/render";
 import { routes } from "@/lib/routes";
 import type { BikeFitRow } from "@/lib/types/database";
 import { VERDICT_TEXT } from "./verdict-style";
@@ -57,8 +59,21 @@ export type VideoResult = {
   angles: Record<AngleKey, number | null>;
   legs: { thighMm: number | null; shankMm: number | null };
   analysis: BikeFitAnalysis;
-  /** Filerna att ladda upp när fiten sparats. */
-  files: { video: Blob | null; frame: Blob | null };
+  /**
+   * Analysvideon och bilden från nedre dödläget för en bedömning. Spelas in
+   * igen om bedömningen ändrats sedan sist, så att färgerna i videon alltid
+   * följer samma gränser som texten.
+   */
+  media: (assessment: Assessment) => Promise<RenderedMedia>;
+};
+
+export type VideoPanelProps = {
+  onResult: (r: VideoResult | null) => void;
+  /** Bedömningen som den ser ut i formuläret just nu. */
+  assessment: Assessment;
+  /** Vevlängden ur cykelns mått, för skalan i videon. */
+  crankMm: number | null;
+  title: string;
 };
 
 /**
@@ -80,9 +95,13 @@ export function FitForm({
   /** Förra fiten: måtten fylls i därifrån som utgångsläge. */
   previous?: BikeFitRow | null;
   /** Videoanalysen, när den finns; ger vinklarna i stället för fälten. */
-  videoPanel?: (onResult: (r: VideoResult | null) => void) => ReactNode;
+  videoPanel?: (props: VideoPanelProps) => ReactNode;
   /** Efter sparandet, innan sidan byts – för filerna. */
-  onSaved?: (id: string, video: VideoResult | null) => Promise<string | null>;
+  onSaved?: (
+    id: string,
+    video: VideoResult | null,
+    assessment: Assessment,
+  ) => Promise<string | null>;
 }) {
   const router = useRouter();
   const ids = { date: useId(), bike: useId() };
@@ -124,6 +143,9 @@ export function FitForm({
   const [changes, setChanges] = useState(initial?.changes ?? "");
   const [video, setVideo] = useState<VideoResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // En ny fit som sparats men vars filer inte kom upp: nästa försök ändrar
+  // den i stället för att skapa en till.
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const template = TEMPLATES[discipline];
@@ -191,7 +213,7 @@ export function FitForm({
     }
     start(async () => {
       const result = await saveFit({
-        id: initial?.id,
+        id: initial?.id ?? savedId ?? undefined,
         adeptId,
         performedOn: date,
         discipline,
@@ -211,9 +233,14 @@ export function FitForm({
         return;
       }
       if (onSaved) {
-        const uploadError = await onSaved(result.id, fromVideo ? video : null);
+        const uploadError = await onSaved(
+          result.id,
+          fromVideo ? video : null,
+          preview,
+        );
         if (uploadError) {
-          setError(uploadError);
+          setSavedId(result.id);
+          setError(`Fiten är sparad, men ${uploadError} Försök igen.`);
           return;
         }
       }
@@ -304,7 +331,12 @@ export function FitForm({
         )}
 
         {method === "video" && videoPanel ? (
-          videoPanel(setVideo)
+          videoPanel({
+            onResult: setVideo,
+            assessment: preview,
+            crankMm: num(measures.crank_length ?? ""),
+            title: `${template.label}${bike ? ` · ${bike}` : ""}`,
+          })
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ANGLES.map((a) => (

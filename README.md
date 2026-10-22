@@ -2093,6 +2093,52 @@ Menyn är byggd efter arbetet, inte efter verktygen (`src/lib/nav.ts`).
   som har en egen adeptsida – läget, säsongen, träningen, styrkan,
   progressionen – leder dit.
 
+## Bikefit
+
+Sittpositionen mätt och sparad per adept, för uppföljning
+(`/app/adepter/<id>/tester/bikefit`). Coachen väljer gren – landsväg, gravel,
+tempo/triathlon eller mountainbike – och får mallens band, mått och checklista
+(`src/lib/bikefit/templates.ts`). Vinklarna kommer ur en sidovideo eller förs
+in för hand; en coach med egen erfarenhet kan också ändra banden. Varje fit
+jämförs med den förra i samma gren: vinklar och cykelns mått med skillnaden
+sedan sist, och fältet *Ändrat vid den här fiten* säger vad som flyttades.
+Adepten ser en fit först när coachen delar den (`shared_at`); databasen avgör
+det för både raden och filerna.
+
+### Mätkedjan
+
+Ren och modelloberoende (`src/lib/bikefit/chain.ts`), i pixlar så att bildens
+format inte förvränger vinklarna. Bara bilder där cyklisten trampar räknas,
+utan första och sista sekunden. Nedre dödläget hittas per varv som vertex i en
+parabel över en kvarts trampperiod på ojämnade värden, och medianen över varven
+blir knäböjningen. Bildfrekvensen läses ur filen (`mp4.ts`), inte ur
+uppspelningen. Kedjan är prövad på syntetiska klipp med 35° facit, med brus och
+olika faser: medelfelet 0,2–0,3°, värst 0,6° (`chain.test.ts`).
+
+Bedömningen (`assessFit`): knäböjningen 30–40° är grön, inom ±2,5° gul, annars
+röd – samma gräns för färg och text, och bara rött ger ett förslag att flytta
+sadeln, räknat med cosinussatsen ur adeptens ben (eller videons, eller
+standardben som det då står). Bål och armbåge jämförs med erfarenhetsvärden;
+axel och höft mäts men bedöms inte. Ett värde som inte gick att mäta står som
+"inte mätbart".
+
+### Videon i webbläsaren
+
+MediaPipe Pose Landmarker (Apache 2.0) körs i coachens webbläsare
+(`pose.ts`), bild för bild utan spårning så att punkterna inte jämnas ut över
+tid. wasm-filerna kopieras ur `node_modules` till `public/mediapipe/<version>`
+före dev och build (`scripts/copy-mediapipe.mjs`); modellen hämtas från
+Googles lagring. Originalvideon laddas aldrig upp. Det som sparas i den privata
+hinken `bikefits` (`<adept>/<fit>/`) är analysvideon med overlay – skelett i
+omdömets färg, knävinkeln live, vinklarna, mätkvaliteten, knäkurvan med
+målband och nedre dödlägen, resultatet – och bilden från nedre dödläget
+(`overlay.ts`, `render.ts`). Videon spelas in i realtid med MediaRecorder, MP4
+där webbläsaren kan och annars WebM. Ändras bedömningen efter inspelningen
+spelas videon in igen när fiten sparas, så att färgerna följer texten.
+
+Vad mätningen inte ser står i rapporten: knäspårning och klossar kräver en
+inspelning framifrån, smärta kräver en människa, och en sak ändras i taget.
+
 ## Nästa steg
 
 Kända luckor:
