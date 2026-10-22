@@ -62,6 +62,7 @@ export const ADEPT_SECTIONS = {
   tester: "tester",
   progression: "tester/progression",
   varden: "tester/varden",
+  bikefit: "tester/bikefit",
   maende: "maende",
   meddelanden: "meddelanden",
   profil: "profil",

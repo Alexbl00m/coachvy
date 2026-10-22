@@ -33,6 +33,7 @@ const ADEPT_PAGES: [AdeptSection, string, string[]][] = [
   ["tester", "Tester", ["testtillfällen", "laktat"]],
   ["progression", "Progression", ["tester", "utveckling"]],
   ["varden", "Enstaka värden", ["tester", "testresultat"]],
+  ["bikefit", "Bikefit", ["sittposition", "sadelhöjd", "cykel", "video"]],
   ["maende", "Mående", ["incheckning", "återhämtning", "belastning"]],
   ["meddelanden", "Meddelanden", ["chatt"]],
   ["profil", "Profil", ["uppgifter", "inbjudan", "samtycke"]],

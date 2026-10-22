@@ -2,6 +2,7 @@ import {
   Activity,
   BarChart3,
   BicepsFlexed,
+  Bike,
   Bot,
   CalendarDays,
   ChartBarBig,
@@ -161,6 +162,7 @@ function adeptSections(adeptId: string | null): NavSection[] {
             { label: "Progression", href: routes.progression, icon: BarChart3 },
             ...own("tester", "Tester", FlaskConical),
             ...own("varden", "Enstaka värden", FlaskConical),
+            ...own("bikefit", "Bikefit", Bike),
           ],
         },
         {

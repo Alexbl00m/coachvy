@@ -11,6 +11,8 @@ import type {
 } from "@/lib/activities/analysis";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 import type { MultisportSummary } from "@/lib/activities/multisport";
+import type { BikeFitAnalysis } from "@/lib/bikefit/fit";
+import type { Bands, Discipline } from "@/lib/bikefit/templates";
 import type {
   PlanLibraryFunctions,
   PlanLibraryTables,
@@ -258,6 +260,32 @@ export type StrengthSessionRow = {
   note: string | null;
   session_rpe: number | null;
   created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** En bikefit: grenens band, vinklarna, cykelns mått och analysvideon. */
+export type BikeFitRow = {
+  id: string;
+  adept_id: string;
+  coach_id: string | null;
+  performed_on: string;
+  discipline: Discipline;
+  bike: string | null;
+  method: "video" | "manuell";
+  angles: Partial<
+    Record<"knee" | "trunk" | "elbow" | "shoulder" | "hip", number | null>
+  >;
+  bands: Bands;
+  legs: { thighMm?: number | null; shankMm?: number | null; source?: "video" | "coach" };
+  measures: Record<string, string | number | null>;
+  analysis: BikeFitAnalysis | null;
+  video_path: string | null;
+  frame_path: string | null;
+  checklist: Record<string, boolean>;
+  notes: string | null;
+  changes: string | null;
+  shared_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -597,6 +625,16 @@ export type Database = {
         Insert: Pick<CoachCallRow, "adept_id" | "starts_at" | "url"> &
           Partial<CoachCallRow>;
         Update: Partial<CoachCallRow>;
+        Relationships: [];
+      };
+      bike_fits: {
+        Row: BikeFitRow;
+        Insert: Pick<
+          BikeFitRow,
+          "adept_id" | "discipline" | "method" | "bands"
+        > &
+          Partial<BikeFitRow>;
+        Update: Partial<BikeFitRow>;
         Relationships: [];
       };
       activity_summaries: {

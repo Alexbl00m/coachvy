@@ -18,6 +18,7 @@ export default async function AdeptTestsLayout({
           { href: adeptHref(id, "tester"), label: "Testtillfällen" },
           { href: adeptHref(id, "progression"), label: "Progression" },
           { href: adeptHref(id, "varden"), label: "Enstaka värden" },
+          { href: adeptHref(id, "bikefit"), label: "Bikefit" },
         ]}
       />
       {children}
