@@ -45,7 +45,7 @@ export default async function AdeptProfilePage({
             <p className="text-sm text-text">
               {formatLastActive(adept.last_active_at)}
             </p>
-            <p className="mt-1 text-[12px] text-text-subtle">
+            <p className="mt-1 text-[0.75rem] text-text-subtle">
               Uppdateras när adepten loggar in.
             </p>
           </Card>

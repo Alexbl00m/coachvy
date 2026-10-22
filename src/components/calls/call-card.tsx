@@ -66,8 +66,8 @@ export function CallCard({
             <span
               className={
                 live
-                  ? "ml-2 text-[12px] font-medium text-good"
-                  : "ml-2 text-[12px] font-normal text-text-muted"
+                  ? "ml-2 text-[0.75rem] font-medium text-good"
+                  : "ml-2 text-[0.75rem] font-normal text-text-muted"
               }
             >
               {STATE_TEXT[state]}
@@ -76,14 +76,14 @@ export function CallCard({
           <p
             className={
               state === "avbokat"
-                ? "text-[13px] text-text-subtle line-through"
-                : "text-[13px] text-text-muted"
+                ? "text-[0.8125rem] text-text-subtle line-through"
+                : "text-[0.8125rem] text-text-muted"
             }
           >
             {callWhen(call.starts_at)} · {call.duration_minutes} min
           </p>
           {call.topic && (
-            <p className="mt-0.5 text-[13px] text-text">{call.topic}</p>
+            <p className="mt-0.5 text-[0.8125rem] text-text">{call.topic}</p>
           )}
         </div>
       </div>
@@ -119,7 +119,7 @@ export function CallCard({
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-[13px] text-bad">
+        <p role="alert" className="mt-2 text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

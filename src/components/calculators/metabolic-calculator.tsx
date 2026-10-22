@@ -130,7 +130,7 @@ export function MetabolicCalculator() {
                     aria-pressed={mode === key}
                     onClick={() => setMode(key)}
                     className={cn(
-                      "rounded-md border px-2.5 py-1 text-[12px] capitalize transition-colors",
+                      "rounded-md border px-2.5 py-1 text-[0.75rem] capitalize transition-colors",
                       mode === key
                         ? "border-text-subtle bg-surface-3 font-medium text-text"
                         : "border-line-strong text-text-muted hover:border-accent hover:text-text",
@@ -204,10 +204,10 @@ export function MetabolicCalculator() {
 
           {mode === "löpning" && (
             <div className="mt-5 border-t border-line pt-4">
-              <p className="text-[13px] font-medium text-text">
+              <p className="text-[0.8125rem] font-medium text-text">
                 Löpekonomi ur ett löpbandstest
               </p>
-              <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
+              <p className="mt-1 text-[0.8125rem] leading-relaxed text-text-muted">
                 Syreupptaget vid en jämn fart under tröskeln. Löpekonomin skiljer
                 mycket mellan löpare, så ett uppmätt värde gör mer för
                 precisionen än något annat här.
@@ -233,7 +233,7 @@ export function MetabolicCalculator() {
                   type="button"
                   disabled={!(derivedEconomy > 0)}
                   onClick={() => set({ runningEconomy: String(Math.round(derivedEconomy)) })}
-                  className="mb-[22px] rounded-md border border-line-strong px-3 py-2 text-[13px] text-text transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mb-[1.375rem] rounded-md border border-line-strong px-3 py-2 text-[0.8125rem] text-text transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {derivedEconomy > 0 ? `Använd ${Math.round(derivedEconomy)}` : "Använd"}
                 </button>
@@ -248,7 +248,7 @@ export function MetabolicCalculator() {
               <button
                 type="button"
                 onClick={() => setShowConstants((v) => !v)}
-                className="text-[12px] font-medium text-text-muted hover:text-text"
+                className="text-[0.75rem] font-medium text-text-muted hover:text-text"
               >
                 {showConstants ? "Dölj" : "Visa"}
               </button>
@@ -404,7 +404,7 @@ export function MetabolicCalculator() {
             />
           )}
 
-          <p className="text-[13px] leading-relaxed text-text-subtle">
+          <p className="text-[0.8125rem] leading-relaxed text-text-subtle">
             Modellen räknar upp till{" "}
             {mode === "cykling"
               ? `${Math.round(top)} W`
@@ -415,7 +415,7 @@ export function MetabolicCalculator() {
           </p>
 
           {mode === "löpning" && (
-            <p className="text-[13px] leading-relaxed text-text-subtle">
+            <p className="text-[0.8125rem] leading-relaxed text-text-subtle">
               I löpning avgör löpekonomin hur fort en viss syremängd bär, och
               den kan skilja 20–30 % mellan löpare på samma fart – en uppskattad
               löpekonomi flyttar alla tempon lika mycket. VLamax ska vara ett

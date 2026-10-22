@@ -153,7 +153,7 @@ export function FitImport({
           <span className="font-medium text-text">
             {busy ? "Läser filerna …" : "Hämta insatserna ur cykeldatorn"}
           </span>
-          <span className="block text-[12px] text-text-subtle">
+          <span className="block text-[0.75rem] text-text-subtle">
             Välj eller släpp en .fit-fil per testdag – från Garmin, Wahoo,
             Hammerhead eller Zwift. Filen läses här i webbläsaren och laddas
             aldrig upp.
@@ -173,7 +173,7 @@ export function FitImport({
       </label>
 
       {problems.length > 0 && (
-        <ul className="space-y-1 text-[13px] text-text-muted">
+        <ul className="space-y-1 text-[0.8125rem] text-text-muted">
           {problems.map((p) => (
             <li key={p}>{p}</li>
           ))}
@@ -188,7 +188,7 @@ export function FitImport({
               style={{ minWidth: 560 }}
             >
               <thead>
-                <tr className="border-b border-line text-left text-[12px] uppercase tracking-[0.08em] text-text-muted">
+                <tr className="border-b border-line text-left text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                   <th className="px-3 py-2 font-medium">Använd</th>
                   <th className="px-3 py-2 font-medium">Längd</th>
                   <th className="px-3 py-2 text-right font-medium">
@@ -229,12 +229,12 @@ export function FitImport({
                           {slot.label}
                         </span>
                         {f && (
-                          <span className="ml-2 text-[12px] text-text-subtle tabular-nums">
+                          <span className="ml-2 text-[0.75rem] text-text-subtle tabular-nums">
                             {formatDuration(f.seconds)}
                           </span>
                         )}
                         {f && !f.isolated && (
-                          <span className="mt-1 flex items-start gap-1.5 text-[12px] text-text-muted">
+                          <span className="mt-1 flex items-start gap-1.5 text-[0.75rem] text-text-muted">
                             <TriangleAlert
                               aria-hidden
                               className="mt-0.5 size-3.5 shrink-0 text-text-muted"
@@ -245,12 +245,12 @@ export function FitImport({
                           </span>
                         )}
                         {!f && (
-                          <span className="ml-2 text-[12px] text-text-subtle">
+                          <span className="ml-2 text-[0.75rem] text-text-subtle">
                             hittades inte
                           </span>
                         )}
                         {f?.laps && (
-                          <span className="mt-1 block text-[12px] text-text-subtle tabular-nums">
+                          <span className="mt-1 block text-[0.75rem] text-text-subtle tabular-nums">
                             {f.laps.length} varv:{" "}
                             {f.laps
                               .map((l) => formatDuration(l.seconds))
@@ -258,7 +258,7 @@ export function FitImport({
                           </span>
                         )}
                         {f?.pacing && (
-                          <span className="mt-1 block text-[12px] text-text-muted">
+                          <span className="mt-1 block text-[0.75rem] text-text-muted">
                             {f.pacing}
                           </span>
                         )}
@@ -289,7 +289,7 @@ export function FitImport({
             >
               Fyll i {count} {count === 1 ? "insats" : "insatser"}
             </Button>
-            <span className="text-[12px] text-text-subtle">
+            <span className="text-[0.75rem] text-text-subtle">
               Ur {fileCount} pass. Raderna går att ändra efteråt.
             </span>
           </div>

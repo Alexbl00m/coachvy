@@ -37,7 +37,7 @@ export function AdeptBottomNav({ adeptId }: { adeptId: string | null }) {
                 href={item.href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "flex h-15 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors [-webkit-tap-highlight-color:transparent]",
+                  "flex h-15 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors [-webkit-tap-highlight-color:transparent]",
                   current ? "text-text" : "text-text-subtle hover:text-text",
                 )}
               >
@@ -86,7 +86,7 @@ export function AdeptSectionNav({ adeptId }: { adeptId: string | null }) {
             href={child.href}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] transition-colors",
+              "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[0.8125rem] transition-colors",
               selected
                 ? "bg-surface-3 font-medium text-text"
                 : "text-text-muted hover:bg-surface-2 hover:text-text",

@@ -107,7 +107,7 @@ function Bar({
           style={{ left: `${marker}%` }}
         />
       </div>
-      <div className="mt-3 flex gap-1 font-mono text-[11px] leading-4 text-text-subtle">
+      <div className="mt-3 flex gap-1 font-mono text-[0.6875rem] leading-4 text-text-subtle">
         {segments.map((s, i) => (
           <span
             key={i}

@@ -309,7 +309,7 @@ export function LevelChart({
         {activeColumn && activeColumn.detail && (
           <div
             role="status"
-            className="pointer-events-none absolute top-1 z-10 w-max max-w-[240px] rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg"
+            className="pointer-events-none absolute top-1 z-10 w-max max-w-[15rem] rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg"
             style={
               tipLeft > width * 0.6
                 ? { right: width - tipLeft + 12 }
@@ -319,7 +319,7 @@ export function LevelChart({
             <p className="text-sm font-semibold text-text tabular-nums">
               {activeColumn.value}
               {activeColumn.unit && (
-                <span className="ml-1 text-[12px] font-normal text-text-muted">
+                <span className="ml-1 text-[0.75rem] font-normal text-text-muted">
                   {activeColumn.unit}
                 </span>
               )}

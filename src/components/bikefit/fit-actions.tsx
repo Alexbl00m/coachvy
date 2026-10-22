@@ -67,7 +67,7 @@ export function FitActions({
         Ta bort
       </Button>
       {error && (
-        <p role="alert" className="w-full text-[13px] text-bad">
+        <p role="alert" className="w-full text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

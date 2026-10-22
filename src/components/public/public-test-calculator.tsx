@@ -39,7 +39,7 @@ export function PublicTestCalculator() {
     <div className="space-y-6">
       {/* Bara i utskriften: rubrik med namn, protokoll och datum. */}
       <div className="hidden print:block">
-        <p className="text-[13px] font-medium uppercase tracking-[0.12em] text-accent">
+        <p className="text-[0.8125rem] font-medium uppercase tracking-[0.12em] text-accent">
           {site.name}
         </p>
         <h2 className="mt-1 text-2xl font-semibold text-text">
@@ -97,7 +97,7 @@ export function PublicTestCalculator() {
           </div>
 
           {calc.spec && (
-            <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
+            <p className="mt-4 border-t border-line pt-3 text-[0.75rem] leading-relaxed text-text-subtle">
               {calc.spec.howTo}
             </p>
           )}
@@ -125,14 +125,14 @@ export function PublicTestCalculator() {
           <Printer aria-hidden className="size-4" />
           Skriv ut eller spara som PDF
         </Button>
-        <span className="text-[13px] text-text-subtle">
+        <span className="text-[0.8125rem] text-text-subtle">
           {canPrint
             ? "Inget sparas här – ta med dig resultatet som fil."
             : `Fyll i minst ${calc.spec?.minEfforts ?? 2} rader så räknas testet ut.`}
         </span>
       </div>
 
-      <p className="hidden text-[11px] text-text-subtle print:block">
+      <p className="hidden text-[0.6875rem] text-text-subtle print:block">
         Beräknat med {site.name}s öppna testverktyg · {site.website}
       </p>
     </div>

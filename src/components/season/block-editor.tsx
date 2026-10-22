@@ -254,17 +254,17 @@ export function BlockEditor({
                   <p className="text-sm font-medium text-text">
                     {block.name?.trim() || phaseName(block.phase)}
                     {block.name?.trim() && (
-                      <span className="ml-2 text-[12px] font-normal text-text-subtle">
+                      <span className="ml-2 text-[0.75rem] font-normal text-text-subtle">
                         {PHASE_SHORT[block.phase]}
                       </span>
                     )}
                     {now && (
-                      <span className="ml-2 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-text">
+                      <span className="ml-2 rounded bg-surface-3 px-1.5 py-0.5 text-[0.6875rem] font-medium text-text">
                         pågår
                       </span>
                     )}
                   </p>
-                  <p className="text-[12px] text-text-subtle tabular-nums">
+                  <p className="text-[0.75rem] text-text-subtle tabular-nums">
                     {dateRange(block.starts_on, block.ends_on, today)} ·{" "}
                     {weekSpan(block.starts_on, block.ends_on)} ·{" "}
                     {lengthText(length)}
@@ -272,7 +272,7 @@ export function BlockEditor({
                       ` · ${lengthText(daysBetween(today, block.ends_on))} kvar`}
                   </p>
                   {block.focus && (
-                    <p className="mt-0.5 text-[13px] text-text-muted">
+                    <p className="mt-0.5 text-[0.8125rem] text-text-muted">
                       {block.focus}
                     </p>
                   )}
@@ -318,7 +318,7 @@ export function BlockEditor({
       )}
 
       {saved && (
-        <p role="status" className="mt-3 text-[13px] text-good">
+        <p role="status" className="mt-3 text-[0.8125rem] text-good">
           {saved}
         </p>
       )}
@@ -467,7 +467,7 @@ export function BlockEditor({
             </Field>
           </div>
 
-          <div className="space-y-1.5 text-[13px]">
+          <div className="space-y-1.5 text-[0.8125rem]">
             <p className="text-text-muted tabular-nums">
               {lengthText(days)} · {weekSpan(draft.startsOn, draft.endsOn)} ·{" "}
               {longDate(draft.startsOn, today)} – {weekdayName(draft.endsOn)}{" "}

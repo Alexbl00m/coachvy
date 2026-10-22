@@ -83,13 +83,13 @@ export function DayContent({
           <ItemLink href={adeptHref(race.adept_id, "plan")}>
             <PriorityBadge
               priority={race.priority}
-              className="size-5 text-[11px]"
+              className="size-5 text-[0.6875rem]"
             />
             <span className="min-w-0">
               <span className="block text-sm font-medium text-text">
                 {race.name}
               </span>
-              <span className="block text-[12px] text-text-subtle">
+              <span className="block text-[0.75rem] text-text-subtle">
                 {who(race.adept_name)}
                 {[race.distance, race.target && `mål: ${race.target}`]
                   .filter(Boolean)
@@ -114,7 +114,7 @@ export function DayContent({
               <span className="block text-sm font-medium text-text">
                 Videosamtal {callTime(c.starts_at)}
               </span>
-              <span className="block text-[12px] text-text-subtle">
+              <span className="block text-[0.75rem] text-text-subtle">
                 {who(c.adeptName)}
                 {c.duration_minutes} min
                 {c.topic ? ` · ${c.topic}` : ""} · gå med
@@ -138,7 +138,7 @@ export function DayContent({
               <span className="block text-sm font-medium text-text">
                 {a.name}
               </span>
-              <span className="block text-[12px] text-text-subtle">
+              <span className="block text-[0.75rem] text-text-subtle">
                 {who(a.adept_name)}
                 {[
                   a.distance_m !== null &&
@@ -167,7 +167,7 @@ export function DayContent({
               <span className="block text-sm font-medium text-text">
                 {w.title}
               </span>
-              <span className="block text-[12px] text-text-subtle">
+              <span className="block text-[0.75rem] text-text-subtle">
                 {who(w.adeptName)}
                 {[w.duration, w.summary].filter(Boolean).join(" · ") || "Pass"}
               </span>
@@ -184,7 +184,7 @@ export function DayContent({
               <span className="block text-sm font-medium text-text">
                 {t.label}
               </span>
-              <span className="block text-[12px] text-text-subtle">
+              <span className="block text-[0.75rem] text-text-subtle">
                 {who(t.adeptName)}
                 {t.headline ?? "Inga värden än"}
               </span>
@@ -193,8 +193,8 @@ export function DayContent({
         </li>
       ))}
       {checkin && items.checkin && (
-        <li className="mt-1 rounded-md border border-line px-3 py-2 text-[13px] text-text-muted">
-          <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-subtle">
+        <li className="mt-1 rounded-md border border-line px-3 py-2 text-[0.8125rem] text-text-muted">
+          <p className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-subtle">
             Incheckning
           </p>
           {checkin.sessionRpe !== null && checkin.durationMinutes !== null ? (
@@ -252,13 +252,13 @@ export function DayPanel({
     <div id="dag" className="min-w-0 scroll-mt-20">
       <Card className="min-w-0">
         <div className="mb-3">
-          <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-text-muted">
+          <p className="text-[0.75rem] font-medium uppercase tracking-[0.1em] text-text-muted">
             {date === today ? "I dag" : weekdayName(date)}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-lg font-semibold text-text">
             {longDate(date, today)}
             {phase && (
-              <span className="inline-flex items-center gap-1.5 rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-text-muted">
+              <span className="inline-flex items-center gap-1.5 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] font-medium text-text-muted">
                 <span
                   aria-hidden
                   className="h-2 w-3 rounded-[2px]"
@@ -315,7 +315,7 @@ export function Upcoming({
             const items = days.get(date)!;
             return (
               <div key={date}>
-                <p className="text-[12px] font-medium text-text-subtle">
+                <p className="text-[0.75rem] font-medium text-text-subtle">
                   {date === today
                     ? "I dag"
                     : `${weekdayName(date)} ${longDate(date, today)}`}

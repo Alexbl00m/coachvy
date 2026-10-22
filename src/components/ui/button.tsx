@@ -21,9 +21,9 @@ const variants: Record<Variant, string> = {
 // Pillor: knappen är det enda runda på en sida av raka kort, så den syns
 // som något man trycker på.
 const sizes: Record<Size, string> = {
-  sm: "h-8 px-3.5 text-[13px]",
+  sm: "h-8 px-3.5 text-[0.8125rem]",
   md: "h-10 px-5 text-sm",
-  lg: "h-12 px-6 text-[15px] font-semibold",
+  lg: "h-12 px-6 text-[0.9375rem] font-semibold",
 };
 
 export function buttonClass({

@@ -99,7 +99,7 @@ export function PhilosophyEditor({
       }}
     >
       <fieldset className="grid gap-2 sm:grid-cols-2">
-        <legend className="mb-2 text-[13px] font-medium text-text">
+        <legend className="mb-2 text-[0.8125rem] font-medium text-text">
           Hur den förhåller sig till grundfilosofin
         </legend>
         {MODES.map((m) => (
@@ -124,7 +124,7 @@ export function PhilosophyEditor({
               <span className="block text-sm font-medium text-text">
                 {m.label}
               </span>
-              <span className="mt-0.5 block text-[12px] leading-relaxed text-text-muted">
+              <span className="mt-0.5 block text-[0.75rem] leading-relaxed text-text-muted">
                 {m.hint}
               </span>
             </span>
@@ -136,7 +136,7 @@ export function PhilosophyEditor({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <label
             htmlFor="philosophy-text"
-            className="text-[13px] font-medium text-text"
+            className="text-[0.8125rem] font-medium text-text"
           >
             Din filosofi
           </label>
@@ -144,7 +144,7 @@ export function PhilosophyEditor({
             <button
               type="button"
               onClick={() => setText(TEMPLATE)}
-              className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+              className="text-[0.8125rem] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
             >
               Börja från en mall
             </button>
@@ -157,12 +157,12 @@ export function PhilosophyEditor({
           onChange={(e) => setText(e.target.value)}
           placeholder="Skriv som du skulle förklara din metodik för en ny assisterande tränare: vad du prioriterar, hur du fördelar intensiteten, hur du bygger block, testar och toppar – och varför."
           aria-describedby="philosophy-count"
-          className="min-h-64 font-mono text-[13px] leading-relaxed"
+          className="min-h-64 font-mono text-[0.8125rem] leading-relaxed"
         />
         <p
           id="philosophy-count"
           className={cn(
-            "text-right text-[12px] tabular-nums",
+            "text-right text-[0.75rem] tabular-nums",
             over ? "text-bad" : "text-text-subtle",
           )}
         >
@@ -212,7 +212,7 @@ export function PhilosophyEditor({
           </Button>
         )}
         {updatedAt && savedText && (
-          <span className="text-[12px] text-text-subtle">
+          <span className="text-[0.75rem] text-text-subtle">
             Senast ändrad {updatedAt}
           </span>
         )}

@@ -110,7 +110,7 @@ export function CriticalPowerCalculator() {
               ]}
             />
 
-            <p className="text-[13px] text-text-subtle">
+            <p className="text-[0.8125rem] text-text-subtle">
               {result.goodnessOfFit === null
                 ? `Två test definierar linjen exakt, så ingen anpassningsgrad går att mäta. Lägg till ett tredje test för det.`
                 : `Anpassning R² ${result.goodnessOfFit} % på ${result.testCount} test.`}
@@ -136,7 +136,7 @@ export function CriticalPowerCalculator() {
               </div>
 
               <div className="mt-5 border-t border-line pt-5">
-                <p className="mb-3 text-[13px] font-medium text-text">
+                <p className="mb-3 text-[0.8125rem] font-medium text-text">
                   Effekt som bör kunna hållas
                 </p>
                 <DataTable

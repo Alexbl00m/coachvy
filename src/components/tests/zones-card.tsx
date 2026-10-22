@@ -257,7 +257,7 @@ export function ZonesCard({
         <div className="mb-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-4">
             <label
-              className="space-y-1 text-[12px] text-text-muted"
+              className="space-y-1 text-[0.75rem] text-text-muted"
               htmlFor={`${ids}-pos`}
             >
               <span>Position</span>
@@ -276,7 +276,7 @@ export function ZonesCard({
               </Select>
             </label>
             <label
-              className="space-y-1 text-[12px] text-text-muted"
+              className="space-y-1 text-[0.75rem] text-text-muted"
               htmlFor={`${ids}-tire`}
             >
               <span>Däck</span>
@@ -295,7 +295,7 @@ export function ZonesCard({
               </Select>
             </label>
             <label
-              className="space-y-1 text-[12px] text-text-muted"
+              className="space-y-1 text-[0.75rem] text-text-muted"
               htmlFor={`${ids}-rider`}
             >
               <span>Atletens vikt (kg)</span>
@@ -308,7 +308,7 @@ export function ZonesCard({
               />
             </label>
             <label
-              className="space-y-1 text-[12px] text-text-muted"
+              className="space-y-1 text-[0.75rem] text-text-muted"
               htmlFor={`${ids}-bike`}
             >
               <span>Cykel och utrustning (kg)</span>
@@ -326,7 +326,7 @@ export function ZonesCard({
               {thresholds.map((t) => (
                 <li
                   key={t.label}
-                  className="rounded-md border border-line bg-surface px-3 py-2 text-[13px] text-text-muted tabular-nums"
+                  className="rounded-md border border-line bg-surface px-3 py-2 text-[0.8125rem] text-text-muted tabular-nums"
                 >
                   <span className="font-medium text-text">{t.label}</span>{" "}
                   {Math.round(t.watts)} W ·{" "}
@@ -338,7 +338,7 @@ export function ZonesCard({
             </ul>
           )}
           {!setup && (
-            <p className="text-[12px] text-text-subtle">
+            <p className="text-[0.75rem] text-text-subtle">
               Fyll i atletens vikt för att se farten.
             </p>
           )}
@@ -353,7 +353,7 @@ export function ZonesCard({
         />
       )}
 
-      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         {hasHr &&
           "Pulsen är den testet gav vid zonens gränser – ur atletens egen pulskurva, inte ur procent av maxpuls. "}
         {hasFuel &&

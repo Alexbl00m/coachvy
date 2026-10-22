@@ -129,7 +129,7 @@ const ChartPanel = memo(function ChartPanel({
   const gradientId = `fill-${panel.key}`;
   return (
     <figure className="min-w-0">
-      <figcaption className="mb-1 flex items-baseline justify-between gap-3 text-[12px]">
+      <figcaption className="mb-1 flex items-baseline justify-between gap-3 text-[0.75rem]">
         <span className="font-medium text-text">{panel.title}</span>
         <span className="text-text-subtle">{panel.unit}</span>
       </figcaption>
@@ -164,7 +164,7 @@ const ChartPanel = memo(function ChartPanel({
               tickFormatter={(v: number) =>
                 x === "km" ? sv(v) : formatClock(v)
               }
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 10 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.625rem" }}
               tickLine={false}
               axisLine={{ stroke: CHART_GRID }}
               minTickGap={28}
@@ -172,7 +172,7 @@ const ChartPanel = memo(function ChartPanel({
             />
             <YAxis
               width={40}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 10 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.625rem" }}
               tickLine={false}
               axisLine={false}
               tickCount={3}
@@ -210,7 +210,7 @@ const ChartPanel = memo(function ChartPanel({
                   value: panel.reference.label,
                   position: "insideTopRight",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 10,
+                  fontSize: "0.625rem",
                 }}
               />
             )}

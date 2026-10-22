@@ -102,7 +102,7 @@ export function LoadPanel({
         <CardTitle>Belastning och mående</CardTitle>
         <LoadChart points={series.points} />
 
-        <div className="mt-4 space-y-2 border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
+        <div className="mt-4 space-y-2 border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           {latest?.ratio && <p>{readRatio(latest.ratio)}</p>}
           {series.warnings.map((warning) => (
             <p key={warning}>{warning}</p>

@@ -114,7 +114,7 @@ export function NewMenu() {
               aria-label={group.title}
               className={cn(i > 0 && "mt-1 border-t border-line pt-1")}
             >
-              <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-text-subtle">
+              <p className="px-2.5 pb-1 pt-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle">
                 {group.title}
               </p>
               {group.entries.map((entry) => (
@@ -127,7 +127,7 @@ export function NewMenu() {
                 >
                   {entry.label}
                   {entry.hint && (
-                    <span className="block text-[12px] text-text-subtle">
+                    <span className="block text-[0.75rem] text-text-subtle">
                       {entry.hint}
                     </span>
                   )}

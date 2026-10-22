@@ -383,7 +383,7 @@ export function FitForm({
             </button>
           ))}
         </div>
-        <p className="mt-3 max-w-3xl text-[13px] text-text-muted">
+        <p className="mt-3 max-w-3xl text-[0.8125rem] text-text-muted">
           {template.focus}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -442,7 +442,7 @@ export function FitForm({
                 aria-checked={method === key}
                 onClick={() => setMethod(key)}
                 className={cn(
-                  "rounded px-3 py-1.5 text-[13px] font-medium transition-colors",
+                  "rounded px-3 py-1.5 text-[0.8125rem] font-medium transition-colors",
                   method === key
                     ? "bg-surface-3 text-text"
                     : "text-text-muted hover:text-text",
@@ -457,7 +457,7 @@ export function FitForm({
         <div
           role="radiogroup"
           aria-label="Vinklarna gäller"
-          className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]"
+          className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.8125rem]"
         >
           <span className="text-text-muted">Vinklarna gäller</span>
           {(
@@ -511,7 +511,7 @@ export function FitForm({
         )}
 
         <details className="mt-5 border-t border-line pt-4">
-          <summary className="cursor-pointer text-[13px] font-medium text-text">
+          <summary className="cursor-pointer text-[0.8125rem] font-medium text-text">
             Målband
           </summary>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -523,7 +523,7 @@ export function FitForm({
               ] as const
             ).map(([key, label]) => (
               <fieldset key={key} className="min-w-0">
-                <legend className="text-[13px] font-medium text-text">
+                <legend className="text-[0.8125rem] font-medium text-text">
                   {label}, °
                 </legend>
                 <div className="mt-1.5 flex items-center gap-2">
@@ -554,7 +554,7 @@ export function FitForm({
               </fieldset>
             ))}
           </div>
-          <p className="mt-2 text-[12px] text-text-subtle">
+          <p className="mt-2 text-[0.75rem] text-text-subtle">
             Mallens band för {template.label.toLowerCase()}: knä{" "}
             {template.bands.knee.min}–{template.bands.knee.max}°, bål{" "}
             {template.bands.trunk.min}–{template.bands.trunk.max}°, armbåge{" "}
@@ -567,9 +567,9 @@ export function FitForm({
           className="mt-5 rounded-md border border-line bg-surface-2 p-3"
           aria-live="polite"
         >
-          <p className="text-[12px] font-medium text-text-muted">Bedömning</p>
+          <p className="text-[0.75rem] font-medium text-text-muted">Bedömning</p>
           <p className="mt-1 text-sm text-text">{preview.sentence}</p>
-          <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+          <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem]">
             {(
               [
                 ["Knä", preview.knee],
@@ -607,7 +607,7 @@ export function FitForm({
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="min-w-0">
-            <p className="mb-2 text-[13px] font-medium text-text">
+            <p className="mb-2 text-[0.8125rem] font-medium text-text">
               Att titta efter
             </p>
             <div className="space-y-2">
@@ -663,7 +663,7 @@ export function FitForm({
               : "Spara bikefiten"}
         </Button>
         {error && (
-          <p role="alert" className="text-[13px] text-bad">
+          <p role="alert" className="text-[0.8125rem] text-bad">
             {error}
           </p>
         )}

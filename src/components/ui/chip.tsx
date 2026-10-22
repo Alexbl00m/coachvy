@@ -19,7 +19,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex h-7 items-center gap-2 rounded-full border px-3 text-[13px]",
+        "inline-flex h-7 items-center gap-2 rounded-full border px-3 text-[0.8125rem]",
         zone ? "" : "border-line-strong text-text-muted",
         className,
       )}

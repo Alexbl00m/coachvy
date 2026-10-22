@@ -74,16 +74,16 @@ export default async function AdeptBikefitPage({
                           {fit.bike && (
                             <span className="text-text-muted">{fit.bike}</span>
                           )}
-                          <span className="text-[12px] text-text-subtle">
+                          <span className="text-[0.75rem] text-text-subtle">
                             {fit.method === "video" ? "video" : "manuell"}
                           </span>
                           {canEdit && (
-                            <span className="text-[12px] text-text-subtle">
+                            <span className="text-[0.75rem] text-text-subtle">
                               {fit.shared_at ? "delad" : "inte delad"}
                             </span>
                           )}
                         </p>
-                        <p className="mt-0.5 truncate text-[13px] text-text-muted">
+                        <p className="mt-0.5 truncate text-[0.8125rem] text-text-muted">
                           {a.sentence}
                         </p>
                       </div>
@@ -91,7 +91,7 @@ export default async function AdeptBikefitPage({
                         <p className="text-sm text-text">
                           Knä {knee == null ? "–" : `${sv(knee)}°`}
                         </p>
-                        <p className="text-[12px]">
+                        <p className="text-[0.75rem]">
                           <span
                             className={
                               a.knee.verdict

@@ -78,7 +78,7 @@ export function MetabolicProgression({
               aria-pressed={e.sessionId === selected.sessionId}
               onClick={() => setSelectedId(e.sessionId)}
               className={cn(
-                "rounded-md border px-3 py-1.5 text-[13px] tabular-nums transition-colors",
+                "rounded-md border px-3 py-1.5 text-[0.8125rem] tabular-nums transition-colors",
                 e.sessionId === selected.sessionId
                   ? "border-accent bg-surface-2 font-medium text-text"
                   : "border-line text-text-muted hover:text-text",
@@ -157,7 +157,7 @@ export function MetabolicProgression({
             watts(e.thresholds.carbMax),
           ])}
         />
-        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           Varje test räknas om ur rådatan med dagens modell, så att profiler
           från olika år går att jämföra.
         </p>

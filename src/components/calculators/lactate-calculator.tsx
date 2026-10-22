@@ -214,16 +214,16 @@ export function LactateCalculator() {
             <table className="w-full border-collapse text-sm" style={{ minWidth: "440px" }}>
               <thead>
                 <tr className="border-b border-line text-left">
-                  <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                     Steg
                   </th>
-                  <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                     Belastning ({unit})
                   </th>
-                  <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                     Laktat (mmol/l)
                   </th>
-                  <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                  <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                     Puls
                   </th>
                   <th className="pb-2" />
@@ -232,7 +232,7 @@ export function LactateCalculator() {
               <tbody>
                 {rows.map((row, index) => (
                   <tr key={row.id} className="border-b border-line last:border-b-0">
-                    <td className="py-2 pr-3 text-[13px] text-text-subtle tabular-nums">
+                    <td className="py-2 pr-3 text-[0.8125rem] text-text-subtle tabular-nums">
                       {index === 0 && decimal(row.intensity) === 0 ? "Vila" : index}
                     </td>
                     <td className="py-2 pr-3">
@@ -334,7 +334,7 @@ export function LactateCalculator() {
               </Select>
             </Field>
 
-            <label className="flex items-start gap-2.5 text-[13px] text-text">
+            <label className="flex items-start gap-2.5 text-[0.8125rem] text-text">
               <input
                 type="checkbox"
                 checked={includeBaseline}
@@ -343,14 +343,14 @@ export function LactateCalculator() {
               />
               <span>
                 Ta med vilovärdet i kurvan
-                <span className="mt-0.5 block text-[11px] text-text-subtle">
+                <span className="mt-0.5 block text-[0.6875rem] text-text-subtle">
                   Påverkar var kurvan börjar böja.
                 </span>
               </span>
             </label>
 
             <div className="border-t border-line pt-4">
-              <p className="mb-2 text-[13px] font-medium text-text">Metoder</p>
+              <p className="mb-2 text-[0.8125rem] font-medium text-text">Metoder</p>
               <div className="flex flex-wrap gap-1.5">
                 {METHOD_CATEGORIES.map((category) => {
                   const active = methods.includes(category.id);
@@ -362,7 +362,7 @@ export function LactateCalculator() {
                       aria-pressed={active}
                       title={category.description}
                       className={cn(
-                        "rounded-md border px-2.5 py-1 text-[12px] transition-colors",
+                        "rounded-md border px-2.5 py-1 text-[0.75rem] transition-colors",
                         active
                           ? "border-text-subtle bg-surface-3 text-text"
                           : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
@@ -419,12 +419,12 @@ export function LactateCalculator() {
                 <span key="m" className="flex items-baseline gap-2">
                   {r.method}
                   {r.note && (
-                    <span className="text-[11px] font-normal text-text-subtle">
+                    <span className="text-[0.6875rem] font-normal text-text-subtle">
                       {r.note}
                     </span>
                   )}
                 </span>,
-                <span key="f" className="text-[12px]">
+                <span key="f" className="text-[0.75rem]">
                   {r.fitting}
                 </span>,
                 r.intensity === null ? "–" : sv(r.intensity, digits),
@@ -467,7 +467,7 @@ export function LactateCalculator() {
                   ],
                 ]}
               />
-              <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+              <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
                 Trezonsmodellen är det trösklarna faktiskt definierar: under
                 LT1, mellan trösklarna, över LT2. Vill du ha din egen
                 femzonsindelning behöver jag procentsatserna du använder – de
@@ -488,7 +488,7 @@ export function LactateCalculator() {
             </div>
           ))}
         </dl>
-        <p className="mt-5 border-t border-line pt-4 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-5 border-t border-line pt-4 text-[0.8125rem] leading-relaxed text-text-muted">
           Beräkningarna är portade från R-paketet{" "}
           <a
             href="https://github.com/fmmattioni/lactater"

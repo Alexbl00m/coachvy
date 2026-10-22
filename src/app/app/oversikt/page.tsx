@@ -43,11 +43,11 @@ export default async function OversiktPage() {
       {!isSupabaseConfigured() && (
         <div className="mb-6 rounded-lg border border-accent/40 bg-accent-soft px-4 py-3 text-sm text-ink-100">
           Supabase är inte konfigurerat. Kopiera{" "}
-          <code className="rounded bg-ink-800 px-1.5 py-0.5 text-[12px]">
+          <code className="rounded bg-ink-800 px-1.5 py-0.5 text-[0.75rem]">
             .env.example
           </code>{" "}
           till{" "}
-          <code className="rounded bg-ink-800 px-1.5 py-0.5 text-[12px]">
+          <code className="rounded bg-ink-800 px-1.5 py-0.5 text-[0.75rem]">
             .env.local
           </code>{" "}
           och fyll i projektets URL och anon-nyckel för att aktivera inloggning.

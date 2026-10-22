@@ -116,11 +116,11 @@ export function WorkoutPanel({
                       {saved.title}
                     </Link>
                     {saved.summary && (
-                      <p className="text-[13px] text-text-muted">
+                      <p className="text-[0.8125rem] text-text-muted">
                         {saved.summary}
                       </p>
                     )}
-                    <p className="text-[12px] text-text-subtle">
+                    <p className="text-[0.75rem] text-text-subtle">
                       {saved.scheduled_for && (
                         <span className="text-text-muted">
                           I kalendern {formatDate(saved.scheduled_for)} ·{" "}

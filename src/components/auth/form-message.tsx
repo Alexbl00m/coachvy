@@ -15,7 +15,7 @@ export function FormMessage({
   return (
     <p
       role={isError ? "alert" : "status"}
-      className={`flex items-start gap-2 rounded-md border px-3 py-2.5 text-[13px] ${
+      className={`flex items-start gap-2 rounded-md border px-3 py-2.5 text-[0.8125rem] ${
         isError
           ? "border-red-500/40 bg-red-500/10 text-red-200"
           : "border-accent/40 bg-accent-soft text-ink-100"

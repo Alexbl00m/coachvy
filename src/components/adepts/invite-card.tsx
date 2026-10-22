@@ -123,7 +123,7 @@ export function InviteCard({
           : `${firstName} har ett konto men har inte godkänt att hälsouppgifter behandlas. Tills dess används inte AI-funktionerna för ${firstName}. Skicka en påminnelse:`}
       </p>
       {mode === "inbjudan" && (
-        <p className="mb-3 text-[13px] text-text-subtle" role="status">
+        <p className="mb-3 text-[0.8125rem] text-text-subtle" role="status">
           {invitedAt
             ? `Inbjudan skickad ${longDate(invitedAt)}.`
             : "Ingen inbjudan skickad än."}
@@ -134,7 +134,7 @@ export function InviteCard({
         aria-label={mode === "inbjudan" ? "Inbjudan" : "Påminnelse"}
         value={origin ? message : ""}
         rows={9}
-        className="w-full resize-y rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[13px] leading-relaxed text-text"
+        className="w-full resize-y rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[0.8125rem] leading-relaxed text-text"
       />
       <div className="mt-3 flex flex-wrap gap-2">
         {canEmail && email && (
@@ -198,7 +198,7 @@ export function InviteCard({
         <p
           role="status"
           className={cn(
-            "mt-3 text-[13px]",
+            "mt-3 text-[0.8125rem]",
             sendError ? "text-bad" : "text-text-muted",
           )}
         >

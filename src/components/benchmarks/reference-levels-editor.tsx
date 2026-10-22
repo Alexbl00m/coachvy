@@ -117,7 +117,7 @@ export function ReferenceLevelsEditor({
               aria-pressed={sex === s.key}
               onClick={() => setSex(s.key)}
               className={cn(
-                "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+                "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
                 sex === s.key
                   ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line-strong text-text-muted hover:text-text",
@@ -153,7 +153,7 @@ export function ReferenceLevelsEditor({
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-line align-bottom">
-              <th className="py-2 pr-3 text-left text-[12px] font-medium text-text-muted">
+              <th className="py-2 pr-3 text-left text-[0.75rem] font-medium text-text-muted">
                 Mått
               </th>
               {drafts.map((d, i) => (
@@ -162,7 +162,7 @@ export function ReferenceLevelsEditor({
                     aria-label={`Namn på grupp ${i + 1}`}
                     value={d.name}
                     maxLength={30}
-                    className="h-8 px-2 py-1 text-[13px] font-medium"
+                    className="h-8 px-2 py-1 text-[0.8125rem] font-medium"
                     onChange={(e) =>
                       update(i, (g) => ({ ...g, name: e.target.value }))
                     }
@@ -208,7 +208,7 @@ export function ReferenceLevelsEditor({
               <tr key={m.key} className="border-b border-line last:border-0">
                 <td className="py-2 pr-3 text-text">
                   {m.label}
-                  <span className="block text-[12px] text-text-subtle">
+                  <span className="block text-[0.75rem] text-text-subtle">
                     {m.unit}
                   </span>
                 </td>
@@ -255,7 +255,7 @@ export function ReferenceLevelsEditor({
           </Button>
         )}
         {message && (
-          <span className="text-[13px] text-text-muted" role="status">
+          <span className="text-[0.8125rem] text-text-muted" role="status">
             {message}
           </span>
         )}

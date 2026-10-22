@@ -50,7 +50,7 @@ export function Metric({
         {aside && <span className="ml-auto shrink-0">{aside}</span>}
       </div>
       {hint && (
-        <p className="mt-2 truncate text-[13px] text-text-subtle">{hint}</p>
+        <p className="mt-2 truncate text-[0.8125rem] text-text-subtle">{hint}</p>
       )}
     </div>
   );
@@ -59,7 +59,7 @@ export function Metric({
 /** Enheten bredvid ett stort tal: "min", "W", "/km". */
 export function Unit({ children }: { children: ReactNode }) {
   return (
-    <span className="ml-1.5 font-mono text-[13px] font-normal tracking-normal text-text-muted">
+    <span className="ml-1.5 font-mono text-[0.8125rem] font-normal tracking-normal text-text-muted">
       {children}
     </span>
   );
@@ -85,7 +85,7 @@ export function Delta({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[13px] font-medium tabular-nums",
+        "inline-flex items-center gap-1 text-[0.8125rem] font-medium tabular-nums",
         flat ? "text-text-muted" : good ? "text-good" : "text-bad",
         className,
       )}

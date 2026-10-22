@@ -22,12 +22,12 @@ export function TargetLevelSelect({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <label htmlFor="malniva" className="text-[13px] text-text-muted">
+      <label htmlFor="malniva" className="text-[0.8125rem] text-text-muted">
         Målnivå
       </label>
       <Select
         id="malniva"
-        className="h-8 w-auto py-1 text-[13px]"
+        className="h-8 w-auto py-1 text-[0.8125rem]"
         value={value ?? ""}
         disabled={pending}
         onChange={(event) => {
@@ -47,7 +47,7 @@ export function TargetLevelSelect({
           </option>
         ))}
       </Select>
-      {error && <span className="text-[13px] text-text">{error}</span>}
+      {error && <span className="text-[0.8125rem] text-text">{error}</span>}
     </div>
   );
 }

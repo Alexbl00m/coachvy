@@ -72,7 +72,7 @@ export default async function AdeptPlanPage({
     <>
       {header}
       {instances.length > 1 && (
-        <p className="mb-4 text-[13px] text-text-muted">
+        <p className="mb-4 text-[0.8125rem] text-text-muted">
           Andra planer:{" "}
           {instances
             .filter((i) => i.id !== chosen.id)

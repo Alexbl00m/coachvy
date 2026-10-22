@@ -40,8 +40,8 @@ export function TestRows({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-[1fr_1fr_auto] gap-3">
-        <span className="text-[13px] font-medium text-text">{firstLabel}</span>
-        <span className="text-[13px] font-medium text-text">{secondLabel}</span>
+        <span className="text-[0.8125rem] font-medium text-text">{firstLabel}</span>
+        <span className="text-[0.8125rem] font-medium text-text">{secondLabel}</span>
         <span className="w-8" />
       </div>
 

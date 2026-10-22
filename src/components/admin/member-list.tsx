@@ -82,7 +82,7 @@ export function MemberList({ members }: { members: AdminMember[] }) {
             aria-pressed={filter === f.key}
             onClick={() => setFilter(f.key)}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-[12px] transition-colors",
+              "rounded-md border px-2.5 py-1 text-[0.75rem] transition-colors",
               filter === f.key
                 ? "border-text-subtle bg-surface-3 font-medium text-text"
                 : "border-line-strong text-text-muted hover:border-accent hover:text-text",
@@ -120,17 +120,17 @@ export function MemberList({ members }: { members: AdminMember[] }) {
                   <div className="min-w-0 flex-1 basis-60">
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-text">
                       {m.full_name}
-                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-normal text-text-muted">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] font-normal text-text-muted">
                         {m.role === "coach" ? "Coach" : "Adept"}
                       </span>
                       {m.is_admin ? (
-                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-normal text-text">
+                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] font-normal text-text">
                           Admin – full tillgång
                         </span>
                       ) : (
                         <span
                           className={cn(
-                            "rounded px-1.5 py-0.5 text-[11px] font-normal",
+                            "rounded px-1.5 py-0.5 text-[0.6875rem] font-normal",
                             member ? "bg-surface-3 text-text" : "bg-surface-2 text-text-muted",
                           )}
                         >
@@ -138,8 +138,8 @@ export function MemberList({ members }: { members: AdminMember[] }) {
                         </span>
                       )}
                     </p>
-                    <p className="truncate text-[13px] text-text-muted">{m.email}</p>
-                    <p className="text-[12px] text-text-subtle">
+                    <p className="truncate text-[0.8125rem] text-text-muted">{m.email}</p>
+                    <p className="text-[0.75rem] text-text-subtle">
                       {[...details, `registrerad ${formatDate(m.created_at)}`].filter(Boolean).join(" · ")}
                     </p>
                   </div>

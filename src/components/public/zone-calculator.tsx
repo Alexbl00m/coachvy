@@ -158,7 +158,7 @@ export function ZoneCalculator() {
           ))}
         </div>
 
-        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           {active?.description}
         </p>
 

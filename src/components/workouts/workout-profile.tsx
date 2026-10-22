@@ -320,7 +320,7 @@ export function WorkoutProfile({
         {step && block && active !== null && (
           <div
             role="status"
-            className="pointer-events-none absolute top-2 z-10 w-max max-w-[220px] rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg"
+            className="pointer-events-none absolute top-2 z-10 w-max max-w-[13.75rem] rounded-md border border-line bg-canvas px-3 py-2 text-xs shadow-lg"
             style={
               tipOnLeft ? { right: width - center + 10 } : { left: center + 10 }
             }
@@ -359,7 +359,7 @@ export function ZoneLegend({ zones }: { zones: IntensityZone[] }) {
   return (
     <ul
       aria-label="Zoner"
-      className="flex flex-wrap gap-x-4 gap-y-1 pl-[52px] text-[12px] text-text-muted"
+      className="flex flex-wrap gap-x-4 gap-y-1 pl-[3.25rem] text-[0.75rem] text-text-muted"
     >
       {zones.map((zone) => (
         <li key={zone} className="flex items-center gap-1.5">

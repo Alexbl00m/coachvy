@@ -38,7 +38,7 @@ export function PromptLibrary({
             aria-selected={c.id === category.id}
             onClick={() => setActive(c.id)}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+              "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
               c.id === category.id
                 ? "border-text-subtle bg-surface-3 font-medium text-text"
                 : "border-line-strong text-text-muted hover:border-text-subtle hover:text-text",
@@ -68,7 +68,7 @@ export function PromptLibrary({
         ))}
       </ul>
 
-      <p className="mt-3 text-[12px] text-text-subtle">
+      <p className="mt-3 text-[0.75rem] text-text-subtle">
         {disabled
           ? "Välj en adept först."
           : "Frågan läggs i rutan ovan så att du kan ändra den innan du skickar. Text inom hakparenteser fyller du i själv."}

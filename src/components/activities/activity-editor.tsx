@@ -173,7 +173,7 @@ export function ActivityEditor({
           </Button>
         )}
         {message && (
-          <span role="status" className="text-[13px] text-text-muted">
+          <span role="status" className="text-[0.8125rem] text-text-muted">
             {message}
           </span>
         )}

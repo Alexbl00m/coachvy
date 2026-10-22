@@ -78,7 +78,7 @@ export function GoalBreakdown({
   const notes = distributionNotes(counts, target);
   return (
     <div className="min-w-0 space-y-2">
-      <p className="text-[12px] font-medium text-text-muted">
+      <p className="text-[0.75rem] font-medium text-text-muted">
         {label}
         {counts.total > 0 && (
           <span className="font-normal text-text-subtle">
@@ -90,7 +90,7 @@ export function GoalBreakdown({
       {counts.total > 0 ? (
         <>
           <DistributionBar counts={counts} />
-          <dl className="grid grid-cols-3 gap-2 text-[12px]">
+          <dl className="grid grid-cols-3 gap-2 text-[0.75rem]">
             {SESSION_GOALS.map(({ key, label }) => (
               <div key={key} className="min-w-0">
                 <dt className="flex items-center gap-1.5 text-text-muted">
@@ -116,7 +116,7 @@ export function GoalBreakdown({
             ))}
           </dl>
           {notes.length > 0 ? (
-            <ul className="space-y-1 text-[13px] text-text">
+            <ul className="space-y-1 text-[0.8125rem] text-text">
               {notes.map((note) => (
                 <li key={note} className="flex gap-2">
                   <span
@@ -128,13 +128,13 @@ export function GoalBreakdown({
               ))}
             </ul>
           ) : counts.total < MIN_SESSIONS && target.bands ? (
-            <p className="text-[12px] text-text-subtle">
+            <p className="text-[0.75rem] text-text-subtle">
               För få pass för att jämföra andelarna.
             </p>
           ) : null}
         </>
       ) : (
-        <p className="text-[13px] text-text-subtle">{empty}</p>
+        <p className="text-[0.8125rem] text-text-subtle">{empty}</p>
       )}
     </div>
   );
@@ -216,20 +216,20 @@ export function DistributionCard({
                 <p className="text-sm font-medium text-text">
                   {blockLabel(block)}
                   {block.id === current?.id && (
-                    <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-text-muted">
+                    <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] font-medium text-text-muted">
                       nu
                     </span>
                   )}
                 </p>
-                <p className="text-[12px] text-text-subtle tabular-nums">
+                <p className="text-[0.75rem] text-text-subtle tabular-nums">
                   {block.name?.trim() ? `${PHASE_SHORT[block.phase]} · ` : ""}
                   {dateRange(block.starts_on, block.ends_on, today)}
                 </p>
-                <p className="mt-1 text-[12px] font-medium text-text-muted">
+                <p className="mt-1 text-[0.75rem] font-medium text-text-muted">
                   {target.model}
                   {race ? ` · ${race.name}` : ""}
                 </p>
-                <p className="mt-1 text-[12px] text-text-subtle">
+                <p className="mt-1 text-[0.75rem] text-text-subtle">
                   {target.text}
                 </p>
               </div>
@@ -252,7 +252,7 @@ export function DistributionCard({
                   }
                 />
                 {extra.length > 0 && (
-                  <p className="text-[12px] text-text-subtle md:col-span-2">
+                  <p className="text-[0.75rem] text-text-subtle md:col-span-2">
                     {extra.join(" · ")}.
                   </p>
                 )}

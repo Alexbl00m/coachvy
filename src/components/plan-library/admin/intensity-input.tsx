@@ -17,12 +17,12 @@ export function IntensityInput({
   const sum = value.låg + value.medel + value.hög;
   return (
     <fieldset className="space-y-1.5">
-      <legend className="text-[13px] font-medium text-text">
+      <legend className="text-[0.8125rem] font-medium text-text">
         Intensitet, % av tiden
       </legend>
       <div className="grid grid-cols-3 gap-2">
         {(["låg", "medel", "hög"] as const).map((k) => (
-          <label key={k} className="space-y-1 text-[11px] text-text-subtle">
+          <label key={k} className="space-y-1 text-[0.6875rem] text-text-subtle">
             <span className="capitalize">{k}</span>
             <Input
               id={`${id}-${k}`}
@@ -38,7 +38,7 @@ export function IntensityInput({
         ))}
       </div>
       {sum > 0 && sum !== 100 && (
-        <p className="text-[11px] text-warn">Summan är {sum} %, inte 100.</p>
+        <p className="text-[0.6875rem] text-warn">Summan är {sum} %, inte 100.</p>
       )}
     </fieldset>
   );

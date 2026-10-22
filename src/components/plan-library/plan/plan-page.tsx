@@ -107,7 +107,7 @@ function PacedStructure({
   if (!variant.blocks) return null;
   if (!isRunningBasis(variant.basis)) {
     return (
-      <p className="mt-1 font-mono text-[11px] leading-snug text-text-subtle">
+      <p className="mt-1 font-mono text-[0.6875rem] leading-snug text-text-subtle">
         {structureText(variant, refs)}
       </p>
     );
@@ -119,7 +119,7 @@ function PacedStructure({
     .flatMap((b) => b.steps.filter((st) => !st.zone).map((st) => st.percent))
     .filter((v, i, all) => all.indexOf(v) === i);
   return (
-    <div className="mt-1.5 text-[12px] leading-snug tabular-nums">
+    <div className="mt-1.5 text-[0.75rem] leading-snug tabular-nums">
       <ul className="space-y-0.5">
         {blocks.map((b, i) => (
           <li key={i} className="text-text-muted">
@@ -129,7 +129,7 @@ function PacedStructure({
                 {j > 0 && " + "}
                 {st.amount}{" "}
                 {st.zone && (
-                  <span className="mr-1 rounded-sm bg-surface-3 px-1 text-[11px] font-medium text-text">
+                  <span className="mr-1 rounded-sm bg-surface-3 px-1 text-[0.6875rem] font-medium text-text">
                     {st.zone}
                   </span>
                 )}
@@ -144,13 +144,13 @@ function PacedStructure({
         ))}
       </ul>
       {!ref ? (
-        <p className="mt-0.5 text-[11px] text-text-subtle">
+        <p className="mt-0.5 text-[0.6875rem] text-text-subtle">
           Procent av {BASIS_LABEL[variant.basis!]} – tempona visas när det finns
           en formuppskattning.
         </p>
       ) : (
         percents.length > 0 && (
-          <p className="mt-0.5 text-[11px] text-text-subtle">
+          <p className="mt-0.5 text-[0.6875rem] text-text-subtle">
             {percents.join(", ")} av {BASIS_LABEL[variant.basis!]}
           </p>
         )
@@ -413,16 +413,16 @@ export function PlanPage({
           />
         </div>
         {s.state === "flyttad" && s.plannedDate && (
-          <p className="mt-1 text-[11px] text-text-subtle">
+          <p className="mt-1 text-[0.6875rem] text-text-subtle">
             Flyttat från {DAY_LONG[weekdayIndex(s.plannedDate)]}{" "}
             {dayMonth(s.plannedDate)}
           </p>
         )}
         {s.state === "struken" && (
-          <p className="mt-1 text-[11px] text-text-subtle">Struket</p>
+          <p className="mt-1 text-[0.6875rem] text-text-subtle">Struket</p>
         )}
         {s.state === "ersatt" && (
-          <p className="mt-1 text-[11px] text-text-subtle">
+          <p className="mt-1 text-[0.6875rem] text-text-subtle">
             Ersatt med{" "}
             {replaced ? `eget pass: ${replaced.title}` : "ett eget pass"}
           </p>
@@ -431,12 +431,12 @@ export function PlanPage({
           <RationaleText
             text={instruction}
             compact
-            className="mt-1.5 text-[12px] leading-snug text-text-muted"
+            className="mt-1.5 text-[0.75rem] leading-snug text-text-muted"
           />
         )}
         <PacedStructure variant={s.variant} refs={refs} />
         {s.log && !editable && (
-          <p className="mt-1 text-[11px] text-text-muted">
+          <p className="mt-1 text-[0.6875rem] text-text-muted">
             {s.log.status === "genomförd"
               ? "Genomfört"
               : s.log.status === "delvis"
@@ -485,7 +485,7 @@ export function PlanPage({
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[12px] text-text-subtle">
+            <p className="text-[0.75rem] text-text-subtle">
               {longDate(instance.start_date)} – {longDate(end)} ·{" "}
               {instance.weeks} veckor
               {!active && ` · ${instance.status}`}
@@ -563,7 +563,7 @@ export function PlanPage({
                       · {dayMonth(week.startsOn)} – {dayMonth(week.endsOn)}
                     </span>
                   </p>
-                  <p className="text-[13px] text-text-muted">
+                  <p className="text-[0.8125rem] text-text-muted">
                     {[
                       multi ? `varv ${week.round}` : null,
                       span?.name,
@@ -595,7 +595,7 @@ export function PlanPage({
                   {weekNo !== view.currentWeek && (
                     <Link
                       href={link({ vecka: view.currentWeek })}
-                      className="rounded-md px-2 py-1 text-[13px] text-text-muted hover:bg-surface-2 hover:text-text"
+                      className="rounded-md px-2 py-1 text-[0.8125rem] text-text-muted hover:bg-surface-2 hover:text-text"
                     >
                       Den här veckan
                     </Link>
@@ -614,7 +614,7 @@ export function PlanPage({
                 </nav>
               </div>
 
-              <p className="mb-4 text-[13px] text-text-subtle tabular-nums">
+              <p className="mb-4 text-[0.8125rem] text-text-subtle tabular-nums">
                 {summary.planned} pass ·{" "}
                 {hoursMinutes(summary.plannedSeconds) || "tid saknas"}
                 {Object.keys(summary.byDiscipline).length > 1 &&
@@ -630,7 +630,7 @@ export function PlanPage({
               </p>
 
               {volume && (
-                <p className="-mt-2 mb-4 text-[13px] text-text-muted tabular-nums">
+                <p className="-mt-2 mb-4 text-[0.8125rem] text-text-muted tabular-nums">
                   <span className="text-text">
                     Veckovolym {volumeText(volume.target, unit)}
                   </span>
@@ -647,7 +647,7 @@ export function PlanPage({
               {(week.roundEnd || week.checkpoint) && (
                 <div className="mb-4 space-y-2">
                   {week.roundEnd && (
-                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
+                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[0.8125rem] text-text">
                       <Flag
                         aria-hidden
                         className="mt-0.5 size-4 shrink-0 text-text-muted"
@@ -660,7 +660,7 @@ export function PlanPage({
                     </p>
                   )}
                   {week.checkpoint && (
-                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text">
+                    <p className="flex gap-2 rounded-md border border-line bg-surface-2 px-3 py-2 text-[0.8125rem] text-text">
                       <Gauge
                         aria-hidden
                         className="mt-0.5 size-4 shrink-0 text-text-muted"
@@ -683,18 +683,18 @@ export function PlanPage({
                   >
                     <p
                       className={cn(
-                        "text-[13px] text-text-muted",
+                        "text-[0.8125rem] text-text-muted",
                         d.date === today && "font-semibold text-text",
                       )}
                     >
                       {DAY_LONG[weekdayIndex(d.date)][0].toUpperCase() +
                         DAY_LONG[weekdayIndex(d.date)].slice(1)}
-                      <span className="block text-[12px] font-normal text-text-subtle">
+                      <span className="block text-[0.75rem] font-normal text-text-subtle">
                         {d.date === today ? "I dag" : dayMonth(d.date)}
                       </span>
                     </p>
                     {d.sessions.length === 0 ? (
-                      <p className="text-[13px] text-text-subtle">
+                      <p className="text-[0.8125rem] text-text-subtle">
                         Vila eller fritt
                       </p>
                     ) : (
@@ -707,7 +707,7 @@ export function PlanPage({
               </ol>
               {flexible.length > 0 && (
                 <div className="mt-3 border-t border-line pt-3">
-                  <p className="mb-2 text-[13px] text-text-muted">
+                  <p className="mb-2 text-[0.8125rem] text-text-muted">
                     Valfri dag i veckan
                   </p>
                   <ul className="grid gap-2 md:grid-cols-2">
@@ -749,7 +749,7 @@ export function PlanPage({
                       {w.roundEnd ? " · testlopp" : ""}
                       {w.checkpoint ? " · avstämning" : ""}
                     </h3>
-                    <ul className="mt-1 text-[12px]">
+                    <ul className="mt-1 text-[0.75rem]">
                       {w.sessions
                         .filter((s) => s.state !== "struken")
                         .map((s) => (
@@ -868,7 +868,7 @@ export function PlanPage({
                         suggestionId={s.id}
                       />
                     ) : (
-                      <p className="text-[12px] text-text-subtle">
+                      <p className="text-[0.75rem] text-text-subtle">
                         {s.status === "accepterad"
                           ? "Godkänt"
                           : s.status === "avvisad"
@@ -892,7 +892,7 @@ export function PlanPage({
                 {levelOf(instance.start_level_id)?.name}. Inga byten än.
               </p>
             ) : (
-              <ol className="space-y-2.5 text-[13px]">
+              <ol className="space-y-2.5 text-[0.8125rem]">
                 <li className="text-text-subtle">
                   Start: {levelOf(instance.start_level_id)?.key} ·{" "}
                   {levelOf(instance.start_level_id)?.name}
@@ -929,7 +929,7 @@ export function PlanPage({
                         />
                       )}
                     {c.note && (
-                      <span className="basis-full text-[12px] text-text-muted">
+                      <span className="basis-full text-[0.75rem] text-text-muted">
                         {c.note}
                       </span>
                     )}

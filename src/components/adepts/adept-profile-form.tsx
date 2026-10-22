@@ -215,7 +215,7 @@ export function AdeptProfileForm({
         <Button type="button" onClick={save} disabled={pending}>
           {pending ? "Sparar …" : "Spara bakgrunden"}
         </Button>
-        <span className="text-[13px] text-text-subtle">
+        <span className="text-[0.8125rem] text-text-subtle">
           {saved
             ? "Sparat. Nästa pass byggs med den här bakgrunden."
             : "Följer med till passbyggaren och AI-coachen."}

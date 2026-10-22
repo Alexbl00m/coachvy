@@ -23,7 +23,7 @@ export function StatTile({
         {value}
       </p>
       {hint && (
-        <p className="mt-2.5 truncate text-[13px] text-text-subtle">{hint}</p>
+        <p className="mt-2.5 truncate text-[0.8125rem] text-text-subtle">{hint}</p>
       )}
     </>
   );

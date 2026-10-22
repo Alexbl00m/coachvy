@@ -88,7 +88,7 @@ function Row({
     <li className="grid gap-2 py-3 sm:grid-cols-[220px_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
       <div>
         <p className="text-sm font-medium text-text">{label}</p>
-        <p className="text-[12px] text-text-subtle tabular-nums">{detail}</p>
+        <p className="text-[0.75rem] text-text-subtle tabular-nums">{detail}</p>
       </div>
       <Track pct={pct} range={range} />
       <div className="flex items-center gap-2 sm:justify-end">
@@ -98,7 +98,7 @@ function Row({
         {state && (
           <span
             className={cn(
-              "rounded px-1.5 py-0.5 text-[11px] font-medium",
+              "rounded px-1.5 py-0.5 text-[0.6875rem] font-medium",
               state === "inom"
                 ? "bg-surface-2 text-good"
                 : "bg-surface-2 text-text-muted",
@@ -148,7 +148,7 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
             style={{ left: at(row.pct), top: i % 2 === 0 ? 0 : 38 }}
           >
             {i % 2 === 0 && (
-              <span className="whitespace-nowrap text-[11px] text-text-muted">
+              <span className="whitespace-nowrap text-[0.6875rem] text-text-muted">
                 {row.key === "I_4mmol"
                   ? "4 mmol"
                   : row.key.replace("_speed", "")}
@@ -157,11 +157,11 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
             <span
               className={cn(
                 "size-3 rounded-full bg-text ring-2 ring-surface",
-                i % 2 === 0 ? "mt-2" : "-mt-[6px]",
+                i % 2 === 0 ? "mt-2" : "-mt-[0.375rem]",
               )}
             />
             {i % 2 === 1 && (
-              <span className="mt-0.5 whitespace-nowrap text-[11px] text-text-muted">
+              <span className="mt-0.5 whitespace-nowrap text-[0.6875rem] text-text-muted">
                 {row.key === "I_4mmol"
                   ? "4 mmol"
                   : row.key.replace("_speed", "")}
@@ -170,7 +170,7 @@ function Ladder({ rows }: { rows: UtilisationRow[] }) {
           </div>
         ))}
       </div>
-      <div className="mt-2 flex justify-between text-[11px] text-text-subtle tabular-nums">
+      <div className="mt-2 flex justify-between text-[0.6875rem] text-text-subtle tabular-nums">
         {[40, 50, 60, 70, 80, 90, 100].map((p) => (
           <span key={p}>{p} %</span>
         ))}
@@ -259,7 +259,7 @@ export function UtilisationCard({
               aria-pressed={on}
               onClick={() => toggle(row.key)}
               className={cn(
-                "rounded-full border px-3 py-1 text-[12px] transition-colors",
+                "rounded-full border px-3 py-1 text-[0.75rem] transition-colors",
                 on
                   ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-subtle line-through hover:text-text-muted",
@@ -309,7 +309,7 @@ export function UtilisationCard({
 
       {diagnosis && (
         <div className="mt-4 rounded-md border border-line bg-surface-2 p-3 sm:p-4">
-          <p className="text-[12px] font-medium text-text-muted">
+          <p className="text-[0.75rem] font-medium text-text-muted">
             Vad det säger ·{" "}
             <span className="tabular-nums">
               {diagnosis.label} {sv(diagnosis.pct, 0)} %
@@ -319,13 +319,13 @@ export function UtilisationCard({
           <p className="mt-1 text-sm font-medium text-text">
             {diagnosis.headline}
           </p>
-          <p className="mt-1 max-w-prose text-[13px] text-text-muted">
+          <p className="mt-1 max-w-prose text-[0.8125rem] text-text-muted">
             {diagnosis.text}
           </p>
         </div>
       )}
 
-      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         Syreupptaget vid varje tröskel räknas med ACSM:s ekvation och delas med
         VO2max. Banden är referensspann: FatMax 50–70 %, LT1 65–75 %, och LT2
         75–90 % – som också gäller anaerob tröskel, FTP, 4 mmol och CP, som alla

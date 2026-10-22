@@ -170,7 +170,7 @@ export function StrengthLogForm({
       <div className="space-y-1.5">
         <label
           htmlFor="styrka-snabb"
-          className="text-[13px] font-medium text-text"
+          className="text-[0.8125rem] font-medium text-text"
         >
           Skriv som du brukar
         </label>
@@ -189,7 +189,7 @@ export function StrengthLogForm({
         />
         {parsed.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[12px] text-text-muted">
+            <p className="text-[0.75rem] text-text-muted">
               Blir:{" "}
               {parsed
                 .map(
@@ -212,7 +212,7 @@ export function StrengthLogForm({
           <button
             type="button"
             onClick={copyPrevious}
-            className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+            className="text-[0.8125rem] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
           >
             Som förra gången{previous.title ? ` (${previous.title})` : ""}
           </button>
@@ -221,9 +221,9 @@ export function StrengthLogForm({
 
       {rows.length > 0 && (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] border-collapse text-sm">
+          <table className="w-full min-w-[32.5rem] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-[12px] text-text-muted">
+              <tr className="border-b border-line text-left text-[0.75rem] text-text-muted">
                 <th className="pb-1.5 pr-2 font-medium">Övning</th>
                 <th className="pb-1.5 pr-2 font-medium">Set</th>
                 <th className="pb-1.5 pr-2 font-medium">Reps</th>

@@ -37,7 +37,7 @@ export function RevokeButton({
         Ångra
       </Button>
       {error && (
-        <span role="alert" className="text-[12px] text-warn">
+        <span role="alert" className="text-[0.75rem] text-warn">
           {error}
         </span>
       )}
@@ -80,7 +80,7 @@ export function SuggestionButtons({
         Avvisa
       </Button>
       {error && (
-        <span role="alert" className="text-[12px] text-warn">
+        <span role="alert" className="text-[0.75rem] text-warn">
           {error}
         </span>
       )}
@@ -165,7 +165,7 @@ export function RestartCard({
           </Select>
         </Field>
       </div>
-      <ul className="space-y-1 text-[13px] leading-relaxed text-text-muted">
+      <ul className="space-y-1 text-[0.8125rem] leading-relaxed text-text-muted">
         {suggestion.rationale.map((line) => (
           <li key={line}>{line}</li>
         ))}
@@ -263,7 +263,7 @@ export function EndPlanButtons({ instanceId }: { instanceId: string }) {
         Avbryt planen
       </Button>
       {error && (
-        <span role="alert" className="text-[12px] text-warn">
+        <span role="alert" className="text-[0.75rem] text-warn">
           {error}
         </span>
       )}

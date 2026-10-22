@@ -44,7 +44,7 @@ export function StrengthHistory({
 
   if (sessions.length === 0) {
     return (
-      <p className="text-[13px] text-text-subtle">Inga pass loggade ännu.</p>
+      <p className="text-[0.8125rem] text-text-subtle">Inga pass loggade ännu.</p>
     );
   }
 
@@ -55,13 +55,13 @@ export function StrengthHistory({
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-text">
               {s.title || "Styrkepass"}
-              <span className="ml-2 text-[12px] font-normal text-text-subtle tabular-nums">
+              <span className="ml-2 text-[0.75rem] font-normal text-text-subtle tabular-nums">
                 {dateText(s.performed_on)}
                 {s.session_rpe !== null &&
                   ` · RPE ${String(s.session_rpe).replace(".", ",")}`}
               </span>
             </p>
-            <p className="mt-0.5 text-[13px] text-text-muted">
+            <p className="mt-0.5 text-[0.8125rem] text-text-muted">
               {s.exercises
                 .map((e) => {
                   const detail = entryText(e);
@@ -70,7 +70,7 @@ export function StrengthHistory({
                 .join(" · ")}
             </p>
             {s.note && (
-              <p className="mt-0.5 text-[12px] text-text-subtle">{s.note}</p>
+              <p className="mt-0.5 text-[0.75rem] text-text-subtle">{s.note}</p>
             )}
           </div>
           <div className="flex shrink-0 items-start gap-1">

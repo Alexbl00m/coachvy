@@ -61,7 +61,7 @@ export function WeekBars({
           return (
             <Fragment key={r.key}>
               {r.group && (
-                <li className="list-none pt-5 pb-1 text-[11px] font-semibold tracking-[0.12em] text-text-subtle uppercase first:pt-1">
+                <li className="list-none pt-5 pb-1 text-[0.6875rem] font-semibold tracking-[0.12em] text-text-subtle uppercase first:pt-1">
                   {r.group}
                 </li>
               )}
@@ -72,7 +72,7 @@ export function WeekBars({
                   r.current && "-mx-2 rounded-md bg-surface-2 px-2",
                 )}
               >
-                <span className="font-mono text-[13px] font-semibold text-text">
+                <span className="font-mono text-[0.8125rem] font-semibold text-text">
                   {label}
                 </span>
                 <span
@@ -101,13 +101,13 @@ export function WeekBars({
                     )}
                   </span>
                 </span>
-                <span className="text-right font-mono text-[13px] whitespace-nowrap tabular-nums text-text">
+                <span className="text-right font-mono text-[0.8125rem] whitespace-nowrap tabular-nums text-text">
                   {r.valueText}
                 </span>
                 <span aria-hidden />
-                <p className="text-[13px] leading-snug text-text-muted">
+                <p className="text-[0.8125rem] leading-snug text-text-muted">
                   {r.meta && (
-                    <span className="mr-2 font-mono text-[11px] whitespace-nowrap text-text-subtle">
+                    <span className="mr-2 font-mono text-[0.6875rem] whitespace-nowrap text-text-subtle">
                       {r.meta}
                     </span>
                   )}
@@ -121,7 +121,7 @@ export function WeekBars({
                   {r.note && (
                     <span
                       className={cn(
-                        "mt-0.5 block text-[12px]",
+                        "mt-0.5 block text-[0.75rem]",
                         r.note.tone === "varning"
                           ? "text-warn"
                           : "text-text-subtle",
@@ -133,7 +133,7 @@ export function WeekBars({
                 </p>
                 <span
                   className={cn(
-                    "text-right text-[12px] whitespace-nowrap tabular-nums",
+                    "text-right text-[0.75rem] whitespace-nowrap tabular-nums",
                     r.asideTone === "varning"
                       ? "text-warn"
                       : r.asideTone === "notis"
@@ -149,7 +149,7 @@ export function WeekBars({
         })}
       </ol>
       {legend && (
-        <p className="mt-3 text-[11px] leading-snug text-text-subtle">
+        <p className="mt-3 text-[0.6875rem] leading-snug text-text-subtle">
           {legend}
         </p>
       )}

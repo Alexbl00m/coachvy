@@ -112,7 +112,7 @@ function MetabolicMap({ points }: { points: MapPoint[] }) {
               dataKey="vo2max"
               domain={[40, 90]}
               ticks={[40, 50, 60, 70, 80, 90]}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               stroke={CHART_GRID}
               label={{
@@ -120,7 +120,7 @@ function MetabolicMap({ points }: { points: MapPoint[] }) {
                 position: "insideBottomRight",
                 offset: -4,
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <YAxis
@@ -129,7 +129,7 @@ function MetabolicMap({ points }: { points: MapPoint[] }) {
               domain={[0.1, 1.0]}
               ticks={[0.2, 0.4, 0.6, 0.8, 1.0]}
               tickFormatter={(v: number) => sv(v, 1)}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={false}
               width={44}
@@ -150,7 +150,7 @@ function MetabolicMap({ points }: { points: MapPoint[] }) {
                   value: t.label,
                   position: "insideTopLeft",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 10,
+                  fontSize: "0.625rem",
                 }}
               />
             ))}
@@ -175,13 +175,13 @@ function MetabolicMap({ points }: { points: MapPoint[] }) {
                 dataKey: "date",
                 position: "right",
                 fill: CHART_LABEL_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[12px] text-text-subtle">
+      <p className="text-[0.75rem] text-text-subtle">
         Typerna är erfarenhetsmässiga spann för cyklister och överlappar – en
         orientering, inte en klassning.
       </p>
@@ -272,7 +272,7 @@ export function MetabolicSection({
               aria-pressed={view === v.key}
               onClick={() => setView(v.key)}
               className={cn(
-                "rounded px-3 py-1.5 text-[13px] transition-colors",
+                "rounded px-3 py-1.5 text-[0.8125rem] transition-colors",
                 view === v.key
                   ? "bg-surface-2 font-medium text-text"
                   : "text-text-muted hover:text-text",
@@ -291,13 +291,13 @@ export function MetabolicSection({
               key={f.label}
               className="rounded-md border border-line bg-surface px-3 py-2"
             >
-              <dt className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+              <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
                 {f.label}
               </dt>
               <dd className="mt-1 text-lg font-semibold text-text tabular-nums">
                 {f.value}
               </dd>
-              <dd className="text-[12px] text-text-subtle">{f.hint}</dd>
+              <dd className="text-[0.75rem] text-text-subtle">{f.hint}</dd>
             </div>
           ))}
         </dl>
@@ -316,7 +316,7 @@ export function MetabolicSection({
             band={band}
             weightKg={weightKg}
           />
-          <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+          <p className="mt-3 max-w-3xl text-[0.8125rem] leading-relaxed text-text-muted">
             {view === "lactate"
               ? "Laktatet som bildas mot det som förbränns, ur Mader-modellen med VO2max och VLamax, och syreupptaget. Där laktatkurvorna korsar varandra ligger tröskeln – över den hopar sig laktatet."
               : "Fett och kolhydrat i gram per timme. FatMax är där fettförbränningen toppar, CarbMax där kolhydratåtgången når 90 g/h – ungefär vad magen tar upp under ett lopp. Över den töms förråden fortare än de fylls på."}

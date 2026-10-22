@@ -197,7 +197,7 @@ export async function SeasonPlan({
                 <span className="min-w-0 truncate">{main.name}</span>
                 <PriorityBadge
                   priority={main.priority}
-                  className="size-5 shrink-0 text-[11px]"
+                  className="size-5 shrink-0 text-[0.6875rem]"
                 />
               </p>
               <p className="mt-2 text-sm text-text-muted">
@@ -258,7 +258,7 @@ export async function SeasonPlan({
               >
                 <ChevronLeft aria-hidden className="size-4" />
               </Link>
-              <span className="hidden min-w-[9.5rem] text-center text-[13px] text-text-muted tabular-nums sm:inline">
+              <span className="hidden min-w-[9.5rem] text-center text-[0.8125rem] text-text-muted tabular-nums sm:inline">
                 {monthLabel(fran)} – {monthLabel(shiftMonth(fran, 11))}
               </span>
               <Link
@@ -284,7 +284,7 @@ export async function SeasonPlan({
         />
         {notes.length > 0 && (
           <div className="mt-5 border-t border-line pt-4">
-            <h3 className="text-[13px] font-medium text-text">Att se över</h3>
+            <h3 className="text-[0.8125rem] font-medium text-text">Att se över</h3>
             <ul className="mt-2 space-y-1.5 text-sm text-text-muted">
               {notes.map((note) => (
                 <li key={note} className="flex gap-2.5">

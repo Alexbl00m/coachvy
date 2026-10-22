@@ -115,7 +115,7 @@ export function WorkoutView({
         />
         <p
           className={cn(
-            "mt-3 border-t border-line pt-3 text-[13px] leading-relaxed",
+            "mt-3 border-t border-line pt-3 text-[0.8125rem] leading-relaxed",
             balance?.depleted ? "text-text" : "text-text-muted",
           )}
         >
@@ -135,7 +135,7 @@ export function WorkoutView({
           onChange={onChange}
         />
         {onChange && (
-          <p className="mt-3 text-[12px] text-text-subtle print:hidden">
+          <p className="mt-3 text-[0.75rem] text-text-subtle print:hidden">
             Ändra en längd eller ett mål så räknas grafen och W′bal om direkt.
           </p>
         )}

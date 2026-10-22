@@ -54,15 +54,15 @@ export function Coaching() {
                 : "border-line bg-canvas",
             )}
           >
-            <h3 className="text-[15px] font-semibold text-text">
+            <h3 className="text-[0.9375rem] font-semibold text-text">
               {item.title}
             </h3>
-            <p className="mt-1 text-[14px] text-text-muted">
+            <p className="mt-1 text-[0.875rem] text-text-muted">
               {item.description}
             </p>
-            <p className="mt-6 text-[36px] leading-none font-semibold tracking-[-0.03em] text-text tabular-nums">
+            <p className="mt-6 text-[2.25rem] leading-none font-semibold tracking-[-0.03em] text-text tabular-nums">
               {item.price}
-              <span className="ml-1.5 text-[14px] font-normal tracking-normal text-text-subtle">
+              <span className="ml-1.5 text-[0.875rem] font-normal tracking-normal text-text-subtle">
                 per månad
               </span>
             </p>
@@ -71,7 +71,7 @@ export function Coaching() {
               {item.features.map((feature) => (
                 <li
                   key={feature}
-                  className="flex items-start gap-3 text-[14px] text-text-muted"
+                  className="flex items-start gap-3 text-[0.875rem] text-text-muted"
                 >
                   <Check
                     aria-hidden

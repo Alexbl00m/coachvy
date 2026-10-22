@@ -12,7 +12,7 @@ import type { Adept } from "@/lib/types/database";
 function Row({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="border-b border-ink-800 py-3 last:border-b-0 sm:grid sm:grid-cols-[160px_1fr] sm:gap-4">
-      <dt className="text-[13px] text-ink-400">{label}</dt>
+      <dt className="text-[0.8125rem] text-ink-400">{label}</dt>
       <dd className="mt-0.5 text-sm text-ink-100 sm:mt-0">
         {value?.trim() ? value : "–"}
       </dd>

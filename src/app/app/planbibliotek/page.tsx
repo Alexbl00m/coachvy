@@ -82,7 +82,7 @@ export default async function PlanLibraryPage({
             <p className="text-sm font-medium text-text">
               Du följer {active.title}
             </p>
-            <p className="text-[13px] text-text-muted">
+            <p className="text-[0.8125rem] text-text-muted">
               En plan i taget. Avsluta den aktiva för att starta en ny.
             </p>
           </div>
@@ -138,7 +138,7 @@ export default async function PlanLibraryPage({
                     href={`${routes.planLibrary}/${template.slug}`}
                     className="lift flex h-full flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-line-strong"
                   >
-                    <span className="text-[12px] text-text-subtle">
+                    <span className="text-[0.75rem] text-text-subtle">
                       {[category?.name, weeks].filter(Boolean).join(" · ")}
                     </span>
                     <span className="mt-1 text-base font-semibold text-text">
@@ -155,7 +155,7 @@ export default async function PlanLibraryPage({
                         showLabels={false}
                         className="opacity-90"
                       />
-                      <span className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-text-muted">
+                      <span className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-text-muted">
                         <span>
                           {levels.length}{" "}
                           {levels.length === 1 ? "nivå" : "nivåer"}:{" "}

@@ -39,10 +39,10 @@ export function ScaleField({
 
   return (
     <fieldset className="space-y-1.5">
-      <legend className="flex w-full items-baseline justify-between text-[13px] font-medium text-text">
+      <legend className="flex w-full items-baseline justify-between text-[0.8125rem] font-medium text-text">
         <span>{label}</span>
         {value !== null && (
-          <span className="text-[12px] font-normal text-text-muted tabular-nums">
+          <span className="text-[0.75rem] font-normal text-text-muted tabular-nums">
             {value}
           </span>
         )}
@@ -59,7 +59,7 @@ export function ScaleField({
               aria-pressed={active}
               aria-label={`${label} ${step}`}
               className={cn(
-                "h-8 min-w-8 flex-1 rounded-md border text-[13px] tabular-nums transition-colors",
+                "h-8 min-w-8 flex-1 rounded-md border text-[0.8125rem] tabular-nums transition-colors",
                 active
                   ? "border-accent bg-accent text-accent-on"
                   : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
@@ -71,12 +71,12 @@ export function ScaleField({
         })}
       </div>
 
-      <div className="flex justify-between text-[11px] text-text-subtle">
+      <div className="flex justify-between text-[0.6875rem] text-text-subtle">
         <span>{lowLabel}</span>
         <span>{highLabel}</span>
       </div>
 
-      {hint && <p className="text-[11px] text-text-subtle">{hint}</p>}
+      {hint && <p className="text-[0.6875rem] text-text-subtle">{hint}</p>}
     </fieldset>
   );
 }

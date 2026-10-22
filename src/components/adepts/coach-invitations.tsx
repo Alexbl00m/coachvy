@@ -37,7 +37,7 @@ export function CoachInvitations({ invitations }: { invitations: Invitation[] })
                 {inv.coach_name}
                 {inv.company_name ? `, ${inv.company_name}` : ""} vill bli din coach
               </p>
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[0.8125rem] text-text-muted">
                 Tackar du ja ser din coach dina tester, pass och incheckningar, och du kommer in i
                 communityn. Det du redan loggat följer med.
               </p>
@@ -48,7 +48,7 @@ export function CoachInvitations({ invitations }: { invitations: Invitation[] })
           </div>
         </Card>
       ))}
-      {error && <p className="text-[13px] text-text">{error}</p>}
+      {error && <p className="text-[0.8125rem] text-text">{error}</p>}
     </div>
   );
 }

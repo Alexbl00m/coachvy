@@ -100,7 +100,7 @@ export function BeforeAfter({
                 />
               </span>
               <span className="text-right tabular-nums">
-                <span className="block text-[13px] text-text-muted">
+                <span className="block text-[0.8125rem] text-text-muted">
                   {show(a.value).value} →{" "}
                   <span className="font-semibold text-text">
                     {show(b.value).value} {show(b.value).unit}
@@ -109,7 +109,7 @@ export function BeforeAfter({
                 {change && (
                   <span
                     className={cn(
-                      "block text-[12px] font-medium",
+                      "block text-[0.75rem] font-medium",
                       change.tone === "good"
                         ? "text-good"
                         : change.tone === "bad"

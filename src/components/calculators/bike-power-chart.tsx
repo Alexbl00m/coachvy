@@ -73,7 +73,7 @@ export function SpeedPowerChart({
   );
 
   return (
-    <div className="h-[320px] w-full">
+    <div className="h-[20rem] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={curve}
@@ -86,20 +86,20 @@ export function SpeedPowerChart({
             domain={["dataMin", "dataMax"]}
             tickFormatter={(v: number) => String(Math.round(v))}
             stroke={CHART_GRID}
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
             tickLine={false}
             label={{
               value: "km/h",
               position: "insideBottomRight",
               offset: -4,
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           <YAxis
             domain={[0, Math.ceil((maxWatts * 1.05) / 50) * 50]}
             stroke={CHART_GRID}
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
             tickLine={false}
             width={52}
             label={{
@@ -107,7 +107,7 @@ export function SpeedPowerChart({
               position: "insideTopLeft",
               offset: 8,
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           <Tooltip
@@ -124,7 +124,7 @@ export function SpeedPowerChart({
                 value: `FTP ${Math.round(ftp)} W`,
                 position: "insideTopLeft",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -156,7 +156,7 @@ export function SpeedPowerChart({
                 value: `${sv(currentKmh, 1)} km/h · ${Math.round(currentWatts)} W`,
                 position: "top",
                 fill: CHART_LABEL_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -248,8 +248,8 @@ export function PowerSplitBar({
               className="size-2.5 shrink-0 translate-y-px rounded-full"
               style={{ backgroundColor: share.color }}
             />
-            <dt className="text-[13px] text-text-muted">{share.label}</dt>
-            <dd className="ml-auto shrink-0 text-[13px] font-medium text-text tabular-nums">
+            <dt className="text-[0.8125rem] text-text-muted">{share.label}</dt>
+            <dd className="ml-auto shrink-0 text-[0.8125rem] font-medium text-text tabular-nums">
               {percentages[index]} %
               <span className="ml-2 font-normal text-text-subtle">
                 {Math.round(share.watts)} W
@@ -260,7 +260,7 @@ export function PowerSplitBar({
       </dl>
 
       {negative.map((share) => (
-        <p key={share.label} className="text-[12px] text-text-subtle">
+        <p key={share.label} className="text-[0.75rem] text-text-subtle">
           {share.label} hjälper i stället till med {Math.round(-share.watts)} W.
         </p>
       ))}

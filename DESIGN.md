@@ -273,6 +273,12 @@ Montserrat lever bara i Lindblom Coachings logotyp.
   kort, paneler och tabellramar; `xl` (20 px) på dialoger och kartan; `xs`
   (4 px) på prioritetsbrickor. Knappar, brickor och flikväljare är pillor –
   det enda runda på en sida av raka kort, så att det syns vad man trycker på.
+- **Gränssnittet växer med skärmen.** Rotens storlek går från 100 % vid
+  1280 px till 125 % vid 2560 px (`globals.css`), och innehållet fyller
+  bredden upp till 110 rem. Därför anges text, avstånd och höjder i rem –
+  `text-[0.8125rem]`, inte `text-[13px]`. Bara hårfina mått (kanter, 1–4 px
+  mellanrum och hörn) står i px. Ritningar som räknar i pixlar i JavaScript
+  skalar med `useRootScale()`.
 - Kort: `surface`, kant `line`, ingen skugga, inre luft 20–28 px.
 - Nyckeltal som hör ihop står i en rad delad av hårfina linjer (`gap-px` på
   `bg-line`), inte som fristående rutor.

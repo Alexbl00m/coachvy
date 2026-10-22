@@ -22,7 +22,7 @@ export function AdeptPicker({
       <select
         value={current}
         onChange={(e) => router.push(`${basePath}?adept=${e.target.value}`)}
-        className="h-9 min-w-[200px] rounded-md border border-line-strong bg-surface-2 px-3 text-sm text-text focus:border-accent focus:outline-none"
+        className="h-9 min-w-[12.5rem] rounded-md border border-line-strong bg-surface-2 px-3 text-sm text-text focus:border-accent focus:outline-none"
       >
         {adepts.map((a) => (
           <option key={a.id} value={a.id}>

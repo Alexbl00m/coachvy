@@ -17,7 +17,7 @@ export function ContextSummary({ context }: { context: AthleteContext }) {
   const cycling = context.sport === "cykling";
 
   return (
-    <div className="border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
+    <div className="border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
       {context.reference !== null && context.basis ? (
         <p className="text-text-muted">
           {context.basis}{" "}

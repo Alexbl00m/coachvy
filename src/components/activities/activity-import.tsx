@@ -39,7 +39,7 @@ const plural = (n: number, one: string, many: string) =>
 /** Var exporten finns hos de vanliga tjänsterna. */
 function WhereToFind() {
   return (
-    <details className="group mt-3 text-[13px] text-text-muted">
+    <details className="group mt-3 text-[0.8125rem] text-text-muted">
       <summary className="cursor-pointer text-text-muted hover:text-text">
         Var hittar man filerna?
       </summary>
@@ -272,7 +272,7 @@ export function ActivityImport({
                 ? "Letar efter pass i filerna …"
                 : "Välj eller släpp zip-filen eller FIT-filerna"}
             </span>
-            <span className="block text-[12px] text-text-subtle">
+            <span className="block text-[0.75rem] text-text-subtle">
               .zip, .fit och .fit.gz – flera på en gång går bra.
             </span>
           </span>
@@ -295,7 +295,7 @@ export function ActivityImport({
           <Button onClick={run}>
             Importera {plural(total, "pass", "pass")}
           </Button>
-          <p className="text-[13px] text-text-subtle">
+          <p className="text-[0.8125rem] text-text-subtle">
             {scan.skipped > 0 &&
               `${plural(scan.skipped, "annan fil", "andra filer")} hoppas över. `}
             Tar under en sekund per pass – låt sidan vara öppen tills det står
@@ -306,7 +306,7 @@ export function ActivityImport({
 
       {(running || finished) && (
         <div className="mt-4" role="status" aria-live="polite">
-          <div className="flex items-baseline justify-between gap-3 text-[13px]">
+          <div className="flex items-baseline justify-between gap-3 text-[0.8125rem]">
             <span className="text-text tabular-nums">
               {finished ? "Klart." : `${tally.done} av ${total} · ${pct} %`}
             </span>
@@ -331,12 +331,12 @@ export function ActivityImport({
               style={{ width: `${finished ? 100 : pct}%` }}
             />
           </div>
-          <p className="mt-2 text-[13px] text-text-muted tabular-nums">
+          <p className="mt-2 text-[0.8125rem] text-text-muted tabular-nums">
             {plural(tally.saved, "nytt pass", "nya pass")} · {tally.duplicates}{" "}
             fanns redan · {tally.unreadable} gick inte att läsa
           </p>
           {current && (
-            <p className="mt-1 truncate font-mono text-[11px] text-text-subtle">
+            <p className="mt-1 truncate font-mono text-[0.6875rem] text-text-subtle">
               {current}
             </p>
           )}
@@ -344,7 +344,7 @@ export function ActivityImport({
       )}
 
       {error && (
-        <p role="alert" className="mt-3 text-[13px] text-bad">
+        <p role="alert" className="mt-3 text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

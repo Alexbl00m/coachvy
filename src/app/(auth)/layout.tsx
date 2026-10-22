@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           </p>
         </div>
 
-        <p className="text-[12px] text-ink-500">
+        <p className="text-[0.75rem] text-ink-500">
           © {new Date().getFullYear()} Coachvy
         </p>
       </section>
@@ -36,7 +36,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
 
           {children}
 
-          <p className="mt-8 text-center text-[12px] text-ink-500">
+          <p className="mt-8 text-center text-[0.75rem] text-ink-500">
             <Link
               href={routes.privacy}
               className="underline underline-offset-2 hover:text-ink-300"

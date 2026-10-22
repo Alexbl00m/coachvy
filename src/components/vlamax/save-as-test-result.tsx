@@ -66,7 +66,7 @@ export function SaveAsTestResult({
           {pending ? "Sparar…" : `Spara ${value.toFixed(2).replace(".", ",")} mmol/l/s`}
         </Button>
 
-        <p className="text-[12px] text-text-subtle">
+        <p className="text-[0.75rem] text-text-subtle">
           Resultatet märks som beräknat, så att det inte förväxlas med ett
           uppmätt värde.
         </p>

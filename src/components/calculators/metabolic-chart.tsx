@@ -71,7 +71,7 @@ function ChartTooltip({
 
   return (
     <div className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg">
-      <p className="text-[11px] text-text-muted">
+      <p className="text-[0.6875rem] text-text-muted">
         {mode === "cykling"
           ? `${Math.round(point.power)} W`
           : `${paceFromSpeed(point.power)}/km · ${(point.power * 3.6).toFixed(1).replace(".", ",")} km/h`}{" "}
@@ -92,7 +92,7 @@ function ChartTooltip({
           </span>
         </p>
       ))}
-      <p className="mt-1 text-right text-[11px] text-text-subtle">{unit}</p>
+      <p className="mt-1 text-right text-[0.6875rem] text-text-subtle">{unit}</p>
     </div>
   );
 }
@@ -201,7 +201,7 @@ export function MetabolicChart({
             tickFormatter={(v: number) =>
               mode === "cykling" ? String(Math.round(v)) : (v * 3.6).toFixed(0)
             }
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
             tickLine={false}
             axisLine={{ stroke: CHART_GRID }}
             height={28}
@@ -211,7 +211,7 @@ export function MetabolicChart({
               position: "insideBottomRight",
               offset: -4,
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           {withVo2 && (
@@ -219,7 +219,7 @@ export function MetabolicChart({
               yAxisId="vo2"
               domain={[0, "auto"]}
               tickFormatter={(v: number) => String(Math.round(v))}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={false}
               width={56}
@@ -228,7 +228,7 @@ export function MetabolicChart({
                 angle: -90,
                 position: "insideLeft",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -242,7 +242,7 @@ export function MetabolicChart({
                 ? v.toFixed(1).replace(".", ",")
                 : String(Math.round(v))
             }
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
             tickLine={false}
             axisLine={false}
             width={52}
@@ -251,7 +251,7 @@ export function MetabolicChart({
               angle: withVo2 ? 90 : -90,
               position: withVo2 ? "insideRight" : "insideLeft",
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           <Tooltip
@@ -263,7 +263,7 @@ export function MetabolicChart({
             align="right"
             height={28}
             iconType="plainline"
-            wrapperStyle={{ fontSize: 12, color: CHART_AXIS_TEXT }}
+            wrapperStyle={{ fontSize: "0.75rem", color: CHART_AXIS_TEXT }}
           />
 
           {thresholdPower !== null && (
@@ -276,7 +276,7 @@ export function MetabolicChart({
                 value: "Tröskel",
                 position: "top",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -293,7 +293,7 @@ export function MetabolicChart({
                 value: m.label,
                 position: "insideTopLeft",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           ))}
@@ -379,7 +379,7 @@ function FuelTooltip({
         ⇔ {Math.round(grams * kcalPerGram)} kcal/h
       </span>
       {range && (
-        <span className="text-[11px] text-text-subtle tabular-nums">
+        <span className="text-[0.6875rem] text-text-subtle tabular-nums">
           ({Math.round(range[0])}–{Math.round(range[1])})
         </span>
       )}
@@ -387,7 +387,7 @@ function FuelTooltip({
   );
   return (
     <div className="rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg">
-      <p className="text-[11px] text-text-muted">
+      <p className="text-[0.6875rem] text-text-muted">
         {mode === "cykling"
           ? `${Math.round(p.power)} W`
           : `${paceFromSpeed(p.power)}/km · ${(p.power * 3.6).toFixed(1).replace(".", ",")} km/h`}{" "}
@@ -471,7 +471,7 @@ function FuelChart({
 
   return (
     <div className="space-y-2">
-      <ul className="flex flex-wrap justify-end gap-x-5 gap-y-1 text-[12px] text-text-muted">
+      <ul className="flex flex-wrap justify-end gap-x-5 gap-y-1 text-[0.75rem] text-text-muted">
         <li className="flex items-center gap-2">
           <span
             aria-hidden
@@ -511,7 +511,7 @@ function FuelChart({
               domain={mode === "cykling" ? [0, "dataMax"] : ["dataMin", "dataMax"]}
               ticks={ticks}
               tickFormatter={format}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={{ stroke: CHART_GRID }}
               height={28}
@@ -521,7 +521,7 @@ function FuelChart({
                 position: "insideBottomRight",
                 offset: -4,
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <YAxis
@@ -529,7 +529,7 @@ function FuelChart({
               domain={[0, carbCeil]}
               ticks={carbTicks}
               allowDataOverflow
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={false}
               width={48}
@@ -538,7 +538,7 @@ function FuelChart({
                 angle: -90,
                 position: "insideLeft",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <YAxis
@@ -547,7 +547,7 @@ function FuelChart({
               domain={[0, fatMax]}
               ticks={fatTicks}
               allowDataOverflow
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={false}
               width={48}
@@ -556,7 +556,7 @@ function FuelChart({
                 angle: 90,
                 position: "insideRight",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <Tooltip
@@ -573,7 +573,7 @@ function FuelChart({
                   value: "Tröskel",
                   position: "insideTopRight",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 11,
+                  fontSize: "0.6875rem",
                 }}
               />
             )}
@@ -589,7 +589,7 @@ function FuelChart({
                   value: m.label,
                   position: m.label === "CarbMax" ? "insideBottomLeft" : "insideTopLeft",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 11,
+                  fontSize: "0.6875rem",
                 }}
               />
             ))}
@@ -603,7 +603,7 @@ function FuelChart({
                 value: "90 g/h",
                 position: "insideTopLeft",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 10,
+                fontSize: "0.625rem",
               }}
             />
             {band && (

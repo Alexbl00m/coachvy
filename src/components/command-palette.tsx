@@ -259,7 +259,7 @@ export function CommandPalette({
         }}
         aria-haspopup="dialog"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-9 items-center gap-2.5 rounded-full border border-line-strong bg-surface px-2.5 text-[13px] text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:h-10 sm:w-72 sm:px-4"
+        className="flex h-9 items-center gap-2.5 rounded-full border border-line-strong bg-surface px-2.5 text-[0.8125rem] text-text-muted transition-colors hover:bg-surface-2 hover:text-text sm:h-10 sm:w-72 sm:px-4"
       >
         <Search aria-hidden className="size-4 shrink-0" />
         <span className="sr-only sm:not-sr-only sm:flex-1 sm:truncate sm:text-left">
@@ -269,7 +269,7 @@ export function CommandPalette({
         </span>
         <kbd
           suppressHydrationWarning
-          className="hidden font-mono text-[11px] text-text-subtle sm:inline"
+          className="hidden font-mono text-[0.6875rem] text-text-subtle sm:inline"
         >
           {mac ? "⌘K" : "Ctrl K"}
         </kbd>
@@ -312,7 +312,7 @@ export function CommandPalette({
                     ? 'Sök sida eller adept – "tobias tester"'
                     : "Sök sida eller handling"
                 }
-                className="h-12 min-w-0 flex-1 bg-transparent text-[15px] text-text placeholder:text-text-subtle focus:outline-none focus-visible:outline-none"
+                className="h-12 min-w-0 flex-1 bg-transparent text-[0.9375rem] text-text placeholder:text-text-subtle focus:outline-none focus-visible:outline-none"
               />
             </div>
 
@@ -335,7 +335,7 @@ export function CommandPalette({
                     {first && (
                       <p
                         role="presentation"
-                        className="px-3 pb-1 pt-2.5 text-[11px] font-medium uppercase tracking-[0.08em] text-text-subtle"
+                        className="px-3 pb-1 pt-2.5 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle"
                       >
                         {command.group}
                       </p>
@@ -354,7 +354,7 @@ export function CommandPalette({
                       <span className="min-w-0 flex-1 truncate">
                         {command.label}
                         {command.hint && (
-                          <span className="ml-2 text-[13px] text-text-muted">
+                          <span className="ml-2 text-[0.8125rem] text-text-muted">
                             {command.hint}
                           </span>
                         )}
@@ -371,7 +371,7 @@ export function CommandPalette({
               })}
             </ul>
 
-            <p className="flex gap-4 border-t border-line px-4 py-2 text-[12px] text-text-subtle">
+            <p className="flex gap-4 border-t border-line px-4 py-2 text-[0.75rem] text-text-subtle">
               <span>↑↓ välj</span>
               <span>↵ öppna</span>
               <span>esc stäng</span>

@@ -94,7 +94,7 @@ export default async function KalkylerPage() {
               <h2 className="mt-4 flex flex-wrap items-center gap-2 text-lg font-semibold text-text">
                 {item.title}
                 {"membersOnly" in item && item.membersOnly && (
-                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-normal text-text">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[0.6875rem] font-normal text-text">
                     <Lock aria-hidden className="size-3" />
                     {member ? "Medlem" : "Ingår i medlemskapet"}
                   </span>
@@ -107,7 +107,7 @@ export default async function KalkylerPage() {
               <p className="mt-2 text-sm leading-relaxed text-text-muted">
                 {item.description}
               </p>
-              <p className="mt-4 text-[12px] uppercase tracking-[0.1em] text-text-subtle">
+              <p className="mt-4 text-[0.75rem] uppercase tracking-[0.1em] text-text-subtle">
                 In: {item.inputs}
               </p>
             </Link>

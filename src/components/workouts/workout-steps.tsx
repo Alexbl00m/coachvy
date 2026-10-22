@@ -35,7 +35,7 @@ type Address = { blockIndex: number; stepIndex: number };
 const keyOf = (a: Address) => `${a.blockIndex}:${a.stepIndex}`;
 
 const th =
-  "pb-2 pr-3 text-left text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted";
+  "pb-2 pr-3 text-left text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted";
 
 export function WorkoutSteps({
   workout,
@@ -163,11 +163,11 @@ export function WorkoutSteps({
                   <tr className="border-b border-line/60">
                     <td colSpan={editable ? 5 : 4} className="py-2">
                       {editable ? (
-                        <label className="flex items-center gap-2 text-[13px] text-text-muted">
+                        <label className="flex items-center gap-2 text-[0.8125rem] text-text-muted">
                           <Input
                             aria-label="Antal varv"
                             inputMode="numeric"
-                            className="h-7 w-16 px-2 py-1 text-[13px]"
+                            className="h-7 w-16 px-2 py-1 text-[0.8125rem]"
                             value={String(headers.get(address.blockIndex))}
                             onChange={(e) =>
                               setTimes(
@@ -179,7 +179,7 @@ export function WorkoutSteps({
                           <span>× följande</span>
                         </label>
                       ) : (
-                        <span className="text-[13px] font-medium text-text">
+                        <span className="text-[0.8125rem] font-medium text-text">
                           {headers.get(address.blockIndex)} × följande
                         </span>
                       )}
@@ -197,7 +197,7 @@ export function WorkoutSteps({
                       />
                       <span className="text-text">{step.kind}</span>
                       {step.label && (
-                        <span className="text-[12px] text-text-subtle">
+                        <span className="text-[0.75rem] text-text-subtle">
                           {step.label}
                         </span>
                       )}
@@ -234,14 +234,14 @@ export function WorkoutSteps({
                             })
                           }
                         />
-                        <span className="text-[12px] text-text-subtle">
+                        <span className="text-[0.75rem] text-text-subtle">
                           {byDistance ? "m" : "m:ss"}
                         </span>
                       </span>
                     ) : (
                       <span className="text-text tabular-nums">
                         {committed}
-                        <span className="ml-1 text-[12px] text-text-subtle">
+                        <span className="ml-1 text-[0.75rem] text-text-subtle">
                           {byDistance ? "m" : ""}
                         </span>
                       </span>
@@ -265,7 +265,7 @@ export function WorkoutSteps({
                             });
                           }}
                         />
-                        <span className="text-[12px] text-text-subtle">–</span>
+                        <span className="text-[0.75rem] text-text-subtle">–</span>
                         <Input
                           aria-label={`Övre mål ${step.kind}`}
                           inputMode="numeric"
@@ -286,7 +286,7 @@ export function WorkoutSteps({
                     )}
                   </td>
 
-                  <td className="py-2 pr-3 text-[13px] text-text-muted tabular-nums">
+                  <td className="py-2 pr-3 text-[0.8125rem] text-text-muted tabular-nums">
                     {resolved === null ? (
                       "–"
                     ) : workout.sport === "cykling" ? (

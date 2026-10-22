@@ -53,11 +53,11 @@ function Author({
   at: string;
 }) {
   return (
-    <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.8125rem]">
       <span className="font-medium text-text">{name}</span>
       <span
         className={cn(
-          "rounded px-1.5 py-0.5 text-[10px] uppercase tracking-[0.08em]",
+          "rounded px-1.5 py-0.5 text-[0.625rem] uppercase tracking-[0.08em]",
           role === "coach" || admin ? "bg-surface-3 text-text" : "bg-surface-2 text-text-muted",
         )}
       >
@@ -76,9 +76,9 @@ function Attachment({ item }: { item: CommunityAttachment }) {
         <Icon aria-hidden className="size-4 text-text-muted" />
         {item.title}
       </p>
-      {item.subtitle && <p className="mt-0.5 text-[12px] text-text-subtle">{item.subtitle}</p>}
+      {item.subtitle && <p className="mt-0.5 text-[0.75rem] text-text-subtle">{item.subtitle}</p>}
       {item.lines.length > 0 && (
-        <dl className="mt-2 space-y-1 text-[13px]">
+        <dl className="mt-2 space-y-1 text-[0.8125rem]">
           {item.lines.map((line, i) => (
             <div key={i} className="flex gap-3">
               <dt className="w-20 shrink-0 text-text-subtle">{line.label}</dt>
@@ -136,7 +136,7 @@ function Comments({ postId, me, onCount }: { postId: string; me: Me; onCount: (n
   return (
     <div className="mt-3 space-y-3 border-t border-line pt-3">
       {items === null ? (
-        <p className="text-[13px] text-text-subtle">Hämtar …</p>
+        <p className="text-[0.8125rem] text-text-subtle">Hämtar …</p>
       ) : (
         items.map((c) => (
           <div key={c.id} className="group">
@@ -172,7 +172,7 @@ function Comments({ postId, me, onCount }: { postId: string; me: Me; onCount: (n
           Skicka
         </Button>
       </div>
-      {error && <p className="text-[13px] text-text">{error}</p>}
+      {error && <p className="text-[0.8125rem] text-text">{error}</p>}
     </div>
   );
 }
@@ -210,7 +210,7 @@ function Post({ post, me, onDeleted }: { post: CommunityFeedItem; me: Me; onDele
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <Author name={post.author_name} role={post.author_role} admin={post.author_is_admin} at={post.created_at} />
-          <p className="mt-0.5 text-[11px] uppercase tracking-[0.1em] text-text-subtle">
+          <p className="mt-0.5 text-[0.6875rem] uppercase tracking-[0.1em] text-text-subtle">
             {channelLabel(post.channel)}
           </p>
         </div>
@@ -229,7 +229,7 @@ function Post({ post, me, onDeleted }: { post: CommunityFeedItem; me: Me; onDele
       <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text">{post.body}</p>
       {post.attachment && <Attachment item={post.attachment} />}
 
-      <div className="mt-3 flex gap-4 text-[13px]">
+      <div className="mt-3 flex gap-4 text-[0.8125rem]">
         <button
           type="button"
           aria-pressed={liked}
@@ -328,7 +328,7 @@ function Composer({
           {pending ? "Publicerar …" : "Publicera"}
         </Button>
       </div>
-      {error && <p className="mt-2 text-[13px] text-text">{error}</p>}
+      {error && <p className="mt-2 text-[0.8125rem] text-text">{error}</p>}
     </Card>
   );
 }
@@ -371,7 +371,7 @@ export function CommunityFeed({
             href={c.key ? `${routes.community}?kanal=${c.key}` : routes.community}
             aria-current={channel === c.key ? "page" : undefined}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+              "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
               channel === c.key
                 ? "border-text-subtle bg-surface-3 font-medium text-text"
                 : "border-line-strong text-text-muted hover:border-accent hover:text-text",

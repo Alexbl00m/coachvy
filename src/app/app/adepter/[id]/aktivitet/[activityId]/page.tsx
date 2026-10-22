@@ -146,7 +146,7 @@ function ZoneBars({ zones }: { zones: ZoneTime[] }) {
       {zones.map((z) => (
         <li
           key={z.zone}
-          className="grid grid-cols-[minmax(0,8.5rem)_1fr] items-center gap-3 text-[13px]"
+          className="grid grid-cols-[minmax(0,8.5rem)_1fr] items-center gap-3 text-[0.8125rem]"
         >
           <span className="truncate text-text-muted">{z.zone}</span>
           <span className="flex items-center gap-2">
@@ -260,13 +260,13 @@ export default async function ActivityPage({
           race ? (
             <Link
               href={adeptHref(adept.id, "plan")}
-              className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted hover:border-accent hover:text-text"
+              className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text-muted hover:border-accent hover:text-text"
             >
               <Flag aria-hidden className="size-3.5 text-text" />
               {race.name} · {race.priority}-lopp
             </Link>
           ) : activity.is_race ? (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text-muted">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text-muted">
               <Flag aria-hidden className="size-3.5 text-text" />
               Oplanerad tävling
             </span>
@@ -286,7 +286,7 @@ export default async function ActivityPage({
               hrefs={legHrefs}
               current={multi.leg}
             />
-            <p className="mt-2 text-[12px] text-text-subtle">
+            <p className="mt-2 text-[0.75rem] text-text-subtle">
               Varje gren har sin egen analys. Växlingarna är klockans tider.
             </p>
           </Card>
@@ -297,7 +297,7 @@ export default async function ActivityPage({
               key={t.label}
               className="min-w-0 rounded-lg border border-line bg-surface p-4"
             >
-              <p className="text-[12px] font-medium text-text-muted">
+              <p className="text-[0.75rem] font-medium text-text-muted">
                 {t.label}
               </p>
               <p className="mt-1 text-2xl font-semibold tracking-tight text-text">
@@ -309,7 +309,7 @@ export default async function ActivityPage({
                 )}
               </p>
               {t.hint && (
-                <p className="mt-0.5 truncate text-[12px] text-text-subtle">
+                <p className="mt-0.5 truncate text-[0.75rem] text-text-subtle">
                   {t.hint}
                 </p>
               )}
@@ -326,7 +326,7 @@ export default async function ActivityPage({
         {s.insights.length > 0 && (
           <Card>
             <CardTitle>Analys</CardTitle>
-            <ul className="max-w-3xl space-y-2.5 text-[15px] leading-relaxed text-text">
+            <ul className="max-w-3xl space-y-2.5 text-[0.9375rem] leading-relaxed text-text">
               {s.insights.map((line) => (
                 <li key={line} className="flex gap-3">
                   <span
@@ -360,7 +360,7 @@ export default async function ActivityPage({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm tabular-nums">
                   <thead>
-                    <tr className="border-b border-line text-left text-[12px] uppercase tracking-[0.08em] text-text-muted">
+                    <tr className="border-b border-line text-left text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                       <th className="py-2 pr-3 font-medium">
                         {running ? "Distans" : "Längd"}
                       </th>
@@ -422,7 +422,7 @@ export default async function ActivityPage({
                   </tbody>
                 </table>
               </div>
-              <p className="mt-3 text-[12px] text-text-subtle">
+              <p className="mt-3 text-[0.75rem] text-text-subtle">
                 {running
                   ? "Modellen är tiden CS och D′ ur testet förutsäger för distansen. Plus betyder snabbare än modellen."
                   : "Modellen är CP + W′/tid ur testet, från en minut och uppåt. Plus betyder mer än modellen."}
@@ -436,7 +436,7 @@ export default async function ActivityPage({
               <div className="space-y-6">
                 {s.powerZones && (
                   <div>
-                    <p className="mb-2 text-[12px] text-text-subtle">
+                    <p className="mb-2 text-[0.75rem] text-text-subtle">
                       Effekt mot FTP {ftp ? `${sv(ftp)} W` : ""}
                     </p>
                     <ZoneBars zones={s.powerZones} />
@@ -444,7 +444,7 @@ export default async function ActivityPage({
                 )}
                 {s.hrZones && (
                   <div>
-                    <p className="mb-2 text-[12px] text-text-subtle">
+                    <p className="mb-2 text-[0.75rem] text-text-subtle">
                       Puls mot tröskelpuls {ref?.lthr ? sv(ref.lthr) : ""}
                     </p>
                     <ZoneBars zones={s.hrZones} />
@@ -466,7 +466,7 @@ export default async function ActivityPage({
                 style={{ minWidth: 520 }}
               >
                 <thead>
-                  <tr className="border-b border-line text-left text-[12px] uppercase tracking-[0.08em] text-text-muted">
+                  <tr className="border-b border-line text-left text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                     <th className="py-2 pr-3 font-medium">Till</th>
                     <th className="py-2 pr-3 text-right font-medium">Tid</th>
                     <th className="py-2 pr-3 text-right font-medium">
@@ -520,7 +520,7 @@ export default async function ActivityPage({
                 style={{ minWidth: 420 }}
               >
                 <thead>
-                  <tr className="border-b border-line text-left text-[12px] uppercase tracking-[0.08em] text-text-muted">
+                  <tr className="border-b border-line text-left text-[0.75rem] uppercase tracking-[0.08em] text-text-muted">
                     <th className="py-2 pr-3 font-medium">Varv</th>
                     <th className="py-2 pr-3 text-right font-medium">Tid</th>
                     <th className="py-2 pr-3 text-right font-medium">

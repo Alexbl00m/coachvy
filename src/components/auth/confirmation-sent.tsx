@@ -67,7 +67,7 @@ export function ConfirmationSent({
       </p>
 
       {existing && (
-        <p className="mt-4 rounded-md border border-line-strong bg-surface-2 px-3 py-2.5 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-4 rounded-md border border-line-strong bg-surface-2 px-3 py-2.5 text-[0.8125rem] leading-relaxed text-text-muted">
           Adressen registrerades redan {longDate(existing.since)} men har inte
           bekräftats, så vi skickade länken igen.
           {otherRole && (
@@ -85,10 +85,10 @@ export function ConfirmationSent({
       )}
 
       <div className="mt-8 border-t border-line pt-6">
-        <h2 className="text-[13px] font-medium text-text">
+        <h2 className="text-[0.8125rem] font-medium text-text">
           Hittar du inget mejl?
         </h2>
-        <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-text-muted">
+        <ul className="mt-2 space-y-1.5 text-[0.8125rem] leading-relaxed text-text-muted">
           <li>Det kan ta en minut eller två.</li>
           <li>
             Titta i skräpposten och under Kampanjer – första mejlet från en ny

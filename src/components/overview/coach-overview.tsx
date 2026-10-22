@@ -227,7 +227,7 @@ export async function CoachOverview({
                       {adept.full_name}
                     </Link>
                     {phase && (
-                      <span className="inline-flex items-center gap-1.5 rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-muted">
+                      <span className="inline-flex items-center gap-1.5 rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] text-text-muted">
                         <span
                           aria-hidden
                           className="h-2 w-3 rounded-[2px]"
@@ -244,7 +244,7 @@ export async function CoachOverview({
                         <li key={item.kind + item.text}>
                           <Link
                             href={targetHref(adept.id, item.target)}
-                            className="group flex items-start gap-2 text-[13px] text-text-muted hover:text-text"
+                            className="group flex items-start gap-2 text-[0.8125rem] text-text-muted hover:text-text"
                           >
                             <Icon
                               aria-hidden
@@ -264,7 +264,7 @@ export async function CoachOverview({
               ))}
             </ul>
           )}
-          <p className="mt-4 border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
+          <p className="mt-4 border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
             Återhämtningen jämförs med adeptens eget snitt den senaste månaden,
             belastningen med månaden före. Det som nämns är sådant som skiljer
             sig tydligt – vad det betyder är din bedömning.
@@ -276,7 +276,7 @@ export async function CoachOverview({
             action={
               <Link
                 href={routes.calendar}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="text-[0.8125rem] text-text-muted hover:text-text"
               >
                 Kalender
               </Link>
@@ -302,7 +302,7 @@ export async function CoachOverview({
                       <span className="block truncate text-sm font-medium text-text group-hover:text-text">
                         {race.name}
                       </span>
-                      <span className="block text-[12px] text-text-subtle">
+                      <span className="block text-[0.75rem] text-text-subtle">
                         {race.adept_name} · {longDate(race.race_date, today)} ·{" "}
                         {countdownText(daysBetween(today, race.race_date))}
                       </span>
@@ -321,7 +321,7 @@ export async function CoachOverview({
             action={
               <Link
                 href={routes.calendar}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="text-[0.8125rem] text-text-muted hover:text-text"
               >
                 Hela veckan
               </Link>
@@ -343,8 +343,8 @@ export async function CoachOverview({
                     <p
                       className={
                         d === today
-                          ? "text-[12px] font-semibold text-text"
-                          : "text-[12px] font-medium text-text-subtle"
+                          ? "text-[0.75rem] font-semibold text-text"
+                          : "text-[0.75rem] font-medium text-text-subtle"
                       }
                     >
                       {d === today
@@ -361,7 +361,7 @@ export async function CoachOverview({
                                 w.href ??
                                 `${routes.adepts}/${w.adeptId}/pass/${w.id}`
                               }
-                              className="flex items-center gap-2 text-[13px] text-text-muted hover:text-text"
+                              className="flex items-center gap-2 text-[0.8125rem] text-text-muted hover:text-text"
                             >
                               <SportIcon
                                 sport={w.sport}
@@ -403,7 +403,7 @@ export async function CoachOverview({
                       <span className="block truncate text-sm text-text group-hover:text-text">
                         {t.adeptName} · {t.label}
                       </span>
-                      <span className="block truncate text-[12px] text-text-subtle">
+                      <span className="block truncate text-[0.75rem] text-text-subtle">
                         {longDate(t.date, today)}
                         {t.headline ? ` · ${t.headline}` : ""}
                       </span>

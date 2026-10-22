@@ -119,7 +119,7 @@ export function WorkoutChart({
       />
 
       {showBalance && (
-        <div className="h-[170px] w-full pt-2">
+        <div className="h-[10.625rem] w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={balanceData} margin={MARGIN}>
               <defs>
@@ -145,14 +145,14 @@ export function WorkoutChart({
                 ticks={ticks}
                 tickFormatter={(value: number) => formatDuration(value)}
                 stroke={CHART_GRID}
-                tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+                tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 100]}
                 ticks={[0, 25, 50, 75, 100]}
                 stroke={CHART_GRID}
-                tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+                tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
                 tickLine={false}
                 width={PLOT_LEFT}
                 tickFormatter={(v: number) => `${Math.round(v)} %`}
@@ -185,7 +185,7 @@ export function WorkoutChart({
         <ZoneLegend zones={zones} />
       </div>
 
-      <p className="pl-[52px] text-[11px] text-text-subtle">
+      <p className="pl-[3.25rem] text-[0.6875rem] text-text-subtle">
         {showBalance ? "Överst" : "Höjden"}: målet som andel av {basis}, färgen
         zonen.
         {showBalance

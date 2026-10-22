@@ -192,7 +192,7 @@ export function RacePredictor() {
             ))}
           </div>
 
-          <p className="mt-4 border-t border-line pt-3 text-[12px] leading-relaxed text-text-subtle">
+          <p className="mt-4 border-t border-line pt-3 text-[0.75rem] leading-relaxed text-text-subtle">
             Ett lopp räcker för en prognos. Med två eller fler räknas din egen
             utmattningsexponent fram i stället för schablonen – och den skiljer
             sig mer mellan löpare än man tror.
@@ -265,7 +265,7 @@ export function RacePredictor() {
               formatDuration(p.seconds),
               `${formatDuration(p.paceSeconds)}/km`,
               p.extrapolated ? (
-                <span key="x" className="text-[12px] text-text-subtle">
+                <span key="x" className="text-[0.75rem] text-text-subtle">
                   långt utanför dina lopp
                 </span>
               ) : (
@@ -273,7 +273,7 @@ export function RacePredictor() {
               ),
             ])}
           />
-          <p className="mt-3 text-[12px] leading-relaxed text-text-subtle">
+          <p className="mt-3 text-[0.75rem] leading-relaxed text-text-subtle">
             Modellen håller väl inom ungefär tre gånger de distanser du matat
             in. Utanför det – och särskilt mot maraton – blir den optimistisk,
             eftersom det då är bränslet och inte utmattningen som sätter

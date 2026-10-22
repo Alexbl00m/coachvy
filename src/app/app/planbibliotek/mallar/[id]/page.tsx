@@ -78,7 +78,7 @@ export default async function PlanTemplatePage({
     <>
       <Link
         href={routes.planTemplates}
-        className="mb-3 inline-flex items-center gap-1 text-[13px] text-text-muted hover:text-text"
+        className="mb-3 inline-flex items-center gap-1 text-[0.8125rem] text-text-muted hover:text-text"
       >
         <ChevronLeft aria-hidden className="size-4" />
         Planmallar
@@ -188,7 +188,7 @@ export default async function PlanTemplatePage({
               </dd>
             </dl>
             {editable && (
-              <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-[13px] leading-snug">
+              <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-[0.8125rem] leading-snug">
                 {issues.length === 0 ? (
                   <li className="text-good">Allt ser bra ut.</li>
                 ) : (

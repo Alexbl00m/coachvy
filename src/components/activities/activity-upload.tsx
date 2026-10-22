@@ -185,7 +185,7 @@ export function ActivityUpload({
               ? "Läser och analyserar filen …"
               : "Ladda upp ett pass eller lopp"}
           </span>
-          <span className="block text-[12px] text-text-subtle">
+          <span className="block text-[0.75rem] text-text-subtle">
             Välj eller släpp en .fit-fil från Garmin, Wahoo, Coros, Hammerhead
             eller TrainingPeaks. Analysen görs här i webbläsaren; filen sparas
             inte, bara analysen och kurvorna.
@@ -227,7 +227,7 @@ export function ActivityUpload({
                 </span>{" "}
                 · {formatClock(ready.multisport.totalS)} ·{" "}
                 {km(ready.multisport.distanceM)}
-                <span className="block text-[12px] text-text-subtle">
+                <span className="block text-[0.75rem] text-text-subtle">
                   Filen har flera grenar. Varje gren sparas som en egen
                   aktivitet med sin egen analys, och växlingarna som tider. Ett
                   pass som redan finns i samma gren – cykeldatorns – blir
@@ -257,7 +257,7 @@ export function ActivityUpload({
               ],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="text-[11px] uppercase tracking-[0.08em] text-text-subtle">
+                <dt className="text-[0.6875rem] uppercase tracking-[0.08em] text-text-subtle">
                   {label}
                 </dt>
                 <dd className="font-medium text-text tabular-nums">{value}</dd>
@@ -265,7 +265,7 @@ export function ActivityUpload({
             ))}
           </dl>
 
-          <p className="text-[12px] text-text-subtle">
+          <p className="text-[0.75rem] text-text-subtle">
             {ref.testedOn || ref.ftpSource
               ? `Räknas mot ${[
                   ref.ftp ? `FTP ${Math.round(ref.ftp)} W` : null,

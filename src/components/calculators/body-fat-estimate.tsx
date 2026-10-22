@@ -41,7 +41,7 @@ export function BodyFatEstimate({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-[12px] text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+        className="text-[0.75rem] text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
       >
         Inget mätt värde? Uppskatta ur BMI
       </button>
@@ -51,7 +51,7 @@ export function BodyFatEstimate({
   return (
     <div className="space-y-3 rounded-md border border-line bg-surface-2/60 p-3">
       <div className="grid grid-cols-2 gap-3">
-        <label className="space-y-1 text-[12px] text-text-muted" htmlFor={`${id}-h`}>
+        <label className="space-y-1 text-[0.75rem] text-text-muted" htmlFor={`${id}-h`}>
           <span>Längd (cm)</span>
           <Input
             id={`${id}-h`}
@@ -61,7 +61,7 @@ export function BodyFatEstimate({
             onChange={(e) => setHeight(e.target.value)}
           />
         </label>
-        <label className="space-y-1 text-[12px] text-text-muted" htmlFor={`${id}-a`}>
+        <label className="space-y-1 text-[0.75rem] text-text-muted" htmlFor={`${id}-a`}>
           <span>Ålder (år)</span>
           <Input
             id={`${id}-a`}
@@ -74,7 +74,7 @@ export function BodyFatEstimate({
       </div>
 
       {pct !== null && b !== null ? (
-        <div className="space-y-2 text-[13px] text-text-muted">
+        <div className="space-y-2 text-[0.8125rem] text-text-muted">
           <p>
             BMI {sv(b)} ger ungefär{" "}
             <span className="font-medium text-text tabular-nums">
@@ -89,7 +89,7 @@ export function BodyFatEstimate({
             {sv(fatFreeMass(weightKg, pct + BMI_FAT_ERROR))} och{" "}
             {sv(fatFreeMass(weightKg, Math.max(pct - BMI_FAT_ERROR, 3)))} kg.
           </p>
-          <p className="text-[12px] text-text-subtle">
+          <p className="text-[0.75rem] text-text-subtle">
             BMI skiljer inte muskler från fett. För en tränad atlet blir
             kroppsfettet oftast för högt – ett mätt värde är alltid bättre.
           </p>
@@ -99,13 +99,13 @@ export function BodyFatEstimate({
               onUse(Math.round(pct * 10) / 10);
               setOpen(false);
             }}
-            className="rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text transition-colors hover:border-accent"
+            className="rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text transition-colors hover:border-accent"
           >
             Använd {sv(pct)} %
           </button>
         </div>
       ) : (
-        <p className="text-[12px] text-text-subtle">
+        <p className="text-[0.75rem] text-text-subtle">
           Fyll i längd och ålder. Vikten och könet tas från formuläret.
         </p>
       )}

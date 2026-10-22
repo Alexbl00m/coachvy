@@ -44,7 +44,7 @@ function GapRow({ gap }: { gap: MetricGap }) {
           style={{ left: `calc(${(1 / ceiling) * 100}% - 1px)` }}
         />
       </span>
-      <span className="col-span-2 flex items-baseline justify-between gap-3 text-[13px] tabular-nums sm:col-span-1 sm:justify-end">
+      <span className="col-span-2 flex items-baseline justify-between gap-3 text-[0.8125rem] tabular-nums sm:col-span-1 sm:justify-end">
         <span className="text-text-muted">
           {sv(gap.value, gap.digits)}{" "}
           <span className="text-text-subtle">
@@ -91,7 +91,7 @@ function RaceGoalRow({ line }: { line: RaceLine }) {
               : ""}
           </span>
         </p>
-        <p className="text-[13px] text-text-muted tabular-nums">
+        <p className="text-[0.8125rem] text-text-muted tabular-nums">
           {[race.distance, race.target].filter(Boolean).join(" · ") ||
             "Ingen distans eller målsättning"}
           {goal && (
@@ -103,7 +103,7 @@ function RaceGoalRow({ line }: { line: RaceLine }) {
           )}
         </p>
         {reading && (
-          <p className="max-w-3xl text-[13px] leading-relaxed text-text-subtle">
+          <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-subtle">
             {reading}
           </p>
         )}
@@ -145,7 +145,7 @@ export function GapCard({
               value={target?.id ?? null}
             />
           ) : target ? (
-            <span className="text-[13px] text-text-muted">
+            <span className="text-[0.8125rem] text-text-muted">
               Målnivå: <span className="text-text">{target.name}</span>
             </span>
           ) : undefined
@@ -172,7 +172,7 @@ export function GapCard({
               <GapRow key={gap.key} gap={gap} />
             ))}
           </ul>
-          <p className="mt-2 text-[12px] text-text-subtle">
+          <p className="mt-2 text-[0.75rem] text-text-subtle">
             Stapeln är adeptens värde som andel av {target.name}s; strecket är
             målet. För VLamax räknas lägre som närmare målet.
           </p>
@@ -188,7 +188,7 @@ export function GapCard({
 
       {races.length > 0 && (
         <div className="mt-5 border-t border-line pt-4">
-          <h3 className="text-[13px] font-medium text-text">Tävlingsmål</h3>
+          <h3 className="text-[0.8125rem] font-medium text-text">Tävlingsmål</h3>
           <ul className="divide-y divide-line">
             {races.map((line) => (
               <RaceGoalRow key={line.race.id} line={line} />

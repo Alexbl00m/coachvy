@@ -74,7 +74,7 @@ function Choice({
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+        "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
         selected
           ? "border-text-subtle bg-surface-3 text-text"
           : "border-line-strong text-text-muted hover:text-text",
@@ -230,7 +230,7 @@ export function TrainingProfile({
         </p>
       ) : (
         <>
-          <p className="text-[13px] text-text-subtle">
+          <p className="text-[0.8125rem] text-text-subtle">
             Det bästa ur {view.now.length}{" "}
             {view.now.length === 1 ? "pass" : "pass"}
             {range.from
@@ -242,17 +242,17 @@ export function TrainingProfile({
 
           <dl className="mt-5 flex flex-wrap gap-px overflow-hidden rounded-lg border border-line bg-line">
             <div className="min-w-[9.5rem] flex-1 bg-surface px-3 py-3">
-              <dt className="text-[12px] text-text-muted">
+              <dt className="text-[0.75rem] text-text-muted">
                 {kind === "power" ? "CP ur träningen" : "CS ur träningen"}
               </dt>
-              <dd className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text tabular-nums">
+              <dd className="mt-1 text-[1.25rem] font-semibold tracking-[-0.02em] text-text tabular-nums">
                 {view.fit
                   ? kind === "power"
                     ? `${sv(view.fit.critical)} W`
                     : `${paceOf(view.fit.critical)}/km`
                   : "–"}
               </dd>
-              <dd className="text-[12px] text-text-subtle tabular-nums">
+              <dd className="text-[0.75rem] text-text-subtle tabular-nums">
                 {view.fit
                   ? kind === "power"
                     ? `W′ ${sv(view.fit.reserve / 1000, 1)} kJ`
@@ -261,17 +261,17 @@ export function TrainingProfile({
               </dd>
             </div>
             <div className="min-w-[9.5rem] flex-1 bg-surface px-3 py-3">
-              <dt className="text-[12px] text-text-muted">
+              <dt className="text-[0.75rem] text-text-muted">
                 {kind === "power" ? "CP i senaste test" : "CS i senaste test"}
               </dt>
-              <dd className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text tabular-nums">
+              <dd className="mt-1 text-[1.25rem] font-semibold tracking-[-0.02em] text-text tabular-nums">
                 {testCritical
                   ? kind === "power"
                     ? `${sv(testCritical)} W`
                     : `${paceOf(testCritical)}/km`
                   : "–"}
               </dd>
-              <dd className="text-[12px] text-text-subtle tabular-nums">
+              <dd className="text-[0.75rem] text-text-subtle tabular-nums">
                 {testCritical && view.fit ? (
                   <Change now={view.fit.critical} before={testCritical} />
                 ) : test.testedOn ? (
@@ -291,13 +291,13 @@ export function TrainingProfile({
                 key={p.span}
                 className="min-w-[9.5rem] flex-1 bg-surface px-3 py-3"
               >
-                <dt className="text-[12px] text-text-muted">
+                <dt className="text-[0.75rem] text-text-muted">
                   Bästa {spanLabel(p.span)}
                 </dt>
-                <dd className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text tabular-nums">
+                <dd className="mt-1 text-[1.25rem] font-semibold tracking-[-0.02em] text-text tabular-nums">
                   {show(kind, p.value)}
                 </dd>
-                <dd className="text-[12px] tabular-nums">
+                <dd className="text-[0.75rem] tabular-nums">
                   <Change
                     now={p.value}
                     before={prevBy.get(p.span)?.value ?? null}
@@ -308,7 +308,7 @@ export function TrainingProfile({
           </dl>
 
           {view.fit?.doubtful && (
-            <p className="mt-3 rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[13px] text-text-muted">
+            <p className="mt-3 rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[0.8125rem] text-text-muted">
               {kind === "power" ? "W′" : "D′"} hamnar utanför det rimliga, så
               3–20 minuter i perioden är troligen inte maximala. Läs{" "}
               {kind === "power" ? "CP" : "CS"} som en undre gräns, eller välj en
@@ -316,7 +316,7 @@ export function TrainingProfile({
             </p>
           )}
 
-          <div className="mt-5 h-[280px] w-full">
+          <div className="mt-5 h-[17.5rem] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={data}
@@ -331,13 +331,13 @@ export function TrainingProfile({
                   ticks={TICKS}
                   tickFormatter={spanLabel}
                   allowDataOverflow
-                  tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+                  tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
                   stroke={CHART_GRID}
                 />
                 <YAxis
                   width={44}
                   domain={["auto", "auto"]}
-                  tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+                  tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
                   stroke={CHART_GRID}
                   tickFormatter={(v: number) => sv(v, kind === "speed" ? 1 : 0)}
                 />
@@ -349,7 +349,7 @@ export function TrainingProfile({
                     const point = view.curve.find((p) => p.span === row.span);
                     const before = prevBy.get(row.span);
                     return (
-                      <div className="rounded-md border border-line-strong bg-surface-3 px-3 py-2 text-[12px] shadow-none">
+                      <div className="rounded-md border border-line-strong bg-surface-3 px-3 py-2 text-[0.75rem] shadow-none">
                         <p className="font-medium text-text">
                           {spanLabel(row.span)}
                         </p>
@@ -405,7 +405,7 @@ export function TrainingProfile({
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-text-muted">
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[0.75rem] text-text-muted">
             <li className="flex items-center gap-1.5">
               <span
                 aria-hidden
@@ -440,7 +440,7 @@ export function TrainingProfile({
           <div className="mt-6 overflow-x-auto">
             <table className="w-full border-collapse text-sm whitespace-nowrap tabular-nums">
               <thead>
-                <tr className="border-b border-line text-left text-[12px] text-text-muted">
+                <tr className="border-b border-line text-left text-[0.75rem] text-text-muted">
                   <th className="py-2 pr-3 font-medium">Längd</th>
                   <th className="py-2 pr-3 text-right font-medium">Bästa</th>
                   <th className="py-2 pr-3 font-medium">Pass</th>
@@ -515,7 +515,7 @@ export function TrainingProfile({
             </table>
           </div>
           {thin.length > 0 && (
-            <p className="mt-2 text-[12px] text-text-subtle">
+            <p className="mt-2 text-[0.75rem] text-text-subtle">
               Färre än tre pass bär{" "}
               {thin.length === 1 ? "en längd" : `${thin.length} längder`} – den
               delen av kurvan säger mindre.
@@ -524,22 +524,22 @@ export function TrainingProfile({
 
           {view.distances.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-[13px] font-medium text-text-muted">
+              <h3 className="text-[0.8125rem] font-medium text-text-muted">
                 Snabbaste på distans
               </h3>
               <ul className="mt-2 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
                 {view.distances.map((d) => (
                   <li key={d.span} className="bg-surface px-3 py-2.5">
-                    <p className="text-[12px] text-text-muted">{d.label}</p>
-                    <p className="text-[16px] font-semibold text-text tabular-nums">
+                    <p className="text-[0.75rem] text-text-muted">{d.label}</p>
+                    <p className="text-[1rem] font-semibold text-text tabular-nums">
                       {formatClock(d.seconds)}
-                      <span className="ml-1.5 text-[12px] font-normal text-text-subtle">
+                      <span className="ml-1.5 text-[0.75rem] font-normal text-text-subtle">
                         {paceOf(d.span / d.seconds)}/km
                       </span>
                     </p>
                     <Link
                       href={link(d.activityId)}
-                      className={cn("text-[12px] text-text-subtle", linkLabel)}
+                      className={cn("text-[0.75rem] text-text-subtle", linkLabel)}
                     >
                       {d.date}
                     </Link>

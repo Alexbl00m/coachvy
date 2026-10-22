@@ -63,7 +63,7 @@ export function Logo({ markOnly = false, className }: LogoProps) {
       <CoachvyMark weight="bold" className="size-8 text-text" />
       <span
         className={cn(
-          "text-[17px] font-semibold tracking-tight text-text",
+          "text-[1.0625rem] font-semibold tracking-tight text-text",
           markOnly && "sr-only",
         )}
       >

@@ -35,7 +35,7 @@ export function SwimPredictionsCard({
   return (
     <Card className="min-w-0">
       <CardTitle>Loppprognos</CardTitle>
-      <p className="mb-3 text-[13px] text-text-muted">
+      <p className="mb-3 text-[0.8125rem] text-text-muted">
         Från {Math.round(longest.metres)} m-testet med{" "}
         {profile
           ? `simmarens egen exponent ${profile.exponent.toFixed(3).replace(".", ",")}`
@@ -68,7 +68,7 @@ export function SwimPredictionsCard({
             : `${formatDuration(r.css)}${r.cssBeyondModel ? " *" : ""}`,
         ])}
       />
-      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         Bassängtider: i öppet vatten tillkommer navigering, vågor och start –
         och våtdräkt åt andra hållet. * CSS-modellen gäller ungefär 2–20
         minuter.
@@ -84,7 +84,7 @@ export function RedMistCard({ cs }: { cs: number }) {
   return (
     <Card className="min-w-0">
       <CardTitle>Red Mist-cykler</CardTitle>
-      <p className="mb-3 text-[13px] text-text-muted">
+      <p className="mb-3 text-[0.8125rem] text-text-muted">
         Tiden per 50 m för tempotränaren: cykel 0 är CSS, varje cykel en sekund
         långsammare.
       </p>

@@ -60,13 +60,13 @@ export function ZoneSuggestionButtons({
       </div>
       <p
         id={`zon-${sport}-forklaring`}
-        className="mt-2 text-[13px] text-text-muted"
+        className="mt-2 text-[0.8125rem] text-text-muted"
       >
         Uppdatera sparar insatserna som ett {testName} daterat i dag, med varje
         insats eget datum. Inte nu döljer förslaget tills träningen visar mer.
       </p>
       {error && (
-        <p role="alert" className="mt-2 text-[13px] text-bad">
+        <p role="alert" className="mt-2 text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

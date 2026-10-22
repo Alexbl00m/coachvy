@@ -248,7 +248,7 @@ export async function AdeptToday({
               <Card level="lead">
                 <CardLabel>Dagens pass</CardLabel>
                 <CardHeadline>Inga pass inlagda.</CardHeadline>
-                <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-text-muted">
+                <p className="mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-text-muted">
                   När din coach lägger in pass, eller du startar en plan ur
                   planbiblioteket, står dagens pass här.
                 </p>
@@ -277,7 +277,7 @@ export async function AdeptToday({
               aside={
                 <span className="flex items-center gap-3">
                   {unread > 0 && (
-                    <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[12px] font-medium text-text tabular-nums">
+                    <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[0.75rem] font-medium text-text tabular-nums">
                       {unread} {unread === 1 ? "oläst" : "olästa"}
                     </span>
                   )}
@@ -294,7 +294,7 @@ export async function AdeptToday({
               <p className="line-clamp-3 max-w-3xl whitespace-pre-line text-base leading-relaxed text-text">
                 {fromCoach.body}
               </p>
-              <p className="mt-2 text-[13px] text-text-muted group-hover:text-text">
+              <p className="mt-2 text-[0.8125rem] text-text-muted group-hover:text-text">
                 Svara →
               </p>
             </Link>
@@ -303,7 +303,7 @@ export async function AdeptToday({
 
         <Card className="min-w-0">
           <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 className="flex flex-wrap items-baseline gap-x-3 text-[17px] font-semibold tracking-[-0.01em] text-text">
+            <h2 className="flex flex-wrap items-baseline gap-x-3 text-[1.0625rem] font-semibold tracking-[-0.01em] text-text">
               Veckan
               <span className="text-sm font-normal text-text-muted">
                 {thisWeek.length} pass · {quality} kvalitet · {restDays}{" "}
@@ -312,7 +312,7 @@ export async function AdeptToday({
             </h2>
             <Link
               href={routes.calendar}
-              className="text-[13px] text-text-muted hover:text-text"
+              className="text-[0.8125rem] text-text-muted hover:text-text"
             >
               Kalender →
             </Link>
@@ -353,7 +353,7 @@ export async function AdeptToday({
                   : `${strengthThisWeek} ${strengthThisWeek === 1 ? "pass" : "pass"} den här veckan.`
                 : "Logga styrkan här, inte i en kommentar."}
             </CardHeadline>
-            <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
+            <p className="mt-3 text-[0.9375rem] leading-relaxed text-text-muted">
               {lastStrength
                 ? `Senast ${longDate(lastStrength.performed_on, today)}: ${
                     lastStrength.exercises
@@ -496,7 +496,7 @@ function TodayWorkout({
           Öppna passet
         </ButtonLink>
         {reference && saved && (
-          <p className="ml-auto text-[13px] text-text-subtle">
+          <p className="ml-auto text-[0.8125rem] text-text-subtle">
             Zonerna räknas mot {BASIS_LABEL[saved.basis]} {reference}
           </p>
         )}
@@ -571,7 +571,7 @@ function CheckinPanel({
       <CardHeadline>
         {readiness} av {READINESS_MAX}.
       </CardHeadline>
-      <p className="mt-3 text-[15px] text-text-muted">
+      <p className="mt-3 text-[0.9375rem] text-text-muted">
         {readReadiness(readiness)} i dag.
         {logged
           ? ` Passet: RPE ${Number(todays.session_rpe)} i ${Number(todays.duration_minutes)} min.`

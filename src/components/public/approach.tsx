@@ -29,7 +29,7 @@ const principles = [
 export function Approach() {
   return (
     <Section>
-      <p className="max-w-4xl text-[24px] leading-[1.3] font-medium tracking-[-0.018em] text-balance text-text-muted sm:text-[32px]">
+      <p className="max-w-4xl text-[1.5rem] leading-[1.3] font-medium tracking-[-0.018em] text-balance text-text-muted sm:text-[2rem]">
         <span className="text-text">
           Jag har alltid drömt om att hjälpa människor nå sina mål.
         </span>{" "}
@@ -43,10 +43,10 @@ export function Approach() {
           return (
             <li key={item.title} className="bg-canvas p-6 sm:p-7">
               <Icon aria-hidden className="size-5 text-text-muted" />
-              <h3 className="mt-6 text-[15px] font-semibold text-text">
+              <h3 className="mt-6 text-[0.9375rem] font-semibold text-text">
                 {item.title}
               </h3>
-              <p className="mt-2 text-[14px] leading-relaxed text-text-muted">
+              <p className="mt-2 text-[0.875rem] leading-relaxed text-text-muted">
                 {item.text}
               </p>
             </li>

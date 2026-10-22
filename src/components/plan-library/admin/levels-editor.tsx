@@ -75,7 +75,7 @@ export function LevelsEditor({
             className="rounded-lg border border-line bg-surface-2/40 p-4"
           >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[13px] font-medium text-text-muted">
+              <p className="text-[0.8125rem] font-medium text-text-muted">
                 {i === 0
                   ? "Högst"
                   : i === levels.length - 1
@@ -146,7 +146,7 @@ export function LevelsEditor({
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr]">
               <fieldset className="space-y-1.5">
-                <legend className="text-[13px] font-medium text-text">
+                <legend className="text-[0.8125rem] font-medium text-text">
                   Timmar per vecka
                 </legend>
                 <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export function LevelsEditor({
                 </div>
               </fieldset>
               <fieldset className="space-y-1.5">
-                <legend className="text-[13px] font-medium text-text">
+                <legend className="text-[0.8125rem] font-medium text-text">
                   Pass per vecka
                 </legend>
                 <div className="flex items-center gap-2">

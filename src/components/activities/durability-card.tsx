@@ -78,7 +78,7 @@ function DropChart({ profile }: { profile: DurabilityProfile }) {
             x={pad.l - 6}
             y={y(g) + 3.5}
             textAnchor="end"
-            className="fill-text-subtle text-[10px] tabular-nums"
+            className="fill-text-subtle text-[0.625rem] tabular-nums"
           >
             {g} %
           </text>
@@ -90,7 +90,7 @@ function DropChart({ profile }: { profile: DurabilityProfile }) {
           x={x(i)}
           y={H - 6}
           textAnchor="middle"
-          className="fill-text-subtle text-[10px] tabular-nums"
+          className="fill-text-subtle text-[0.625rem] tabular-nums"
         >
           {l.level}
           {i === n - 1 ? ` ${profile.unit}` : ""}
@@ -119,7 +119,7 @@ function DropChart({ profile }: { profile: DurabilityProfile }) {
             <text
               x={x(last.i) + 7}
               y={labelY[k] + 3.5}
-              className="text-[10px] font-medium"
+              className="text-[0.625rem] font-medium"
               fill={s.color}
             >
               {s.label}
@@ -168,7 +168,7 @@ function Section({
       <div className="mt-3 grid gap-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <DropChart profile={{ ...profile, levels: visible }} />
         <div className="min-w-0 overflow-x-auto">
-          <table className="w-full min-w-[20rem] text-[13px] tabular-nums">
+          <table className="w-full min-w-[20rem] text-[0.8125rem] tabular-nums">
             <caption className="sr-only">
               Bästa per längd efter utfört arbete, {title.toLowerCase()}
             </caption>
@@ -214,7 +214,7 @@ function Section({
                             <>
                               <span className="text-text">{show(v)}</span>
                               {fresh && l.level > 0 && (
-                                <span className="block text-[12px] text-text-subtle">
+                                <span className="block text-[0.75rem] text-text-subtle">
                                   {sv((v / fresh) * 100)} %
                                 </span>
                               )}
@@ -254,7 +254,7 @@ function Section({
         </div>
       )}
       {estimated > 0 && (
-        <p className="mt-2 text-[13px] text-text-muted">
+        <p className="mt-2 text-[0.8125rem] text-text-muted">
           {estimated} äldre pass är räknade ur den sparade serien, som jämnar ut
           korta toppar – där kan tappet se något större ut än det var.
         </p>
@@ -316,7 +316,7 @@ export function DurabilityCard({
     <Card className="min-w-0">
       <CardTitle>Durability: förmågan efter utfört arbete</CardTitle>
       <div className="space-y-8">{sections}</div>
-      <p className="mt-5 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-5 text-[0.8125rem] leading-relaxed text-text-muted">
         Bästa insatser som börjar efter att arbetet redan gjorts – kJ per kilo
         kroppsvikt på cykeln, minuter i rörelse i löpningen – de senaste 90
         dagarna, som andel av samma längd utvilad. Långa lopp avgörs där, och

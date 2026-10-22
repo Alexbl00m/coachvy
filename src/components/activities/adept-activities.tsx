@@ -18,7 +18,7 @@ import { addDays, mondayOf, todayIso } from "@/lib/season/season";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { listSessions } from "@/lib/tests/session-queries";
 
-const heading = "mb-3 text-[13px] font-medium text-text-muted";
+const heading = "mb-3 text-[0.8125rem] font-medium text-text-muted";
 
 /**
  * En adepts lopp och aktiviteter: utvecklingen i text, uppladdning,

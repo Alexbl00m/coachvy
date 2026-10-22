@@ -106,7 +106,7 @@ export function SessionPanel({
 
           {rolling.warnings.length > 0 && (
             <Card>
-              <ul className="space-y-1.5 text-[13px] text-text-muted">
+              <ul className="space-y-1.5 text-[0.8125rem] text-text-muted">
                 {rolling.warnings.map((w) => (
                   <li key={w}>{w}</li>
                 ))}
@@ -167,18 +167,18 @@ export function SessionPanel({
                     <span className="text-sm font-medium text-text">
                       {spec?.label ?? session.protocol}
                     </span>
-                    <span className="text-[13px] text-text-subtle">
+                    <span className="text-[0.8125rem] text-text-subtle">
                       {formatDate(session.performed_on)} · {session.sport}
                     </span>
                     {phaseLabel(session.training_phase) && (
-                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-muted">
+                      <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] text-text-muted">
                         {phaseLabel(session.training_phase)}
                       </span>
                     )}
 
                     <span className="ml-auto flex flex-wrap items-baseline gap-x-4 tabular-nums">
                       {primary.length === 0 ? (
-                        <span className="text-[13px] text-text-subtle">
+                        <span className="text-[0.8125rem] text-text-subtle">
                           inga värden
                         </span>
                       ) : (
@@ -192,7 +192,7 @@ export function SessionPanel({
                           return (
                             <span
                               key={m.id}
-                              className="text-[13px] text-text-muted"
+                              className="text-[0.8125rem] text-text-muted"
                             >
                               {shortMetricLabel(m.key)}{" "}
                               <span className="font-medium text-text">

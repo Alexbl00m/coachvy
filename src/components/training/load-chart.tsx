@@ -121,7 +121,7 @@ function ReadinessTooltip({
 /** Förklaringsruta. Två serier i samma panel behöver alltid en. */
 function Legend({ items }: { items: { label: string; color: string }[] }) {
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 pl-[56px] text-[12px] text-text-muted">
+    <div className="flex flex-wrap gap-x-4 gap-y-1 pl-[3.5rem] text-[0.75rem] text-text-muted">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
           <span
@@ -162,7 +162,7 @@ export function LoadChart({ points }: { points: LoadPoint[] }) {
         ]}
       />
 
-      <div className="h-[230px] w-full">
+      <div className="h-[14.375rem] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={MARGIN}>
             <CartesianGrid
@@ -175,14 +175,14 @@ export function LoadChart({ points }: { points: LoadPoint[] }) {
               ticks={ticks}
               tickFormatter={shortDate}
               stroke={CHART_GRID}
-              tick={hasReadiness ? false : { fill: CHART_AXIS_TEXT, fontSize: 12 }}
+              tick={hasReadiness ? false : { fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
               tickLine={false}
               height={hasReadiness ? 12 : 30}
             />
             <YAxis
               domain={[0, Math.ceil((maxLoad * 1.1) / 100) * 100]}
               stroke={CHART_GRID}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
               tickLine={false}
               width={Y_WIDTH}
             />
@@ -213,10 +213,10 @@ export function LoadChart({ points }: { points: LoadPoint[] }) {
 
       {hasReadiness && (
         <>
-          <p className="pl-[56px] text-[12px] text-text-muted">
+          <p className="pl-[3.5rem] text-[0.75rem] text-text-muted">
             Återhämtning, {READINESS_MIN}–{READINESS_MAX}
           </p>
-          <div className="h-[150px] w-full">
+          <div className="h-[9.375rem] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={rows} margin={MARGIN}>
                 <CartesianGrid
@@ -229,14 +229,14 @@ export function LoadChart({ points }: { points: LoadPoint[] }) {
                   ticks={ticks}
                   tickFormatter={shortDate}
                   stroke={CHART_GRID}
-                  tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+                  tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[READINESS_MIN, READINESS_MAX]}
                   ticks={[4, 8, 12, 16, 20]}
                   stroke={CHART_GRID}
-                  tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+                  tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
                   tickLine={false}
                   width={Y_WIDTH}
                 />
@@ -263,7 +263,7 @@ export function LoadChart({ points }: { points: LoadPoint[] }) {
         </>
       )}
 
-      <p className="pl-[56px] text-[11px] text-text-subtle">
+      <p className="pl-[3.5rem] text-[0.6875rem] text-text-subtle">
         Belastning är sessions-RPE gånger passets längd i minuter. Enheten är
         godtycklig men jämförbar med sig själv över tid.
       </p>

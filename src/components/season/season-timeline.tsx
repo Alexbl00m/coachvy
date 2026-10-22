@@ -11,6 +11,7 @@ import {
 
 import { SERIES } from "@/lib/calculators/chart-colors";
 import { cn } from "@/lib/cn";
+import { useRootScale } from "@/lib/ui/use-root-scale";
 import {
   addDays,
   countdownText,
@@ -63,9 +64,10 @@ type Tip = {
 /** Ungefärlig höjd för en tooltip med rubrik och tre rader. */
 const TIP_ROOM = 90;
 
-// Lodrät layout, px: månaderna överst, sedan en rad per slag – perioderna
-// som höga band med namn och veckor, tävlingarna och testerna.
-const Y = {
+// Lodrät layout i px vid grundstorleken: månaderna överst, sedan en rad per
+// slag – perioderna som höga band med namn och veckor, tävlingarna och
+// testerna. Allt skalas med gränssnittet på stora skärmar.
+const Y_BASE = {
   month: 6,
   band: 34,
   bandHeight: 54,
@@ -73,18 +75,6 @@ const Y = {
   test: 178,
   height: 204,
 };
-
-/** Raderna, med etikett i vänsterkanten. */
-const ROWS = [
-  { label: "Perioder", center: Y.band + Y.bandHeight / 2 },
-  { label: "Tävlingar", center: Y.race },
-  { label: "Tester", center: Y.test },
-];
-
-/** Ungefärlig bredd för en etikett i 12 px Geist. */
-const textWidth = (text: string) => text.length * 6.6 + 6;
-/** Ungefärlig bredd för en etikett i 10,5 px Geist Mono i versaler. */
-const monoWidth = (text: string) => text.length * 7.4 + 6;
 
 const MARKER_SIZE = { A: 12, B: 10, C: 8 } as const;
 
@@ -119,6 +109,20 @@ export function SeasonTimeline({
   const frame = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [tip, setTip] = useState<Tip | null>(null);
+  const scale = useRootScale();
+  const Y = Object.fromEntries(
+    Object.entries(Y_BASE).map(([k, v]) => [k, v * scale]),
+  ) as typeof Y_BASE;
+  /** Raderna, med etikett i vänsterkanten. */
+  const ROWS = [
+    { label: "Perioder", center: Y.band + Y.bandHeight / 2 },
+    { label: "Tävlingar", center: Y.race },
+    { label: "Tester", center: Y.test },
+  ];
+  /** Ungefärlig bredd för en etikett i 12 px Geist. */
+  const textWidth = (text: string) => (text.length * 6.6 + 6) * scale;
+  /** Ungefärlig bredd för en etikett i 10,5 px Geist Mono i versaler. */
+  const monoWidth = (text: string) => (text.length * 7.4 + 6) * scale;
 
   useEffect(() => {
     const el = box.current;
@@ -148,7 +152,7 @@ export function SeasonTimeline({
     if (!outer) return;
     const center = mark.left + mark.width / 2 - outer.left;
     const above = mark.top - outer.top;
-    const below = above < TIP_ROOM;
+    const below = above < TIP_ROOM * scale;
     setTip({
       left: Math.min(Math.max(center, 110), Math.max(outer.width - 110, 110)),
       top: below ? mark.bottom - outer.top + 8 : above - 8,
@@ -249,7 +253,7 @@ export function SeasonTimeline({
           {ROWS.map((row) => (
             <span
               key={row.label}
-              className="eyebrow absolute left-0 -translate-y-1/2 text-[11px] text-text-subtle"
+              className="eyebrow absolute left-0 -translate-y-1/2 text-[0.6875rem] text-text-subtle"
               style={{ top: row.center }}
             >
               {row.label}
@@ -259,7 +263,7 @@ export function SeasonTimeline({
         <div className="min-w-0 flex-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
           <div
             ref={box}
-            className="relative min-w-[720px] select-none"
+            className="relative min-w-[45rem] select-none"
             style={{ height: Y.height }}
             onPointerLeave={hide}
           >
@@ -271,13 +275,13 @@ export function SeasonTimeline({
                   className="absolute w-px"
                   style={{
                     left: pct(frac(month.iso)),
-                    top: 26,
-                    bottom: 6,
+                    top: 26 * scale,
+                    bottom: 6 * scale,
                     background: "var(--chart-grid)",
                   }}
                 />
                 <span
-                  className="absolute whitespace-nowrap font-mono text-[11px] tabular-nums"
+                  className="absolute whitespace-nowrap font-mono text-[0.6875rem] tabular-nums"
                   style={{
                     left: `calc(${pct(frac(month.iso))} + 4px)`,
                     top: Y.month,
@@ -338,12 +342,12 @@ export function SeasonTimeline({
                   {...hover(title, lines)}
                 >
                   {fits && (
-                    <span className="max-w-full truncate text-[13px] font-semibold">
+                    <span className="max-w-full truncate text-[0.8125rem] font-semibold">
                       {label}
                     </span>
                   )}
                   {subFits && (
-                    <span className="max-w-full truncate font-mono text-[10.5px] uppercase tracking-[0.06em] opacity-80">
+                    <span className="max-w-full truncate font-mono text-[0.65625rem] uppercase tracking-[0.06em] opacity-80">
                       {sub}
                     </span>
                   )}
@@ -362,7 +366,7 @@ export function SeasonTimeline({
                 };
                 const text = `Inget planerat efter ${longDate(addDays(openFrom, -1), today)}`;
                 const className =
-                  "absolute flex items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-line-strong px-3 text-[13px] text-text-muted";
+                  "absolute flex items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-line-strong px-3 text-[0.8125rem] text-text-muted";
                 return newPeriodHref ? (
                   <Link
                     href={newPeriodHref}
@@ -397,7 +401,7 @@ export function SeasonTimeline({
                 <div key={race.id}>
                   {label && (
                     <span
-                      className="absolute -translate-y-1/2 whitespace-nowrap text-[12px] text-text-muted"
+                      className="absolute -translate-y-1/2 whitespace-nowrap text-[0.75rem] text-text-muted"
                       style={{ left: label.left, top: Y.race }}
                     >
                       {race.name}
@@ -473,7 +477,7 @@ export function SeasonTimeline({
                   }}
                 />
                 <span
-                  className="eyebrow absolute whitespace-nowrap bg-surface pr-1 pl-1.5 text-[11px] text-accent-text"
+                  className="eyebrow absolute whitespace-nowrap bg-surface pr-1 pl-1.5 text-[0.6875rem] text-accent-text"
                   style={{ left: pct(mid(today)), top: Y.month - 2 }}
                 >
                   I dag
@@ -486,14 +490,16 @@ export function SeasonTimeline({
           <div
             role="tooltip"
             className={cn(
-              "pointer-events-none absolute z-10 w-max max-w-[220px] -translate-x-1/2 rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg",
+              "pointer-events-none absolute z-10 w-max max-w-[13.75rem] -translate-x-1/2 rounded-md border border-line-strong bg-surface-2 px-3 py-2 shadow-lg",
               !tip.below && "-translate-y-full",
             )}
             style={{ left: tip.left, top: tip.top }}
           >
-            <p className="text-[13px] font-semibold text-text">{tip.title}</p>
+            <p className="text-[0.8125rem] font-semibold text-text">
+              {tip.title}
+            </p>
             {tip.lines.map((line) => (
-              <p key={line} className="text-[12px] text-text-muted">
+              <p key={line} className="text-[0.75rem] text-text-muted">
                 {line}
               </p>
             ))}
@@ -502,7 +508,7 @@ export function SeasonTimeline({
       </div>
 
       {/* Förklaringen */}
-      <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-text-muted">
+      <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.75rem] text-text-muted">
         {TRAINING_PHASES.map((phase) => (
           <li key={phase.key} className="flex items-center gap-1.5">
             <span

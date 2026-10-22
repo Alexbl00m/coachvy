@@ -163,50 +163,50 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="rounded-lg border border-line bg-surface p-4">
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
               Profil
             </p>
             <p className="mt-1.5 text-xl font-semibold tracking-tight text-text">
               {profile.label ?? "–"}
             </p>
-            <p className="mt-0.5 text-[12px] text-text-subtle tabular-nums">
+            <p className="mt-0.5 text-[0.75rem] text-text-subtle tabular-nums">
               {profile.individual
                 ? `egen exponent ${sv(exponent, 3)}`
                 : "Riegel 1,06 (en distans)"}
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-4">
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
               Fart-tapp per dubblad distans
             </p>
             <p className="mt-1.5 text-xl font-semibold tracking-tight text-text tabular-nums">
               {sv(profile.lossPerDoubling)} %
             </p>
-            <p className="mt-0.5 text-[12px] text-text-subtle">
+            <p className="mt-0.5 text-[0.75rem] text-text-subtle">
               de flesta: ca 4 %
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-4">
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
               Critical speed
             </p>
             <p className="mt-1.5 text-xl font-semibold tracking-tight text-text tabular-nums">
               {cs ? pace(cs.speed) : "–"}
             </p>
-            <p className="mt-0.5 text-[12px] text-text-subtle tabular-nums">
+            <p className="mt-0.5 text-[0.75rem] text-text-subtle tabular-nums">
               {cs
                 ? `D′ ${Math.round(cs.dPrime)} m · ${sv(cs.speed * 3.6)} km/h`
                 : "kräver insatser av klart olika längd på 2–20 min"}
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-4">
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+            <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
               VDOT
             </p>
             <p className="mt-1.5 text-xl font-semibold tracking-tight text-text tabular-nums">
               {profile.vdot ? sv(profile.vdot.value) : "–"}
             </p>
-            <p className="mt-0.5 text-[12px] text-text-subtle">
+            <p className="mt-0.5 text-[0.75rem] text-text-subtle">
               {profile.vdot
                 ? `${protocolLabel(profile.vdot.point.protocol)}, ${formatDate(profile.vdot.point.performedOn)}`
                 : "–"}
@@ -218,16 +218,16 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
           {profile.reading}
         </p>
         {profile.warnings.map((w) => (
-          <p key={w} className="mt-2 max-w-3xl text-[13px] text-text-subtle">
+          <p key={w} className="mt-2 max-w-3xl text-[0.8125rem] text-text-subtle">
             {w}
           </p>
         ))}
 
-        <p className="mt-5 text-[12px] text-text-subtle">
+        <p className="mt-5 text-[0.75rem] text-text-subtle">
           Fart i km/h mot tid, tidsaxeln logaritmisk – 2 minuter till 4 timmar.
         </p>
         <div
-          className="mt-2 h-[320px] w-full"
+          className="mt-2 h-[20rem] w-full"
           role="img"
           aria-label="Fart mot tid: insatserna och den egna kurvan"
         >
@@ -243,7 +243,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
                 tickFormatter={tickLabel}
                 allowDuplicatedCategory={false}
                 stroke={CHART_GRID}
-                tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+                tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
                 tickLine={false}
               />
               <YAxis
@@ -252,7 +252,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
                 domain={[yMin, yMax]}
                 allowDecimals={false}
                 stroke={CHART_GRID}
-                tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+                tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
                 tickLine={false}
                 width={40}
               />
@@ -306,7 +306,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-        <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-text-muted">
+        <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[0.75rem] text-text-muted">
           <li className="flex items-center gap-2">
             <span
               aria-hidden
@@ -371,7 +371,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
               : []),
           ])}
         />
-        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           Den egna kurvan bygger på hur just den här atleten tappar fart. VDOT
           antar en genomsnittlig löpares kurva, och CS-modellen gäller bara lopp
           på ungefär 2–20 minuter. Där de skiljer sig mycket saknas oftast ett
@@ -382,7 +382,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
       <Card className="min-w-0">
         <CardTitle>Tävlingsplan</CardTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="space-y-1.5 text-[13px] font-medium text-text">
+          <label className="space-y-1.5 text-[0.8125rem] font-medium text-text">
             <span>Lopp</span>
             <Select
               value={distanceKey}
@@ -400,7 +400,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
             </Select>
           </label>
           {distanceKey === "egen" && (
-            <label className="space-y-1.5 text-[13px] font-medium text-text">
+            <label className="space-y-1.5 text-[0.8125rem] font-medium text-text">
               <span>Distans (km)</span>
               <Input
                 inputMode="decimal"
@@ -413,18 +413,18 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
               />
             </label>
           )}
-          <label className="space-y-1.5 text-[13px] font-medium text-text">
+          <label className="space-y-1.5 text-[0.8125rem] font-medium text-text">
             <span>Måltid</span>
             <Input
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder={metres > 0 ? clock(predicted(metres)) : "0:00"}
             />
-            <span className="block text-[11px] font-normal text-text-subtle">
+            <span className="block text-[0.6875rem] font-normal text-text-subtle">
               tomt = den egna kurvans prognos
             </span>
           </label>
-          <label className="space-y-1.5 text-[13px] font-medium text-text">
+          <label className="space-y-1.5 text-[0.8125rem] font-medium text-text">
             <span>Varv</span>
             <Select
               value={String(lapMetres)}
@@ -450,7 +450,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
                 aria-pressed={strategy === s.key}
                 onClick={() => setStrategy(s.key)}
                 className={cn(
-                  "px-3 py-1.5 text-[13px] transition-colors",
+                  "px-3 py-1.5 text-[0.8125rem] transition-colors",
                   strategy === s.key
                     ? "bg-surface-2 font-medium text-text"
                     : "text-text-muted hover:text-text",
@@ -461,7 +461,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
             ))}
           </div>
           {strategy !== "jämn" && (
-            <label className="flex items-center gap-2 text-[13px] text-text-muted">
+            <label className="flex items-center gap-2 text-[0.8125rem] text-text-muted">
               Skillnad mellan halvorna
               <input
                 type="range"
@@ -519,7 +519,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
             {plan.notes.map((n) => (
               <p
                 key={n}
-                className="text-[13px] leading-relaxed text-text-muted"
+                className="text-[0.8125rem] leading-relaxed text-text-muted"
               >
                 {n}
               </p>

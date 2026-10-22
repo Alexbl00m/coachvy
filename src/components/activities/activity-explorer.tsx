@@ -28,7 +28,7 @@ const ActivityMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[340px] w-full animate-pulse rounded-lg border border-line bg-surface-2 sm:h-[420px]" />
+      <div className="h-[21.25rem] w-full animate-pulse rounded-lg border border-line bg-surface-2 sm:h-[26.25rem]" />
     ),
   },
 );
@@ -109,19 +109,19 @@ function Readout({
   return (
     <div
       aria-live="off"
-      className="flex min-h-[38px] flex-wrap items-baseline gap-x-5 gap-y-1 text-sm"
+      className="flex min-h-[2.375rem] flex-wrap items-baseline gap-x-5 gap-y-1 text-sm"
     >
       {row ? (
         items.map(([label, value]) => (
           <span key={label} className="whitespace-nowrap">
-            <span className="text-[11px] uppercase tracking-[0.08em] text-text-subtle">
+            <span className="text-[0.6875rem] uppercase tracking-[0.08em] text-text-subtle">
               {label}
             </span>{" "}
             <span className="font-medium text-text tabular-nums">{value}</span>
           </span>
         ))
       ) : (
-        <span className="text-[13px] text-text-subtle">
+        <span className="text-[0.8125rem] text-text-subtle">
           För pekaren över graferna för att följa loppet på kartan.
         </span>
       )}
@@ -212,7 +212,7 @@ export function ActivityExplorer({
 
       {best.length > 0 && (
         <div>
-          <p className="mb-2 text-[12px] text-text-subtle">
+          <p className="mb-2 text-[0.75rem] text-text-subtle">
             Välj en insats för att se var i loppet den gjordes.
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -223,7 +223,7 @@ export function ActivityExplorer({
                 aria-pressed={chosen === n}
                 onClick={() => setChosen(chosen === n ? null : n)}
                 className={cn(
-                  "rounded-md border px-2.5 py-1.5 text-left text-[12px] transition-colors",
+                  "rounded-md border px-2.5 py-1.5 text-left text-[0.75rem] transition-colors",
                   chosen === n
                     ? "border-text-subtle bg-surface-3 text-text"
                     : "border-line-strong text-text-muted hover:border-accent/60 hover:text-text",
@@ -245,7 +245,7 @@ export function ActivityExplorer({
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <Readout rows={rows} hover={hover} sport={sport} />
           <div className="flex flex-wrap gap-2">
-            <label className="flex items-center gap-1.5 rounded-md border border-line-strong px-2.5 py-1 text-[12px] text-text-muted">
+            <label className="flex items-center gap-1.5 rounded-md border border-line-strong px-2.5 py-1 text-[0.75rem] text-text-muted">
               <input
                 type="checkbox"
                 checked={smoothed}
@@ -257,7 +257,7 @@ export function ActivityExplorer({
             <div
               role="group"
               aria-label="X-axel"
-              className="flex rounded-md border border-line-strong p-0.5 text-[12px]"
+              className="flex rounded-md border border-line-strong p-0.5 text-[0.75rem]"
             >
               {(
                 [

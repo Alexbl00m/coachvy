@@ -71,7 +71,7 @@ export function MonthGrid({
 
   return (
     <div className="overflow-hidden rounded-lg border border-line">
-      <div className="grid grid-cols-7 border-b border-line bg-surface-2/60 text-[11px] font-medium uppercase tracking-[0.08em] text-text-subtle sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]">
+      <div className="grid grid-cols-7 border-b border-line bg-surface-2/60 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]">
         <span className="hidden px-2 py-2 sm:block" aria-hidden>
           v.
         </span>
@@ -87,7 +87,7 @@ export function MonthGrid({
           key={week[0]}
           className="grid grid-cols-7 border-b border-line last:border-b-0 sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]"
         >
-          <span className="hidden border-r border-line px-2 py-1.5 text-[11px] text-text-subtle tabular-nums sm:block">
+          <span className="hidden border-r border-line px-2 py-1.5 text-[0.6875rem] text-text-subtle tabular-nums sm:block">
             {isoWeek(week[0])}
           </span>
           {week.map((date) => {
@@ -145,7 +145,7 @@ export function MonthGrid({
                 <span className="flex items-center justify-between">
                   <span
                     className={cn(
-                      "grid size-6 place-items-center rounded-full text-[12px] tabular-nums",
+                      "grid size-6 place-items-center rounded-full text-[0.75rem] tabular-nums",
                       isToday
                         ? "bg-accent font-semibold text-accent-on"
                         : inMonth
@@ -201,12 +201,12 @@ export function MonthGrid({
                       return (
                         <span
                           key={row.key}
-                          className="flex min-w-0 items-center gap-1 text-[11px] font-medium leading-tight text-text"
+                          className="flex min-w-0 items-center gap-1 text-[0.6875rem] font-medium leading-tight text-text"
                         >
                           <span
                             aria-hidden
                             className={cn(
-                              "grid size-3.5 shrink-0 place-items-center rounded-[3px] text-[8px] font-bold",
+                              "grid size-3.5 shrink-0 place-items-center rounded-[3px] text-[0.5rem] font-bold",
                               row.race.priority === "A"
                                 ? "bg-text text-canvas"
                                 : "border border-line-strong text-text-muted",
@@ -225,7 +225,7 @@ export function MonthGrid({
                       return (
                         <span
                           key={row.key}
-                          className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text"
+                          className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text"
                         >
                           <Video
                             aria-hidden
@@ -242,7 +242,7 @@ export function MonthGrid({
                       return (
                         <span
                           key={row.key}
-                          className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text"
+                          className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text"
                         >
                           <SportIcon
                             sport={row.activity.sport as Sport}
@@ -259,7 +259,7 @@ export function MonthGrid({
                       return (
                         <span
                           key={row.key}
-                          className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text-muted"
+                          className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text-muted"
                         >
                           <SportIcon
                             sport={row.workout.sport}
@@ -275,7 +275,7 @@ export function MonthGrid({
                     return (
                       <span
                         key={row.key}
-                        className="flex min-w-0 items-center gap-1 text-[11px] leading-tight text-text-muted"
+                        className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text-muted"
                       >
                         <TestIcon className="size-3 shrink-0" />
                         <span className="truncate">
@@ -286,7 +286,7 @@ export function MonthGrid({
                     );
                   })}
                   {more > 0 && (
-                    <span className="text-[11px] text-text-subtle">
+                    <span className="text-[0.6875rem] text-text-subtle">
                       +{more} till
                     </span>
                   )}

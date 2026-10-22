@@ -59,21 +59,21 @@ export function Testing() {
       <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
         {tests.map((test) => (
           <article key={test.title} className="flex flex-col bg-canvas p-7">
-            <h3 className="text-[15px] font-semibold text-text">
+            <h3 className="text-[0.9375rem] font-semibold text-text">
               {test.title}
             </h3>
-            <p className="mt-1.5 font-mono text-[12px] text-text-subtle">
+            <p className="mt-1.5 font-mono text-[0.75rem] text-text-subtle">
               {test.price} · {test.duration}
             </p>
-            <p className="mt-4 text-[14px] leading-relaxed text-text-muted">
+            <p className="mt-4 text-[0.875rem] leading-relaxed text-text-muted">
               {test.description}
             </p>
-            <p className="mt-6 text-[12px] font-medium text-text-subtle">
+            <p className="mt-6 text-[0.75rem] font-medium text-text-subtle">
               Du får
             </p>
             <ul className="mt-2 space-y-1.5">
               {test.features.map((feature) => (
-                <li key={feature} className="text-[14px] text-text">
+                <li key={feature} className="text-[0.875rem] text-text">
                   {feature}
                 </li>
               ))}
@@ -84,7 +84,7 @@ export function Testing() {
 
       <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
         <ButtonLink href="#kontakt">Boka ett test</ButtonLink>
-        <p className="text-[14px] text-text-subtle">
+        <p className="text-[0.875rem] text-text-subtle">
           Varje test avslutas med träningsråd utifrån resultaten.
         </p>
       </div>

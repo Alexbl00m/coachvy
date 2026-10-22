@@ -131,21 +131,21 @@ export function RaceEditor({
         <PriorityBadge priority={race.priority} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-text">{race.name}</p>
-          <p className="text-[12px] text-text-subtle tabular-nums">
+          <p className="text-[0.75rem] text-text-subtle tabular-nums">
             {longDate(race.race_date, today)} · {countdownText(days)}
           </p>
           {details.length > 0 && (
-            <p className="mt-0.5 text-[13px] text-text-muted">
+            <p className="mt-0.5 text-[0.8125rem] text-text-muted">
               {details.join(" · ")}
             </p>
           )}
           {race.note && (
-            <p className="mt-0.5 text-[12px] text-text-subtle">{race.note}</p>
+            <p className="mt-0.5 text-[0.75rem] text-text-subtle">{race.note}</p>
           )}
           {analyses[race.id] && (
             <Link
               href={`${routes.adepts}/${adeptId}/aktivitet/${analyses[race.id]}`}
-              className="mt-1 inline-block text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+              className="mt-1 inline-block text-[0.8125rem] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
             >
               Se loppanalysen
             </Link>
@@ -222,7 +222,7 @@ export function RaceEditor({
           <button
             type="button"
             onClick={() => setShowPast((v) => !v)}
-            className="text-[12px] text-text-subtle hover:text-text"
+            className="text-[0.75rem] text-text-subtle hover:text-text"
             aria-expanded={showPast}
           >
             {showPast ? "Dölj" : "Visa"} genomförda ({past.length})
@@ -240,7 +240,7 @@ export function RaceEditor({
           </p>
 
           <fieldset>
-            <legend className="pb-1.5 text-[13px] font-medium text-text">
+            <legend className="pb-1.5 text-[0.8125rem] font-medium text-text">
               Prioritet
             </legend>
             <div className="grid grid-cols-3 gap-2">
@@ -262,7 +262,7 @@ export function RaceEditor({
                     <span className="block text-sm font-medium text-text">
                       {p.label}
                     </span>
-                    <span className="block text-[11px] leading-snug text-text-subtle">
+                    <span className="block text-[0.6875rem] leading-snug text-text-subtle">
                       {p.hint}
                     </span>
                   </button>

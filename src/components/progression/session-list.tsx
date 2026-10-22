@@ -46,7 +46,7 @@ export function SessionList({
                   {protocolLabel(s.protocol)}
                 </span>
                 {phase && PHASE_SHORT[phase] && (
-                  <span className="shrink-0 rounded-full border border-line-strong px-2 py-0.5 text-[11px] text-text-muted">
+                  <span className="shrink-0 rounded-full border border-line-strong px-2 py-0.5 text-[0.6875rem] text-text-muted">
                     {PHASE_SHORT[phase]}
                   </span>
                 )}
@@ -61,13 +61,13 @@ export function SessionList({
                   );
                   return (
                     <span key={m.id} className="whitespace-nowrap">
-                      <span className="font-mono text-[11px] text-text-subtle">
+                      <span className="font-mono text-[0.6875rem] text-text-subtle">
                         {shortMetricLabel(m.key)}
                       </span>{" "}
-                      <span className="text-[15px] font-semibold text-text">
+                      <span className="text-[0.9375rem] font-semibold text-text">
                         {d.value}
                       </span>{" "}
-                      <span className="font-mono text-[11px] text-text-subtle">
+                      <span className="font-mono text-[0.6875rem] text-text-subtle">
                         {d.unit}
                       </span>
                     </span>

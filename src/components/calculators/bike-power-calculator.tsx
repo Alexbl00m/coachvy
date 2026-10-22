@@ -247,7 +247,7 @@ export function BikePowerCalculator() {
               />
             </Field>
           </div>
-          <p className="mt-4 border-t border-line pt-3 text-[12px] text-text-subtle">
+          <p className="mt-4 border-t border-line pt-3 text-[0.75rem] text-text-subtle">
             Systemvikt {sv(model.totalWeightKg, 1)} kg
           </p>
         </Card>
@@ -304,7 +304,7 @@ export function BikePowerCalculator() {
               />
             </Field>
           </div>
-          <p className="mt-4 border-t border-line pt-3 text-[12px] text-text-subtle">
+          <p className="mt-4 border-t border-line pt-3 text-[0.75rem] text-text-subtle">
             Luftdensitet {sv(model.density, 3)} kg/m³
           </p>
         </Card>
@@ -384,7 +384,7 @@ export function BikePowerCalculator() {
           ))}
         </div>
 
-        <p className="mt-3 text-[12px] text-text-subtle">
+        <p className="mt-3 text-[0.75rem] text-text-subtle">
           {targetKind === "power"
             ? "Du anger effekten – fart och tid räknas fram."
             : targetKind === "speed"
@@ -478,7 +478,7 @@ export function BikePowerCalculator() {
               currentWatts={solution.riderWatts}
               ftp={model.ftp}
             />
-            <p className="mt-2 text-[12px] text-text-subtle">
+            <p className="mt-2 text-[0.75rem] text-text-subtle">
               Kurvan gäller den här sträckans lutning, vind och luftdensitet.
               Att effekten växer med kuben av farten är därför inte en linje –
               det är hela poängen med diagrammet.
@@ -492,7 +492,7 @@ export function BikePowerCalculator() {
               gravityWatts={solution.breakdown.gravityWatts}
               airWatts={solution.breakdown.airWatts}
             />
-            <p className="mt-4 border-t border-line pt-3 text-[12px] text-text-subtle">
+            <p className="mt-4 border-t border-line pt-3 text-[0.75rem] text-text-subtle">
               Andelarna är av effekten som når vägen. Drivlinan tar
               ytterligare{" "}
               {Math.round(
@@ -518,7 +518,7 @@ export function BikePowerCalculator() {
                 : "–",
             ])}
           />
-          <p className="mt-3 text-[12px] text-text-subtle">
+          <p className="mt-3 text-[0.75rem] text-text-subtle">
             Räknat vid samma effekt över {sv(model.distanceKm, 1)} km. På platt
             mark ger aero mest; ju brantare det är, desto mer betyder vikten.
           </p>

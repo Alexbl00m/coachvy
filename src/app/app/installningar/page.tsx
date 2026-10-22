@@ -31,7 +31,7 @@ function Row({
 }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5">
-      <dt className="text-[13px] text-text-muted">{label}</dt>
+      <dt className="text-[0.8125rem] text-text-muted">{label}</dt>
       <dd className="text-sm text-text">{children}</dd>
     </div>
   );
@@ -193,11 +193,11 @@ export default async function InstallningarPage() {
                 }
               />
               <details className="mt-6 border-t border-line pt-4">
-                <summary className="cursor-pointer text-[13px] font-medium text-text">
+                <summary className="cursor-pointer text-[0.8125rem] font-medium text-text">
                   Läs Coachvys grundfilosofi
                 </summary>
                 <div className="mt-3 max-h-[28rem] overflow-y-auto rounded-md border border-line bg-surface-2 p-4">
-                  <p className="max-w-prose whitespace-pre-wrap text-[13px] leading-relaxed text-text-muted">
+                  <p className="max-w-prose whitespace-pre-wrap text-[0.8125rem] leading-relaxed text-text-muted">
                     {FOUNDATION_TEXT}
                   </p>
                 </div>

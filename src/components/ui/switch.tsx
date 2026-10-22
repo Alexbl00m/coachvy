@@ -40,14 +40,14 @@ export function Switch({
         <span
           className={cn(
             "absolute top-0.5 size-3.5 rounded-full transition-[left,background-color] duration-150 ease-out motion-reduce:transition-none",
-            checked ? "left-[18px] bg-canvas" : "left-0.5 bg-text-subtle",
+            checked ? "left-[1.125rem] bg-canvas" : "left-0.5 bg-text-subtle",
           )}
         />
       </span>
       <span>
         <span className="block text-sm text-text">{label}</span>
         {hint && (
-          <span className="block text-[12px] text-text-subtle">{hint}</span>
+          <span className="block text-[0.75rem] text-text-subtle">{hint}</span>
         )}
       </span>
     </button>

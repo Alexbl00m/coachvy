@@ -15,7 +15,7 @@ export function ToolsTeaser() {
         />
         <Link
           href="/verktyg"
-          className="text-[14px] text-accent-text transition-colors hover:text-accent-hover"
+          className="text-[0.875rem] text-accent-text transition-colors hover:text-accent-hover"
         >
           Alla verktyg
         </Link>
@@ -37,10 +37,10 @@ export function ToolsTeaser() {
                     className="size-4 text-text-subtle transition-colors group-hover:text-text"
                   />
                 </span>
-                <span className="mt-6 text-[15px] font-semibold text-text">
+                <span className="mt-6 text-[0.9375rem] font-semibold text-text">
                   {tool.title}
                 </span>
-                <span className="mt-2 line-clamp-3 text-[14px] leading-relaxed text-text-muted">
+                <span className="mt-2 line-clamp-3 text-[0.875rem] leading-relaxed text-text-muted">
                   {tool.description}
                 </span>
               </Link>

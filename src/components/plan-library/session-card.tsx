@@ -24,10 +24,10 @@ export function SessionCard({
   ].filter(Boolean);
   return (
     <span className={cn("block min-w-0", className)}>
-      <span className="block truncate text-[13px] font-medium text-text">
+      <span className="block truncate text-[0.8125rem] font-medium text-text">
         {session.title}
       </span>
-      <span className="block truncate text-[11px] text-text-subtle">
+      <span className="block truncate text-[0.6875rem] text-text-subtle">
         {[
           disciplineName,
           // "Styrka · Styrka" säger ingenting två gånger.
@@ -39,7 +39,7 @@ export function SessionCard({
           .join(" · ")}
       </span>
       {facts.length > 0 && (
-        <span className="mt-0.5 block truncate text-[11px] text-text-muted tabular-nums">
+        <span className="mt-0.5 block truncate text-[0.6875rem] text-text-muted tabular-nums">
           {facts.join(" · ")}
         </span>
       )}

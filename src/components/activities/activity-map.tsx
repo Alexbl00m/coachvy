@@ -207,7 +207,7 @@ export function ActivityMap({
       ref={box}
       role="img"
       aria-label="Karta över rutten"
-      className="activity-map h-[340px] w-full overflow-hidden rounded-lg border border-line bg-surface-2 sm:h-[420px]"
+      className="activity-map h-[21.25rem] w-full overflow-hidden rounded-lg border border-line bg-surface-2 sm:h-[26.25rem]"
     />
   );
 }

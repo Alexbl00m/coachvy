@@ -22,7 +22,7 @@ export function DevelopmentCard({
       <div className="grid gap-x-10 gap-y-6 lg:grid-cols-2">
         {reading.sections.map((section) => (
           <section key={section.title}>
-            <h3 className="text-[13px] font-medium text-text">
+            <h3 className="text-[0.8125rem] font-medium text-text">
               {section.title}
             </h3>
             <ul className="mt-2 max-w-[62ch] space-y-1.5 text-sm leading-relaxed text-text-muted">
@@ -33,7 +33,7 @@ export function DevelopmentCard({
           </section>
         ))}
       </div>
-      <p className="mt-5 border-t border-line pt-3 text-[12px] text-text-subtle">
+      <p className="mt-5 border-t border-line pt-3 text-[0.75rem] text-text-subtle">
         Ur {reading.activities} pass, räknat bakåt från{" "}
         {longDate(reading.anchor)}
         {reading.anchoredOnLast

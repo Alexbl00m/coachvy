@@ -76,7 +76,7 @@ export function PaceSource({
           className={choice(draftMode === "form")}
         >
           <span className="block font-medium">Min form</span>
-          <span className="block text-[12px] text-text-subtle">
+          <span className="block text-[0.75rem] text-text-subtle">
             Tempona följer dina tester och tider, och ändras när de gör det.
           </span>
         </button>
@@ -88,7 +88,7 @@ export function PaceSource({
           className={choice(draftMode === "mål")}
         >
           <span className="block font-medium">Min måltid</span>
-          <span className="block text-[12px] text-text-subtle">
+          <span className="block text-[0.75rem] text-text-subtle">
             Tempona räknas ur den tid du vill springa {race.name} på.
           </span>
         </button>
@@ -121,27 +121,27 @@ export function PaceSource({
             Byt
           </Button>
           {error && (
-            <span role="alert" className="text-[13px] text-warn">
+            <span role="alert" className="text-[0.8125rem] text-warn">
               {error}
             </span>
           )}
         </div>
       )}
-      <p className="text-[12px] leading-snug text-text-subtle">
+      <p className="text-[0.75rem] leading-snug text-text-subtle">
         Procenten i passen ändras inte, bara tempona. Du kan byta när som helst.
       </p>
 
       {shown.length > 0 && zoneSpeed && (
         <div>
-          <p className="mb-1.5 text-[13px] font-medium text-text">Dina zoner</p>
-          <ul className="divide-y divide-line rounded-md border border-line text-[13px] tabular-nums">
+          <p className="mb-1.5 text-[0.8125rem] font-medium text-text">Dina zoner</p>
+          <ul className="divide-y divide-line rounded-md border border-line text-[0.8125rem] tabular-nums">
             {shown.map((z) => (
               <li
                 key={z.key}
                 className="flex items-baseline justify-between gap-3 px-3 py-1.5"
               >
                 <span className="min-w-0">
-                  <span className="mr-2 rounded-sm bg-surface-3 px-1 text-[11px] font-medium text-text">
+                  <span className="mr-2 rounded-sm bg-surface-3 px-1 text-[0.6875rem] font-medium text-text">
                     {z.key}
                   </span>
                   <span className="text-text-muted">{z.name}</span>
@@ -164,7 +164,7 @@ export function PaceSource({
               </li>
             )}
           </ul>
-          <p className="mt-1.5 text-[11px] leading-snug text-text-subtle">
+          <p className="mt-1.5 text-[0.6875rem] leading-snug text-text-subtle">
             Zonerna räknas ur farten på {race.name} och är en vägledning. Lugn
             distans ska kännas lugn även när benen orkar mer.
             {lt2

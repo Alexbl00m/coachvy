@@ -247,7 +247,7 @@ export function WorkoutBuilder({
                       setPrompt(example);
                       if (/W′|D′/.test(example)) setUseBalance(true);
                     }}
-                    className="rounded-full border border-line-strong px-3 py-1 text-[12px] text-text-muted transition-colors hover:border-accent/60 hover:text-text"
+                    className="rounded-full border border-line-strong px-3 py-1 text-[0.75rem] text-text-muted transition-colors hover:border-accent/60 hover:text-text"
                   >
                     {example}
                   </button>
@@ -266,7 +266,7 @@ export function WorkoutBuilder({
                 <span className="font-medium text-text">
                   Bygg mot {cycling ? "W′bal" : "D′bal"}
                 </span>
-                <span className="block text-[12px] text-text-subtle">
+                <span className="block text-[0.75rem] text-text-subtle">
                   För pass som handlar om den anaeroba reserven –
                   VO2max-intervaller, lopp med attacker, banan.{" "}
                   {context.balance
@@ -311,11 +311,11 @@ export function WorkoutBuilder({
             </div>
 
             {adeptId !== null && blocked && (
-              <p className="text-[13px] text-text-muted">{blocked}</p>
+              <p className="text-[0.8125rem] text-text-muted">{blocked}</p>
             )}
 
             {!configured && (
-              <p className="text-[13px] text-text-muted">
+              <p className="text-[0.8125rem] text-text-muted">
                 Passbyggaren behöver en nyckel från Anthropic:{" "}
                 <code className="text-text">ANTHROPIC_API_KEY</code> som
                 miljövariabel – i Vercel under Settings → Environment Variables.
@@ -436,7 +436,7 @@ export function WorkoutBuilder({
                 </p>
               )}
             </div>
-            <span className="rounded bg-surface-2 px-2 py-1 text-[12px] text-text-muted print:hidden">
+            <span className="rounded bg-surface-2 px-2 py-1 text-[0.75rem] text-text-muted print:hidden">
               {SPORTS.find((s) => s.id === workout.sport)?.label}
             </span>
           </div>
@@ -453,7 +453,7 @@ export function WorkoutBuilder({
 
           <div className="flex flex-wrap items-center gap-3 print:hidden">
             {adeptId !== null && (
-              <label className="flex items-center gap-2 text-[13px] text-text-muted">
+              <label className="flex items-center gap-2 text-[0.8125rem] text-text-muted">
                 Datum
                 <input
                   type="date"
@@ -486,7 +486,7 @@ export function WorkoutBuilder({
               </Button>
             )}
             <PrintButton />
-            <span className="text-[13px] text-text-subtle">
+            <span className="text-[0.8125rem] text-text-subtle">
               {saved ??
                 (selfService
                   ? "Sparas med de värden det byggdes mot."

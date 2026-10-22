@@ -40,7 +40,7 @@ const RETURN_MODES: { key: ReturnMode; label: string }[] = [
 
 const tab = (selected: boolean) =>
   cn(
-    "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+    "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
     selected
       ? "border-text-subtle bg-surface-3 font-medium text-text"
       : "border-line-strong text-text-muted hover:border-text-subtle hover:text-text",
@@ -167,7 +167,7 @@ export function LevelPanel({
       }}
     >
       <div>
-        <p className="mb-2 text-[13px] text-text-muted">Något som händer?</p>
+        <p className="mb-2 text-[0.8125rem] text-text-muted">Något som händer?</p>
         <div className="flex flex-wrap gap-1.5">
           {SCENARIOS.map((s) => (
             <button
@@ -183,7 +183,7 @@ export function LevelPanel({
           ))}
         </div>
         {SCENARIOS.find((s) => s.reason === reason) && (
-          <p className="mt-2 text-[13px] leading-relaxed text-text-muted">
+          <p className="mt-2 text-[0.8125rem] leading-relaxed text-text-muted">
             {SCENARIOS.find((s) => s.reason === reason)!.description} Förvalen
             nedan går att ändra.
           </p>
@@ -319,7 +319,7 @@ export function LevelPanel({
       </div>
 
       <div className="rounded-lg border border-line bg-surface-2/40 p-3">
-        <p className="mb-2 text-[13px] text-text-muted">
+        <p className="mb-2 text-[0.8125rem] text-text-muted">
           {planned.length === 0
             ? `Du är redan på ${name(toLevelId)} vecka ${week}.`
             : planned
@@ -337,7 +337,7 @@ export function LevelPanel({
           label="Nivån vecka för vecka efter bytet"
         />
         {superseded.length > 0 && (
-          <p className="mt-2 text-[12px] text-text-subtle">
+          <p className="mt-2 text-[0.75rem] text-text-subtle">
             Ersätter {superseded.length} planerade byten från vecka {week}.
           </p>
         )}

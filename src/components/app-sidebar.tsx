@@ -30,7 +30,7 @@ export function AppSidebar({
       {navSections.map((section, index) => (
         <div key={section.title ?? `section-${index}`} className="space-y-1">
           {section.title && (
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">
+            <p className="px-3 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-text-subtle">
               {section.title}
             </p>
           )}
@@ -73,7 +73,7 @@ export function AppSidebar({
                             onClick={onNavigate}
                             aria-current={current ? "page" : undefined}
                             className={cn(
-                              "block truncate rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                              "block truncate rounded-md px-2.5 py-1.5 text-[0.8125rem] transition-colors",
                               current
                                 ? "font-medium text-text"
                                 : "text-text-muted hover:text-text",

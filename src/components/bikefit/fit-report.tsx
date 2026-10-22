@@ -70,7 +70,7 @@ export function AngleTile({
         a.verdict ? VERDICT_BORDER[a.verdict] : "border-line",
       )}
     >
-      <p className="text-[12px] font-medium leading-snug text-text-muted">
+      <p className="text-[0.75rem] font-medium leading-snug text-text-muted">
         {title}
       </p>
       <p className="mt-1 text-2xl font-semibold tracking-tight text-text tabular-nums">
@@ -78,13 +78,13 @@ export function AngleTile({
       </p>
       <p
         className={cn(
-          "text-[12px] font-medium",
+          "text-[0.75rem] font-medium",
           a.verdict ? VERDICT_TEXT[a.verdict] : "text-text-subtle",
         )}
       >
         {label}
       </p>
-      <p className="mt-1 text-[12px] text-text-subtle tabular-nums">
+      <p className="mt-1 text-[0.75rem] text-text-subtle tabular-nums">
         {a.band
           ? `mål ${a.band.min}–${a.band.max}°${a.basis === "erfarenhetsvärde" ? " · erfarenhetsvärde" : ""}`
           : "mäts, bedöms inte"}
@@ -93,7 +93,7 @@ export function AngleTile({
           : ""}
       </p>
       {extra && (
-        <p className="mt-0.5 text-[12px] text-text-subtle tabular-nums">
+        <p className="mt-0.5 text-[0.75rem] text-text-subtle tabular-nums">
           {extra}
         </p>
       )}
@@ -132,13 +132,13 @@ export function FitReport({
     <div className="space-y-6">
       <Card level="lead" className="min-w-0">
         <CardTitle>Resultat</CardTitle>
-        <p className="max-w-3xl text-[17px] font-semibold leading-snug text-text">
+        <p className="max-w-3xl text-[1.0625rem] font-semibold leading-snug text-text">
           {a.sentence}
         </p>
         {followUp && (
           <p className="mt-2 max-w-3xl text-sm text-text">{followUp}</p>
         )}
-        <p className="mt-2 text-[13px] text-text-muted">
+        <p className="mt-2 text-[0.8125rem] text-text-muted">
           {DISCIPLINE_LABEL[fit.discipline]}
           {fit.bike ? ` · ${fit.bike}` : ""} · {longDate(fit.performed_on)} ·{" "}
           {fit.method === "video" ? "mätt ur video" : "mätt manuellt"}
@@ -191,7 +191,7 @@ export function FitReport({
             previous={previous?.angles.hip}
           />
         </div>
-        <p className="mt-2 max-w-3xl text-[12px] text-text-subtle">
+        <p className="mt-2 max-w-3xl text-[0.75rem] text-text-subtle">
           Knäböjningen är 180° minus vinkeln höft–knä–fotled. Grönt i bandet,
           gult inom ±{sv(TOLERANCE)}° (ett mobilvideo löser upp ungefär två till
           tre grader) och rött utanför – bara rött ger ett förslag att flytta
@@ -232,7 +232,7 @@ export function FitReport({
       {analysis && (
         <Card className="min-w-0">
           <CardTitle>Videoanalysen</CardTitle>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13px] sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[0.8125rem] sm:grid-cols-4">
             {[
               ["Bildfrekvens", `${sv(analysis.fps, 0)} B/s`],
               ["Längd", `${sv(analysis.durationS)} s`],
@@ -270,7 +270,7 @@ export function FitReport({
             ))}
           </dl>
           {analysis.problems.length > 0 && (
-            <ul className="mt-3 space-y-1 text-[13px] text-text">
+            <ul className="mt-3 space-y-1 text-[0.8125rem] text-text">
               {analysis.problems.map((p) => (
                 <li key={p} className="flex gap-2">
                   <span
@@ -300,7 +300,7 @@ export function FitReport({
       <div className="grid gap-6">
         <Card className="min-w-0">
           <CardTitle>Checklista och anteckningar</CardTitle>
-          <ul className="space-y-1.5 text-[13px]">
+          <ul className="space-y-1.5 text-[0.8125rem]">
             {template.checklist.map((item) => (
               <li key={item} className="flex gap-2">
                 <span
@@ -327,7 +327,7 @@ export function FitReport({
           </ul>
           {fit.changes && (
             <div className="mt-4 border-t border-line pt-3">
-              <p className="text-[12px] font-medium text-text-muted">
+              <p className="text-[0.75rem] font-medium text-text-muted">
                 Ändrat i korthet
               </p>
               <p className="mt-1 whitespace-pre-line text-sm text-text">
@@ -337,7 +337,7 @@ export function FitReport({
           )}
           {fit.notes && (
             <div className="mt-4 border-t border-line pt-3">
-              <p className="text-[12px] font-medium text-text-muted">Övrigt</p>
+              <p className="text-[0.75rem] font-medium text-text-muted">Övrigt</p>
               <p className="mt-1 whitespace-pre-line text-sm text-text">
                 {fit.notes}
               </p>
@@ -347,7 +347,7 @@ export function FitReport({
       </div>
 
       <Card level="flat" className="min-w-0">
-        <p className="max-w-3xl text-[13px] leading-relaxed text-text-muted">
+        <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-muted">
           <span className="font-medium text-text">Vad mätningen inte ser.</span>{" "}
           En video från sidan kan bedöma sadelhöjd och överkroppens hållning.
           Den ser inte om knäna vandrar inåt eller utåt, och den säger inget om

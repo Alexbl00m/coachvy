@@ -67,7 +67,7 @@ const sv = (v: number) => v.toString().replace(".", ",");
 
 const segment = (on: boolean) =>
   cn(
-    "flex-1 rounded-md border px-2.5 py-1.5 text-[13px] transition-colors",
+    "flex-1 rounded-md border px-2.5 py-1.5 text-[0.8125rem] transition-colors",
     on
       ? "border-text-subtle bg-surface-3 text-text"
       : "border-line-strong text-text-muted hover:text-text",
@@ -208,7 +208,7 @@ export function RunningPlanner({
             </Field>
 
             <fieldset>
-              <legend className="mb-1.5 text-[13px] font-medium text-text">
+              <legend className="mb-1.5 text-[0.8125rem] font-medium text-text">
                 Nivå
               </legend>
               <div className="flex gap-1.5">
@@ -227,7 +227,7 @@ export function RunningPlanner({
                       )}
                     >
                       <span className="block font-medium">{l}</span>
-                      <span className="block text-[11px] text-text-subtle tabular-nums">
+                      <span className="block text-[0.6875rem] text-text-subtle tabular-nums">
                         {r ? `${r.peakWeekKm} km/v` : "–"}
                       </span>
                     </button>
@@ -290,7 +290,7 @@ export function RunningPlanner({
             </div>
 
             <fieldset>
-              <legend className="mb-1.5 text-[13px] font-medium text-text">
+              <legend className="mb-1.5 text-[0.8125rem] font-medium text-text">
                 Avlastning
               </legend>
               <div className="flex gap-1.5">
@@ -309,7 +309,7 @@ export function RunningPlanner({
             </fieldset>
 
             <div className="border-t border-line pt-4">
-              <p className="mb-1.5 text-[13px] font-medium text-text">
+              <p className="mb-1.5 text-[0.8125rem] font-medium text-text">
                 Zoner ur en tid
               </p>
               <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
@@ -339,7 +339,7 @@ export function RunningPlanner({
                   ))}
                 </Select>
               </div>
-              <p className="mt-1.5 text-[11px] leading-snug text-text-subtle">
+              <p className="mt-1.5 text-[0.6875rem] leading-snug text-text-subtle">
                 {pace?.source ??
                   "Ett färskt lopp eller en måltid. Tiden närmast loppet i distans träffar bäst – en mil för halvmaran, en halvmara för maran."}
                 {paceTime.trim() && !seconds && (
@@ -409,19 +409,19 @@ export function RunningPlanner({
                     key={s.label}
                     className="rounded-lg border border-line bg-surface px-4 py-3"
                   >
-                    <dt className="text-[11px] font-medium tracking-wide text-text-subtle uppercase">
+                    <dt className="text-[0.6875rem] font-medium tracking-wide text-text-subtle uppercase">
                       {s.label}
                     </dt>
                     <dd className="mt-0.5 font-mono text-lg font-semibold tabular-nums text-text">
                       {s.value}
                     </dd>
-                    <dd className="text-[12px] text-text-subtle">{s.hint}</dd>
+                    <dd className="text-[0.75rem] text-text-subtle">{s.hint}</dd>
                   </div>
                 ))}
               </dl>
 
               {result.plan.warnings.length > 0 && (
-                <ul className="space-y-1.5 rounded-lg border border-warn/40 bg-warn/5 px-4 py-3 text-[13px] text-text">
+                <ul className="space-y-1.5 rounded-lg border border-warn/40 bg-warn/5 px-4 py-3 text-[0.8125rem] text-text">
                   {result.plan.warnings.map((w) => (
                     <li key={w}>{w}</li>
                   ))}

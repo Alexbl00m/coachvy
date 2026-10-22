@@ -13,7 +13,7 @@ export function PriorityBadge({
   return (
     <span
       className={cn(
-        "inline-grid size-6 shrink-0 place-items-center rounded-md text-[12px] font-semibold",
+        "inline-grid size-6 shrink-0 place-items-center rounded-md text-[0.75rem] font-semibold",
         priority === "A" && "bg-text text-canvas",
         priority === "B" && "border border-line-strong text-text",
         priority === "C" &&

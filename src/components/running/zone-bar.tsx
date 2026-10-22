@@ -30,10 +30,10 @@ export function ZoneBar({
               title={z.name}
               className="border-r border-line px-2 py-2 text-center last:border-r-0"
             >
-              <dt className="text-[11px] font-semibold tracking-[0.08em] text-text-subtle">
+              <dt className="text-[0.6875rem] font-semibold tracking-[0.08em] text-text-subtle">
                 {z.key}
               </dt>
-              <dd className="font-mono text-[12px] whitespace-nowrap tabular-nums text-text">
+              <dd className="font-mono text-[0.75rem] whitespace-nowrap tabular-nums text-text">
                 {z.pace}
               </dd>
             </div>

@@ -10,14 +10,14 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-canvas text-text">
       <header className="border-b border-line px-5 py-5 sm:px-8">
-        <div className="mx-auto max-w-[1120px]">
+        <div className="mx-auto max-w-[70rem]">
           <SiteLogo className="inline-block rounded-md" />
         </div>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-5 py-20">
         <div className="text-center">
-          <p className="font-mono text-[13px] text-text-subtle">
+          <p className="font-mono text-[0.8125rem] text-text-subtle">
             404
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.028em] text-text sm:text-4xl">
@@ -35,7 +35,7 @@ export default function NotFound() {
               Kontakta mig
             </ButtonLink>
           </div>
-          <p className="mt-8 text-[13px] text-text-subtle">
+          <p className="mt-8 text-[0.8125rem] text-text-subtle">
             Är du inloggad?{" "}
             <Link href={routes.dashboard} className="text-accent-text hover:underline">
               Gå till din översikt

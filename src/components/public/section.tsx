@@ -23,7 +23,7 @@ export function Section({
         className,
       )}
     >
-      <div className="mx-auto max-w-[1120px]">{children}</div>
+      <div className="mx-auto max-w-[70rem]">{children}</div>
     </section>
   );
 }
@@ -50,16 +50,16 @@ export function SectionHeading({
   return (
     <div className={cn("max-w-3xl", className)}>
       {label && (
-        <p className="mb-5 font-mono text-[12px] text-text-subtle">{label}</p>
+        <p className="mb-5 font-mono text-[0.75rem] text-text-subtle">{label}</p>
       )}
-      <h2 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.028em] text-balance text-text sm:text-[44px]">
+      <h2 className="text-[2rem] font-semibold leading-[1.1] tracking-[-0.028em] text-balance text-text sm:text-[2.75rem]">
         {title}
         {continuation && (
           <span className="text-text-muted"> {continuation}</span>
         )}
       </h2>
       {description && (
-        <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-text-muted sm:text-base">
+        <p className="mt-5 max-w-2xl text-[0.9375rem] leading-relaxed text-text-muted sm:text-base">
           {description}
         </p>
       )}

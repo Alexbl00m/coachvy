@@ -107,7 +107,7 @@ export function FitnessCard({
               </>
             )}
           </dl>
-          <p className="text-[12px] leading-snug text-text-subtle">
+          <p className="text-[0.75rem] leading-snug text-text-subtle">
             {current.source === "test"
               ? `Ur testerna och loppen, senast ${shortDate(current.date)}.`
               : `Inskriven ${shortDate(current.date)}.`}{" "}
@@ -123,7 +123,7 @@ export function FitnessCard({
           planens lopp i distans, desto bättre. Ett löptest gör samma sak.
         </p>
       )}
-      <p className="text-[12px] leading-snug text-text-muted">
+      <p className="text-[0.75rem] leading-snug text-text-muted">
         Procenten i passen ligger fast. En ny tid ger nya tempon med samma
         relation till loppfarten.
       </p>
@@ -179,7 +179,7 @@ export function FitnessCard({
                 Spara
               </Button>
               {error && (
-                <span role="alert" className="text-[13px] text-warn">
+                <span role="alert" className="text-[0.8125rem] text-warn">
                   {error}
                 </span>
               )}
@@ -193,7 +193,7 @@ export function FitnessCard({
           <summary className="cursor-pointer text-sm font-medium text-text marker:text-text-subtle">
             Tidigare
           </summary>
-          <ul className="mt-2 space-y-1.5 text-[13px] tabular-nums">
+          <ul className="mt-2 space-y-1.5 text-[0.8125rem] tabular-nums">
             {fromTests && (
               <li className="text-text-muted">
                 {shortDate(fromTests.date)} · test: 5 km{" "}

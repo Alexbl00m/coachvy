@@ -298,7 +298,7 @@ export async function AdeptStatus({
               : `${items.length} saker att titta på.`}
         </p>
         {items.length === 0 ? (
-          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-text-muted">
+          <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-text-muted">
             Inget som sticker ut just nu: återhämtningen ligger kring sitt
             vanliga, belastningen har inte ändrats tydligt och det finns inga
             olästa meddelanden.
@@ -311,7 +311,7 @@ export async function AdeptStatus({
                 <li key={item.key}>
                   <Link
                     href={item.href}
-                    className="group flex items-start gap-2.5 text-[15px] text-text hover:underline"
+                    className="group flex items-start gap-2.5 text-[0.9375rem] text-text hover:underline"
                   >
                     <Icon
                       aria-hidden
@@ -350,7 +350,7 @@ export async function AdeptStatus({
           action={
             <Link
               href={routes.calendar}
-              className="text-[13px] text-text-muted hover:text-text"
+              className="text-[0.8125rem] text-text-muted hover:text-text"
             >
               Kalender →
             </Link>
@@ -399,7 +399,7 @@ export async function AdeptStatus({
                     <li key={r.id}>
                       <Link
                         href={adeptHref(adept.id, "plan")}
-                        className="flex items-center gap-1.5 rounded bg-surface-3 px-1.5 py-1 text-[12px] font-medium text-text"
+                        className="flex items-center gap-1.5 rounded bg-surface-3 px-1.5 py-1 text-[0.75rem] font-medium text-text"
                       >
                         <Flag aria-hidden className="size-3 shrink-0" />
                         <span className="line-clamp-2 break-words">
@@ -415,7 +415,7 @@ export async function AdeptStatus({
                           w.href ?? `${routes.adepts}/${adept.id}/pass/${w.id}`
                         }
                         title={w.title}
-                        className="block rounded px-0.5 py-0.5 text-[12px] leading-snug text-text-muted hover:text-text"
+                        className="block rounded px-0.5 py-0.5 text-[0.75rem] leading-snug text-text-muted hover:text-text"
                       >
                         <WorkoutStrip
                           blocks={w.profile}
@@ -438,7 +438,7 @@ export async function AdeptStatus({
                       <Link
                         href={`${routes.adepts}/${adept.id}/aktivitet/${a.id}`}
                         title={a.name}
-                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:underline"
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[0.75rem] text-text hover:underline"
                       >
                         <Check
                           aria-hidden
@@ -461,7 +461,7 @@ export async function AdeptStatus({
                     <li key={s.id}>
                       <Link
                         href={adeptHref(adept.id, "styrka")}
-                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[12px] text-text hover:underline"
+                        className="flex items-center gap-1.5 px-1.5 py-0.5 text-[0.75rem] text-text hover:underline"
                       >
                         <Check
                           aria-hidden
@@ -476,7 +476,7 @@ export async function AdeptStatus({
                     </li>
                   ))}
                   {empty && (
-                    <li className="px-1.5 text-[12px] text-text-subtle">–</li>
+                    <li className="px-1.5 text-[0.75rem] text-text-subtle">–</li>
                   )}
                 </ul>
               </li>
@@ -491,7 +491,7 @@ export async function AdeptStatus({
             action={
               <Link
                 href={adeptHref(adept.id, "plan")}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="text-[0.8125rem] text-text-muted hover:text-text"
               >
                 Planen
               </Link>
@@ -508,7 +508,7 @@ export async function AdeptStatus({
             <div className="space-y-4">
               <p className="text-sm text-text">
                 {blockLabel(block)}
-                <span className="ml-1.5 text-[13px] text-text-muted">
+                <span className="ml-1.5 text-[0.8125rem] text-text-muted">
                   {target.model}
                 </span>
               </p>
@@ -535,7 +535,7 @@ export async function AdeptStatus({
             action={
               <Link
                 href={adeptHref(adept.id, "tester")}
-                className="text-[13px] text-text-muted hover:text-text"
+                className="text-[0.8125rem] text-text-muted hover:text-text"
               >
                 Alla tester
               </Link>
@@ -553,7 +553,7 @@ export async function AdeptStatus({
                 <span className="block text-sm font-medium text-text group-hover:underline">
                   {protocolByKey(latest.protocol)?.label ?? latest.protocol}
                 </span>
-                <span className="block text-[13px] text-text-muted">
+                <span className="block text-[0.8125rem] text-text-muted">
                   {longDate(latest.performed_on, today)}
                   {sessionHeadline(latest.test_metrics, latest.sport)
                     ? ` · ${sessionHeadline(latest.test_metrics, latest.sport)}`
@@ -571,7 +571,7 @@ export async function AdeptStatus({
               <p className="text-sm font-medium text-text">
                 {diagnosis.headline}
               </p>
-              <p className="text-[13px] text-text-muted tabular-nums">
+              <p className="text-[0.8125rem] text-text-muted tabular-nums">
                 {diagnosis.label} på {Math.round(diagnosis.pct)} % av VO₂max
               </p>
             </div>
@@ -597,7 +597,7 @@ export async function AdeptStatus({
                 {readiness.score}
                 <Unit>av {READINESS_MAX}</Unit>
               </p>
-              <p className="mt-3 text-[13px] text-text-muted">
+              <p className="mt-3 text-[0.8125rem] text-text-muted">
                 {daysAgo(readiness.date, today)}
                 {readiness.baseline !== null
                   ? ` · brukar ligga runt ${readiness.baseline.toFixed(1).replace(".", ",")}`
@@ -631,7 +631,7 @@ export async function AdeptStatus({
                   ? "Inget pass den här veckan."
                   : `${lifted.length} pass den här veckan.`}
               </CardHeadline>
-              <p className="mt-3 text-[13px] text-text-muted">
+              <p className="mt-3 text-[0.8125rem] text-text-muted">
                 Senast {longDate(lastStrength.performed_on, today)}:{" "}
                 {lastStrength.title || "styrkepass"}.
               </p>

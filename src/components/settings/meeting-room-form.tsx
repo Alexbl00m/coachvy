@@ -54,7 +54,7 @@ export function MeetingRoomForm({ url }: { url: string | null }) {
           <span
             role={failed ? "alert" : "status"}
             className={
-              failed ? "text-[13px] text-bad" : "text-[13px] text-text-muted"
+              failed ? "text-[0.8125rem] text-bad" : "text-[0.8125rem] text-text-muted"
             }
           >
             {message}

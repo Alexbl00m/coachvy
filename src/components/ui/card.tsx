@@ -41,7 +41,7 @@ export function CardTitle({
 }) {
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-      <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-text">
+      <h2 className="text-[1.0625rem] font-semibold tracking-[-0.01em] text-text">
         {children}
       </h2>
       {action}
@@ -68,7 +68,7 @@ export function CardLabel({
     <div className={cn("flex items-baseline justify-between gap-4", className)}>
       <Tag className="eyebrow text-text-subtle">{children}</Tag>
       {aside && (
-        <span className="text-[13px] text-text-muted tabular-nums">
+        <span className="text-[0.8125rem] text-text-muted tabular-nums">
           {aside}
         </span>
       )}
@@ -110,8 +110,8 @@ export function EmptyState({
   return (
     <div className="rounded-lg border border-dashed border-line-strong px-6 py-10 sm:px-8">
       {icon && <div className="mb-4 text-text-muted">{icon}</div>}
-      <p className="headline text-[28px] leading-[1.1] text-text">{title}</p>
-      <p className="mt-3 max-w-md text-[15px] leading-relaxed text-text-muted">
+      <p className="headline text-[1.75rem] leading-[1.1] text-text">{title}</p>
+      <p className="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-text-muted">
         {description}
       </p>
       {action && <div className="mt-6 flex flex-wrap gap-2">{action}</div>}

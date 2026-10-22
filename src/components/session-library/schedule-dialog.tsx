@@ -126,7 +126,7 @@ export function ScheduleDialog({
     >
       <div className="space-y-4 p-5 sm:p-6">
         <div>
-          <p className="text-[12px] font-medium text-text-muted">
+          <p className="text-[0.75rem] font-medium text-text-muted">
             Lägg i kalendern
           </p>
           <h2 id="schema-rubrik" className="text-lg font-semibold">
@@ -142,7 +142,7 @@ export function ScheduleDialog({
               {done.level ? `, nivå ${done.level}` : ""}.
             </p>
             {done.note && (
-              <p className="text-[13px] text-text-muted">{done.note}</p>
+              <p className="text-[0.8125rem] text-text-muted">{done.note}</p>
             )}
             <div className="flex flex-wrap gap-2">
               <ButtonLink
@@ -171,7 +171,7 @@ export function ScheduleDialog({
           <>
             {hasLevels && (
               <div className="space-y-1.5">
-                <p className="text-[13px] font-medium">Nivå</p>
+                <p className="text-[0.8125rem] font-medium">Nivå</p>
                 <div
                   role="group"
                   aria-label="Nivå"
@@ -190,10 +190,10 @@ export function ScheduleDialog({
                           : "border-line hover:border-line-strong",
                       )}
                     >
-                      <span className="block text-[13px] font-medium">
+                      <span className="block text-[0.8125rem] font-medium">
                         Nivå {l.key}
                       </span>
-                      <span className="block text-[11px] text-text-muted tabular-nums">
+                      <span className="block text-[0.6875rem] text-text-muted tabular-nums">
                         {amountText(levelOf(session, l.key).blocks)}
                       </span>
                     </button>
@@ -233,7 +233,7 @@ export function ScheduleDialog({
               </Field>
             </div>
 
-            <p className="text-[12px] text-text-subtle">
+            <p className="text-[0.75rem] text-text-subtle">
               Zonerna räknas om mot adeptens tröskel i passets gren – löpzonerna
               mot formuppskattningen. Passet går att ändra i passbyggaren
               efteråt.
@@ -257,7 +257,7 @@ export function ScheduleDialog({
               {adeptId ? (
                 <Link
                   href={builderHref()}
-                  className="text-[13px] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+                  className="text-[0.8125rem] font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
                 >
                   Anpassa i passbyggaren först
                 </Link>

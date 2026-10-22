@@ -273,7 +273,7 @@ export function StartWizard({
             className={choiceClass(mode === "lopp")}
           >
             <span className="block font-medium">Mot ett lopp</span>
-            <span className="block text-[13px] text-text-subtle">
+            <span className="block text-[0.8125rem] text-text-subtle">
               Planen räknas bakåt så att loppet hamnar i sista veckan.
             </span>
           </button>
@@ -287,7 +287,7 @@ export function StartWizard({
             className={choiceClass(mode === "fritt")}
           >
             <span className="block font-medium">Utan lopp</span>
-            <span className="block text-[13px] text-text-subtle">
+            <span className="block text-[0.8125rem] text-text-subtle">
               Välj startdag och längd själv.
             </span>
           </button>
@@ -401,7 +401,7 @@ export function StartWizard({
                       ? `Ett varv, ${weeksText(o.rounds[0])}`
                       : `${o.rounds.length} varv, ${o.rounds.join(" + ")} veckor`}
                   </span>
-                  <span className="block text-[13px] text-text-subtle">
+                  <span className="block text-[0.8125rem] text-text-subtle">
                     {o.leadIn === 0
                       ? "Börjar nästa vecka."
                       : `Börjar om ${weeksText(o.leadIn)} – lugn grundträning fram till dess.`}
@@ -412,7 +412,7 @@ export function StartWizard({
           </div>
         )}
         {mode === "lopp" && options.length > 1 && (
-          <p className="mb-4 text-[13px] text-text-muted">
+          <p className="mb-4 text-[0.8125rem] text-text-muted">
             Ju längre tid du ger dig, desto bättre. I varv går du igenom planen
             flera gånger, med ett testlopp i slutet av varje varv före det sista
             – och kan ta nästa varv på en högre nivå.
@@ -486,7 +486,7 @@ export function StartWizard({
             {proposal.rounds.map((round, ri) => (
               <div key={round.round} className="mt-4">
                 {multi && (
-                  <p className="mb-2 text-[13px] font-medium text-text">
+                  <p className="mb-2 text-[0.8125rem] font-medium text-text">
                     Varv {round.round}{" "}
                     <span className="font-normal text-text-subtle tabular-nums">
                       · {weeksText(round.weeks)} · {shortDate(round.startsOn)} –{" "}
@@ -511,7 +511,7 @@ export function StartWizard({
                           <span className="block text-sm font-medium text-text">
                             {span.name}
                           </span>
-                          <span className="block text-[12px] text-text-subtle tabular-nums">
+                          <span className="block text-[0.75rem] text-text-subtle tabular-nums">
                             Vecka {span.fromWeek}
                             {span.toWeek > span.fromWeek
                               ? `–${span.toWeek}`
@@ -556,7 +556,7 @@ export function StartWizard({
               </div>
             ))}
             {proposal.notes.length > 0 && (
-              <ul className="mt-3 space-y-1 text-[13px] text-text-muted">
+              <ul className="mt-3 space-y-1 text-[0.8125rem] text-text-muted">
                 {proposal.notes.map((n) => (
                   <li key={n}>{n}</li>
                 ))}
@@ -589,7 +589,7 @@ export function StartWizard({
               <span className="block font-medium">
                 {l.key} · {l.name}
               </span>
-              <span className="block text-[12px] text-text-subtle tabular-nums">
+              <span className="block text-[0.75rem] text-text-subtle tabular-nums">
                 {[
                   l.volumePeak !== null
                     ? `upp till ${volumeText({ min: l.volumePeak, max: null }, volumeUnit)}/vecka`
@@ -601,7 +601,7 @@ export function StartWizard({
                   .join(" · ")}
               </span>
               {l.description && (
-                <span className="mt-1 block text-[13px] leading-snug">
+                <span className="mt-1 block text-[0.8125rem] leading-snug">
                   {l.description}
                 </span>
               )}
@@ -609,7 +609,7 @@ export function StartWizard({
           ))}
         </div>
         {level && intensityText(level.intensity) && (
-          <p className="mt-3 text-[12px] text-text-subtle">
+          <p className="mt-3 text-[0.75rem] text-text-subtle">
             Intensitet på {level.key}: {intensityText(level.intensity)}.
           </p>
         )}
@@ -617,7 +617,7 @@ export function StartWizard({
           <div className="mt-4 space-y-3 border-t border-line pt-4">
             {proposal.rounds.slice(1).map((round) => (
               <div key={round.round}>
-                <p className="mb-1.5 text-[13px] font-medium text-text">
+                <p className="mb-1.5 text-[0.8125rem] font-medium text-text">
                   Varv {round.round}{" "}
                   <span className="font-normal text-text-subtle">
                     · från vecka {round.fromWeek}
@@ -641,12 +641,12 @@ export function StartWizard({
                 </div>
               </div>
             ))}
-            <p className="text-[13px] text-text-muted">
+            <p className="text-[0.8125rem] text-text-muted">
               Till exempel en lägre volym första varvet och en högre mot målet.
             </p>
           </div>
         )}
-        <p className="mt-3 text-[13px] text-text-muted">
+        <p className="mt-3 text-[0.8125rem] text-text-muted">
           Du kan byta nivå när som helst under planen.
         </p>
       </Step>
@@ -664,7 +664,7 @@ export function StartWizard({
               className={choiceClass(paceMode === "form")}
             >
               <span className="block font-medium">Min form</span>
-              <span className="block text-[13px] text-text-subtle">
+              <span className="block text-[0.8125rem] text-text-subtle">
                 Dina tester och tider. Tempona följer med när formen ändras.
               </span>
             </button>
@@ -675,7 +675,7 @@ export function StartWizard({
               className={choiceClass(paceMode === "mål")}
             >
               <span className="block font-medium">Min måltid</span>
-              <span className="block text-[13px] text-text-subtle">
+              <span className="block text-[0.8125rem] text-text-subtle">
                 Tiden du vill springa {race.name} på. Tempona räknas ur den.
               </span>
             </button>
@@ -697,7 +697,7 @@ export function StartWizard({
               </Field>
             </div>
           )}
-          <p className="mt-3 text-[13px] text-text-muted">
+          <p className="mt-3 text-[0.8125rem] text-text-muted">
             Du kan byta senare under planen.
           </p>
         </Step>

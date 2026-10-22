@@ -165,7 +165,7 @@ export function CheckinForm({
         </Field>
 
         <div className="space-y-2">
-          <span className="block text-[13px] font-medium text-text">
+          <span className="block text-[0.8125rem] font-medium text-text">
             Tränade du?
           </span>
           <div className="flex gap-2">
@@ -214,7 +214,7 @@ export function CheckinForm({
             </Field>
 
             {load > 0 && (
-              <p className="rounded-md border border-line bg-surface-2 px-3 py-2 text-[13px] text-text-muted">
+              <p className="rounded-md border border-line bg-surface-2 px-3 py-2 text-[0.8125rem] text-text-muted">
                 Belastning:{" "}
                 <span className="font-medium text-text tabular-nums">
                   {Math.round(load)}
@@ -227,11 +227,11 @@ export function CheckinForm({
 
         <div className="space-y-4 border-t border-line pt-4">
           <span className="flex items-baseline justify-between">
-            <span className="text-[13px] font-medium text-text">
+            <span className="text-[0.8125rem] font-medium text-text">
               Hur mår du?
             </span>
             {readiness !== null && (
-              <span className="text-[12px] text-text-muted tabular-nums">
+              <span className="text-[0.75rem] text-text-muted tabular-nums">
                 {readiness} av {READINESS_MAX} · {readReadiness(readiness)}
               </span>
             )}
@@ -253,7 +253,7 @@ export function CheckinForm({
           ))}
 
           {readiness === null && (
-            <p className="text-[11px] text-text-subtle">
+            <p className="text-[0.6875rem] text-text-subtle">
               Alla fyra behöver ett svar för att dagen ska gå att jämföra med
               andra dagar. Hoppa hellre över hela måendedelen än att fylla i
               några av frågorna.
@@ -277,7 +277,7 @@ export function CheckinForm({
         <Button type="button" onClick={save} disabled={!canSave}>
           {pending ? "Sparar …" : existing ? "Uppdatera" : "Spara"}
         </Button>
-        <span className="text-[13px] text-text-subtle">
+        <span className="text-[0.8125rem] text-text-subtle">
           {saved
             ? "Sparat."
             : trained && rpe === null

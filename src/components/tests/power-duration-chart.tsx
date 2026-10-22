@@ -99,7 +99,7 @@ export function PowerDurationChart({
               domain={[55, 1500]}
               ticks={TICKS}
               tickFormatter={(t: number) => `${t / 60} min`}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               stroke={CHART_GRID}
               allowDuplicatedCategory={false}
@@ -108,7 +108,7 @@ export function PowerDurationChart({
               dataKey="watts"
               type="number"
               domain={[yMin, yMax]}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 11 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.6875rem" }}
               tickLine={false}
               axisLine={false}
               width={44}
@@ -121,7 +121,7 @@ export function PowerDurationChart({
                 value: `CP ${Math.round(cp)} W`,
                 position: "insideBottomRight",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <Tooltip content={<PdTooltip />} cursor={false} />
@@ -146,7 +146,7 @@ export function PowerDurationChart({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-2 text-[12px] text-text-subtle">
+      <p className="mt-2 text-[0.75rem] text-text-subtle">
         Linjen är modellen, punkterna testets insatser. Ligger en punkt klart
         under linjen kördes den insatsen troligen inte maximalt.
       </p>

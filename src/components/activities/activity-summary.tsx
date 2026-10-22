@@ -82,7 +82,7 @@ export function ActivitySummary({
   };
 
   const errorLine = error && (
-    <p role="alert" className="mt-3 text-[13px] text-bad">
+    <p role="alert" className="mt-3 text-[0.8125rem] text-bad">
       {error}
     </p>
   );
@@ -184,11 +184,11 @@ export function ActivitySummary({
         </form>
       ) : (
         <div className="max-w-3xl">
-          <p className="text-[17px] font-semibold leading-snug text-text">
+          <p className="text-[1.0625rem] font-semibold leading-snug text-text">
             {summary.headline}
           </p>
           {(summary.purpose || summary.intensity) && (
-            <p className="mt-2 flex flex-wrap gap-2 text-[13px]">
+            <p className="mt-2 flex flex-wrap gap-2 text-[0.8125rem]">
               {summary.purpose && (
                 <span className="rounded-full border border-line px-2.5 py-0.5 text-text-muted">
                   {summary.purpose}
@@ -201,7 +201,7 @@ export function ActivitySummary({
               )}
             </p>
           )}
-          <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-text">
+          <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-text">
             {summary.body.split(/\n\s*\n/).map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
@@ -209,7 +209,7 @@ export function ActivitySummary({
         </div>
       )}
 
-      <p className="mt-4 text-[13px] text-text-muted">{meta.join(" · ")}</p>
+      <p className="mt-4 text-[0.8125rem] text-text-muted">{meta.join(" · ")}</p>
 
       {canManage && !editing && (
         <div className="mt-3 flex flex-wrap gap-2" aria-live="polite">

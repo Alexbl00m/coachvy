@@ -73,7 +73,7 @@ function TooltipBody({
 
   return (
     <div className="rounded-md border border-ink-600 bg-ink-800 px-3 py-2 shadow-lg">
-      <p className="text-[11px] text-ink-400">{point.label}</p>
+      <p className="text-[0.6875rem] text-ink-400">{point.label}</p>
       <p className="text-sm font-semibold text-ink-50">
         {formatValue(point.value)}{" "}
         <span className="font-normal text-ink-300">{unit}</span>
@@ -128,7 +128,7 @@ export function TestChart({
             tickFormatter={(t: number) =>
               new Date(t).toISOString().slice(0, 10)
             }
-            tick={{ fill: AXIS_TEXT, fontSize: 11 }}
+            tick={{ fill: AXIS_TEXT, fontSize: "0.6875rem" }}
             tickLine={false}
             axisLine={{ stroke: GRID }}
             ticks={xTicks}
@@ -139,7 +139,7 @@ export function TestChart({
           <YAxis
             domain={[ticks[0], ticks[ticks.length - 1]]}
             ticks={ticks}
-            tick={{ fill: AXIS_TEXT, fontSize: 11 }}
+            tick={{ fill: AXIS_TEXT, fontSize: "0.6875rem" }}
             tickLine={false}
             axisLine={false}
             width={48}

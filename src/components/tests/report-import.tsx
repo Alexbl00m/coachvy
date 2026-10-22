@@ -117,7 +117,7 @@ export function ReportImport({
               ? `Läser ${fileName ?? "rapporten"} …`
               : "Läs in ur labbets rapport"}
           </span>
-          <span className="block text-[12px] text-text-subtle">
+          <span className="block text-[0.75rem] text-text-subtle">
             PDF eller ett foto av protokollet. Stegen, pulsen och laktatet läses
             ut och fylls i nedan, så granskar du innan du sparar. Rapporter från
             Aktivitus, Ergonizer (Going Long) och 30K läses direkt ur PDF:en;
@@ -137,14 +137,14 @@ export function ReportImport({
       </label>
 
       {error && (
-        <p role="alert" className="mt-3 text-[13px] text-bad">
+        <p role="alert" className="mt-3 text-[0.8125rem] text-bad">
           {error}
         </p>
       )}
 
       {r && first && last && (
         <div className="enter mt-4" role="status">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13px] sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[0.8125rem] sm:grid-cols-4">
             {[
               [
                 "Steg",
@@ -172,11 +172,11 @@ export function ReportImport({
           </dl>
 
           {source && (
-            <p className="mt-2 text-[12px] text-text-subtle">{source}</p>
+            <p className="mt-2 text-[0.75rem] text-text-subtle">{source}</p>
           )}
 
           {r.warnings.length > 0 && (
-            <ul className="mt-3 space-y-1 rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[13px] text-text-muted">
+            <ul className="mt-3 space-y-1 rounded-md border border-line-strong bg-surface-2 px-3 py-2 text-[0.8125rem] text-text-muted">
               {r.warnings.map((w) => (
                 <li key={w} className="flex gap-2">
                   <TriangleAlert
@@ -200,7 +200,7 @@ export function ReportImport({
             >
               {applied ? "Fyll i igen" : "Fyll i formuläret"}
             </Button>
-            <span className="text-[13px] text-text-subtle">
+            <span className="text-[0.8125rem] text-text-subtle">
               {applied
                 ? "Granska stegen nedan mot rapporten innan du sparar."
                 : "Det som står i formuläret nu ersätts."}

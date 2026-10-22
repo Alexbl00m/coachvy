@@ -140,7 +140,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
-      <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+      <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
         {label}
       </p>
       <p className="mt-1.5 text-xl font-semibold tracking-tight text-text tabular-nums">
@@ -151,8 +151,8 @@ function Stat({
           </span>
         )}
       </p>
-      {hint && <p className="mt-0.5 text-[12px] text-text-subtle">{hint}</p>}
-      {children && <div className="mt-1 text-[12px]">{children}</div>}
+      {hint && <p className="mt-0.5 text-[0.75rem] text-text-subtle">{hint}</p>}
+      {children && <div className="mt-1 text-[0.75rem]">{children}</div>}
     </div>
   );
 }
@@ -253,7 +253,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 setSelected(new Set(list.slice(-2).map((c) => c.sessionId)));
               }}
               className={cn(
-                "rounded-md border px-3 py-1.5 text-[13px] transition-colors",
+                "rounded-md border px-3 py-1.5 text-[0.8125rem] transition-colors",
                 key === groupKey
                   ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-muted hover:text-text",
@@ -280,7 +280,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 : new Set(group.map((c) => c.sessionId)),
             )
           }
-          className="rounded-md border border-line px-3 py-1.5 text-[13px] font-medium text-text-muted transition-colors hover:text-text"
+          className="rounded-md border border-line px-3 py-1.5 text-[0.8125rem] font-medium text-text-muted transition-colors hover:text-text"
         >
           {allSelected ? "Bara senaste" : "Alla"}
         </button>
@@ -294,7 +294,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
               aria-pressed={on}
               onClick={() => toggle(c.sessionId)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[13px] tabular-nums transition-colors",
+                "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[0.8125rem] tabular-nums transition-colors",
                 on
                   ? "border-line-strong bg-surface-2 text-text"
                   : "border-line text-text-subtle hover:text-text",
@@ -379,7 +379,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
       )}
 
       <div
-        className="h-[340px] w-full"
+        className="h-[21.25rem] w-full"
         role="img"
         aria-label="Laktatkurvor för de valda testerna"
       >
@@ -399,14 +399,14 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
               domain={["dataMin - 10", "dataMax + 10"]}
               tickFormatter={(v: number) => sv(v, digits)}
               stroke={CHART_GRID}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
               tickLine={false}
               label={{
                 value: unit,
                 position: "insideBottomRight",
                 offset: -4,
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <YAxis
@@ -414,7 +414,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
               domain={[0, Math.ceil(maxLactate + 0.5)]}
               allowDecimals={false}
               stroke={CHART_GRID}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
               tickLine={false}
               width={40}
               label={{
@@ -423,7 +423,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 offset: 6,
                 dy: -22,
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
             <Tooltip
@@ -440,7 +440,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 value: "2 mmol",
                 position: "insideBottomRight",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 10,
+                fontSize: "0.625rem",
               }}
             />
             <ReferenceLine
@@ -452,7 +452,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                 value: "4 mmol",
                 position: "insideBottomRight",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 10,
+                fontSize: "0.625rem",
               }}
             />
 
@@ -464,7 +464,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                   value: "LT1",
                   position: "top",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 11,
+                  fontSize: "0.6875rem",
                 }}
               />
             )}
@@ -476,7 +476,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
                   value: "LT2",
                   position: "top",
                   fill: CHART_AXIS_TEXT,
-                  fontSize: 11,
+                  fontSize: "0.6875rem",
                 }}
               />
             )}
@@ -518,7 +518,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
 
       {current && previous && comparison && (
         <div>
-          <p className="mb-2 text-[13px] text-text-muted">
+          <p className="mb-2 text-[0.8125rem] text-text-muted">
             Utveckling sedan{" "}
             <span className="font-medium text-text">
               {formatDate(previous.performedOn)}
@@ -572,7 +572,7 @@ export function LactateCompare({ curves }: { curves: LactateCurve[] }) {
               />
             )}
           </div>
-          <p className="mt-2 text-[12px] text-text-subtle">
+          <p className="mt-2 text-[0.75rem] text-text-subtle">
             Kurvan flyttar sig åt höger (tröskel vid högre belastning) eller
             nedåt (lägre laktat på samma belastning) när formen går framåt.
             Pilen för laktatet pekar uppåt när laktatet sjunkit.

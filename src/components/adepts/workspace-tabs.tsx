@@ -56,7 +56,7 @@ export function WorkspaceTabs({
           >
             {tab.label}
             {tab.count ? (
-              <span className="ml-1.5 rounded-full bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-text tabular-nums">
+              <span className="ml-1.5 rounded-full bg-surface-3 px-1.5 py-0.5 text-[0.6875rem] font-medium text-text tabular-nums">
                 {tab.count}
               </span>
             ) : null}
@@ -98,7 +98,7 @@ export function WorkspaceSubnav({
             href={item.href}
             aria-current={current ? "page" : undefined}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] transition-colors",
+              "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[0.8125rem] transition-colors",
               current
                 ? "bg-surface-3 font-medium text-text"
                 : "text-text-muted hover:bg-surface-2 hover:text-text",

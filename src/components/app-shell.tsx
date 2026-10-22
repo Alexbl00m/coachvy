@@ -89,15 +89,15 @@ export function AppShell({
           <div className="hidden items-center gap-2.5 border-l border-ink-800 pl-3 md:flex">
             <span
               aria-hidden
-              className="grid size-8 place-items-center rounded-full bg-ink-800 text-[12px] font-semibold text-ink-200"
+              className="grid size-8 place-items-center rounded-full bg-ink-800 text-[0.75rem] font-semibold text-ink-200"
             >
               {initials || "?"}
             </span>
             <span className="leading-tight">
-              <span className="block text-[13px] font-medium text-ink-100">
+              <span className="block text-[0.8125rem] font-medium text-ink-100">
                 {user.name}
               </span>
-              <span className="block text-[11px] text-ink-400">
+              <span className="block text-[0.6875rem] text-ink-400">
                 {user.roleLabel}
               </span>
             </span>
@@ -156,12 +156,13 @@ export function AppShell({
 
         <main
           className={cn(
-            "min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8",
+            "min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 2xl:px-12",
             // Plats för bottenraden och hemindikatorn under sista innehållet.
             adept && "pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-6",
           )}
         >
-          <div className="mx-auto w-full max-w-6xl">
+          {/* Innehållet fyller skärmen; taket gäller bara riktigt breda. */}
+          <div className="mx-auto w-full max-w-[110rem]">
             {adept && <AdeptSectionNav adeptId={adeptId} />}
             {children}
           </div>

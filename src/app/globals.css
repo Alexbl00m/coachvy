@@ -152,6 +152,19 @@ body {
   height: 100%;
 }
 
+/*
+ * Hela gränssnittet växer med skärmen. Upp till 1280 px bred är grunden
+ * webbläsarens egen (16 px); därifrån växer den jämnt till 125 % vid 2560 px,
+ * så att en stor skärm visar samma sida större i stället för samma lilla sida
+ * med tomma kanter. Storlekar och avstånd är i rem och följer med;
+ * brytpunkterna gör det inte, eftersom mediefrågor räknar mot
+ * grundstorleken. Procent i stället för px, så att den som ställt in större
+ * text i webbläsaren behåller det.
+ */
+html {
+  font-size: clamp(100%, calc(100% + (100vw - 80rem) * 0.003125), 125%);
+}
+
 body {
   background-color: var(--canvas);
   color: var(--text);

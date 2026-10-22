@@ -31,7 +31,7 @@ function Section({
   return (
     <section id={id} className="scroll-mt-24">
       <h2 className="text-lg font-semibold text-text">{title}</h2>
-      <div className="mt-2 space-y-3 text-[15px] leading-relaxed text-text-muted">
+      <div className="mt-2 space-y-3 text-[0.9375rem] leading-relaxed text-text-muted">
         {children}
       </div>
     </section>
@@ -73,13 +73,13 @@ export default function IntegritetspolicyPage() {
       <h1 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">
         Integritetspolicy & villkor
       </h1>
-      <p className="mt-4 text-[15px] leading-relaxed text-text-muted">
+      <p className="mt-4 text-[0.9375rem] leading-relaxed text-text-muted">
         Coachvy är en plattform för testning, analys och planering av
         uthållighetsträning, där coacher och adepter arbetar tillsammans. Här
         står vilka uppgifter som behandlas, varför och hur, och vilka villkor
         som gäller för att använda tjänsten.
       </p>
-      <p className="mt-2 text-[13px] text-text-subtle">
+      <p className="mt-2 text-[0.8125rem] text-text-subtle">
         Senast uppdaterad {UPDATED}.
       </p>
 
@@ -87,7 +87,7 @@ export default function IntegritetspolicyPage() {
         aria-label="Innehåll"
         className="mt-8 rounded-lg border border-line bg-surface-2 px-5 py-4"
       >
-        <ol className="grid gap-1.5 text-[14px] sm:grid-cols-2">
+        <ol className="grid gap-1.5 text-[0.875rem] sm:grid-cols-2">
           {sections.map((s, i) => (
             <li key={s.id}>
               <a href={`#${s.id}`} className="text-text-muted hover:text-text">

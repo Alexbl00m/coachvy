@@ -90,19 +90,19 @@ export default async function MorePage() {
       <PageHeader title="Mer" />
       <div className="space-y-6">
         <section className="space-y-2">
-          <h2 className="px-1 text-[13px] font-medium text-text-muted">
+          <h2 className="px-1 text-[0.8125rem] font-medium text-text-muted">
             Kontakt
           </h2>
           <ActionList items={contact} />
         </section>
         <section className="space-y-2">
-          <h2 className="px-1 text-[13px] font-medium text-text-muted">
+          <h2 className="px-1 text-[0.8125rem] font-medium text-text-muted">
             Verktyg
           </h2>
           <ActionList items={tools} />
         </section>
         <section className="space-y-2">
-          <h2 className="px-1 text-[13px] font-medium text-text-muted">
+          <h2 className="px-1 text-[0.8125rem] font-medium text-text-muted">
             Konto
           </h2>
           <ActionList items={account} />

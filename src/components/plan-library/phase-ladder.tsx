@@ -50,7 +50,7 @@ export function PhaseLadder({
           {phases.map((p) => (
             <span
               key={p.id}
-              className="min-w-0 truncate text-[11px] text-text-subtle"
+              className="min-w-0 truncate text-[0.6875rem] text-text-subtle"
               style={{ flex: `${Math.max(1, p.weeks)} 1 0` }}
             >
               {p.name}

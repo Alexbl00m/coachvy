@@ -231,7 +231,7 @@ export function DatePicker({
         {value ? (
           <>
             <span className="truncate tabular-nums">{pickerDate(value)}</span>
-            <span className="ml-auto shrink-0 text-[12px] text-text-subtle tabular-nums">
+            <span className="ml-auto shrink-0 text-[0.75rem] text-text-subtle tabular-nums">
               v. {isoWeek(value)}
             </span>
           </>
@@ -308,7 +308,7 @@ export function DatePicker({
                       goTo(shiftDate(`${month}-${focus.slice(8, 10)}`, 0));
                     }}
                     className={cn(
-                      "h-10 rounded-md text-[13px] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent",
+                      "h-10 rounded-md text-[0.8125rem] hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent",
                       current
                         ? "bg-accent-soft font-semibold text-accent-text"
                         : "text-text",
@@ -330,7 +330,7 @@ export function DatePicker({
               <div role="row" className="grid grid-cols-8">
                 <span
                   role="columnheader"
-                  className="py-1 text-[11px] text-text-subtle"
+                  className="py-1 text-[0.6875rem] text-text-subtle"
                 >
                   <abbr title="Vecka" className="no-underline">
                     v.
@@ -340,7 +340,7 @@ export function DatePicker({
                   <span
                     key={head}
                     role="columnheader"
-                    className="py-1 text-[11px] font-medium text-text-muted"
+                    className="py-1 text-[0.6875rem] font-medium text-text-muted"
                   >
                     <abbr
                       title={weekdayName(addDays("2026-01-05", i))}
@@ -364,7 +364,7 @@ export function DatePicker({
                         aria-label={`Välj måndag i vecka ${weekNumber}`}
                         title={`Välj måndag ${longDate(monday)}`}
                         onClick={() => pick(monday)}
-                        className="h-8 w-full rounded-md text-[11px] text-text-subtle tabular-nums hover:bg-surface-2 hover:text-text disabled:pointer-events-none disabled:opacity-30"
+                        className="h-8 w-full rounded-md text-[0.6875rem] text-text-subtle tabular-nums hover:bg-surface-2 hover:text-text disabled:pointer-events-none disabled:opacity-30"
                       >
                         {weekNumber}
                       </button>
@@ -399,7 +399,7 @@ export function DatePicker({
                             onClick={() => pick(date)}
                             onFocus={() => setFocus(date)}
                             className={cn(
-                              "relative h-8 w-full rounded-md text-[13px] tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-30",
+                              "relative h-8 w-full rounded-md text-[0.8125rem] tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-30",
                               selected || rangeEnd
                                 ? "bg-accent font-semibold text-accent-on hover:bg-accent-strong"
                                 : inRange
@@ -436,11 +436,11 @@ export function DatePicker({
               type="button"
               disabled={outside(today)}
               onClick={() => pick(today)}
-              className="rounded-md px-2 py-1 text-[12px] font-medium text-accent-text hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40"
+              className="rounded-md px-2 py-1 text-[0.75rem] font-medium text-accent-text hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40"
             >
               I dag
             </button>
-            <span className="text-[11px] text-text-subtle">
+            <span className="text-[0.6875rem] text-text-subtle">
               Klicka på veckan för måndagen
             </span>
           </div>

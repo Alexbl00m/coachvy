@@ -92,7 +92,7 @@ export function LactateChart({
   );
 
   return (
-    <div className="h-[360px] w-full">
+    <div className="h-[22.5rem] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart margin={{ top: 34, right: 16, bottom: 8, left: 0 }}>
           <CartesianGrid stroke={CHART_GRID} strokeDasharray="2 4" vertical={false} />
@@ -103,21 +103,21 @@ export function LactateChart({
             allowDuplicatedCategory={false}
             tickFormatter={(v: number) => sv(v, digits)}
             stroke={CHART_GRID}
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
             tickLine={false}
             label={{
               value: unit,
               position: "insideBottomRight",
               offset: -4,
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           <YAxis
             type="number"
             domain={[0, Math.ceil(maxLactate + 0.5)]}
             stroke={CHART_GRID}
-            tick={{ fill: CHART_AXIS_TEXT, fontSize: 12 }}
+            tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.75rem" }}
             tickLine={false}
             width={52}
             label={{
@@ -126,7 +126,7 @@ export function LactateChart({
               offset: 6,
               dy: -22,
               fill: CHART_AXIS_TEXT,
-              fontSize: 11,
+              fontSize: "0.6875rem",
             }}
           />
           <Tooltip
@@ -143,7 +143,7 @@ export function LactateChart({
                 value: `LT1 ${sv(lt1, digits)}`,
                 position: "top",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -156,7 +156,7 @@ export function LactateChart({
                 value: `LT2 ${sv(lt2, digits)}`,
                 position: "top",
                 fill: CHART_AXIS_TEXT,
-                fontSize: 11,
+                fontSize: "0.6875rem",
               }}
             />
           )}
@@ -225,7 +225,7 @@ export function MethodSpread({
 
   return (
     <div className="space-y-3">
-      <p className="text-[13px] leading-relaxed text-text-muted">
+      <p className="text-[0.8125rem] leading-relaxed text-text-muted">
         Ett stegtest ger inte ett tröskelvärde utan ett spann. Här ligger de{" "}
         {usable.length} metoderna på {sv(span, digits)} {unit}.
       </p>
@@ -233,11 +233,11 @@ export function MethodSpread({
       <ol className="space-y-[3px]">
         {usable.map((row) => (
           <li key={row.method} className="group relative flex items-center gap-2">
-            <span className="w-[104px] shrink-0 truncate text-[11px] text-text-muted">
+            <span className="w-[6.5rem] shrink-0 truncate text-[0.6875rem] text-text-muted">
               {row.method}
             </span>
 
-            <span className="relative h-[14px] flex-1">
+            <span className="relative h-[0.875rem] flex-1">
               {band && (
                 <span
                   aria-hidden
@@ -254,7 +254,7 @@ export function MethodSpread({
               />
               <span
                 aria-hidden
-                className="absolute top-1/2 size-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface"
+                className="absolute top-1/2 size-[0.4375rem] -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface"
                 style={{
                   left: `${position(row.intensity)}%`,
                   backgroundColor: SERIES.primary,
@@ -262,14 +262,14 @@ export function MethodSpread({
               />
             </span>
 
-            <span className="w-[46px] shrink-0 text-right text-[11px] text-text tabular-nums">
+            <span className="w-[2.875rem] shrink-0 text-right text-[0.6875rem] text-text tabular-nums">
               {sv(row.intensity, digits)}
             </span>
           </li>
         ))}
       </ol>
 
-      <p className="border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
+      <p className="border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         Det skuggade fältet är spannet mellan LT1 och LT2 – där det mesta av
         träningen styrs.
       </p>

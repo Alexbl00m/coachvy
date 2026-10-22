@@ -36,15 +36,15 @@ export function About() {
         )}
 
         <div>
-          <p className="mb-5 font-mono text-[12px] text-text-subtle">Om mig</p>
-          <h2 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.028em] text-balance text-text sm:text-[44px]">
+          <p className="mb-5 font-mono text-[0.75rem] text-text-subtle">Om mig</p>
+          <h2 className="text-[2rem] leading-[1.1] font-semibold tracking-[-0.028em] text-balance text-text sm:text-[2.75rem]">
             Alexander Lindblom.{" "}
             <span className="text-text-muted">
               Coach för uthållighet i {site.location}.
             </span>
           </h2>
 
-          <div className="mt-8 max-w-[62ch] space-y-5 text-[16px] leading-relaxed text-text-muted">
+          <div className="mt-8 max-w-[62ch] space-y-5 text-[1rem] leading-relaxed text-text-muted">
             <p>
               Redan i ung ålder insåg jag att jag brann för att stödja och guida
               andra på deras väg mot målet. Jag började som hockeytränare, och
@@ -64,7 +64,7 @@ export function About() {
             {credentials.map((item) => (
               <li
                 key={item}
-                className="border-b border-line py-3.5 text-[15px] text-text"
+                className="border-b border-line py-3.5 text-[0.9375rem] text-text"
               >
                 {item}
               </li>
@@ -72,12 +72,12 @@ export function About() {
           </ul>
 
           <figure className="mt-12 max-w-xl">
-            <blockquote className="text-[22px] leading-[1.35] font-medium tracking-[-0.016em] text-balance text-text">
+            <blockquote className="text-[1.375rem] leading-[1.35] font-medium tracking-[-0.016em] text-balance text-text">
               ”Coaching är inte bara träningsplanering – det handlar om att
               skapa en relation. Träningen är en del av det större pusslet i
               ditt liv, och allt ska samspela.”
             </blockquote>
-            <figcaption className="mt-4 text-[14px] text-text-subtle">
+            <figcaption className="mt-4 text-[0.875rem] text-text-subtle">
               Min filosofi
             </figcaption>
           </figure>

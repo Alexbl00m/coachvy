@@ -51,8 +51,8 @@ export function StrengthProgress({
     <div className="space-y-5">
       <div>
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-[13px] font-medium text-text">Pass per vecka</p>
-          <p className="text-[12px] text-text-subtle tabular-nums">
+          <p className="text-[0.8125rem] font-medium text-text">Pass per vecka</p>
+          <p className="text-[0.75rem] text-text-subtle tabular-nums">
             {total} på åtta veckor · {sv(total / 8, 1)} per vecka
           </p>
         </div>
@@ -84,7 +84,7 @@ export function StrengthProgress({
                 <p className="truncate text-sm font-medium text-text">
                   {p.name}
                 </p>
-                <p className="text-[12px] text-text-muted tabular-nums">
+                <p className="text-[0.75rem] text-text-muted tabular-nums">
                   {entryText(p.latest)} · {shortDate(p.latest.date)}
                   {p.points.length > 1 && ` · från ${entryText(p.first)}`}
                 </p>
@@ -100,7 +100,7 @@ export function StrengthProgress({
                 </p>
                 <p
                   className={cn(
-                    "text-[12px] tabular-nums",
+                    "text-[0.75rem] tabular-nums",
                     p.changePct === null
                       ? "text-text-subtle"
                       : p.changePct >= 0
@@ -117,20 +117,20 @@ export function StrengthProgress({
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-text-subtle">
+        <p className="text-[0.8125rem] text-text-subtle">
           Ingen övning med vikt loggad ännu. Progressionen räknas på övningar
           med set, repetitioner och vikt.
         </p>
       )}
 
       {other.length > 0 && (
-        <p className="text-[12px] text-text-muted">
+        <p className="text-[0.75rem] text-text-muted">
           <span className="font-medium text-text">Utan vikt:</span>{" "}
           {other.map((p) => `${p.name} (${p.points.length})`).join(", ")}
         </p>
       )}
 
-      <p className="text-[13px] leading-relaxed text-text-muted">
+      <p className="text-[0.8125rem] leading-relaxed text-text-muted">
         Talet till höger är skattat 1RM ur passets tyngsta set (Epley), så att
         3×10 på 40 kg och 4×8 på 50 kg går att jämföra. Förändringen räknas från
         första passet de senaste sexton veckorna.

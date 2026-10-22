@@ -258,7 +258,7 @@ export function SessionDialog({
             <h2 id="pass-dialog-titel" className="text-lg font-semibold">
               {session ? "Ändra pass" : "Nytt pass"}
             </h2>
-            <p className="text-[13px] text-text-subtle">{weekLabel}</p>
+            <p className="text-[0.8125rem] text-text-subtle">{weekLabel}</p>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -354,7 +354,7 @@ export function SessionDialog({
           </div>
         </div>
 
-        <p className="mt-5 max-w-3xl text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-5 max-w-3xl text-[0.8125rem] leading-relaxed text-text-muted">
           Strukturen skrivs som en rad:{" "}
           <code className="text-text-muted">
             15 min 65%; 5x(4 min 105% + 2 min 60%); 10 min 60%
@@ -491,11 +491,11 @@ export function SessionDialog({
                                 ? "15 min 65%; 3x(10 min 95% + 3 min 60%); 10 min 60%"
                                 : "Välj vad procenten räknas mot först"
                           }
-                          className="font-mono text-[13px]"
+                          className="font-mono text-[0.8125rem]"
                         />
                       </Field>
                       {result && !result.ok && (
-                        <p className="mt-1 text-[12px] text-warn">
+                        <p className="mt-1 text-[0.75rem] text-warn">
                           {result.error}
                         </p>
                       )}
@@ -535,7 +535,7 @@ export function SessionDialog({
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-2 text-[13px] text-text-subtle">
+                  <p className="mt-2 text-[0.8125rem] text-text-subtle">
                     Passet ingår inte på den här nivån.
                   </p>
                 )}

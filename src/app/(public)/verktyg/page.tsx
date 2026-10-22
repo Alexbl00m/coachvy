@@ -16,8 +16,8 @@ export const metadata = {
 export default function ToolsPage() {
   return (
     <>
-      <p className="font-mono text-[12px] text-text-subtle">Fria verktyg</p>
-      <h1 className="mt-5 max-w-3xl text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] text-balance text-text sm:text-[56px]">
+      <p className="font-mono text-[0.75rem] text-text-subtle">Fria verktyg</p>
+      <h1 className="mt-5 max-w-3xl text-[2.5rem] leading-[1.05] font-semibold tracking-[-0.035em] text-balance text-text sm:text-[3.5rem]">
         Räkna på din träning
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed text-text-muted">
@@ -46,7 +46,7 @@ export default function ToolsPage() {
               <p className="mt-2 text-sm leading-relaxed text-text-muted">
                 {tool.description}
               </p>
-              <p className="mt-4 font-mono text-[12px] text-text-subtle">
+              <p className="mt-4 font-mono text-[0.75rem] text-text-subtle">
                 In: {tool.inputs}
               </p>
             </Link>
@@ -69,7 +69,7 @@ export default function ToolsPage() {
             Läs om testning
           </ButtonLink>
         </div>
-        <p className="mt-6 text-[12px] text-text-subtle">
+        <p className="mt-6 text-[0.75rem] text-text-subtle">
           {site.name} · {site.location}
         </p>
       </div>

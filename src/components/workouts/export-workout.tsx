@@ -99,7 +99,7 @@ export function ExportWorkout({
 
       {error && <p className="mt-3 text-sm text-text">{error}</p>}
 
-      <dl className="mt-4 grid gap-x-6 gap-y-3 border-t border-line pt-4 text-[13px] sm:grid-cols-2">
+      <dl className="mt-4 grid gap-x-6 gap-y-3 border-t border-line pt-4 text-[0.8125rem] sm:grid-cols-2">
         <div>
           <dt className="font-medium text-text">.fit – Garmin och andra</dt>
           <dd className="mt-1 leading-relaxed text-text-muted">
@@ -133,7 +133,7 @@ export function ExportWorkout({
           </div>
         )}
       </dl>
-      <p className="mt-3 text-[12px] text-text-subtle">
+      <p className="mt-3 text-[0.75rem] text-text-subtle">
         Målen skrivs i {cycling ? "watt" : "fart"} räknat mot {workout.basis}.
         Ett mål utan spann får {cycling ? "±3 %" : "±2 %"} så att klockan inte
         larmar vid varje svängning.

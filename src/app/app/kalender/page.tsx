@@ -197,7 +197,7 @@ export default async function KalenderPage({
             {month !== today.slice(0, 7) && (
               <Link
                 href={href({ manad: today.slice(0, 7), dag: today })}
-                className="rounded-md border border-line-strong px-3 py-1.5 text-[13px] text-text hover:border-accent"
+                className="rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text hover:border-accent"
               >
                 I dag
               </Link>
@@ -216,7 +216,7 @@ export default async function KalenderPage({
           />
 
           {phasesShown.length > 0 && (
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-text-muted">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem] text-text-muted">
               {phasesShown.map((p) => (
                 <li key={p.key} className="flex items-center gap-1.5">
                   <span

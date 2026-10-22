@@ -83,7 +83,7 @@ export default async function LibraryPlanPage({
     <>
       <Link
         href={routes.planLibrary}
-        className="mb-3 inline-flex items-center gap-1 text-[13px] text-text-muted hover:text-text"
+        className="mb-3 inline-flex items-center gap-1 text-[0.8125rem] text-text-muted hover:text-text"
       >
         <ChevronLeft aria-hidden className="size-4" />
         Planbibliotek
@@ -139,17 +139,17 @@ export default async function LibraryPlanPage({
                     </span>
                   </p>
                   {p.purpose && (
-                    <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                    <p className="mt-1 text-[0.8125rem] leading-relaxed text-text-muted">
                       {p.purpose}
                     </p>
                   )}
                   {p.focus && (
-                    <p className="mt-1 text-[13px] leading-relaxed text-text-subtle">
+                    <p className="mt-1 text-[0.8125rem] leading-relaxed text-text-subtle">
                       Fokus: {p.focus}
                     </p>
                   )}
                   {intensityText(p.intensity) && (
-                    <p className="mt-1 text-[12px] text-text-subtle tabular-nums">
+                    <p className="mt-1 text-[0.75rem] text-text-subtle tabular-nums">
                       Intensitet {intensityText(p.intensity)}
                     </p>
                   )}
@@ -206,7 +206,7 @@ export default async function LibraryPlanPage({
                   <p className="text-sm font-medium text-text">
                     {l.key} · {l.name}
                   </p>
-                  <p className="text-[12px] text-text-subtle tabular-nums">
+                  <p className="text-[0.75rem] text-text-subtle tabular-nums">
                     {[
                       peak(l.id) !== null
                         ? `upp till ${volumeText({ min: peak(l.id)!, max: null }, domain.volumeUnit)}/vecka`
@@ -219,14 +219,14 @@ export default async function LibraryPlanPage({
                       .join(" · ")}
                   </p>
                   {l.description && (
-                    <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
+                    <p className="mt-1 text-[0.8125rem] leading-relaxed text-text-muted">
                       {l.description}
                     </p>
                   )}
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-[13px] leading-relaxed text-text-muted">
+            <p className="mt-4 text-[0.8125rem] leading-relaxed text-text-muted">
               Du väljer nivå när du startar och byter när du vill – från nästa
               vecka, stegvis eller tillfälligt, till exempel under en resa.
             </p>

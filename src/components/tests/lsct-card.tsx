@@ -83,7 +83,7 @@ export function LsctCard({
             className="grid gap-1 py-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-4"
           >
             <p className="text-sm font-medium text-text">{signal.label}</p>
-            <p className="text-[13px] text-text-muted">
+            <p className="text-[0.8125rem] text-text-muted">
               <span className="font-semibold text-text tabular-nums">
                 {signalValue(signal)}
               </span>
@@ -92,13 +92,13 @@ export function LsctCard({
                 · norm {normValue(signal)}
                 {signal.change ? ` · ${signal.change}` : ""}
               </span>
-              <span className="mt-0.5 block text-[12px] text-text-subtle">
+              <span className="mt-0.5 block text-[0.75rem] text-text-subtle">
                 {signal.text}
               </span>
             </p>
             <span
               className={cn(
-                "w-fit rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium",
+                "w-fit rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] font-medium",
                 STATE[signal.state].tone,
               )}
             >
@@ -110,12 +110,12 @@ export function LsctCard({
 
       {history.length > 1 && (
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[420px] border-collapse text-[13px]">
-            <caption className="mb-2 text-left text-[12px] font-medium text-text-muted">
+          <table className="w-full min-w-[26.25rem] border-collapse text-[0.8125rem]">
+            <caption className="mb-2 text-left text-[0.75rem] font-medium text-text-muted">
               Senaste testen
             </caption>
             <thead>
-              <tr className="border-b border-line text-left text-[12px] text-text-muted">
+              <tr className="border-b border-line text-left text-[0.75rem] text-text-muted">
                 <th className="pb-1.5 pr-3 font-medium">Datum</th>
                 <th className="pb-1.5 pr-3 font-medium">Effekt steg 3</th>
                 <th className="pb-1.5 pr-3 font-medium">HRR</th>
@@ -159,7 +159,7 @@ export function LsctCard({
         </div>
       )}
 
-      <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         Normen är medelvärdet av de senaste testen före det här, högst sex. En
         avvikelse är en ändring större än två standardavvikelser, men minst 4 %
         i effekt och 4 slag i återhämtning; RPE räknas som avvikande en poäng

@@ -127,7 +127,7 @@ export function CriticalSpeedCalculator() {
               ]}
             />
 
-            <p className="text-[13px] text-text-subtle">
+            <p className="text-[0.8125rem] text-text-subtle">
               {result.goodnessOfFit === null
                 ? "Två test definierar linjen exakt, så ingen anpassningsgrad går att mäta. Lägg till ett tredje test för det."
                 : `Anpassning R² ${result.goodnessOfFit} % på ${result.testCount} test.`}
@@ -162,7 +162,7 @@ export function CriticalSpeedCalculator() {
                   discipline,
                 ).map((f) => [f.label, f.time, f.pace])}
               />
-              <p className="mt-3 text-[12px] text-text-subtle">
+              <p className="mt-3 text-[0.75rem] text-text-subtle">
                 Prognoserna extrapolerar från två korta test. Ju längre distans,
                 desto mer beror utfallet på uthållighet som modellen inte mäter —
                 behandla maratonraden som en riktning, inte ett mål.

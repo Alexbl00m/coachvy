@@ -46,7 +46,7 @@ export function ResendConfirmation({
         <p
           role="status"
           className={cn(
-            "mt-2 text-[13px]",
+            "mt-2 text-[0.8125rem]",
             result.ok ? "text-text-muted" : "text-bad",
           )}
         >

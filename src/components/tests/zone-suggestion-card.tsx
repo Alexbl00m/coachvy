@@ -38,7 +38,7 @@ function Suggestion({ adeptId, s }: { adeptId: string; s: ZoneSuggestion }) {
         className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium text-text"
       >
         {power ? "Cykling" : "Löpning"}: {name} {show(s, s.critical)}
-        <span className="text-[13px] font-normal text-text-muted tabular-nums">
+        <span className="text-[0.8125rem] font-normal text-text-muted tabular-nums">
           +{sv(s.changePct, 1)} % mot testet
         </span>
       </h3>
@@ -52,7 +52,7 @@ function Suggestion({ adeptId, s }: { adeptId: string; s: ZoneSuggestion }) {
       </p>
 
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[22rem] text-[13px] tabular-nums">
+        <table className="w-full min-w-[22rem] text-[0.8125rem] tabular-nums">
           <caption className="sr-only">Insatserna förslaget bygger på</caption>
           <thead>
             <tr className="text-left text-text-muted">

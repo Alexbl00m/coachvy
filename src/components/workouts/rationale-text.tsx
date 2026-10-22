@@ -44,7 +44,7 @@ export function RationaleText({
     list.map((s, i) => (
       <div key={i}>
         {s.heading && (
-          <p className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+          <p className="text-[0.6875rem] font-medium uppercase tracking-wide text-text-subtle">
             {s.heading}
           </p>
         )}
@@ -58,7 +58,7 @@ export function RationaleText({
       <div className={cn("space-y-1", className)}>
         <p className="whitespace-pre-line">{first.body}</p>
         <details>
-          <summary className="cursor-pointer select-none text-[11px] text-text-subtle hover:text-text">
+          <summary className="cursor-pointer select-none text-[0.6875rem] text-text-subtle hover:text-text">
             Läs mer om passet
           </summary>
           <div className="mt-1.5 space-y-2">{render(rest)}</div>

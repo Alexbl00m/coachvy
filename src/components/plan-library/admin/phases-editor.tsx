@@ -70,7 +70,7 @@ export function PhasesEditor({
       }}
       className="space-y-4"
     >
-      <p className="max-w-3xl text-[13px] leading-relaxed text-text-subtle">
+      <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-subtle">
         När en medlem väljer en kortare plan kortas faserna en vecka i taget,
         från fasens början, i ordningen nedan – först den som kortas först.
         Faser som inte kortas behåller alla sina veckor, typiskt den specifika
@@ -83,7 +83,7 @@ export function PhasesEditor({
             className="rounded-lg border border-line bg-surface-2/40 p-4"
           >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[13px] font-medium text-text-muted">
+              <p className="text-[0.8125rem] font-medium text-text-muted">
                 Fas {i + 1}
                 {phase.id && weeksPerPhase[phase.id] !== undefined && (
                   <span className="text-text-subtle">

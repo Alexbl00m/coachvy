@@ -58,7 +58,7 @@ export function TemplateWeeks({
                     key={week.id}
                     className="rounded-lg border border-line bg-surface"
                   >
-                    <p className="border-b border-line px-3 py-2 text-[13px] text-text-muted">
+                    <p className="border-b border-line px-3 py-2 text-[0.8125rem] text-text-muted">
                       <span className="font-semibold text-text tabular-nums">
                         Vecka {week.position}
                       </span>
@@ -69,7 +69,7 @@ export function TemplateWeeks({
                       {week.checkpoint && " · avstämning"}
                     </p>
                     {own.length === 0 ? (
-                      <p className="px-3 py-3 text-[13px] text-text-subtle">
+                      <p className="px-3 py-3 text-[0.8125rem] text-text-subtle">
                         Inga pass på den här nivån.
                       </p>
                     ) : (
@@ -85,7 +85,7 @@ export function TemplateWeeks({
                               key={s.id}
                               className="rounded-md border border-line bg-surface-2 p-2"
                             >
-                              <p className="mb-1 text-[11px] font-medium text-text-subtle">
+                              <p className="mb-1 text-[0.6875rem] font-medium text-text-subtle">
                                 {s.day === null
                                   ? "Valfri dag"
                                   : DAY_SHORT[s.day]}
@@ -96,7 +96,7 @@ export function TemplateWeeks({
                                 disciplineName={disciplineName(s.discipline)}
                               />
                               {(v.description || s.description) && (
-                                <p className="mt-1.5 text-[12px] leading-snug text-text-muted">
+                                <p className="mt-1.5 text-[0.75rem] leading-snug text-text-muted">
                                   {v.description || s.description}
                                 </p>
                               )}

@@ -221,7 +221,7 @@ export function VideoPanel({
 
   return (
     <div className="space-y-4">
-      <p className="max-w-3xl text-[13px] leading-relaxed text-text-muted">
+      <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-muted">
         Filma från sidan med mobilen i höjd med vevpartiet och hela cyklisten i
         bild, 15–30 sekunder jämnt trampande på trainern – 60 bilder per sekund
         om mobilen kan. Videon analyseras här i webbläsaren; originalet laddas
@@ -263,21 +263,21 @@ export function VideoPanel({
 
       <div aria-live="polite" className="space-y-3">
         {stage.kind === "öppnar" && (
-          <p className="text-[13px] text-text-muted">Öppnar videon …</p>
+          <p className="text-[0.8125rem] text-text-muted">Öppnar videon …</p>
         )}
         {stage.kind === "vald" && (
           <p
-            className={`text-[13px] ${stage.check.ok ? "text-text" : "text-bad"}`}
+            className={`text-[0.8125rem] ${stage.check.ok ? "text-text" : "text-bad"}`}
           >
             {stage.check.sentence}
           </p>
         )}
         {stage.kind === "laddar" && (
-          <p className="text-[13px] text-text-muted">Laddar posemodellen …</p>
+          <p className="text-[0.8125rem] text-text-muted">Laddar posemodellen …</p>
         )}
         {(stage.kind === "mäter" || stage.kind === "spelar in") && (
           <div className="max-w-md">
-            <p className="text-[13px] text-text-muted">
+            <p className="text-[0.8125rem] text-text-muted">
               {stage.kind === "mäter"
                 ? "Hittar lederna bild för bild …"
                 : "Spelar in analysvideon – tar lika lång tid som klippet …"}{" "}
@@ -300,13 +300,13 @@ export function VideoPanel({
           </div>
         )}
         {stage.kind === "fel" && (
-          <p role="alert" className="text-[13px] text-bad">
+          <p role="alert" className="text-[0.8125rem] text-bad">
             {stage.message}
           </p>
         )}
 
         {analysis && (
-          <div className="space-y-2 text-[13px]">
+          <div className="space-y-2 text-[0.8125rem]">
             <p className="text-text">
               {analysis.kneeFlexBdc === null
                 ? "Knäböjningen gick inte att mäta i klippet."
@@ -343,7 +343,7 @@ export function VideoPanel({
           />
         )}
         {stale && (
-          <div className="flex flex-wrap items-center gap-3 text-[13px] text-text-muted">
+          <div className="flex flex-wrap items-center gap-3 text-[0.8125rem] text-text-muted">
             Bedömningen har ändrats sedan analysvideon spelades in; den spelas
             in igen när fiten sparas.
             <Button

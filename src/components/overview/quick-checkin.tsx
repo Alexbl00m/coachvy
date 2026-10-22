@@ -66,7 +66,7 @@ export function QuickCheckin({
         <fieldset key={q.key} className="min-w-0">
           <legend className="mb-2 flex w-full items-baseline justify-between gap-3 text-sm">
             <span className="font-medium text-text">{q.label}</span>
-            <span className="text-[12px] text-text-subtle">
+            <span className="text-[0.75rem] text-text-subtle">
               1 {q.low.toLowerCase()} · 5 {q.high.toLowerCase()}
             </span>
           </legend>
@@ -87,7 +87,7 @@ export function QuickCheckin({
                   />
                   <span
                     className={cn(
-                      "flex h-11 cursor-pointer items-center justify-center rounded-md border text-[15px] font-medium tabular-nums transition-colors duration-120 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent",
+                      "flex h-11 cursor-pointer items-center justify-center rounded-md border text-[0.9375rem] font-medium tabular-nums transition-colors duration-120 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent",
                       checked
                         ? "border-text bg-text text-canvas"
                         : "border-line bg-canvas/40 text-text-muted hover:border-line-strong hover:text-text",
@@ -110,7 +110,7 @@ export function QuickCheckin({
         {pending ? "Sparar …" : "Checka in"}
       </Button>
       {error && (
-        <p role="alert" className="text-[13px] text-bad">
+        <p role="alert" className="text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

@@ -53,7 +53,7 @@ export function WorkoutProfileChart({
       </div>
       <div
         aria-hidden
-        className="relative mt-2.5 h-4 font-mono text-[12px] text-text-subtle tabular-nums"
+        className="relative mt-2.5 h-4 font-mono text-[0.75rem] text-text-subtle tabular-nums"
       >
         {ticks.map((t) => (
           <span

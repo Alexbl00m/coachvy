@@ -54,10 +54,10 @@ export function PasteSteps({
 
   return (
     <div className="enter mb-4 rounded-lg border border-line-strong bg-surface-2 p-4 print:hidden">
-      <label htmlFor={id} className="text-[13px] font-medium text-text">
+      <label htmlFor={id} className="text-[0.8125rem] font-medium text-text">
         Klistra in stegen
       </label>
-      <p className="mt-0.5 text-[12px] text-text-subtle">
+      <p className="mt-0.5 text-[0.75rem] text-text-subtle">
         Markera raderna i kalkylarket – gärna med rubrikraden – kopiera och
         klistra in här. En rad som heter ”vila” blir vilovärdet.
       </p>
@@ -67,12 +67,12 @@ export function PasteSteps({
         value={text}
         onChange={(e) => read(e.target.value)}
         placeholder={"Watt\tPuls\tLaktat\n150\t128\t1,4\n180\t139\t1,9"}
-        className="mt-2 w-full resize-y rounded-md border border-line-control bg-surface px-3 py-2 font-mono text-[12px] text-text"
+        className="mt-2 w-full resize-y rounded-md border border-line-control bg-surface px-3 py-2 font-mono text-[0.75rem] text-text"
       />
 
       {table && (
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full border-collapse text-[13px] tabular-nums">
+          <table className="w-full border-collapse text-[0.8125rem] tabular-nums">
             <thead>
               <tr>
                 {table.roles.map((role, i) => (
@@ -88,7 +88,7 @@ export function PasteSteps({
                           ),
                         })
                       }
-                      className="h-8 min-w-[7.5rem] text-[12px]"
+                      className="h-8 min-w-[7.5rem] text-[0.75rem]"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -97,7 +97,7 @@ export function PasteSteps({
                       ))}
                     </Select>
                     {table.header?.[i] && (
-                      <span className="mt-1 block truncate text-[11px] text-text-subtle">
+                      <span className="mt-1 block truncate text-[0.6875rem] text-text-subtle">
                         {table.header[i]}
                       </span>
                     )}
@@ -125,7 +125,7 @@ export function PasteSteps({
             </tbody>
           </table>
           {table.rows.length > 6 && (
-            <p className="mt-1 text-[12px] text-text-subtle">
+            <p className="mt-1 text-[0.75rem] text-text-subtle">
               … och {table.rows.length - 6} rader till.
             </p>
           )}
@@ -157,7 +157,7 @@ export function PasteSteps({
           Avbryt
         </Button>
         {table && !table.roles.includes("intensity") && (
-          <span className="text-[12px] text-text-subtle">
+          <span className="text-[0.75rem] text-text-subtle">
             Välj vilken kolumn som är belastningen.
           </span>
         )}

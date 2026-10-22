@@ -64,7 +64,7 @@ export function LibraryPicker({
             <h2 id="bib-valj-rubrik" className="text-lg font-semibold">
               Hämta från passbiblioteket
             </h2>
-            <p className="text-[13px] text-text-subtle">{description}</p>
+            <p className="text-[0.8125rem] text-text-subtle">{description}</p>
           </div>
           <Button size="sm" variant="ghost" onClick={onClose}>
             Stäng

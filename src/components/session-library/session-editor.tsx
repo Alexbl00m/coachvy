@@ -169,7 +169,7 @@ export function SessionEditor({
                 ? "Ändra pass i biblioteket"
                 : "Nytt pass i biblioteket"}
             </h2>
-            <p className="text-[13px] text-text-subtle">
+            <p className="text-[0.8125rem] text-text-subtle">
               Skriv syftet och hur passet byggs på, så följer det med när passet
               används.
             </p>
@@ -266,10 +266,10 @@ export function SessionEditor({
 
           <div className="space-y-3 sm:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[13px] font-medium text-text">
+              <span className="text-[0.8125rem] font-medium text-text">
                 Struktur
               </span>
-              <label className="flex items-center gap-2 text-[13px] text-text-muted">
+              <label className="flex items-center gap-2 text-[0.8125rem] text-text-muted">
                 <input
                   type="checkbox"
                   checked={withLevels}
@@ -302,7 +302,7 @@ export function SessionEditor({
                 basis={draft.basis}
               />
             )}
-            <p className="text-[11px] leading-relaxed text-text-subtle">
+            <p className="text-[0.6875rem] leading-relaxed text-text-subtle">
               Som i planmallarna: steg skiljs med semikolon, en repetition
               skrivs <code className="text-text-muted">5x(…)</code>. Text efter
               målet blir stegets etikett, till exempel{" "}
@@ -407,9 +407,9 @@ export function SessionEditor({
           </div>
 
           <fieldset className="sm:col-span-6">
-            <legend className="mb-1.5 text-[13px] font-medium text-text">
+            <legend className="mb-1.5 text-[0.8125rem] font-medium text-text">
               Faser{" "}
-              <span className="text-[11px] font-normal text-text-subtle">
+              <span className="text-[0.6875rem] font-normal text-text-subtle">
                 valfritt
               </span>
             </legend>
@@ -420,7 +420,7 @@ export function SessionEditor({
                   <label
                     key={p.key}
                     className={cn(
-                      "cursor-pointer rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+                      "cursor-pointer rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
                       on
                         ? "border-text-subtle bg-surface-3 text-text"
                         : "border-line-strong text-text-muted hover:text-text",
@@ -454,7 +454,7 @@ export function SessionEditor({
                 className="size-4 accent-[var(--accent)]"
               />
               Dela med alla coacher
-              <span className="text-[12px] text-text-subtle">
+              <span className="text-[0.75rem] text-text-subtle">
                 – de kan använda och kopiera passet, men inte ändra det.
               </span>
             </label>
@@ -504,7 +504,7 @@ function StructureInput({
       <label
         htmlFor={id}
         className={cn(
-          "mb-1 block text-[12px] text-text-muted",
+          "mb-1 block text-[0.75rem] text-text-muted",
           hideLabel && "sr-only",
         )}
       >
@@ -515,10 +515,10 @@ function StructureInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={PLACEHOLDER[basis] ?? PLACEHOLDER.MP}
-        className="font-mono text-[13px]"
+        className="font-mono text-[0.8125rem]"
         required
       />
-      <div className="mt-1.5 min-h-5 text-[12px]">
+      <div className="mt-1.5 min-h-5 text-[0.75rem]">
         {parsed && !parsed.ok && <p className="text-warn">{parsed.error}</p>}
         {zonesWithoutMp && (
           <p className="text-warn">

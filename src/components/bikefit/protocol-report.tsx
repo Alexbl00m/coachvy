@@ -37,7 +37,7 @@ export function IntakeReport({ fit }: { fit: BikeFitRow }) {
       <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
         {rows.map((f) => (
           <div key={f.key} className="min-w-0">
-            <dt className="text-[12px] font-medium text-text-muted">
+            <dt className="text-[0.75rem] font-medium text-text-muted">
               {f.label}
             </dt>
             <dd className="mt-0.5 whitespace-pre-line text-sm text-text">
@@ -93,14 +93,14 @@ export function MeasuresReport({
       ) : (
         <>
           {hasBefore && (
-            <p className="mb-3 text-[13px] text-text-muted">
+            <p className="mb-3 text-[0.8125rem] text-text-muted">
               {changed.length === 0
                 ? "Inga mått ändrades vid fiten."
                 : `${changed.length} ${changed.length === 1 ? "mått ändrades" : "mått ändrades"} vid fiten: ${changed.map((m) => m.label.toLowerCase()).join(", ")}.`}
             </p>
           )}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[26rem] text-[13px] tabular-nums">
+            <table className="w-full min-w-[26rem] text-[0.8125rem] tabular-nums">
               <thead>
                 <tr className="text-left text-text-muted">
                   <th scope="col" className="py-1 pr-3 font-normal">
@@ -130,7 +130,7 @@ export function MeasuresReport({
                     <th
                       scope="rowgroup"
                       colSpan={4}
-                      className="pt-3 pb-1 text-left text-[12px] font-semibold text-text"
+                      className="pt-3 pb-1 text-left text-[0.75rem] font-semibold text-text"
                     >
                       {MEASURE_GROUPS[g]}
                     </th>
@@ -168,7 +168,7 @@ export function MeasuresReport({
                         >
                           {show(m, now)}
                           {diff !== null && (
-                            <span className="ml-1.5 text-[12px] font-normal text-text-subtle">
+                            <span className="ml-1.5 text-[0.75rem] font-normal text-text-subtle">
                               ({signed(diff, m.unit === "°" ? 1 : 0)})
                             </span>
                           )}
@@ -201,7 +201,7 @@ export function BodyReport({ fit }: { fit: BikeFitRow }) {
   return (
     <Card className="min-w-0">
       <CardTitle>Kroppen</CardTitle>
-      <table className="w-full text-[13px] tabular-nums">
+      <table className="w-full text-[0.8125rem] tabular-nums">
         <thead>
           <tr className="text-left text-text-muted">
             <th scope="col" className="py-1 pr-3 font-normal">
@@ -273,7 +273,7 @@ export function ScreeningReport({
     <Card className="min-w-0">
       <CardTitle>Funktionstester</CardTitle>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[30rem] text-[13px] tabular-nums">
+        <table className="w-full min-w-[30rem] text-[0.8125rem] tabular-nums">
           <thead>
             <tr className="text-left text-text-muted">
               <th scope="col" className="py-1 pr-3 font-normal">
@@ -303,7 +303,7 @@ export function ScreeningReport({
                     {sv(x, Number.isInteger(x) ? 0 : 1)}
                     {t.unit === "°" ? "°" : ` ${t.unit}`}
                     {was !== undefined && was !== x && (
-                      <span className="ml-1 text-[12px] text-text-subtle">
+                      <span className="ml-1 text-[0.75rem] text-text-subtle">
                         ({signed(x - was, Number.isInteger(x - was) ? 0 : 1)})
                       </span>
                     )}
@@ -314,7 +314,7 @@ export function ScreeningReport({
                 <tr key={t.key} className="border-t border-line align-top">
                   <th scope="row" className="py-1.5 pr-3 text-left font-normal">
                     <span className="block text-text">{t.label}</span>
-                    <span className="block text-[11px] text-text-subtle">
+                    <span className="block text-[0.6875rem] text-text-subtle">
                       {t.about}
                     </span>
                   </th>
@@ -343,7 +343,7 @@ export function ScreeningReport({
         </table>
       </div>
       {previous && (
-        <p className="mt-2 text-[12px] text-text-subtle">
+        <p className="mt-2 text-[0.75rem] text-text-subtle">
           Inom parentes: skillnaden mot fiten {longDate(previous.performed_on)}.
         </p>
       )}
@@ -361,7 +361,7 @@ export function FindingsReport({ fit }: { fit: BikeFitRow }) {
       <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
         {areas.map((a) => (
           <section key={a.key} className="min-w-0">
-            <h3 className="text-[13px] font-semibold text-text">{a.label}</h3>
+            <h3 className="text-[0.8125rem] font-semibold text-text">{a.label}</h3>
             <p className="mt-1 whitespace-pre-line text-sm text-text">
               {fit.findings[a.key]}
             </p>

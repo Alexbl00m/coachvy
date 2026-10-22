@@ -21,7 +21,7 @@ export function Contact() {
 
       <div className="mt-14 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
         <div>
-          <dl className="max-w-md border-t border-line text-[15px]">
+          <dl className="max-w-md border-t border-line text-[0.9375rem]">
             {[
               ["E-post", site.email, `mailto:${site.email}`],
               ["Telefon", site.phoneLabel, `tel:${site.phone}`],
@@ -48,16 +48,16 @@ export function Contact() {
             ))}
           </dl>
 
-          <h3 className="mt-12 text-[15px] font-semibold text-text">
+          <h3 className="mt-12 text-[0.9375rem] font-semibold text-text">
             Så går det till
           </h3>
           <ol className="mt-4 space-y-3">
             {steps.map((step, index) => (
               <li
                 key={step}
-                className="flex items-baseline gap-4 text-[15px] text-text-muted"
+                className="flex items-baseline gap-4 text-[0.9375rem] text-text-muted"
               >
-                <span className="font-mono text-[12px] text-text-subtle">
+                <span className="font-mono text-[0.75rem] text-text-subtle">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 {step}
@@ -67,7 +67,7 @@ export function Contact() {
         </div>
 
         <div className="lift self-start rounded-xl border border-line-strong bg-surface p-6 sm:p-8">
-          <h3 className="mb-6 text-[15px] font-semibold text-text">
+          <h3 className="mb-6 text-[0.9375rem] font-semibold text-text">
             Skicka ett meddelande
           </h3>
           <ContactForm />

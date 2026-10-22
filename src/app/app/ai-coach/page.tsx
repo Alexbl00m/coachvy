@@ -47,7 +47,7 @@ export default async function AiCoachPage({
         description="Fråga om en adept och få svar som räknar på adeptens egna mätta värden – inte på allmänna träningsråd."
       />
 
-      <p className="-mt-2 mb-5 text-[13px] text-text-subtle">
+      <p className="-mt-2 mb-5 text-[0.8125rem] text-text-subtle">
         {user.coach?.philosophy?.trim()
           ? user.coach.philosophy_mode === "ersatt"
             ? "Svarar utifrån din egen träningsfilosofi."

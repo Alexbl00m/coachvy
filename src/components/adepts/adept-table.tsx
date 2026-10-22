@@ -110,7 +110,7 @@ export function AdeptTable({
               aria-pressed={sport === s}
               onClick={() => setSport(s)}
               className={cn(
-                "rounded-full border px-3 py-1 text-[12px] transition-colors",
+                "rounded-full border px-3 py-1 text-[0.75rem] transition-colors",
                 sport === s
                   ? "border-text-subtle bg-surface-3 text-text"
                   : "border-line text-text-muted hover:text-text",
@@ -126,7 +126,7 @@ export function AdeptTable({
             aria-pressed={onlyAttention}
             onClick={() => setOnlyAttention((v) => !v)}
             className={cn(
-              "rounded-full border px-3 py-1 text-[12px] transition-colors sm:ml-auto",
+              "rounded-full border px-3 py-1 text-[0.75rem] transition-colors sm:ml-auto",
               onlyAttention
                 ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line text-text-muted hover:text-text",
@@ -141,7 +141,7 @@ export function AdeptTable({
             aria-pressed={onlyMissing}
             onClick={() => setOnlyMissing((v) => !v)}
             className={cn(
-              "rounded-full border px-3 py-1 text-[12px] transition-colors",
+              "rounded-full border px-3 py-1 text-[0.75rem] transition-colors",
               attentionCount === 0 && "sm:ml-auto",
               onlyMissing
                 ? "border-text-subtle bg-surface-3 text-text"
@@ -157,7 +157,7 @@ export function AdeptTable({
         {/* relative: skärmläsartexten i en rubrik är absolut positionerad och
             skulle annars räknas mot hela sidans bredd på en telefon. */}
         <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[880px] border-collapse text-sm">
+          <table className="w-full min-w-[55rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line bg-surface-2/60 text-left">
                 <th className="px-4 py-3 font-medium text-text-muted">Namn</th>
@@ -203,7 +203,7 @@ export function AdeptTable({
                       {r.unread > 0 && (
                         <Link
                           href={adeptHref(r.id, "meddelanden")}
-                          className="ml-2 inline-flex items-center gap-1 rounded-full bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-text tabular-nums"
+                          className="ml-2 inline-flex items-center gap-1 rounded-full bg-surface-3 px-1.5 py-0.5 text-[0.6875rem] font-medium text-text tabular-nums"
                           title="Olästa meddelanden"
                         >
                           <MessageSquare aria-hidden className="size-3" />
@@ -211,14 +211,14 @@ export function AdeptTable({
                         </Link>
                       )}
                       {r.email && (
-                        <span className="block text-[12px] text-text-subtle">
+                        <span className="block text-[0.75rem] text-text-subtle">
                           {r.email}
                         </span>
                       )}
                       {r.attention.length > 0 && (
                         <span
                           className={cn(
-                            "mt-1 block text-[12px]",
+                            "mt-1 block text-[0.75rem]",
                             r.attention[0].weight === 3
                               ? "text-bad"
                               : "text-text-muted",
@@ -233,7 +233,7 @@ export function AdeptTable({
                     <td className="px-4 py-3 text-text-muted">
                       {r.sport ?? "–"}
                       {r.level && (
-                        <span className="block text-[12px] text-text-subtle">
+                        <span className="block text-[0.75rem] text-text-subtle">
                           {r.level}
                         </span>
                       )}
@@ -259,7 +259,7 @@ export function AdeptTable({
                             {r.readiness.score}
                           </span>{" "}
                           av 20
-                          <span className="block text-[12px] text-text-subtle">
+                          <span className="block text-[0.75rem] text-text-subtle">
                             {r.readiness.when}
                             {r.readiness.baseline !== null &&
                               ` · snitt ${sv(r.readiness.baseline)}`}
@@ -274,13 +274,13 @@ export function AdeptTable({
                         <span className="flex items-start gap-2">
                           <PriorityBadge
                             priority={r.nextRace.priority}
-                            className="size-5 text-[11px]"
+                            className="size-5 text-[0.6875rem]"
                           />
                           <span className="min-w-0">
                             <span className="block text-text">
                               {r.nextRace.name}
                             </span>
-                            <span className="block text-[12px] text-text-subtle">
+                            <span className="block text-[0.75rem] text-text-subtle">
                               {r.nextRace.countdown}
                             </span>
                           </span>
@@ -305,7 +305,7 @@ export function AdeptTable({
                         )}
                         {consentLabel(r.consent)}
                       </span>
-                      <span className="block text-[12px] text-text-subtle">
+                      <span className="block text-[0.75rem] text-text-subtle">
                         {r.lastActive}
                       </span>
                     </td>
@@ -325,7 +325,7 @@ export function AdeptTable({
           </table>
         </div>
       </div>
-      <p className="text-[12px] text-text-subtle">
+      <p className="text-[0.75rem] text-text-subtle">
         {shown.length === rows.length
           ? `${rows.length} ${rows.length === 1 ? "adept" : "adepter"}`
           : `${shown.length} av ${rows.length} adepter`}

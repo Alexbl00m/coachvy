@@ -91,7 +91,7 @@ function SignUpForm({
         <FormMessage error={state.error} notice={state.notice} />
 
         <fieldset className="space-y-1.5">
-          <legend className="pb-1.5 text-[13px] font-medium text-ink-200">
+          <legend className="pb-1.5 text-[0.8125rem] font-medium text-ink-200">
             Kontotyp
           </legend>
           <div className="grid grid-cols-2 gap-2">
@@ -118,7 +118,7 @@ function SignUpForm({
                   >
                     {option.label}
                   </span>
-                  <span className="block text-[11px] text-ink-400">
+                  <span className="block text-[0.6875rem] text-ink-400">
                     {option.hint}
                   </span>
                 </button>
@@ -217,7 +217,7 @@ function SignUpForm({
         )}
 
         {role === "adept" && (
-          <div className="flex items-start gap-2.5 pt-1 text-[13px] text-ink-300">
+          <div className="flex items-start gap-2.5 pt-1 text-[0.8125rem] text-ink-300">
             <input
               id="health_consent"
               name="health_consent"
@@ -236,7 +236,7 @@ function SignUpForm({
         )}
 
         {/* The link stays outside the <label> so clicking it does not toggle the box. */}
-        <div className="flex items-start gap-2.5 pt-1 text-[13px] text-ink-300">
+        <div className="flex items-start gap-2.5 pt-1 text-[0.8125rem] text-ink-300">
           <input
             id="accepted_terms"
             name="accepted_terms"

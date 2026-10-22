@@ -43,17 +43,17 @@ export function MultisportStrip({
           <>
             <span
               className={cn(
-                "block text-[11px] font-semibold tracking-[0.08em] uppercase",
+                "block text-[0.6875rem] font-semibold tracking-[0.08em] uppercase",
                 active ? "text-accent" : "text-text-subtle",
               )}
             >
               {labels[i]}
             </span>
-            <span className="block font-mono text-[13px] whitespace-nowrap tabular-nums text-text">
+            <span className="block font-mono text-[0.8125rem] whitespace-nowrap tabular-nums text-text">
               {formatClock(p.seconds)}
             </span>
             {!transition && km(p.distanceM) && (
-              <span className="block text-[11px] whitespace-nowrap tabular-nums text-text-muted">
+              <span className="block text-[0.6875rem] whitespace-nowrap tabular-nums text-text-muted">
                 {km(p.distanceM)}
               </span>
             )}

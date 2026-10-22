@@ -116,7 +116,7 @@ export function ThresholdChart({
             style={{ top: `${y(v)}%` }}
             aria-hidden
           >
-            <span className="w-10 -translate-y-1/2 font-mono text-[11px] text-[var(--chart-axis-text)] tabular-nums">
+            <span className="w-10 -translate-y-1/2 font-mono text-[0.6875rem] text-[var(--chart-axis-text)] tabular-nums">
               {label(shown[0], v)}
             </span>
             <span className="h-px flex-1 -translate-y-1/2 border-t border-dashed border-[var(--chart-grid)]" />
@@ -178,7 +178,7 @@ export function ThresholdChart({
                   />
                   {edge && (
                     <span
-                      className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[13px] font-semibold tabular-nums"
+                      className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.8125rem] font-semibold tabular-nums"
                       style={{
                         color,
                         ...(t === lowest
@@ -196,7 +196,7 @@ export function ThresholdChart({
         </div>
       </div>
       <div
-        className="relative ml-12 mt-3 h-4 font-mono text-[11px] text-text-subtle"
+        className="relative ml-12 mt-3 h-4 font-mono text-[0.6875rem] text-text-subtle"
         aria-hidden
       >
         {months.map((iso) => (
@@ -233,7 +233,7 @@ export function ThresholdLegend({
     trends.some((t) => t.key === key && t.points.length > 0),
   );
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-text-muted">
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-text-muted">
       {keys.map((key) => (
         <li key={key} className="flex items-center gap-1.5">
           <span

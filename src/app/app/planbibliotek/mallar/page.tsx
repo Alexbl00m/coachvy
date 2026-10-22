@@ -68,7 +68,7 @@ export default async function PlanTemplatesPage() {
                         <span className="block truncate text-sm font-medium text-text">
                           {latest?.title ?? t.slug}
                         </span>
-                        <span className="block text-[13px] text-text-subtle">
+                        <span className="block text-[0.8125rem] text-text-subtle">
                           {[
                             t.category?.name,
                             t.instances > 0

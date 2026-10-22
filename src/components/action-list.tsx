@@ -39,21 +39,21 @@ export function ActionList({
               className="flex min-h-16 items-center gap-3.5 px-4 py-3 transition-colors hover:bg-surface-2 [-webkit-tap-highlight-color:transparent]"
             >
               <span className="grid size-9 shrink-0 place-items-center rounded-md bg-surface-2 text-text-muted">
-                <Icon aria-hidden className="size-[18px]" />
+                <Icon aria-hidden className="size-[1.125rem]" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-medium text-text">
+                <span className="block text-[0.9375rem] font-medium text-text">
                   {item.title}
                 </span>
                 {item.description && (
-                  <span className="block text-[13px] leading-snug text-text-muted">
+                  <span className="block text-[0.8125rem] leading-snug text-text-muted">
                     {item.description}
                   </span>
                 )}
                 {item.status && (
                   <span
                     className={cn(
-                      "mt-1 block text-[12px] tabular-nums",
+                      "mt-1 block text-[0.75rem] tabular-nums",
                       item.pending
                         ? "font-medium text-warn"
                         : "text-text-subtle",

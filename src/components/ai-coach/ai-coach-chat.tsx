@@ -158,7 +158,7 @@ export function AiCoachChat({
               </p>
             </div>
           ) : (
-            <ul className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
+            <ul className="max-h-[32.5rem] space-y-4 overflow-y-auto pr-1">
               {messages.map((message) => (
                 <Bubble
                   key={message.id}
@@ -173,7 +173,7 @@ export function AiCoachChat({
               {optimistic !== null && (
                 <>
                   <Bubble role="user" content={optimistic} fresh />
-                  <li className="flex items-center gap-2 text-[13px] text-text-subtle">
+                  <li className="flex items-center gap-2 text-[0.8125rem] text-text-subtle">
                     <Bot aria-hidden className="size-4 animate-pulse text-text-muted" />
                     Räknar igenom talen …
                   </li>
@@ -225,7 +225,7 @@ export function AiCoachChat({
               <Send aria-hidden className="size-4" />
               {pending ? "Frågar …" : "Fråga"}
             </Button>
-            <span className="text-[13px] text-text-subtle">
+            <span className="text-[0.8125rem] text-text-subtle">
               {blocked
                 ? blocked
                 : configured
@@ -295,7 +295,7 @@ function Bubble({
           mine ? "border-accent/40 bg-accent-soft" : "border-line bg-surface-2",
         )}
       >
-        <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.08em] text-text-subtle">
+        <p className="mb-1 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle">
           {mine ? "Du" : "AI Coach"}
         </p>
         <p className="whitespace-pre-line text-sm leading-relaxed text-text">

@@ -24,15 +24,15 @@ export function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={htmlFor}
-        className="flex items-baseline justify-between text-[13px] font-medium text-text"
+        className="flex items-baseline justify-between text-[0.8125rem] font-medium text-text"
       >
         <span>{label}</span>
         {optional && (
-          <span className="text-[11px] font-normal text-text-subtle">valfritt</span>
+          <span className="text-[0.6875rem] font-normal text-text-subtle">valfritt</span>
         )}
       </label>
       {children}
-      {hint && <p className="text-[11px] text-text-subtle">{hint}</p>}
+      {hint && <p className="text-[0.6875rem] text-text-subtle">{hint}</p>}
     </div>
   );
 }

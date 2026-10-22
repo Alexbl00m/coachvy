@@ -33,7 +33,7 @@ export function RacePredictionsCard({
   return (
     <Card className="min-w-0">
       <CardTitle>{title}</CardTitle>
-      <p className="mb-3 text-[13px] text-text-muted">{source}</p>
+      <p className="mb-3 text-[0.8125rem] text-text-muted">{source}</p>
       <DataTable
         headers={["Distans", "Tid", "Tempo"]}
         minWidth={360}
@@ -44,7 +44,7 @@ export function RacePredictionsCard({
         ])}
       />
       {(note || rows.some((r) => r.uncertain)) && (
-        <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           {rows.some((r) => r.uncertain) && "* Utanför modellens säkra spann. "}
           {note}
         </p>

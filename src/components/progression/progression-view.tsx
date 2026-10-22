@@ -127,7 +127,7 @@ function Headline({ trend, sport }: { trend: Trend; sport: Sport }) {
         {latest.shown.value}
         {latest.shown.unit && <Unit>{latest.shown.unit}</Unit>}
       </p>
-      <div className="mt-4 flex items-baseline justify-between gap-3 text-[12px] tabular-nums">
+      <div className="mt-4 flex items-baseline justify-between gap-3 text-[0.75rem] tabular-nums">
         <span className="truncate text-text-subtle">
           {longDate(latest.last.performedOn)}
         </span>
@@ -175,7 +175,7 @@ function TrendGroups({
     <div className="space-y-8">
       {groups.map((g) => (
         <section key={g.title} className="space-y-3">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+          <h2 className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-text-muted">
             {g.title}
           </h2>
           <MetricTrends trends={g.trends} sport={sport} />
@@ -183,7 +183,7 @@ function TrendGroups({
       ))}
       {rest.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+          <h2 className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-text-muted">
             Övrigt
           </h2>
           <MetricTrends trends={rest} sport={sport} />
@@ -225,7 +225,7 @@ function Tabs({
               scroll={false}
               className={cn(
                 "inline-flex items-center gap-2 whitespace-nowrap rounded-full transition-colors",
-                size === "md" ? "h-9 px-4 text-sm" : "h-9 px-3.5 text-[13px]",
+                size === "md" ? "h-9 px-4 text-sm" : "h-9 px-3.5 text-[0.8125rem]",
                 item.active
                   ? size === "md"
                     ? "bg-text font-medium text-canvas"
@@ -237,7 +237,7 @@ function Tabs({
               {item.count !== undefined && (
                 <span
                   className={cn(
-                    "font-mono text-[11px] tabular-nums",
+                    "font-mono text-[0.6875rem] tabular-nums",
                     item.active ? "text-canvas/60" : "text-text-subtle",
                   )}
                 >
@@ -452,7 +452,7 @@ export function ProgressionView({
                 Trösklar över tid
               </CardTitle>
               <ThresholdChart trends={trends} sport={sport} />
-              <p className="mt-4 text-[13px] text-text-muted">
+              <p className="mt-4 text-[0.8125rem] text-text-muted">
                 {thresholdNote(trends, sport)}
               </p>
             </Card>
@@ -464,12 +464,12 @@ export function ProgressionView({
                 <Card className="min-w-0">
                   <CardLabel>Kort analys</CardLabel>
                   <CardHeadline>{analysisHeadline(trends, sport)}</CardHeadline>
-                  <div className="mt-4 max-w-2xl space-y-2 text-[15px] leading-relaxed text-text-muted">
+                  <div className="mt-4 max-w-2xl space-y-2 text-[0.9375rem] leading-relaxed text-text-muted">
                     {analysis.map((line) => (
                       <p key={line}>{line}</p>
                     ))}
                   </div>
-                  <p className="mt-4 text-[12px] text-text-subtle">
+                  <p className="mt-4 text-[0.75rem] text-text-subtle">
                     Första mot senaste test i varje serie.
                   </p>
                 </Card>

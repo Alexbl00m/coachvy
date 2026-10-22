@@ -38,7 +38,7 @@ export function RecomputeButton({ adeptId }: { adeptId: string }) {
         {pending ? "Räknar om…" : "Räkna om med dagens metoder"}
       </Button>
       {message && (
-        <span role="status" className="text-[13px] text-text-muted">
+        <span role="status" className="text-[0.8125rem] text-text-muted">
           {message}
         </span>
       )}

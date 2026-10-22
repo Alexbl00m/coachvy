@@ -241,7 +241,7 @@ function WeekBlock({
   return (
     <div className="rounded-lg border border-line bg-surface">
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
-        <span className="text-[13px] font-semibold text-text tabular-nums">
+        <span className="text-[0.8125rem] font-semibold text-text tabular-nums">
           Vecka {week.position}
         </span>
         <div className="w-40 shrink-0">
@@ -250,7 +250,7 @@ function WeekBlock({
             disabled={!editable || pending}
             value={week.kind}
             onChange={(e) => onSave({ kind: e.target.value as WeekKind })}
-            className="h-8 py-1 text-[13px]"
+            className="h-8 py-1 text-[0.8125rem]"
           >
             {WEEK_KINDS.map((k) => (
               <option key={k.key} value={k.key}>
@@ -267,11 +267,11 @@ function WeekBlock({
             placeholder="Rubrik, till exempel Volymvecka"
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => title !== (week.title ?? "") && onSave({ title })}
-            className="h-8 py-1 text-[13px]"
+            className="h-8 py-1 text-[0.8125rem]"
           />
         </div>
         <label
-          className="flex shrink-0 items-center gap-1.5 text-[13px] text-text-muted"
+          className="flex shrink-0 items-center gap-1.5 text-[0.8125rem] text-text-muted"
           title="I slutet av veckan ses formuppskattningen över, och tempona följer med."
         >
           <input
@@ -328,7 +328,7 @@ function WeekBlock({
             const own = sessions.filter((s) => s.day === day);
             return (
               <div key={day ?? "valfri"} className="min-h-24 space-y-1.5 p-2">
-                <p className="text-[11px] font-medium text-text-subtle">
+                <p className="text-[0.6875rem] font-medium text-text-subtle">
                   {day === null
                     ? "Valfri dag"
                     : `${DAY_SHORT[day]} · dag ${day + 1}`}
@@ -352,7 +352,7 @@ function WeekBlock({
                           disciplineName={disciplineName(s.discipline)}
                         />
                       )}
-                      <span className="mt-1 block text-[11px] text-text-subtle">
+                      <span className="mt-1 block text-[0.6875rem] text-text-subtle">
                         {levels
                           .filter((l) =>
                             s.variants.some((v) => v.levelId === l.id),
@@ -443,10 +443,10 @@ function VolumeStrip({
     );
   };
   const field =
-    "h-7 w-14 rounded-md border border-line bg-surface-2 px-1.5 text-right text-[13px] tabular-nums text-text focus:border-text-subtle focus:outline-none disabled:opacity-60";
+    "h-7 w-14 rounded-md border border-line bg-surface-2 px-1.5 text-right text-[0.8125rem] tabular-nums text-text focus:border-text-subtle focus:outline-none disabled:opacity-60";
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-3 py-2 text-[13px]">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-3 py-2 text-[0.8125rem]">
       <span className="text-text-muted">Volym</span>
       {levels.map((l) => (
         <span key={l.id} className="flex items-center gap-1">

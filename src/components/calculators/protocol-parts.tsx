@@ -92,20 +92,20 @@ export function ProtocolPicker({
             >
               <span className="flex flex-wrap items-baseline gap-2">
                 <span className="text-sm font-medium text-text">{item.label}</span>
-                <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] text-text-muted">
+                <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.6875rem] text-text-muted">
                   {item.remote ? "på distans" : "på plats"}
                 </span>
                 {item.membersOnly && (
-                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[11px] text-text">
+                  <span className="inline-flex items-center gap-1 rounded bg-surface-3 px-1.5 py-0.5 text-[0.6875rem] text-text">
                     <Lock aria-hidden className="size-3" />
                     {locked ? "Ingår i medlemskapet" : "Medlem"}
                   </span>
                 )}
               </span>
-              <span className="mt-1.5 block text-[13px] leading-relaxed text-text-muted">
+              <span className="mt-1.5 block text-[0.8125rem] leading-relaxed text-text-muted">
                 {item.purpose}
               </span>
-              <span className="mt-2 block text-[12px] text-text-subtle">
+              <span className="mt-2 block text-[0.75rem] text-text-subtle">
                 Ger: {item.produces.join(", ")}
               </span>
             </button>
@@ -182,41 +182,41 @@ export function EffortTable({
         >
           <thead>
             <tr className="border-b border-line text-left">
-              <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+              <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                 #
               </th>
               {shape?.intensity && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   Belastning ({unit})
                 </th>
               )}
               {shape?.duration && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   {spec?.columnLabels?.duration ?? "Längd (m:ss)"}
                 </th>
               )}
               {shape?.distance && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   {spec?.columnLabels?.distance ?? "Sträcka (m)"}
                 </th>
               )}
               {shape?.lactate && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   Laktat
                 </th>
               )}
               {shape?.heartRate && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   {spec?.columnLabels?.heartRate ?? "Puls"}
                 </th>
               )}
               {shape?.rpe && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   RPE (1–10)
                 </th>
               )}
               {showDates && (
-                <th className="pb-2 pr-3 text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
                   Datum
                 </th>
               )}
@@ -226,7 +226,7 @@ export function EffortTable({
           <tbody>
             {rows.map((row, index) => (
               <tr key={row.id} className="border-b border-line last:border-b-0">
-                <td className="py-2 pr-3 text-[13px] text-text-subtle tabular-nums whitespace-nowrap">
+                <td className="py-2 pr-3 text-[0.8125rem] text-text-subtle tabular-nums whitespace-nowrap">
                   {spec?.rowLabels?.[index] ?? index + firstRow}
                 </td>
                 {shape?.intensity && (
@@ -398,7 +398,7 @@ export function BodyFields({ calc }: { calc: ProtocolCalculator }) {
                 onUse={(pct) => calc.setBodyFat(String(pct).replace(".", ","))}
               />
             ) : (
-              <p className="text-[12px] text-text-subtle">
+              <p className="text-[0.75rem] text-text-subtle">
                 Inget mätt värde? Välj kön, så går det att uppskatta ur BMI.
               </p>
             )}
@@ -444,7 +444,7 @@ export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
   return (
     <Card className="min-w-0 print:hidden">
       <CardTitle>Slutet på testet</CardTitle>
-      <p className="-mt-1 mb-4 text-[13px] leading-relaxed text-text-muted">
+      <p className="-mt-1 mb-4 text-[0.8125rem] leading-relaxed text-text-muted">
         Avsluta all-out: en ramp till utmattning eller ett VO2max-test. Toppen
         är det tröskeln mäts mot, och det som gör att VLamax kan räknas ur testet.
       </p>
@@ -485,8 +485,8 @@ export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
       </div>
 
       <div className="mt-5 border-t border-line pt-4">
-        <p className="text-[13px] font-medium text-text">{peakName} ur rampen</p>
-        <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
+        <p className="text-[0.8125rem] font-medium text-text">{peakName} ur rampen</p>
+        <p className="mt-1 text-[0.8125rem] leading-relaxed text-text-muted">
           Sista nivån atleten klarade helt, plus den del av nästa som hanns med.
         </p>
         <div className="mt-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
@@ -509,7 +509,7 @@ export function FinishCard({ calc }: { calc: ProtocolCalculator }) {
               fromRamp !== null &&
               calc.setFinish({ peak: trimDecimals(sv(fromRamp, watts ? 0 : 2)) })
             }
-            className="col-span-2 mb-[22px] rounded-md border border-line-strong px-3 py-2 text-[13px] text-text transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1"
+            className="col-span-2 mb-[1.375rem] rounded-md border border-line-strong px-3 py-2 text-[0.8125rem] text-text transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1"
           >
             {fromRamp !== null ? `Använd ${sv(fromRamp, watts ? 0 : 2)}` : "Använd"}
           </button>

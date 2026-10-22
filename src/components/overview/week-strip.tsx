@@ -57,7 +57,7 @@ export function WeekStrip({
                 <span className="mt-3 block truncate text-sm font-medium text-text">
                   {first.title}
                 </span>
-                <span className="mt-0.5 block font-mono text-[12px] text-text-subtle tabular-nums">
+                <span className="mt-0.5 block font-mono text-[0.75rem] text-text-subtle tabular-nums">
                   {first.profile.length > 0
                     ? hoursMinutes(profileSeconds(first.profile))
                     : (first.duration ?? "")}
@@ -65,7 +65,7 @@ export function WeekStrip({
                 </span>
               </span>
             ) : (
-              <span className="headline mt-4 block text-[28px] italic text-text-subtle">
+              <span className="headline mt-4 block text-[1.75rem] italic text-text-subtle">
                 Vila
               </span>
             )}

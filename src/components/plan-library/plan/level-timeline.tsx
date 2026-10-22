@@ -29,7 +29,7 @@ export function LevelTimeline({
             key={week}
             title={`Vecka ${week}: ${level?.key ?? "?"}`}
             className={cn(
-              "flex h-8 w-8 flex-col items-center justify-center rounded-[4px] text-[11px] leading-none tabular-nums",
+              "flex h-8 w-8 flex-col items-center justify-center rounded-[4px] text-[0.6875rem] leading-none tabular-nums",
               week < currentWeek && "opacity-45",
               week === currentWeek &&
                 "outline outline-1 outline-offset-1 outline-text-muted",
@@ -41,7 +41,7 @@ export function LevelTimeline({
             }}
           >
             <span className="font-semibold">{level?.key ?? "?"}</span>
-            <span className="text-[9px] opacity-80">{week}</span>
+            <span className="text-[0.5625rem] opacity-80">{week}</span>
           </li>
         );
       })}

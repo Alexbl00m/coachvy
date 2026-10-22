@@ -36,7 +36,7 @@ export function StructureText({
 }) {
   const parts = text.replace(/(\d)x\(/g, "$1×(").split(TOKEN);
   return (
-    <p className="font-mono text-[13px] leading-relaxed text-text-muted sm:text-sm">
+    <p className="font-mono text-[0.8125rem] leading-relaxed text-text-muted sm:text-sm">
       {parts.map((part, i) => {
         if (i % 2 === 0) return part;
         const zone = zoneOfToken(part, basis);

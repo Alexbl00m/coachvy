@@ -44,11 +44,11 @@ const columns = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-line px-5 sm:px-8">
-      <div className="mx-auto max-w-[1120px] py-16">
+      <div className="mx-auto max-w-[70rem] py-16">
         <div className="grid gap-12 lg:grid-cols-[1.3fr_repeat(4,minmax(0,1fr))]">
           <div>
             <SiteLogo className="inline-block rounded-md" />
-            <p className="mt-5 max-w-xs text-[14px] leading-relaxed text-text-muted">
+            <p className="mt-5 max-w-xs text-[0.875rem] leading-relaxed text-text-muted">
               {site.tagline}. {site.location}.
             </p>
           </div>
@@ -56,10 +56,10 @@ export function SiteFooter() {
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:col-span-4">
             {columns.map((column) => (
               <div key={column.title}>
-                <h2 className="text-[13px] font-medium text-text">
+                <h2 className="text-[0.8125rem] font-medium text-text">
                   {column.title}
                 </h2>
-                <ul className="mt-4 space-y-2.5 text-[13px]">
+                <ul className="mt-4 space-y-2.5 text-[0.8125rem]">
                   {column.links.map(([label, href]) => (
                     <li key={label}>
                       <Link
@@ -76,7 +76,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col gap-4 border-t border-line pt-6 text-[13px] text-text-subtle sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-16 flex flex-col gap-4 border-t border-line pt-6 text-[0.8125rem] text-text-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {site.name} ·{" "}
             <a

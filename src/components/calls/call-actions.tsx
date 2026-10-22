@@ -58,7 +58,7 @@ export function CallActions({
 
   if (!meetingUrl) {
     return (
-      <p className="text-[13px] text-text-muted">
+      <p className="text-[0.8125rem] text-text-muted">
         <Video aria-hidden className="mr-1.5 inline size-4 align-[-3px]" />
         Vill du ringa på video?{" "}
         <Link
@@ -195,7 +195,7 @@ export function CallActions({
       )}
 
       {error && (
-        <p role="alert" className="text-[13px] text-bad">
+        <p role="alert" className="text-[0.8125rem] text-bad">
           {error}
         </p>
       )}

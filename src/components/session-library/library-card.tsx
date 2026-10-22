@@ -15,7 +15,7 @@ import {
 } from "@/lib/session-library/library";
 
 const chip =
-  "rounded-sm bg-surface-3 px-1.5 py-px text-[11px] font-medium text-text-muted";
+  "rounded-sm bg-surface-3 px-1.5 py-px text-[0.6875rem] font-medium text-text-muted";
 
 const DETAILS: [
   "description" | "adaptations" | "fueling" | "timing" | "progression",
@@ -82,7 +82,7 @@ export function LibraryCard({
           </p>
         </div>
         {amount && (
-          <span className="shrink-0 text-[13px] tabular-nums text-text-muted">
+          <span className="shrink-0 text-[0.8125rem] tabular-nums text-text-muted">
             {amount}
           </span>
         )}
@@ -101,7 +101,7 @@ export function LibraryCard({
               aria-pressed={l.key === level}
               onClick={() => (onLevel ?? setOwn)(l.key)}
               className={cn(
-                "rounded-sm px-2 py-0.5 text-[12px] font-medium tabular-nums transition-colors",
+                "rounded-sm px-2 py-0.5 text-[0.75rem] font-medium tabular-nums transition-colors",
                 l.key === level
                   ? "bg-surface-3 text-text"
                   : "text-text-subtle hover:text-text",
@@ -116,7 +116,7 @@ export function LibraryCard({
       <WorkoutStrip blocks={profile} className="h-7" />
 
       <p
-        className="font-mono text-[12px] leading-snug break-words text-text-muted"
+        className="font-mono text-[0.75rem] leading-snug break-words text-text-muted"
         title={`Procent av ${basisName(session.basis).toLowerCase()}`}
       >
         {shown.structure}
@@ -125,7 +125,7 @@ export function LibraryCard({
       {session.purpose && (
         <p
           className={cn(
-            "text-[13px] leading-snug text-text",
+            "text-[0.8125rem] leading-snug text-text",
             compact && "line-clamp-2",
           )}
         >
@@ -134,14 +134,14 @@ export function LibraryCard({
       )}
 
       {!compact && more && (
-        <details className="group text-[13px] text-text-muted">
-          <summary className="cursor-pointer select-none text-[12px] text-text-subtle hover:text-text">
+        <details className="group text-[0.8125rem] text-text-muted">
+          <summary className="cursor-pointer select-none text-[0.75rem] text-text-subtle hover:text-text">
             Mer
           </summary>
           <dl className="mt-2 space-y-2">
             {details.map(([field, heading]) => (
               <div key={field}>
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+                <dt className="text-[0.6875rem] font-medium uppercase tracking-wide text-text-subtle">
                   {heading}
                 </dt>
                 <dd className="whitespace-pre-line">{session[field]}</dd>
@@ -149,7 +149,7 @@ export function LibraryCard({
             ))}
             {phases && (
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+                <dt className="text-[0.6875rem] font-medium uppercase tracking-wide text-text-subtle">
                   Faser
                 </dt>
                 <dd>{phases}</dd>

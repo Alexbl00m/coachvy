@@ -120,7 +120,7 @@ export function MessageThread({
           syns bara för er två.
         </p>
       ) : (
-        <ul className="max-h-[460px] space-y-3 overflow-y-auto pr-1">
+        <ul className="max-h-[28.75rem] space-y-3 overflow-y-auto pr-1">
           {messages.map((message) => {
             const mine = message.sender_id === viewerId;
             return (
@@ -136,7 +136,7 @@ export function MessageThread({
                       : "border-line bg-surface-2",
                   )}
                 >
-                  <p className="flex items-baseline gap-2 text-[11px] text-text-subtle">
+                  <p className="flex items-baseline gap-2 text-[0.6875rem] text-text-subtle">
                     <span className="font-medium text-text-muted">
                       {senderName(message)}
                     </span>
@@ -221,7 +221,7 @@ export function MessageThread({
             <Send aria-hidden className="size-4" />
             {pending ? "Skickar …" : "Skicka"}
           </Button>
-          <span className="text-[13px] text-text-subtle">
+          <span className="text-[0.8125rem] text-text-subtle">
             Ctrl + Enter skickar.
           </span>
         </div>

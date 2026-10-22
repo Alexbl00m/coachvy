@@ -121,7 +121,7 @@ export function VlamaxCalculator({
 
         </div>
 
-        <p className="mt-5 border-t border-line pt-4 text-[13px] leading-relaxed text-text-muted">
+        <p className="mt-5 border-t border-line pt-4 text-[0.8125rem] leading-relaxed text-text-muted">
           Modellen läser sprinteffekten per kilo fettfri massa, plus kön. VLamax
           är glykolytisk förmåga per muskelmassa, och det är det måttet som
           följer den – en tung atlet med stor sprint kan ha lägre VLamax än en
@@ -149,21 +149,21 @@ export function VlamaxCalculator({
                   mmol/l/s
                 </span>
               </p>
-              <p className="mt-2 text-[13px] text-text-muted">
+              <p className="mt-2 text-[0.8125rem] text-text-muted">
                 Typiskt fel ±{prediction.rmse.toFixed(2).replace(".", ",")} på en atlet modellen
                 inte sett.
               </p>
-              <p className="mt-1 text-[12px] text-text-subtle">
+              <p className="mt-1 text-[0.75rem] text-text-subtle">
                 Tränad på {prediction.sampleCount} uppmätta atleter.
               </p>
 
               {prediction.outOfRange.length > 0 && (
                 <div className="mt-4 rounded-md border border-accent/40 bg-accent-soft p-3">
-                  <p className="flex items-center gap-2 text-[13px] font-medium text-text">
+                  <p className="flex items-center gap-2 text-[0.8125rem] font-medium text-text">
                     <AlertTriangle aria-hidden className="size-4 text-warn" />
                     Utanför referensdatan
                   </p>
-                  <ul className="mt-2 space-y-1 text-[12px] text-text-muted">
+                  <ul className="mt-2 space-y-1 text-[0.75rem] text-text-muted">
                     {prediction.outOfRange.map((warning) => (
                       <li key={warning.label}>
                         {warning.label}: {warning.value} {warning.unit} — datan
@@ -171,7 +171,7 @@ export function VlamaxCalculator({
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-2 text-[12px] text-text-muted">
+                  <p className="mt-2 text-[0.75rem] text-text-muted">
                     Siffran är en extrapolation här och bör inte litas på.
                   </p>
                 </div>

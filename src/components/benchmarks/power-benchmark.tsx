@@ -129,7 +129,7 @@ export function PowerBenchmark({
                 aria-pressed={periodKey === p.key}
                 onClick={() => setPeriodKey(p.key)}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-[13px] transition-colors",
+                  "rounded-md border px-2.5 py-1 text-[0.8125rem] transition-colors",
                   periodKey === p.key
                     ? "border-text-subtle bg-surface-3 text-text"
                     : "border-line-strong text-text-muted hover:text-text",
@@ -155,7 +155,7 @@ export function PowerBenchmark({
         </p>
       ) : (
         <>
-          <p className="max-w-3xl text-[13px] leading-relaxed text-text-subtle">
+          <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-subtle">
             Bästa effekt per kilo{" "}
             {range.from
               ? `mellan ${longDate(range.from)} och ${longDate(range.to)}`
@@ -194,7 +194,7 @@ export function PowerBenchmark({
           <div className="mt-5 overflow-x-auto">
             <table className="w-full border-collapse text-sm whitespace-nowrap tabular-nums">
               <thead>
-                <tr className="border-b border-line text-left text-[12px] text-text-muted">
+                <tr className="border-b border-line text-left text-[0.75rem] text-text-muted">
                   <th className="py-2 pr-3 font-medium">Längd</th>
                   <th className="py-2 pr-3 text-right font-medium">Effekt</th>
                   <th className="py-2 pr-3 text-right font-medium">W/kg</th>
@@ -242,7 +242,7 @@ export function PowerBenchmark({
             </table>
           </div>
 
-          <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
             Källa: Allen &amp; Coggan,{" "}
             <i>Training and Racing with a Power Meter</i> – kategoriernas nedre
             gränser. 20 minuter jämförs mot tröskelns gränser delade med 0,95.

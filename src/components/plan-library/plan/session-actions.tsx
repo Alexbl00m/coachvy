@@ -89,7 +89,7 @@ export function SessionActions({
               )
             }
             className={cn(
-              "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[12px] transition-colors disabled:opacity-50",
+              "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[0.75rem] transition-colors disabled:opacity-50",
               log?.status === key
                 ? "border-text-subtle bg-surface-3 text-text"
                 : "border-line text-text-muted hover:border-text-subtle hover:text-text",
@@ -103,7 +103,7 @@ export function SessionActions({
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className="ml-auto inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[12px] text-text-muted hover:text-text"
+          className="ml-auto inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[0.75rem] text-text-muted hover:text-text"
         >
           Mer
           <ChevronDown
@@ -299,7 +299,7 @@ export function SessionActions({
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-1 text-[12px] text-warn">
+        <p role="alert" className="mt-1 text-[0.75rem] text-warn">
           {error}
         </p>
       )}

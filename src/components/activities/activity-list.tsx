@@ -61,7 +61,7 @@ export function ActivityList({
                   )}
                   <span className="truncate">{a.name}</span>
                 </span>
-                <span className="block text-[12px] text-text-subtle">
+                <span className="block text-[0.75rem] text-text-subtle">
                   {a.performed_on}
                   {a.imported ? " · ur historiken" : ""}
                   {a.race_id &&
@@ -90,7 +90,7 @@ export function ActivityList({
       {hidden > 0 && moreHref && (
         <Link
           href={moreHref}
-          className="mt-3 inline-block text-[13px] text-text-muted hover:text-text"
+          className="mt-3 inline-block text-[0.8125rem] text-text-muted hover:text-text"
         >
           Visa alla {total} aktiviteter
         </Link>

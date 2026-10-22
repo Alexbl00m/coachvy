@@ -36,7 +36,7 @@ function WeekBars({
     <div className="min-w-0">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-sm font-medium text-text">{label}</p>
-        <p className="text-[13px] text-text-muted tabular-nums">
+        <p className="text-[0.8125rem] text-text-muted tabular-nums">
           Den här veckan:{" "}
           <span className="text-text">{format(value(last))}</span>
         </p>
@@ -59,7 +59,7 @@ function WeekBars({
         })}
       </div>
       <div
-        className="mt-1 flex justify-between text-[12px] text-text-subtle tabular-nums"
+        className="mt-1 flex justify-between text-[0.75rem] text-text-subtle tabular-nums"
         aria-hidden
       >
         <span>v {isoWeek(weeks[0].monday)}</span>
@@ -126,7 +126,7 @@ export function LoadCard({
         </div>
       )}
 
-      <p className="mt-4 text-[13px] leading-relaxed text-text-muted">
+      <p className="mt-4 text-[0.8125rem] leading-relaxed text-text-muted">
         Volym är tiden i träning. Strain är arbetet över CP (CS), räknat i W′
         (D′): 1 W′ är arbete ovanför tröskeln som motsvarar en full anaerob
         reserv. De hålls isär eftersom tre lugna timmar och en timme hårda

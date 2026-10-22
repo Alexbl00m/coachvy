@@ -16,7 +16,7 @@ export function ResultGrid({ items }: { items: ResultItem[] }) {
           key={item.label}
           className="rounded-lg border border-line bg-surface p-5"
         >
-          <dt className="text-[12px] font-medium uppercase tracking-[0.1em] text-text-muted">
+          <dt className="text-[0.75rem] font-medium uppercase tracking-[0.1em] text-text-muted">
             {item.label}
           </dt>
           <dd className="mt-2 text-2xl font-semibold tracking-tight text-text tabular-nums">
@@ -28,7 +28,7 @@ export function ResultGrid({ items }: { items: ResultItem[] }) {
             )}
           </dd>
           {item.hint && (
-            <p className="mt-1 text-[12px] text-text-subtle">{item.hint}</p>
+            <p className="mt-1 text-[0.75rem] text-text-subtle">{item.hint}</p>
           )}
         </div>
       ))}

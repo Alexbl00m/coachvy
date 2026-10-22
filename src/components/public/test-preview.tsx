@@ -153,7 +153,7 @@ export function TestPreview({ className }: { className?: string }) {
         aria-hidden
         className="lift overflow-hidden rounded-xl border border-line-strong bg-surface select-none"
       >
-        <div className="flex h-11 items-center justify-between border-b border-line px-4 text-[13px]">
+        <div className="flex h-11 items-center justify-between border-b border-line px-4 text-[0.8125rem]">
           <span className="truncate text-text-subtle">
             <span className="hidden sm:inline">
               Adepter <span className="px-1.5">/</span>
@@ -161,7 +161,7 @@ export function TestPreview({ className }: { className?: string }) {
             Exempeladept <span className="px-1.5">/</span>
             <span className="text-text-muted">Laktattest cykel</span>
           </span>
-          <span className="rounded-[6px] border border-line-strong px-1.5 py-0.5 font-mono text-[11px] text-text-subtle">
+          <span className="rounded-[6px] border border-line-strong px-1.5 py-0.5 font-mono text-[0.6875rem] text-text-subtle">
             Exempel
           </span>
         </div>
@@ -169,7 +169,7 @@ export function TestPreview({ className }: { className?: string }) {
         <div className="grid md:grid-cols-[176px_minmax(0,1fr)]">
           <div className="hidden border-r border-line p-3 md:block">
             {/* Som sidomenyns huvud i appen, i mindre storlek. */}
-            <p className="flex items-center gap-2 px-2 pt-0.5 pb-3 text-[13px] font-semibold tracking-tight text-text">
+            <p className="flex items-center gap-2 px-2 pt-0.5 pb-3 text-[0.8125rem] font-semibold tracking-tight text-text">
               <CoachvyMark weight="bold" className="size-5" />
               Coachvy
             </p>
@@ -177,7 +177,7 @@ export function TestPreview({ className }: { className?: string }) {
               <div
                 key={item}
                 className={cn(
-                  "rounded-md px-2 py-1.5 text-[13px]",
+                  "rounded-md px-2 py-1.5 text-[0.8125rem]",
                   item === "Adepter"
                     ? "bg-surface-3 text-text"
                     : "text-text-muted",
@@ -190,10 +190,10 @@ export function TestPreview({ className }: { className?: string }) {
 
           <div className="min-w-0 p-4 sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[18px] font-semibold tracking-[-0.012em] text-text">
+              <p className="text-[1.125rem] font-semibold tracking-[-0.012em] text-text">
                 Laktattest · cykel
               </p>
-              <p className="font-mono text-[12px] text-text-subtle">
+              <p className="font-mono text-[0.75rem] text-text-subtle">
                 8 steg · 4 min per steg
               </p>
             </div>
@@ -205,13 +205,13 @@ export function TestPreview({ className }: { className?: string }) {
                 ["VO2max, uppskattad", "58", "ml/kg/min"],
               ].map(([label, value, note]) => (
                 <div key={label} className="bg-surface px-3 py-3 sm:px-4">
-                  <dt className="truncate text-[12px] text-text-muted">
+                  <dt className="truncate text-[0.75rem] text-text-muted">
                     {label}
                   </dt>
-                  <dd className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text tabular-nums sm:text-[24px]">
+                  <dd className="mt-1 text-[1.25rem] font-semibold tracking-[-0.02em] text-text tabular-nums sm:text-[1.5rem]">
                     {value}
                   </dd>
-                  <dd className="font-mono text-[11px] text-text-subtle">
+                  <dd className="font-mono text-[0.6875rem] text-text-subtle">
                     {note}
                   </dd>
                 </div>
@@ -220,14 +220,14 @@ export function TestPreview({ className }: { className?: string }) {
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_236px]">
               <div className="min-w-0">
-                <p className="mb-2 text-[12px] text-text-muted">
+                <p className="mb-2 text-[0.75rem] text-text-muted">
                   Laktat, mmol/l
                 </p>
                 <LactateChart />
               </div>
               <div className="hidden lg:block">
-                <p className="mb-2 text-[12px] text-text-muted">Zoner</p>
-                <table className="w-full text-[12px]">
+                <p className="mb-2 text-[0.75rem] text-text-muted">Zoner</p>
+                <table className="w-full text-[0.75rem]">
                   <thead>
                     <tr className="text-left text-text-subtle">
                       <th className="pb-2 font-medium">Zon</th>
@@ -257,7 +257,7 @@ export function TestPreview({ className }: { className?: string }) {
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-[13px] text-text-subtle">
+      <figcaption className="mt-3 text-[0.8125rem] text-text-subtle">
         Så ser ett laktattest ut i Coachvy: trösklarna, kurvan och zonerna du
         tränar efter. Värdena är ett exempel.
       </figcaption>

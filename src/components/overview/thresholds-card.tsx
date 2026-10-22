@@ -50,7 +50,7 @@ export function ThresholdsCard({
       {rows.length === 0 ? (
         <>
           <CardHeadline>Inga trösklar än.</CardHeadline>
-          <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
+          <p className="mt-3 text-[0.9375rem] leading-relaxed text-text-muted">
             Ett laktattest eller ett tidstest ger trösklarna, och zonerna passen
             räknas mot.
           </p>
@@ -68,7 +68,7 @@ export function ThresholdsCard({
                   <p className="truncate text-sm font-medium text-text">
                     {trend.label.replace(" – ", " · ")}
                   </p>
-                  <p className="mt-0.5 truncate text-[12px] text-text-subtle">
+                  <p className="mt-0.5 truncate text-[0.75rem] text-text-subtle">
                     {protocolLabel(latest.last.protocol)}{" "}
                     {longDate(latest.last.performedOn, today)}
                     {latest.previousShown
@@ -79,7 +79,7 @@ export function ThresholdsCard({
                 {latest.change && (
                   <span
                     className={cn(
-                      "shrink-0 font-mono text-[12px] tabular-nums",
+                      "shrink-0 font-mono text-[0.75rem] tabular-nums",
                       latest.change.tone === "good"
                         ? "text-good"
                         : latest.change.tone === "bad"

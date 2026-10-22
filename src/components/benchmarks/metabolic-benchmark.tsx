@@ -80,7 +80,7 @@ export function MetabolicBenchmark({
         </p>
       ) : (
         <>
-          <p className="max-w-3xl text-[13px] leading-relaxed text-text-subtle">
+          <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-subtle">
             Senaste värdet för varje mått ur cykeltesterna, mot{" "}
             {levels.isDefault
               ? "Coachvys utgångsnivåer"
@@ -109,7 +109,7 @@ export function MetabolicBenchmark({
           <div className="mt-5 overflow-x-auto">
             <table className="w-full border-collapse text-sm whitespace-nowrap tabular-nums">
               <thead>
-                <tr className="border-b border-line text-left text-[12px] text-text-muted">
+                <tr className="border-b border-line text-left text-[0.75rem] text-text-muted">
                   <th className="py-2 pr-3 font-medium">Mått</th>
                   <th className="py-2 pr-3 text-right font-medium">Adepten</th>
                   {levels.groups.map((g) => (
@@ -160,7 +160,7 @@ export function MetabolicBenchmark({
             </table>
           </div>
 
-          <p className="mt-3 text-[13px] leading-relaxed text-text-muted">
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
             {levels.isDefault
               ? "Utgångsnivåerna är Coachvys egna, satta ur de spann som brukar anges för uthållighetsinriktade cyklister – det finns ingen publicerad standardtabell för de här måtten. "
               : "Nivåerna är satta av coachen. "}

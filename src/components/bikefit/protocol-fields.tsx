@@ -56,7 +56,7 @@ export function Section({
           {title}
         </h2>
         {status && (
-          <span className="ml-auto text-[12px] text-text-subtle">{status}</span>
+          <span className="ml-auto text-[0.75rem] text-text-subtle">{status}</span>
         )}
       </summary>
       <div className="px-5 pb-5 sm:px-6 sm:pb-6">{children}</div>
@@ -120,7 +120,7 @@ export function BodyFields({
         {BODY.map((m) =>
           m.sides ? (
             <fieldset key={m.key} className="min-w-0">
-              <legend className="text-[13px] font-medium text-text">
+              <legend className="text-[0.8125rem] font-medium text-text">
                 {m.label}, {m.unit}
               </legend>
               <div className="mt-1.5 grid grid-cols-2 gap-2">
@@ -136,7 +136,7 @@ export function BodyFields({
                 ))}
               </div>
               {m.hint && (
-                <p className="mt-1.5 text-[11px] text-text-subtle">{m.hint}</p>
+                <p className="mt-1.5 text-[0.6875rem] text-text-subtle">{m.hint}</p>
               )}
             </fieldset>
           ) : (
@@ -156,7 +156,7 @@ export function BodyFields({
           ),
         )}
       </div>
-      <p className="mt-3 text-[12px] text-text-subtle">
+      <p className="mt-3 text-[0.75rem] text-text-subtle">
         {carried ? "Ifyllt från förra fiten – ändra det som mätts om. " : ""}
         Lårben och underben räknar om knäböjningen till millimeter sadelhöjd;
         den filmade sidan används när båda är mätta.
@@ -193,8 +193,8 @@ export function ScreeningFields({
               className="grid gap-2 border-t border-line pt-3 first:border-0 first:pt-0 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]"
             >
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-text">{t.label}</p>
-                <p className="text-[12px] text-text-subtle">
+                <p className="text-[0.8125rem] font-medium text-text">{t.label}</p>
+                <p className="text-[0.75rem] text-text-subtle">
                   {t.about}
                   {t.hint ? ` · ${t.hint}` : ""}
                 </p>
@@ -214,7 +214,7 @@ export function ScreeningFields({
                         </span>
                         <span
                           aria-hidden
-                          className="mb-1 block text-[11px] text-text-subtle"
+                          className="mb-1 block text-[0.6875rem] text-text-subtle"
                         >
                           {k === "l"
                             ? "Vänster"
@@ -235,7 +235,7 @@ export function ScreeningFields({
                 <label className="min-w-[12rem] flex-1">
                   <span
                     aria-hidden
-                    className="mb-1 block text-[11px] text-text-subtle"
+                    className="mb-1 block text-[0.6875rem] text-text-subtle"
                   >
                     Kommentar
                   </span>
@@ -287,7 +287,7 @@ export function MeasureFields({
       status={`${filled(before)} mätta · ${changed} ändrade`}
       defaultOpen
     >
-      <p className="mb-4 max-w-3xl text-[13px] text-text-muted">
+      <p className="mb-4 max-w-3xl text-[0.8125rem] text-text-muted">
         Före är cykeln som den kom
         {carried ? " – ifyllt från förra fitens slutläge" : ""}. Fyll i efter
         bara där du ändrade något; tomt betyder oförändrat.
@@ -295,11 +295,11 @@ export function MeasureFields({
       <div className="space-y-5">
         {groups.map(({ g, items }) => (
           <div key={g} className="min-w-0">
-            <h3 className="mb-2 text-[13px] font-semibold text-text">
+            <h3 className="mb-2 text-[0.8125rem] font-semibold text-text">
               {MEASURE_GROUPS[g]}
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[30rem] text-[13px]">
+              <table className="w-full min-w-[30rem] text-[0.8125rem]">
                 <thead className="sr-only">
                   <tr>
                     <th scope="col">Mått</th>
@@ -321,7 +321,7 @@ export function MeasureFields({
                             {unit}
                           </span>
                           {m.hint && (
-                            <span className="block text-[11px] text-text-subtle">
+                            <span className="block text-[0.6875rem] text-text-subtle">
                               {m.hint}
                             </span>
                           )}

@@ -44,7 +44,7 @@ export default async function StartPlanPage({
     <>
       <Link
         href={back}
-        className="mb-3 inline-flex items-center gap-1 text-[13px] text-text-muted hover:text-text"
+        className="mb-3 inline-flex items-center gap-1 text-[0.8125rem] text-text-muted hover:text-text"
       >
         <ChevronLeft aria-hidden className="size-4" />
         {version.title}

@@ -240,7 +240,7 @@ export function NewSessionForm({
           </div>
 
           {calc.spec && (
-            <p className="mt-4 border-t border-line pt-3 text-[13px] leading-relaxed text-text-muted">
+            <p className="mt-4 border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
               {calc.spec.howTo}
             </p>
           )}
@@ -291,7 +291,7 @@ export function NewSessionForm({
         <Button type="button" onClick={save} disabled={!canSave}>
           {pending ? "Sparar …" : "Spara testtillfället"}
         </Button>
-        <span className="text-[13px] text-text-subtle">
+        <span className="text-[0.8125rem] text-text-subtle">
           {calc.pending && calc.filled.length > 0
             ? "Räknar …"
             : calc.analysis.metrics.length === 0

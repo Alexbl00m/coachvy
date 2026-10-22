@@ -46,7 +46,7 @@ export function ReferenceData({ samples }: { samples: VlamaxSample[] }) {
       </p>
 
       {counts.kvinna < 5 && (
-        <p className="mt-3 rounded-md border border-line bg-surface-2 p-3 text-[12px] leading-relaxed text-text-muted">
+        <p className="mt-3 rounded-md border border-line bg-surface-2 p-3 text-[0.75rem] leading-relaxed text-text-muted">
           Kön är en variabel i modellen, och den vilar på bara {counts.kvinna}{" "}
           {counts.kvinna === 1 ? "kvinna" : "kvinnor"}. Beräkningar för kvinnor
           är därför betydligt osäkrare än siffran ovan antyder — behandla dem som

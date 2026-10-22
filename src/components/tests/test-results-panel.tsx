@@ -121,8 +121,8 @@ export function TestResultsPanel({
                           onClick={() => setSelectedType(type.id)}
                           className={
                             active
-                              ? "rounded-md border border-text-subtle bg-surface-3 px-2.5 py-1 text-[12px] font-medium text-ink-50"
-                              : "rounded-md border border-ink-600 px-2.5 py-1 text-[12px] text-ink-300 hover:border-ink-500 hover:text-ink-100"
+                              ? "rounded-md border border-text-subtle bg-surface-3 px-2.5 py-1 text-[0.75rem] font-medium text-ink-50"
+                              : "rounded-md border border-ink-600 px-2.5 py-1 text-[0.75rem] text-ink-300 hover:border-ink-500 hover:text-ink-100"
                           }
                         >
                           {type.label}
@@ -151,7 +151,7 @@ export function TestResultsPanel({
             {/* relative: skärmläsartexten i en rubrik är absolut positionerad och
                 skulle annars räknas mot hela sidans bredd på en telefon. */}
             <div className="relative overflow-x-auto">
-              <table className="w-full min-w-[620px] border-collapse text-sm">
+              <table className="w-full min-w-[38.75rem] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-ink-800 text-left">
                     <th className="px-4 py-3 font-medium text-ink-300">Datum</th>

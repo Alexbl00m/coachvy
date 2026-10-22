@@ -125,7 +125,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+          <p className="text-[0.6875rem] font-medium uppercase tracking-[0.1em] text-text-muted">
             {trend.label}
           </p>
           <p className="mt-1 text-xl font-semibold tracking-tight text-text tabular-nums">
@@ -138,7 +138,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
         {change !== null && (
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 rounded-md bg-surface-2 px-2 py-1 text-[12px] font-medium tabular-nums",
+              "inline-flex items-center gap-0.5 rounded-md bg-surface-2 px-2 py-1 text-[0.75rem] font-medium tabular-nums",
               tone === "good"
                 ? "text-good"
                 : tone === "bad"
@@ -153,7 +153,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
           </span>
         )}
       </div>
-      <p className="mt-0.5 text-[12px] text-text-subtle">
+      <p className="mt-0.5 text-[0.75rem] text-text-subtle">
         {points.length === 1
           ? `ett test · ${last.date}`
           : `${points.length} tester · sedan ${first.date}`}
@@ -174,7 +174,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
               tickFormatter={(t: number) =>
                 new Date(t).toISOString().slice(2, 7)
               }
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 10 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.625rem" }}
               tickLine={false}
               axisLine={{ stroke: CHART_GRID }}
               minTickGap={20}
@@ -182,7 +182,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
             />
             <YAxis
               domain={[lo - pad, hi + pad]}
-              tick={{ fill: CHART_AXIS_TEXT, fontSize: 10 }}
+              tick={{ fill: CHART_AXIS_TEXT, fontSize: "0.625rem" }}
               tickFormatter={(v: number) => show(v).value}
               tickLine={false}
               axisLine={false}
@@ -229,7 +229,7 @@ function TrendCard({ trend, sport }: { trend: Trend; sport: Sport }) {
         </ResponsiveContainer>
       </div>
       {reading.text && (
-        <p className="mt-2 text-[12px] leading-relaxed text-text-muted">
+        <p className="mt-2 text-[0.75rem] leading-relaxed text-text-muted">
           {reading.text}
         </p>
       )}
