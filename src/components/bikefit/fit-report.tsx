@@ -1,6 +1,7 @@
 import { Card, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { DISCIPLINE_LABEL } from "@/lib/bikefit/fit";
+import { saddleFollowUp } from "@/lib/bikefit/protocol";
 import {
   assessFit,
   TEMPLATES,
@@ -10,6 +11,13 @@ import {
 } from "@/lib/bikefit/templates";
 import { longDate } from "@/lib/season/season";
 import type { BikeFitRow } from "@/lib/types/database";
+import {
+  BodyReport,
+  FindingsReport,
+  IntakeReport,
+  MeasuresReport,
+  ScreeningReport,
+} from "./protocol-report";
 import { VERDICT_BORDER, VERDICT_TEXT } from "./verdict-style";
 
 const sv = (v: number, d = 1) =>
@@ -40,12 +48,15 @@ export function AngleTile({
   a,
   previous,
   manual = false,
+  extra = null,
 }: {
   title: string;
   a: Assessed;
   previous?: number | null;
   /** Manuellt införd: ett tomt värde är inte angivet, inte omätbart. */
   manual?: boolean;
+  /** En rad till under värdet, t.ex. samma vinkel med en annan konvention. */
+  extra?: string | null;
 }) {
   const change =
     a.value !== null && previous !== null && previous !== undefined
@@ -81,6 +92,11 @@ export function AngleTile({
           ? ` · ${change > 0 ? "+" : ""}${sv(change)}° sedan förra`
           : ""}
       </p>
+      {extra && (
+        <p className="mt-0.5 text-[12px] text-text-subtle tabular-nums">
+          {extra}
+        </p>
+      )}
     </div>
   );
 }
@@ -105,6 +121,12 @@ export function FitReport({
       ? "standardben (lår 430 mm, underben 440 mm) – ange egna mått för en exaktare siffra"
       : `${a.legSource === "video" ? "benlängder ur videon" : "coachens benlängder"}: lår ${fit.legs.thighMm} mm, underben ${fit.legs.shankMm} mm`;
   const analysis = fit.analysis;
+  const followUp = saddleFollowUp({
+    anglesAt: fit.angles_at ?? "efter",
+    suggestedMm: a.saddleMm,
+    before: fit.measures_before?.saddle_height,
+    after: fit.measures.saddle_height,
+  });
 
   return (
     <div className="space-y-6">
@@ -113,14 +135,20 @@ export function FitReport({
         <p className="max-w-3xl text-[17px] font-semibold leading-snug text-text">
           {a.sentence}
         </p>
+        {followUp && (
+          <p className="mt-2 max-w-3xl text-sm text-text">{followUp}</p>
+        )}
         <p className="mt-2 text-[13px] text-text-muted">
           {DISCIPLINE_LABEL[fit.discipline]}
           {fit.bike ? ` · ${fit.bike}` : ""} · {longDate(fit.performed_on)} ·{" "}
           {fit.method === "video" ? "mätt ur video" : "mätt manuellt"}
+          {fit.angles_at === "före" ? " före ändringarna" : ""}
           {a.mmPerDegree !== null &&
             ` · ${sv(a.mmPerDegree)} mm sadelhöjd per grad, ${legsText}`}
         </p>
       </Card>
+
+      <IntakeReport fit={fit} />
 
       <section aria-labelledby="vinklar" className="min-w-0">
         <h2 id="vinklar" className="sr-only">
@@ -130,6 +158,11 @@ export function FitReport({
           <AngleTile
             title="Knä i nedre dödläget"
             a={a.knee}
+            extra={
+              a.knee.value !== null
+                ? `= knävinkel ${sv(180 - a.knee.value)}° (180° är rakt ben)`
+                : null
+            }
             manual={fit.method === "manuell"}
             previous={previous?.angles.knee}
           />
@@ -252,81 +285,21 @@ export function FitReport({
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="min-w-0">
-          <CardTitle>Cykelns mått</CardTitle>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[20rem] text-[13px] tabular-nums">
-              <thead>
-                <tr className="text-left text-text-muted">
-                  <th scope="col" className="py-1 pr-3 font-normal">
-                    Mått
-                  </th>
-                  <th scope="col" className="py-1 pr-3 text-right font-normal">
-                    Nu
-                  </th>
-                  {previous && (
-                    <th scope="col" className="py-1 text-right font-normal">
-                      {longDate(previous.performed_on)}
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {template.measures.map((m) => {
-                  const now = fit.measures[m.key];
-                  const then = previous?.measures[m.key];
-                  if (
-                    (now === undefined || now === null) &&
-                    (then === undefined || then === null)
-                  )
-                    return null;
-                  const show = (v: string | number | null | undefined) =>
-                    v === null || v === undefined
-                      ? "–"
-                      : typeof v === "number"
-                        ? `${sv(v, m.unit === "°" ? 1 : 0)}${m.unit === "text" ? "" : ` ${m.unit}`}`
-                        : v;
-                  const changed =
-                    previous &&
-                    typeof now === "number" &&
-                    typeof then === "number" &&
-                    now !== then;
-                  return (
-                    <tr key={m.key} className="border-t border-line">
-                      <th
-                        scope="row"
-                        className="py-1.5 pr-3 text-left font-normal text-text-muted"
-                      >
-                        {m.label}
-                      </th>
-                      <td className="py-1.5 pr-3 text-right text-text">
-                        {show(now)}
-                        {changed && (
-                          <span className="ml-1.5 text-[12px] text-text-subtle">
-                            ({(now as number) > (then as number) ? "+" : ""}
-                            {sv((now as number) - (then as number), 0)})
-                          </span>
-                        )}
-                      </td>
-                      {previous && (
-                        <td className="py-1.5 text-right text-text-muted">
-                          {show(then)}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {Object.keys(fit.measures).length === 0 && (
-            <p className="text-sm text-text-muted">Inga mått ifyllda.</p>
-          )}
-        </Card>
+      {(Object.keys(fit.body ?? {}).length > 0 ||
+        Object.keys(fit.screening ?? {}).length > 0) && (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <BodyReport fit={fit} />
+          <ScreeningReport fit={fit} previous={previous} />
+        </div>
+      )}
 
+      <MeasuresReport fit={fit} previous={previous} />
+
+      <FindingsReport fit={fit} />
+
+      <div className="grid gap-6">
         <Card className="min-w-0">
-          <CardTitle>Coachens anteckningar</CardTitle>
+          <CardTitle>Checklista och anteckningar</CardTitle>
           <ul className="space-y-1.5 text-[13px]">
             {template.checklist.map((item) => (
               <li key={item} className="flex gap-2">
@@ -355,7 +328,7 @@ export function FitReport({
           {fit.changes && (
             <div className="mt-4 border-t border-line pt-3">
               <p className="text-[12px] font-medium text-text-muted">
-                Ändrat vid den här fiten
+                Ändrat i korthet
               </p>
               <p className="mt-1 whitespace-pre-line text-sm text-text">
                 {fit.changes}
@@ -364,9 +337,7 @@ export function FitReport({
           )}
           {fit.notes && (
             <div className="mt-4 border-t border-line pt-3">
-              <p className="text-[12px] font-medium text-text-muted">
-                Anteckningar
-              </p>
+              <p className="text-[12px] font-medium text-text-muted">Övrigt</p>
               <p className="mt-1 whitespace-pre-line text-sm text-text">
                 {fit.notes}
               </p>

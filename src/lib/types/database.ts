@@ -12,6 +12,12 @@ import type {
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 import type { MultisportSummary } from "@/lib/activities/multisport";
 import type { BikeFitAnalysis } from "@/lib/bikefit/fit";
+import type {
+  Body,
+  Findings,
+  Intake,
+  Screening,
+} from "@/lib/bikefit/protocol";
 import type { Bands, Discipline } from "@/lib/bikefit/templates";
 import type {
   PlanLibraryFunctions,
@@ -278,7 +284,16 @@ export type BikeFitRow = {
   >;
   bands: Bands;
   legs: { thighMm?: number | null; shankMm?: number | null; source?: "video" | "coach" };
+  /** Cykelns mått efter fiten. */
   measures: Record<string, string | number | null>;
+  /** Cykelns mått när adepten kom. */
+  measures_before: Record<string, string | number | null>;
+  body: Body;
+  intake: Intake;
+  screening: Screening;
+  findings: Findings;
+  /** Om vinklarna mättes före eller efter fitens ändringar. */
+  angles_at: "före" | "efter";
   analysis: BikeFitAnalysis | null;
   video_path: string | null;
   frame_path: string | null;

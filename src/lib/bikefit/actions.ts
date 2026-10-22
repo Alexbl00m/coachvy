@@ -7,6 +7,13 @@ import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { BikeFitRow } from "@/lib/types/database";
 import type { BikeFitAnalysis } from "./fit";
+import {
+  cleanBody,
+  cleanFindings,
+  cleanIntake,
+  cleanScreening,
+  type ScreeningValue,
+} from "./protocol";
 import { BUCKET } from "./storage";
 import {
   DISCIPLINES,
@@ -23,9 +30,17 @@ export type FitInput = {
   bike: string;
   method: "video" | "manuell";
   angles: BikeFitRow["angles"];
+  anglesAt: "före" | "efter";
   bands: Bands;
   legs: BikeFitRow["legs"];
+  /** Efter fiten. */
   measures: Record<string, string | number | null>;
+  /** När adepten kom. */
+  measuresBefore: Record<string, string | number | null>;
+  body: Record<string, number>;
+  intake: Record<string, string>;
+  screening: Record<string, ScreeningValue>;
+  findings: Record<string, string>;
   analysis: BikeFitAnalysis | null;
   checklist: Record<string, boolean>;
   notes: string;
@@ -100,15 +115,23 @@ export async function saveFit(input: FitInput): Promise<FitResult> {
 
   // Bara mallens mått, så att fältet inte blir en soptunna.
   const known = new Set(TEMPLATES[input.discipline].measures.map((m) => m.key));
-  const measures: Record<string, string | number | null> = {};
-  for (const [key, raw] of Object.entries(input.measures)) {
-    if (!known.has(key) || raw === null || raw === "") continue;
-    if (typeof raw === "number") {
-      if (!Number.isFinite(raw) || Math.abs(raw) > 5000)
-        return { ok: false, error: "Ett cykelmått går inte att läsa." };
-      measures[key] = raw;
-    } else measures[key] = String(raw).trim().slice(0, 120);
-  }
+  const cleanMeasures = (raw: FitInput["measures"]) => {
+    const out: Record<string, string | number | null> = {};
+    for (const [key, v] of Object.entries(raw ?? {})) {
+      if (!known.has(key) || v === null || v === "") continue;
+      if (typeof v === "number") {
+        if (!Number.isFinite(v) || Math.abs(v) > 5000) return null;
+        out[key] = v;
+      } else out[key] = String(v).trim().slice(0, 120);
+    }
+    return out;
+  };
+  const measures = cleanMeasures(input.measures);
+  const measuresBefore = cleanMeasures(input.measuresBefore);
+  if (!measures || !measuresBefore)
+    return { ok: false, error: "Ett cykelmått går inte att läsa." };
+  const body = cleanBody(input.body ?? {});
+  if (!body.ok) return body;
   const checklist: Record<string, boolean> = {};
   for (const [key, v] of Object.entries(input.checklist))
     if (v === true) checklist[key.slice(0, 200)] = true;
@@ -120,9 +143,16 @@ export async function saveFit(input: FitInput): Promise<FitResult> {
     bike: input.bike.trim().slice(0, 120) || null,
     method: input.method,
     angles,
+    angles_at:
+      input.anglesAt === "före" ? ("före" as const) : ("efter" as const),
     bands,
     legs,
     measures,
+    measures_before: measuresBefore,
+    body: body.body,
+    intake: cleanIntake(input.intake ?? {}),
+    screening: cleanScreening(input.screening ?? {}),
+    findings: cleanFindings(input.findings ?? {}),
     analysis: input.method === "video" ? input.analysis : null,
     checklist,
     notes: input.notes.trim().slice(0, 4000) || null,

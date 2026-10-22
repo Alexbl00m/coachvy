@@ -2105,6 +2105,26 @@ sedan sist, och fältet *Ändrat vid den här fiten* säger vad som flyttades.
 Adepten ser en fit först när coachen delar den (`shared_at`); databasen avgör
 det för både raden och filerna.
 
+### En hel fit
+
+Formuläret följer hur en fit går till (`src/lib/bikefit/protocol.ts`):
+samtalet (syfte, mål, bakgrund, besvär, skador), kroppens mått (längd, vikt,
+innerben, lår, underben, arm och fot per sida, bål, axelbredd,
+sittbensbredd), funktionstester av cykeln (Thomas test, knäextension,
+höftflexion, framåtfällning, enbensknäböj, enbensbrygga, planka,
+axelrörlighet, fotens rotation, benlängdsskillnad – per sida där det gäller),
+vinklarna, cykelns mått och fynd per område (klossar, sadel, styre, teknik,
+övningar). Cykelns mått förs in **före och efter**: före är cykeln som den kom
+(vid en ny fit förra fitens slutläge), efter fylls bara i där något
+ändrades. Måtten är grupperade per del av cykeln och omfattar också sadelns
+och armstödens läge mot vevlagret (X/Y), som följer med till en ny ram.
+Lårben och underben räknar om knäböjningen till millimeter; den filmade
+sidan används när båda är mätta. Vinklarna märks med om de gäller cykeln
+som den kom eller läget efter ändringarna – mättes de före och sadeln
+flyttades, säger rapporten hur flytten förhåller sig till förslaget i
+stället för att föreslå det som redan är gjort. Knäböjningen visas också
+som knävinkel (180° minus böjningen), konventionen många fitters använder.
+
 ### Mätkedjan
 
 Ren och modelloberoende (`src/lib/bikefit/chain.ts`), i pixlar så att bildens

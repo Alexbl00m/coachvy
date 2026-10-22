@@ -34,11 +34,23 @@ export type Bands = {
   elbow: Band;
 };
 
-/** Ett mått coachen fyller i om cykeln. */
+/** Var på cykeln ett mått hör hemma, för att gruppera formuläret. */
+export type MeasureGroup = "sadel" | "styre" | "aero" | "vev" | "ram";
+
+export const MEASURE_GROUPS: Record<MeasureGroup, string> = {
+  sadel: "Sadel",
+  styre: "Styre",
+  aero: "Aerobåge",
+  vev: "Vev, pedaler och skor",
+  ram: "Läget mot vevlagret",
+};
+
+/** Ett mått coachen fyller i om cykeln, före och efter fiten. */
 export type BikeMeasure = {
   key: string;
   label: string;
   unit: "mm" | "°" | "text";
+  group: MeasureGroup;
   hint?: string;
 };
 
@@ -53,39 +65,255 @@ export type Template = {
   checklist: string[];
 };
 
-const COMMON: BikeMeasure[] = [
+const SADDLE: BikeMeasure[] = [
   {
     key: "saddle_height",
     label: "Sadelhöjd",
     unit: "mm",
+    group: "sadel",
     hint: "Vevlagrets mitt till sadelns ovansida, längs sadelröret.",
   },
   {
     key: "saddle_setback",
     label: "Sadelns setback",
     unit: "mm",
-    hint: "Sadelnosen bakom vevlagret, vågrätt.",
+    group: "sadel",
+    hint: "Sadelnosen bakom vevlagret, vågrätt. Negativt framför.",
   },
-  { key: "crank_length", label: "Vevlängd", unit: "mm" },
-  { key: "saddle_tilt", label: "Sadelns lutning", unit: "°" },
-  { key: "saddle_model", label: "Sadel", unit: "text" },
-  { key: "cleats", label: "Klossar", unit: "text", hint: "Läge och vinkel." },
+  {
+    key: "saddle_tilt",
+    label: "Sadelns lutning",
+    unit: "°",
+    group: "sadel",
+    hint: "Nosen nedåt negativt.",
+  },
+  {
+    key: "saddle_model",
+    label: "Sadel",
+    unit: "text",
+    group: "sadel",
+    hint: "Modell och bredd.",
+  },
+  {
+    key: "seatpost_offset",
+    label: "Sadelstolpens offset",
+    unit: "mm",
+    group: "sadel",
+  },
+];
+
+const DRIVE: BikeMeasure[] = [
+  { key: "crank_length", label: "Vevlängd", unit: "mm", group: "vev" },
+  { key: "chainrings", label: "Klinga", unit: "text", group: "vev" },
+  { key: "pedals", label: "Pedaler", unit: "text", group: "vev" },
+  {
+    key: "shoes",
+    label: "Skor",
+    unit: "text",
+    group: "vev",
+    hint: "Märke, modell och storlek.",
+  },
+  {
+    key: "cleats",
+    label: "Klossar",
+    unit: "text",
+    group: "vev",
+    hint: "Läge, vinkel, kilar, distanser och inlägg.",
+  },
+];
+
+/** Sadelns och greppets läge mot vevlagret: följer med till en ny ram. */
+const FRAME: BikeMeasure[] = [
+  {
+    key: "saddle_x",
+    label: "Sadel X",
+    unit: "mm",
+    group: "ram",
+    hint: "Vågrätt från vevlagret till sadelns mätpunkt.",
+  },
+  {
+    key: "saddle_y",
+    label: "Sadel Y",
+    unit: "mm",
+    group: "ram",
+    hint: "Lodrätt från vevlagret till sadelns ovansida.",
+  },
+  {
+    key: "frame_size",
+    label: "Ram",
+    unit: "text",
+    group: "ram",
+    hint: "Modell och storlek, stack och reach.",
+  },
 ];
 
 const ROAD_COCKPIT: BikeMeasure[] = [
   {
+    key: "saddle_to_bar_reach",
+    label: "Sadelnos till styrets mitt",
+    unit: "mm",
+    group: "styre",
+  },
+  {
     key: "saddle_to_hoods",
     label: "Sadelnos till bromsgrepp",
     unit: "mm",
+    group: "styre",
   },
   {
     key: "saddle_to_bar_drop",
     label: "Fall sadel till styre",
     unit: "mm",
+    group: "styre",
     hint: "Sadelns ovansida ned till styrets ovansida.",
   },
-  { key: "stem", label: "Styrstam", unit: "text", hint: "Längd och vinkel." },
-  { key: "bar_width", label: "Styrbredd", unit: "mm" },
+  {
+    key: "stem",
+    label: "Styrstam",
+    unit: "text",
+    group: "styre",
+    hint: "Längd och vinkel, t.ex. 110 / −6°.",
+  },
+  {
+    key: "spacers",
+    label: "Distanser under stammen",
+    unit: "mm",
+    group: "styre",
+  },
+  {
+    key: "bar_model",
+    label: "Styre",
+    unit: "text",
+    group: "styre",
+    hint: "Modell, reach och drop.",
+  },
+  {
+    key: "bar_width",
+    label: "Styrbredd",
+    unit: "mm",
+    group: "styre",
+    hint: "Mitt till mitt i ovankant.",
+  },
+  { key: "bar_angle", label: "Styrets vinkel", unit: "°", group: "styre" },
+  { key: "hoods", label: "Bromsgreppens läge", unit: "text", group: "styre" },
+];
+
+const AERO: BikeMeasure[] = [
+  {
+    key: "pad_stack",
+    label: "Fall sadel till armstöd",
+    unit: "mm",
+    group: "aero",
+    hint: "Sadelns ovansida ned till armstödens ovansida.",
+  },
+  {
+    key: "pad_reach",
+    label: "Sadelnos till armstöd",
+    unit: "mm",
+    group: "aero",
+    hint: "Sadelnosen fram till armstödens mitt.",
+  },
+  {
+    key: "pad_x",
+    label: "Armstöd, reach från vevlagret",
+    unit: "mm",
+    group: "ram",
+    hint: "Vågrätt från vevlagret till armstödens mitt.",
+  },
+  {
+    key: "pad_y",
+    label: "Armstöd, stack från vevlagret",
+    unit: "mm",
+    group: "ram",
+    hint: "Lodrätt från vevlagret till armstödens ovansida.",
+  },
+  {
+    key: "pad_width",
+    label: "Armstöd, bredd",
+    unit: "mm",
+    group: "aero",
+    hint: "Mitt till mitt.",
+  },
+  {
+    key: "pad_to_grip",
+    label: "Armstöd till grepp",
+    unit: "mm",
+    group: "aero",
+    hint: "Armstödens mitt fram till växelreglaget.",
+  },
+  {
+    key: "extension",
+    label: "Förlängare",
+    unit: "text",
+    group: "aero",
+    hint: "Modell och form.",
+  },
+  {
+    key: "extension_angle",
+    label: "Förlängarnas vinkel",
+    unit: "°",
+    group: "aero",
+  },
+  {
+    key: "extension_width",
+    label: "Förlängarnas bredd",
+    unit: "mm",
+    group: "aero",
+    hint: "Mitt till mitt.",
+  },
+  {
+    key: "saddle_to_basebar_drop",
+    label: "Fall sadel till basbåge",
+    unit: "mm",
+    group: "aero",
+  },
+  { key: "basebar_width", label: "Basbågens bredd", unit: "mm", group: "aero" },
+  {
+    key: "stem",
+    label: "Styrstam",
+    unit: "text",
+    group: "aero",
+    hint: "Längd och vinkel.",
+  },
+  {
+    key: "spacers",
+    label: "Distanser",
+    unit: "mm",
+    group: "aero",
+    hint: "Under stammen och under armstöden.",
+  },
+];
+
+const MTB_COCKPIT: BikeMeasure[] = [
+  { key: "bar_width", label: "Styrbredd", unit: "mm", group: "styre" },
+  {
+    key: "bar_model",
+    label: "Styre",
+    unit: "text",
+    group: "styre",
+    hint: "Rise och backsweep.",
+  },
+  { key: "stem", label: "Styrstam", unit: "text", group: "styre" },
+  {
+    key: "saddle_to_grips_drop",
+    label: "Fall sadel till grepp",
+    unit: "mm",
+    group: "styre",
+  },
+  {
+    key: "saddle_to_grips_reach",
+    label: "Sadelnos till grepp",
+    unit: "mm",
+    group: "styre",
+  },
+  { key: "levers", label: "Bromsgreppens läge", unit: "text", group: "styre" },
+  {
+    key: "dropper",
+    label: "Sadelstolpe",
+    unit: "text",
+    group: "sadel",
+    hint: "Dropper och slaglängd.",
+  },
 ];
 
 export const TEMPLATES: Record<Discipline, Template> = {
@@ -99,7 +327,7 @@ export const TEMPLATES: Record<Discipline, Template> = {
       trunk: { min: 40, max: 50 },
       elbow: { min: 15, max: 30 },
     },
-    measures: [...COMMON, ...ROAD_COCKPIT],
+    measures: [...SADDLE, ...ROAD_COCKPIT, ...DRIVE, ...FRAME],
     checklist: [
       "Bäckenet stilla på sadeln – ingen gungning i sidled.",
       "Hälen faller inte under pedalen i nedre dödläget.",
@@ -117,9 +345,11 @@ export const TEMPLATES: Record<Discipline, Template> = {
       elbow: { min: 15, max: 30 },
     },
     measures: [
-      ...COMMON,
+      ...SADDLE,
       ...ROAD_COCKPIT,
-      { key: "tyre_width", label: "Däckbredd", unit: "mm" },
+      ...DRIVE,
+      { key: "tyre_width", label: "Däckbredd", unit: "mm", group: "vev" },
+      ...FRAME,
     ],
     checklist: [
       "Händerna når bromsarna i nedre greppet utan att sträcka armarna.",
@@ -138,23 +368,7 @@ export const TEMPLATES: Record<Discipline, Template> = {
       // På aerobågarna: överarm mot underarm runt 90°.
       elbow: { min: 75, max: 105 },
     },
-    measures: [
-      ...COMMON,
-      {
-        key: "pad_stack",
-        label: "Armstöd, höjd",
-        unit: "mm",
-        hint: "Sadelns ovansida till armstödens ovansida.",
-      },
-      {
-        key: "pad_reach",
-        label: "Armstöd, längd",
-        unit: "mm",
-        hint: "Sadelnosen till armstödens bakkant.",
-      },
-      { key: "pad_width", label: "Armstöd, bredd", unit: "mm" },
-      { key: "extension", label: "Förlängare", unit: "text" },
-    ],
+    measures: [...SADDLE, ...AERO, ...DRIVE, ...FRAME],
     checklist: [
       "Huvudet går att hålla framåtriktat utan att nacken värker.",
       "Höften öppen nog att trampa med full kraft i positionen.",
@@ -171,22 +385,7 @@ export const TEMPLATES: Record<Discipline, Template> = {
       trunk: { min: 45, max: 60 },
       elbow: { min: 15, max: 35 },
     },
-    measures: [
-      ...COMMON,
-      { key: "bar_width", label: "Styrbredd", unit: "mm" },
-      { key: "stem", label: "Styrstam", unit: "text" },
-      {
-        key: "saddle_to_grips_drop",
-        label: "Fall sadel till grepp",
-        unit: "mm",
-      },
-      {
-        key: "dropper",
-        label: "Sadelstolpe",
-        unit: "text",
-        hint: "Dropper och slaglängd.",
-      },
-    ],
+    measures: [...SADDLE, ...MTB_COCKPIT, ...DRIVE, ...FRAME],
     checklist: [
       "Sadelhöjden gäller med droppern helt uppe.",
       "Bromsgreppen nås med ett finger utan att vrida handleden.",

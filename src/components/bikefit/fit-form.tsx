@@ -19,6 +19,16 @@ import {
   type Discipline,
 } from "@/lib/bikefit/templates";
 import type { RenderedMedia } from "@/lib/bikefit/render";
+import { legsFromBody } from "@/lib/bikefit/protocol";
+import {
+  BodyFields,
+  FindingsFields,
+  IntakeFields,
+  MeasureFields,
+  ScreeningFields,
+  type ScreeningStrings,
+  type Strings,
+} from "./protocol-fields";
 import { routes } from "@/lib/routes";
 import type { BikeFitRow } from "@/lib/types/database";
 import { VERDICT_TEXT } from "./verdict-style";
@@ -54,6 +64,28 @@ const num = (raw: string): number | null => {
 };
 const text = (v: number | null | undefined) =>
   v === null || v === undefined ? "" : String(v).replace(".", ",");
+
+/** Sparade värden som fälttext: tal med decimalkomma. */
+function toStrings(source: object | null | undefined): Strings {
+  return Object.fromEntries(
+    Object.entries(source ?? {})
+      .filter(([, v]) => v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => [k, typeof v === "number" ? text(v) : String(v)]),
+  );
+}
+
+/** Fälten som går att läsa som tal. */
+function numbers(source: Strings): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(source)) {
+    const n = num(v);
+    if (n !== null) out[k] = n;
+  }
+  return out;
+}
+
+const nonEmpty = (source: Strings) =>
+  Object.fromEntries(Object.entries(source).filter(([, v]) => v.trim() !== ""));
 
 export type VideoResult = {
   angles: Record<AngleKey, number | null>;
@@ -113,6 +145,10 @@ export function FitForm({
     initial?.method ?? (videoPanel ? "video" : "manuell"),
   );
   const [date, setDate] = useState(initial?.performed_on ?? today);
+  // Vid en ny fit filmas cykeln oftast som den kom, innan något flyttas.
+  const [anglesAt, setAnglesAt] = useState<"före" | "efter">(
+    initial?.angles_at ?? "före",
+  );
   const [bike, setBike] = useState(base?.bike ?? "");
   const [angles, setAngles] = useState<Record<AngleKey, string>>(() => ({
     knee: text(initial?.angles.knee),
@@ -121,21 +157,42 @@ export function FitForm({
     shoulder: text(initial?.angles.shoulder),
     hip: text(initial?.angles.hip),
   }));
-  const [legs, setLegs] = useState({
-    thigh: text(base?.legs.thighMm),
-    shank: text(base?.legs.shankMm),
+  const [body, setBody] = useState<Strings>(() => toStrings(base?.body));
+  const [intake, setIntake] = useState<Strings>(() => {
+    if (initial) return toStrings(initial.intake);
+    // Från förra fiten följer det som brukar bestå; syftet är nytt varje gång.
+    const { purpose: _purpose, ...rest } = previous?.intake ?? {};
+    void _purpose;
+    return toStrings(rest);
   });
-  const [bands, setBands] = useState<Bands>(
-    base?.bands ?? TEMPLATES[base?.discipline ?? "landsväg"].bands,
-  );
-  const [measures, setMeasures] = useState<Record<string, string>>(() =>
+  const [screening, setScreening] = useState<ScreeningStrings>(() =>
     Object.fromEntries(
-      Object.entries(base?.measures ?? {}).map(([k, v]) => [
+      Object.entries(initial?.screening ?? {}).map(([k, v]) => [
         k,
-        typeof v === "number" ? text(v) : (v ?? ""),
+        toStrings(v as Record<string, unknown>),
       ]),
     ),
   );
+  const [findings, setFindings] = useState<Strings>(() =>
+    toStrings(initial?.findings),
+  );
+  const [bands, setBands] = useState<Bands>(
+    base?.bands ?? TEMPLATES[base?.discipline ?? "landsväg"].bands,
+  );
+  // Före: cykeln som den kom – vid en ny fit förra fitens slutläge. Efter:
+  // bara det som ändrades; tomt betyder oförändrat.
+  const [before, setBefore] = useState<Strings>(() =>
+    toStrings(initial ? initial.measures_before : previous?.measures),
+  );
+  const [after, setAfter] = useState<Strings>(() => {
+    if (!initial) return {};
+    const was = toStrings(initial.measures_before);
+    return Object.fromEntries(
+      Object.entries(toStrings(initial.measures)).filter(
+        ([k, v]) => was[k] !== v,
+      ),
+    );
+  });
   const [checklist, setChecklist] = useState<Record<string, boolean>>(
     initial?.checklist ?? {},
   );
@@ -161,19 +218,29 @@ export function FitForm({
       hip: pick("hip"),
     };
   }, [fromVideo, video, angles]);
-  const coachLegs = { thigh: num(legs.thigh), shank: num(legs.shank) };
-  const legSource =
-    coachLegs.thigh && coachLegs.shank
-      ? "coach"
-      : fromVideo && video.legs.thighMm && video.legs.shankMm
-        ? "video"
-        : undefined;
-  const usedLegs =
-    legSource === "coach"
-      ? { thighMm: coachLegs.thigh, shankMm: coachLegs.shank }
-      : legSource === "video"
-        ? video!.legs
+  // Benen att räkna millimeter med: coachens mått (den filmade sidan när
+  // den är känd), annars videons, annars det en sparad fit redan hade.
+  const side = fromVideo
+    ? video.analysis.side
+    : (initial?.analysis?.side ?? null);
+  const bodyLegs = legsFromBody(numbers(body), side);
+  const kept =
+    initial?.legs.thighMm && initial.legs.shankMm && initial.legs.source
+      ? initial.legs
+      : null;
+  const legSource: "coach" | "video" | undefined = bodyLegs
+    ? "coach"
+    : fromVideo && video.legs.thighMm && video.legs.shankMm
+      ? "video"
+      : (kept?.source ?? undefined);
+  const usedLegs = bodyLegs
+    ? bodyLegs
+    : legSource === "video" && fromVideo
+      ? video.legs
+      : kept
+        ? { thighMm: kept.thighMm ?? null, shankMm: kept.shankMm ?? null }
         : { thighMm: null, shankMm: null };
+  const crank = num(after.crank_length ?? "") ?? num(before.crank_length ?? "");
   const preview = assessFit(values, bands, { ...usedLegs, source: legSource });
 
   const chooseDiscipline = (d: Discipline) => {
@@ -197,19 +264,51 @@ export function FitForm({
         (a) => num(angles[a.key]) !== (initial?.angles[a.key] ?? null),
       );
     const savedMethod = edited ? "manuell" : method;
-    const measureValues: FitInput["measures"] = {};
-    for (const m of template.measures) {
-      const raw = measures[m.key]?.trim() ?? "";
-      if (!raw) continue;
-      if (m.unit === "text") measureValues[m.key] = raw;
-      else {
-        const v = num(raw);
-        if (v === null) {
-          setError(`${m.label} går inte att läsa som ett tal.`);
-          return;
+    const read = (source: Strings) => {
+      const out: FitInput["measures"] = {};
+      for (const m of template.measures) {
+        const raw = source[m.key]?.trim() ?? "";
+        if (!raw) continue;
+        if (m.unit === "text") out[m.key] = raw;
+        else {
+          const v = num(raw);
+          if (v === null) return `${m.label} går inte att läsa som ett tal.`;
+          out[m.key] = v;
         }
-        measureValues[m.key] = v;
       }
+      return out;
+    };
+    const measuresBefore = read(before);
+    // Efter är före med ändringarna ovanpå.
+    const measuresAfter = read({ ...before, ...nonEmpty(after) });
+    if (
+      typeof measuresBefore === "string" ||
+      typeof measuresAfter === "string"
+    ) {
+      setError(
+        typeof measuresBefore === "string"
+          ? measuresBefore
+          : (measuresAfter as string),
+      );
+      return;
+    }
+    const bodyValues = numbers(body);
+    const badBody = Object.entries(body).find(
+      ([k, v]) => v.trim() !== "" && bodyValues[k] === undefined,
+    );
+    if (badBody) {
+      setError("Ett kroppsmått går inte att läsa som ett tal.");
+      return;
+    }
+    const screeningValues: FitInput["screening"] = {};
+    for (const [test, fields] of Object.entries(screening)) {
+      const v: FitInput["screening"][string] = {};
+      for (const k of ["l", "r", "value"] as const) {
+        const n = num(fields[k] ?? "");
+        if (n !== null) v[k] = n;
+      }
+      if (fields.note?.trim()) v.note = fields.note.trim();
+      if (Object.keys(v).length) screeningValues[test] = v;
     }
     start(async () => {
       const result = await saveFit({
@@ -220,9 +319,15 @@ export function FitForm({
         bike,
         method: savedMethod,
         angles: values,
+        anglesAt,
         bands,
         legs: { ...usedLegs, source: legSource },
-        measures: measureValues,
+        measures: measuresAfter,
+        measuresBefore,
+        body: bodyValues,
+        intake,
+        screening: screeningValues,
+        findings,
         analysis: fromVideo ? video.analysis : (initial?.analysis ?? null),
         checklist,
         notes,
@@ -297,6 +402,25 @@ export function FitForm({
         </div>
       </Card>
 
+      <IntakeFields
+        value={intake}
+        onChange={(k, v) => setIntake((s) => ({ ...s, [k]: v }))}
+      />
+      <BodyFields
+        value={body}
+        onChange={(k, v) => setBody((s) => ({ ...s, [k]: v }))}
+        carried={
+          !initial && Boolean(previous && Object.keys(previous.body).length)
+        }
+      />
+      <ScreeningFields
+        value={screening}
+        onChange={(test, k, v) =>
+          setScreening((s) => ({ ...s, [test]: { ...s[test], [k]: v } }))
+        }
+        previous={initial ? null : (previous?.screening ?? null)}
+      />
+
       <Card className="min-w-0">
         <CardTitle>Vinklarna</CardTitle>
         {videoPanel && (
@@ -330,11 +454,36 @@ export function FitForm({
           </div>
         )}
 
+        <div
+          role="radiogroup"
+          aria-label="Vinklarna gäller"
+          className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]"
+        >
+          <span className="text-text-muted">Vinklarna gäller</span>
+          {(
+            [
+              ["före", "cykeln som den kom"],
+              ["efter", "efter ändringarna"],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key} className="inline-flex items-center gap-1.5">
+              <input
+                type="radio"
+                name="vinklar-galler"
+                checked={anglesAt === key}
+                onChange={() => setAnglesAt(key)}
+                className="size-4 accent-[var(--text)]"
+              />
+              <span className="text-text">{label}</span>
+            </label>
+          ))}
+        </div>
+
         {method === "video" && videoPanel ? (
           videoPanel({
             onResult: setVideo,
             assessment: preview,
-            crankMm: num(measures.crank_length ?? ""),
+            crankMm: crank,
             title: `${template.label}${bike ? ` · ${bike}` : ""}`,
           })
         ) : (
@@ -363,7 +512,7 @@ export function FitForm({
 
         <details className="mt-5 border-t border-line pt-4">
           <summary className="cursor-pointer text-[13px] font-medium text-text">
-            Målband och benlängder
+            Målband
           </summary>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
             {(
@@ -412,38 +561,6 @@ export function FitForm({
             {template.bands.elbow.min}–{template.bands.elbow.max}°. Bål och
             armbåge är erfarenhetsvärden; ändra efter din egen erfarenhet.
           </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field
-              label="Lårbenets längd, mm"
-              htmlFor="ben-lar"
-              optional
-              hint="Höftled till knäled. Ger millimeter per grad."
-            >
-              <Input
-                id="ben-lar"
-                inputMode="numeric"
-                value={legs.thigh}
-                onChange={(e) =>
-                  setLegs((l) => ({ ...l, thigh: e.target.value }))
-                }
-              />
-            </Field>
-            <Field
-              label="Underbenets längd, mm"
-              htmlFor="ben-under"
-              optional
-              hint="Knäled till fotled."
-            >
-              <Input
-                id="ben-under"
-                inputMode="numeric"
-                value={legs.shank}
-                onChange={(e) =>
-                  setLegs((l) => ({ ...l, shank: e.target.value }))
-                }
-              />
-            </Field>
-          </div>
         </details>
 
         <div
@@ -475,60 +592,46 @@ export function FitForm({
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="min-w-0">
-          <CardTitle>Cykelns mått</CardTitle>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {template.measures.map((m) => (
-              <Field
-                key={m.key}
-                label={`${m.label}${m.unit === "text" ? "" : `, ${m.unit}`}`}
-                htmlFor={`matt-${m.key}`}
-                hint={m.hint}
-                optional
-              >
-                <Input
-                  id={`matt-${m.key}`}
-                  inputMode={m.unit === "text" ? "text" : "decimal"}
-                  value={measures[m.key] ?? ""}
-                  maxLength={120}
-                  onChange={(e) =>
-                    setMeasures((s) => ({ ...s, [m.key]: e.target.value }))
-                  }
-                />
-              </Field>
-            ))}
-          </div>
-          {previous && !initial && (
-            <p className="mt-3 text-[12px] text-text-subtle">
-              Ifyllt från förra fiten som utgångsläge – ändra det som ändrats.
-            </p>
-          )}
-        </Card>
+      <MeasureFields
+        measures={template.measures}
+        before={before}
+        after={after}
+        onBefore={(k, v) => setBefore((s) => ({ ...s, [k]: v }))}
+        onAfter={(k, v) => setAfter((s) => ({ ...s, [k]: v }))}
+        carried={!initial && Boolean(previous)}
+      />
 
-        <Card className="min-w-0">
-          <CardTitle>Att titta efter</CardTitle>
-          <div className="space-y-2">
-            {template.checklist.map((item) => (
-              <label key={item} className="flex items-start gap-2.5 text-sm">
-                <input
-                  type="checkbox"
-                  checked={checklist[item] === true}
-                  onChange={(e) =>
-                    setChecklist((c) => ({ ...c, [item]: e.target.checked }))
-                  }
-                  className="mt-0.5 size-4 shrink-0 accent-[var(--text)]"
-                />
-                <span className="text-text">{item}</span>
-              </label>
-            ))}
+      <FindingsFields
+        value={findings}
+        onChange={(k, v) => setFindings((s) => ({ ...s, [k]: v }))}
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="min-w-0">
+            <p className="mb-2 text-[13px] font-medium text-text">
+              Att titta efter
+            </p>
+            <div className="space-y-2">
+              {template.checklist.map((item) => (
+                <label key={item} className="flex items-start gap-2.5 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={checklist[item] === true}
+                    onChange={(e) =>
+                      setChecklist((c) => ({ ...c, [item]: e.target.checked }))
+                    }
+                    className="mt-0.5 size-4 shrink-0 accent-[var(--text)]"
+                  />
+                  <span className="text-text">{item}</span>
+                </label>
+              ))}
+            </div>
           </div>
-          <div className="mt-4 space-y-4">
+          <div className="min-w-0 space-y-4">
             <Field
-              label="Ändrat vid den här fiten"
+              label="Ändrat vid den här fiten, i korthet"
               htmlFor="fit-andrat"
               optional
-              hint="Det du flyttade – en sak i taget, så att nästa fit visar vad som verkade."
+              hint="Det viktigaste som flyttades. Visas överst i rapporten och i listan."
             >
               <Textarea
                 id="fit-andrat"
@@ -538,7 +641,7 @@ export function FitForm({
                 onChange={(e) => setChanges(e.target.value)}
               />
             </Field>
-            <Field label="Anteckningar" htmlFor="fit-anteckningar" optional>
+            <Field label="Övrigt" htmlFor="fit-anteckningar" optional>
               <Textarea
                 id="fit-anteckningar"
                 rows={3}
@@ -548,8 +651,8 @@ export function FitForm({
               />
             </Field>
           </div>
-        </Card>
-      </div>
+        </div>
+      </FindingsFields>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={save} disabled={pending}>
