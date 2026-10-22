@@ -1,12 +1,14 @@
 # Alexanders träningsfilosofi
 
-Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak. Tilläggen efter avsnitt 18 är senare ställningstaganden som preciserar den: intensitet per fas, styrketräning, LSCT och underlaget bakom.
+Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak. Tilläggen efter avsnitt 18 är senare ställningstaganden som preciserar den: intensitet per fas, styrketräning, LSCT, hur effekt, puls och upplevd ansträngning läses mot varandra, livet som ram för belastningen, värme, kvalitetsformat att välja bland och underlaget bakom.
 
 ## Så används den i arbetet
 
 - Varje plan, varje pass och varje råd ska gå att motivera ur filosofin: vilken egenskap utvecklas, vilken begränsning påverkas, hur bidrar det till tävlingsprestationen.
 - Intensitetsfördelningen följer fasen: polariserad i grunden (lugnt plus utvald hög intensitet, lite mellanintensitet), mer tröskelorienterad och pyramidal när specificiteten ökar. Den räknas per pass efter passets huvudsyfte, och i den specifika perioden flyttas kvaliteten mot den intensitet tävlingen avgörs i (avsnitt 19).
 - Styrketräning är en del av planen, tung och rörelsenära, uppbyggd i grunden och underhållen därefter (avsnitt 20).
+- Veckan byggs runt livet: arbete, resor, familj och sömn läggs in först, och belastningen dimensioneras efter en vanlig vecka, inte den ideala (avsnitt 23).
+- Effekt, puls och upplevd ansträngning läses mot varandra. När de går isär är det information, och belastningen justeras innan nästa kvalitetspass (avsnitt 22).
 - Ett utvecklingsblock bygger på ett eller två återkommande kvalitetsformat under tre till fyra veckor. Progressionen ändrar en variabel i taget.
 - Tester placeras där de påverkar beslut, till exempel inför den tävlingsspecifika delen för att kalibrera intensiteterna.
 - Planen är en hypotes. Responsen (genomförande, RPE, återhämtning, tester, lopp) avgör om den fortsätter, justeras eller byts.
@@ -684,7 +686,7 @@ Och ärligt talat: det mest utmärkande är inte att du gillar fysiologiska siff
 
 # Tillägg
 
-Avsnitten nedan preciserar filosofin där den tidigare lämnade öppet. De bygger bland annat på Wilkins & Bell, *Cycling Physiology & Training Science* (2021), och på studierna som anges i avsnitt 22. Texten är egen; ingenting är citerat ur boken.
+Avsnitten nedan preciserar filosofin där den tidigare lämnade öppet. De bygger bland annat på Wilkins & Bell, *Cycling Physiology & Training Science* (2021), och på studierna som anges i avsnitt 26. Texten är egen; ingenting är citerat ur boken.
 
 ## 19. Intensitetsfördelningen fas för fas
 
@@ -704,6 +706,8 @@ Pyramidalt säger bara att lugnt är vanligast, sedan medel, sedan högt. Det s�
 - **Korta tävlingar och lopp som avgörs över LT2** – 5 och 10 km, sprinttriathlon, kriterier, backlopp och linjelopp med avgörande ryck – får en växande andel hög intensitet: VO₂max, upprepade ryck och tävlingsfart över tröskeln. Medelzonen hålls mindre.
 - **Däremellan**, till exempel olympisk distans eller ett 40 km-tempo, ligger tävlingen nära LT2 och kvaliteten fördelas mellan tröskel och VO₂max.
 
+Den specifika perioden är oftast sex till åtta veckor före huvudtävlingen. Tävlingsfartsblocken byggs mot tävlingens krav – på cykel ofta från 30 mot 60 minuter eller mer i målintensitet – och en del av dem görs gärna inomhus på trainer eller löpband, där förhållandena går att upprepa och passen jämföras vecka för vecka.
+
 ### Riktmärken per fas
 
 Andel av veckans pass. Riktmärkena är till för att upptäcka glidning, inte för att styra varje vecka. Avvikelser är ofta medvetna, och responsen väger tyngre än procenten.
@@ -719,6 +723,10 @@ Andel av veckans pass. Riktmärkena är till för att upptäcka glidning, inte f
 
 Sent i grundperioden får tröskelinslag finnas med för laktatomsättningen och utnyttjandegraden; de förbereder för mer tid nära VO₂max i nästa block. I toppningen sjunker volymen men inte intensiteten, så andelen lugna pass blir lägre än annars – det är väntat och inget tecken på att fördelningen spårat ur.
 
+### Lugnt ska vara lugnt
+
+Den polariserade grunden fungerar bara om de lugna passen faktiskt är lugna. Distanspass som glider upp mot LT1 och förbi kostar mer än de ser ut att göra i loggen: de räknas som lugna men äter av återhämtningen till nyckelpassen. Långa pass får ligga nära LT1 när det är syftet – durability, eller tävlingsfart för Ironman – men då är det ett val, inte en glidning.
+
 ## 20. Styrketräning
 
 Styrketräning hör till planen, men den ska stödja uthålligheten och inte konkurrera med den.
@@ -730,6 +738,7 @@ Styrketräning hör till planen, men den ska stödja uthålligheten och inte kon
 - **Explosiv styrka med eftertanke.** Den kan höja maxeffekt och anaerob kapacitet men också VLamax, och därmed sänka tröskeln. Den väljs när prestationsprofilen motiverar det, inte som standard.
 - **Placering.** Där den inte försämrar nyckelpassen, och helst inte på en återhämtningsdag. I triathlon konkurrerar styrkan om samma återhämtning som tre grenar; ett till två pass i veckan är ofta taket.
 - **I toppningen är styrkan det första som tas bort**, eftersom den är minst specifik.
+- **Positionen bär volymen.** En position som går att hålla i timmar är en förutsättning för att tåla volym utan skador. Bikefit görs inför stora volymökningar, efter skada och vid byte av cykel, sadel eller skor; för löpare motsvarande en enkel löpanalys. Asymmetrier åtgärdas när de ger besvär eller kostar effekt, inte för symmetrins skull – de flesta har några.
 
 Det som gör tung styrka värdefull för uthållighet är främst bättre rörelseekonomi, högre maxeffekt och starkare senor, inte större muskler.
 
@@ -757,7 +766,86 @@ Varje steg börjar lite hårdare så att pulsen når målet inom första minuten
 
 För triathleter körs testet på cykeln. För renodlade löpare finns motsvarande submaximala pulstester på löpband eller bana, men LSCT är det som är validerat.
 
-## 22. Underlag och studier
+## 22. Effekt, puls och upplevd ansträngning – tre signaler som läses mot varandra
+
+Avsnitt 9 och 11 säger att beslut ska bygga på flera signaler. Så här läses de i vardagen.
+
+Varje signal svarar på sin egen fråga:
+
+- **Effekt eller fart:** vad idrottaren gjorde.
+- **Puls:** vad det kostade hjärta och cirkulation.
+- **Upplevd ansträngning (RPE):** vad det kostade helheten – muskler, nervsystem, energi och huvud.
+
+En signal ensam säger lite. Det är när de går isär som de berättar något.
+
+### Två skikt av RPE
+
+- **Passets RPE.** Hela passet skattas på skalan 0–10 ungefär en halvtimme efteråt. Gånger passets minuter blir det en enkel belastningssiffra som fungerar även där effekt saknas, till exempel i simning och styrka.
+- **Hårdaste repetitionens RPE.** I kvalitetspass skattas också den tyngsta repetitionen direkt efter att den är gjord. Den visar om ett återkommande format har blivit lättare vid samma effekt – det är progressionen i avsnitt 4.2 och 5 – och fångar trötthet som passets helhetssiffra jämnar ut.
+
+### Mönster att känna igen
+
+Jämförelsen gäller samma format under liknande förhållanden.
+
+| Mönster | Trolig förklaring | Vad det brukar leda till |
+| --- | --- | --- |
+| Effekten upp, puls och RPE som vanligt | Bättre form | Progressionen fortsätter |
+| Effekten som vanligt, puls och RPE lägre | Bättre form | Progressionen fortsätter; nästa steg kan tas |
+| Pulsen högre vid samma effekt, RPE högre | Värme, vätskebrist, sjukdom på gång, dålig sömn eller akut trötthet | Förhållandena ses över; vid feber eller sjukdomskänsla vila |
+| Pulsen lägre vid samma effekt, RPE klart högre, pulsen går inte att få upp i intervallerna | Ackumulerad trötthet, låga kolhydratdepåer eller mycket stress utanför träningen | Lugnt pass eller vila innan nästa kvalitetspass; energiintaget ses över |
+| Pulsen som vanligt, effekten faller och RPE högt i korta hårda moment | Lokal muskulär trötthet | Mer tid mellan kvalitetspassen; styrkan flyttas |
+| Pulsen stiger genom passet trots jämn effekt | Värme, vätskeförlust, för lite energi eller svag durability | Mer dryck och energi; återkommer det i svalt väder är det en durability-fråga |
+
+Lägre puls är alltså inte i sig ett tecken på varken form eller trötthet. Det är upplevd ansträngning som avgör vilket: lägre puls med lägre eller oförändrad RPE är form, lägre puls med klart högre RPE är en varningssignal.
+
+### Så används signalerna
+
+- **Lika jämförs med lika.** Samma format, liknande förhållanden och gärna samma tid på dagen. De återkommande kvalitetsformaten (avsnitt 4.2) och LSCT (avsnitt 21) är de bästa mätpunkterna.
+- **En dag är en dag.** Två till tre pass åt samma håll, eller flera signaler samtidigt, är ett mönster.
+- **Belastningen sänks före nästa kvalitetspass**, inte efter att det har misslyckats.
+- **Kroppskännedom och data kompletterar varandra.** Idrottaren lär sig skilja på tunga ben, som släpper efter uppvärmningen och är normalt mitt i ett block, och en trött kropp – allmän tröghet, irritation, dålig sömn och en puls som inte svarar. När känslan och siffrorna säger olika saker är det ett skäl att fråga, inte att välja en av dem på reflex.
+- **Signalerna säger att något har ändrats, inte varför.** Sömn, stress, kost och sjukdom vägs in av tränaren (avsnitt 11 och 14).
+
+## 23. Livet först – belastning som går att upprepa
+
+Den bästa planen är den som går att genomföra vecka efter vecka (avsnitt 14). För idrottare som också arbetar, reser och har familj är det livet som sätter ramen, inte den ideala veckan.
+
+- **Kalendern först.** Arbete, resor, familj och sömn läggs in innan passen placeras. Nyckelpassen hamnar där förutsättningarna är bäst – när idrottaren är utvilad och har tid för uppvärmning och mat – och distanspassen fyller ut där det går.
+- **Dimensionera efter en vanlig vecka.** Volymen och antalet kvalitetspass ska gå att absorbera under en normal arbetsvecka, inte bara under semester eller läger. Det som bara fungerar under idealiska förhållanden är ingen grund att bygga progression på.
+- **En gemensam återhämtningsbudget.** Arbetsstress, kort sömn, resor och sjukdom i familjen drar från samma konto som träningen. När livet tar mer krymper träningen: först det som bidrar minst – extrapass och en del av distansvolymen. Nyckelpasset behålls om det kan göras med kvalitet; annars flyttas det hellre än att det genomförs halvdant.
+- **Planera det kända.** Resor, arbetstoppar och familjehelger läggs in som lättare veckor i förväg, så att återhämtningen hamnar där den ändå hade tvingats fram.
+- **Kontinuitet slår toppveckor.** Tolv vanliga veckor i rad bygger mer än tre hårda veckor följda av en sjukdomsvecka.
+- **Äldre idrottare.** Många upplever att återhämtningen efter hårda pass tar längre tid med åren, och skillnaderna mellan individer är stora. Behovet av intensitet och tung styrka försvinner inte – de är det som bäst håller kvar VO₂max och muskelmassa. Lösningen är oftare längre tid mellan kvalitetspassen, till exempel två hårda pass på tio dagar i stället för på en vecka, än att ta bort dem.
+
+## 24. Värme
+
+Värme är både en belastning och ett verktyg.
+
+**Vad anpassningen ger.** Efter en till två veckor med regelbunden värmeexponering ökar plasmavolymen, svettningen börjar tidigare, och kärntemperatur och puls vid en given effekt sjunker. Prestationen i värme förbättras tydligt. Vissa studier ser också effekt i svalt väder och, efter längre perioder, en större hemoglobinmassa, men de effekterna är mindre säkra.
+
+**När den används.** Inför tävlingar i värme – Kona, varma etapplopp, sommarmaraton – är den i stort sett nödvändig. Anpassningen avtar under veckorna utan värme men kommer tillbaka snabbare än första gången. Huvuddelen läggs därför inom de sista veckorna före tävlingen och hålls vid liv med ett par exponeringar i veckan fram till start, så att toppningen inte behöver bära både nedtrappning och ny stress.
+
+**Så görs den.**
+
+- **Aktiv värme:** lugna pass inomhus, utan fläkt eller med extra kläder, 45–90 minuter. Pulsen styr och effekten får sjunka.
+- **Passiv värme:** varmt bad (omkring 40 grader, upp till 40 minuter) eller bastu (omkring 20–30 minuter) direkt efter ett lugnt pass. Det sparar tid och påverkar inte kvaliteten i träningen.
+- **Kvalitetspassen hålls svala.** Hård träning i värme kostar mer och ger lägre effekt; under en värmeperiod läggs värmen på de lugna passen.
+
+**Kostnad och säkerhet.** Ett värmepass är tyngre än effekten säger, så puls och RPE är bättre mått än watt. Under en värmeperiod är högre puls vid samma effekt väntat och ska inte läsas som formtapp (avsnitt 22), och LSCT görs under samma svala förhållanden som vanligt. Vätska och vikt följs före och efter. Passet avbryts vid yrsel, illamående, huvudvärk eller förvirring, och värme används inte vid sjukdom eller feber.
+
+## 25. Kvalitetsformat att välja bland
+
+Filosofin bygger på ett eller två återkommande format per block (avsnitt 4.2). Formaten nedan är verktyg att välja bland efter vad blocket ska utveckla och vad tävlingen kräver – inte en meny att växla mellan.
+
+- **Korta intervaller, 30/15 och 40/20.** Serier om ungefär 10–15 repetitioner – 30 eller 40 sekunder hårt, 15 eller 20 sekunder lätt – två till fyra serier med några minuters vila emellan. Syreupptaget hinner inte sjunka under de korta vilorna, så tiden nära VO₂max blir lång, och den upplevda kostnaden är ofta lägre än i långa intervaller. Hos vältränade cyklister har de gett minst lika god utveckling som längre intervaller. De passar särskilt tävlingar som avgörs i upprepade ryck (avsnitt 19). Progression: fler repetitioner per serie, sedan fler serier, sist effekten.
+- **Långa VO₂max-intervaller**, till exempel 4 × 8 minuter (avsnitt 26): mycket tid nära VO₂max per pass vid en intensitet närmare tröskeln, och därför ofta rätt val inför långa tävlingar.
+- **Korta toppar** – ett par repetitioner om en till tre minuter – är en underhållsdos i toppningen och i den specifika perioden inför långa tävlingar, inte ett utvecklingsstimulus.
+- **Vridmoment på låg kadens.** Till exempel 4–6 × 5 minuter sittande i 55–65 varv per minut, strax under tröskeln. Kraften i varje tramptag ökar medan pulsen blir måttlig. Studierna går isär om de ger mer än samma arbete i fri kadens. Värdet ligger främst i specificitet – långa stigningar, tunga växlar, tempoposition – och de ersätter inte tung styrketräning (avsnitt 20). De räknas som medelpass och undviks vid knäbesvär.
+- **Över–under.** Effekten växlar mellan strax över och strax under tröskeln, till exempel två minuter under och en minut över, i block om 8–12 minuter. Formatet tränar förmågan att tåla ryck och komma tillbaka nära tröskeln och passar den specifika perioden inför kuperade lopp och lopp med variabel fart. Efter huvudsyftet räknas det som ett tröskelpass.
+- **Tävlingsfartsblock** i den specifika perioden, förlängda mot tävlingens krav och i triathlon gärna med löpning efter (avsnitt 6, 10 och 19).
+- **Koncentrerad belastning.** En kortare period med tät kvalitet – till exempel en vecka med fyra till fem pass av samma format – följd av en lättare period med ett kvalitetspass i veckan. Hos vältränade cyklister har det gett större utveckling än samma antal pass utspritt. Det passar läger och vältränade idrottare med god återhämtning, kräver verklig återhämtning efteråt och är ett undantag, inte standardupplägget.
+
+## 26. Underlag och studier
 
 Urvalet nedan är det som filosofin främst vilar på. Studierna anges så att de går att läsa i original.
 
@@ -769,4 +857,10 @@ Urvalet nedan är det som filosofin främst vilar på. Studierna anges så att d
 - **Styrketräning.** Rønnestad & Mujika (2014) och Beattie m.fl. (2014) sammanfattar hur tung styrketräning förbättrar ekonomi och prestation i cykling och löpning.
 - **LSCT.** Lamberts m.fl. (2011) beskriver testet och dess samband med prestation; senare studier har prövat hur väl det fångar trötthet.
 - **Durability.** Maunder m.fl. (2021) beskriver trötthetsresistens som en egen prestationsfaktor – hur mycket trösklar och effekt sjunker efter timmar av arbete. Den är central för långdistans och triathlon, och här går filosofin längre än de flesta läroböcker.
+- **Belastningssignaler.** Foster m.fl. (2001) beskriver passets RPE gånger minuter som belastningsmått. Le Meur m.fl. (2013) fann hos överbelastade triathleter lägre puls vid alla intensiteter tillsammans med högre upplevd ansträngning – varningsmönstret i avsnitt 22.
+- **Korta intervaller.** Rønnestad m.fl. (2015 och 2020) jämförde 30/15 med längre intervaller vid samma ansträngning hos vältränade och elitcyklister och fann större förbättringar med de korta.
+- **Koncentrerad belastning.** Rønnestad, Hansen & Ellefsen (2014) jämförde en vecka med fem intervallpass följd av veckor med ett, mot två pass i veckan hela tiden, och fann större utveckling med det koncentrerade upplägget.
+- **Låg kadens.** Paton m.fl. (2009) och Kristoffersen m.fl. (2014) kom till olika slutsatser om lågkadensintervaller; underlaget räcker inte för att de ska ersätta vanlig kadens eller styrketräning.
+- **Värme.** Périard, Racinais & Sawka (2015) och Racinais m.fl. (2015) beskriver anpassningen och hur den byggs. Lorenzo m.fl. (2010) såg förbättring även i svalt väder. Zurawlew m.fl. (2016) och Scoon m.fl. (2007) prövade varmt bad och bastu efter träning. Rønnestad m.fl. (2021) såg större hemoglobinmassa efter fem veckors värmeträning. Daanen, Racinais & Périard (2018) beskriver hur anpassningen avtar och kommer tillbaka.
+- **Sola och Lorang.** Avsnitt 22–25 tog delvis intryck av en jämförande genomgång av hur Javier Sola och Dan Lorang beskrivs arbeta: tre signaler och två skikt av RPE, livet först och belastning som går att upprepa, värme, korta intervaller och vridmoment. Uppgifter om hur enskilda tränare och idrottare tränar är andrahandsuppgifter och används som inspiration, inte som belägg; det är studierna ovan som bär påståendena.
 - **Översikt.** Wilkins & Bell, *Cycling Physiology & Training Science* (2021), sammanfattar mycket av ovanstående för cykling. Boken saknar triathlon, löpning och simning; där står avsnitt 10 på egna ben.
