@@ -23,7 +23,7 @@ export const tools = [
     icon: Gauge,
     title: "Träningszoner",
     description:
-      "Zoner ur FTP, tröskeltempo eller critical speed. Tre olika modeller, för de utgår från olika slags test.",
+      "Zoner ur FTP, tröskeltempo eller critical speed. Tre modeller, eftersom de utgår från tre slags test.",
     inputs: "Ett tröskelvärde",
   },
   {

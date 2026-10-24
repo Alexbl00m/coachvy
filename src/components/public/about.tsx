@@ -46,16 +46,16 @@ export function About() {
 
           <div className="mt-8 max-w-[62ch] space-y-5 text-[1rem] leading-relaxed text-text-muted">
             <p>
-              Redan i ung ålder insåg jag att jag brann för att stödja och guida
-              andra på deras väg mot målet. Jag började som hockeytränare, och
-              där fick jag utveckla inte bara unga spelares färdigheter utan
-              även deras mentala och känslomässiga välbefinnande.
+              Redan som ung märkte jag att jag brann för att hjälpa andra mot
+              deras mål. Jag började som hockeytränare. Där tränade jag unga
+              spelares färdigheter, och lika mycket hur de mådde mentalt och
+              känslomässigt.
             </p>
             <p>
               Kärleken till cykelsporten fick mig att fördjupa mig i träning
               varje dag. Det var början på min resa som coach. År 2022 utbildade
               jag mig till personlig tränare med inriktning på
-              konditionsträning, och sedan dess har det handlat om uthållighet:
+              konditionsträning, och sedan dess arbetar jag med uthållighet:
               cykling, löpning och triathlon.
             </p>
           </div>
@@ -73,9 +73,8 @@ export function About() {
 
           <figure className="mt-12 max-w-xl">
             <blockquote className="text-[1.375rem] leading-[1.35] font-medium tracking-[-0.016em] text-balance text-text">
-              ”Coaching är inte bara träningsplanering – det handlar om att
-              skapa en relation. Träningen är en del av det större pusslet i
-              ditt liv, och allt ska samspela.”
+              ”Coaching är en relation, inte en träningsplan. Träningen är en
+              bit av pusslet i ditt liv, och bitarna ska passa ihop.”
             </blockquote>
             <figcaption className="mt-4 text-[0.875rem] text-text-subtle">
               Min filosofi

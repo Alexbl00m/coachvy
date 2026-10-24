@@ -120,7 +120,7 @@ export function ZoneCalculator() {
           {
             label: "Zoner",
             value: rows.length || "–",
-            hint: rows.length ? "hela skalan nedan" : "fyll i ett värde",
+            hint: rows.length ? "hela skalan längre ned" : "fyll i ett värde",
           },
           {
             label: "Tröskelzon",

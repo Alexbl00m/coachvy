@@ -281,7 +281,7 @@ export function buildAthleteContext(input: ContextInput): AthleteContext {
     gaps.push(
       criticalValue === null
         ? `Ingen ${cycling ? "critical power" : "critical speed"} är mätt, så passet kan inte prövas mot den anaeroba reserven.`
-        : `${cycling ? "W′" : "D′"} saknas. Ett test med minst två insatser av olika längd ger det.`,
+        : `${cycling ? "W′" : "D′"} saknas. Ett test med minst två insatser som inte är lika långa ger det.`,
     );
   }
 

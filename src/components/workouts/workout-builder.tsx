@@ -231,7 +231,7 @@ export function WorkoutBuilder({
               value={prompt}
               placeholder={
                 workout
-                  ? "Till exempel: korta intervallerna till 6 minuter och lägg till ett varv"
+                  ? "Korta intervallerna till 6 minuter och lägg till ett varv"
                   : EXAMPLES[sport][0]
               }
               onChange={(e) => setPrompt(e.target.value)}
@@ -334,7 +334,7 @@ export function WorkoutBuilder({
               <Field
                 label="Adept"
                 htmlFor="adept"
-                hint="styr både gren och tröskelvärden"
+                hint="styr gren och tröskelvärden"
               >
                 <Select
                   id="adept"

@@ -642,7 +642,7 @@ export function StartWizard({
               </div>
             ))}
             <p className="text-[0.8125rem] text-text-muted">
-              Till exempel en lägre volym första varvet och en högre mot målet.
+              Du kan välja en lägre volym första varvet och en högre mot målet.
             </p>
           </div>
         )}
@@ -685,7 +685,7 @@ export function StartWizard({
               <Field
                 label={`Måltid för ${race.name}`}
                 htmlFor="start-maltid"
-                hint={`Till exempel ${race.example}. Känns de första passen för snabba är målet för högt satt.`}
+                hint={`Skriv som ${race.example}. Känns de första passen för snabba är målet för högt satt.`}
               >
                 <Input
                   id="start-maltid"

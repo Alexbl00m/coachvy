@@ -31,6 +31,7 @@ import { listWorkouts } from "./queries";
 import { isAnthropicConfigured } from "./env";
 import { parseWorkout, WORKOUT_JSON_SCHEMA } from "./parse";
 import { formatDuration, resolveWorkout, type Workout } from "./schema";
+import { WRITING_RULES } from "@/lib/ai-coach/language";
 
 const MODEL = "claude-opus-5";
 
@@ -56,7 +57,9 @@ Så här tänker du om innehållet:
 - Saknas ett värde: bygg ändå passet, men säg i motiveringen vad som saknas och vad det gör osäkert. Hitta aldrig på ett tal.
 - Motiveringen ("rationale") ska hänga ihop med just de här siffrorna och just det coachen bad om. Skriv inte allmänna sanningar om träning.
 - Står säsongen med – fasen atleten är i och tävlingarna framför – ska passet passa in i den: ett tröskelpass i toppningen före ett A-lopp är kortare och skarpare än samma pass i grundperioden. Säg i motiveringen hur fasen påverkade upplägget.
-- Följ coachens begäran. Ber coachen om ett pass på en timme ska passet bli ungefär en timme, uppvärmning och nedvarvning inräknade.`;
+- Följ coachens begäran. Ber coachen om ett pass på en timme ska passet bli ungefär en timme, uppvärmning och nedvarvning inräknade.
+
+${WRITING_RULES}`;
 
 export type GenerateInput = {
   prompt: string;

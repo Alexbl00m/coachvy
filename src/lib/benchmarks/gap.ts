@@ -133,7 +133,7 @@ export function readGaps(gaps: MetricGap[], targetName: string): string[] {
     (threshold === undefined || threshold >= -5)
   ) {
     lines.push(
-      "Sprintkraften ligger efter medan tröskeln håller: korta maximala spurter och styrka, om loppen avgörs i en spurt.",
+      "Sprintkraften ligger efter, och tröskeln håller: korta maximala spurter och styrka, om loppen avgörs i en spurt.",
     );
   }
   return lines;

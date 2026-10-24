@@ -6,22 +6,22 @@ const principles = [
   {
     icon: User,
     title: "Utgår från dig",
-    text: "Varje person är unik och tränar därefter. Planen bygger på din nuvarande status, dina behov och dina mål – inte på en mall.",
+    text: "Planen bygger på hur du tränar i dag och vad du vill nå. Ingen mall, ingen färdig plan som någon annan också får.",
   },
   {
     icon: FlaskConical,
     title: "Mätt, inte gissat",
-    text: "Laktattester ger zoner som bygger på hur just din kropp svarar. Nästa test visar om träningen gjorde det den skulle.",
+    text: "Laktattestet ger zoner ur hur din kropp svarar. Nästa test visar om träningen gjorde det den skulle.",
   },
   {
     icon: Puzzle,
     title: "En del av livet",
-    text: "Träningen är en bit i ett större pussel. Jobb, familj, sömn och återhämtning ska gå ihop, och planen ändras när livet gör det.",
+    text: "Träningen är en bit i ett större pussel. Jobb, familj och sömn finns med när planen läggs, och ändras livet ändras planen.",
   },
   {
     icon: Handshake,
     title: "En relation",
-    text: "Coaching är mer än ett schema. Vi pratar, justerar och tar oss förbi hindren tillsammans – hela vägen till start.",
+    text: "Coaching är mer än ett schema. Vi pratar, justerar planen och löser det som står i vägen, ända fram till start.",
   },
 ];
 
@@ -33,8 +33,8 @@ export function Approach() {
         <span className="text-text">
           Jag har alltid drömt om att hjälpa människor nå sina mål.
         </span>{" "}
-        Därför börjar coachingen med dig och ditt liv – inte med ett färdigt
-        program. Sedan mäter vi, planerar och följer upp, tillsammans.
+        Därför börjar coachingen med dig och ditt liv, inte med ett färdigt
+        program. Sedan testar vi, planerar och följer upp.
       </p>
 
       <ul className="mt-16 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">

@@ -127,7 +127,7 @@ export function PublicTestCalculator() {
         </Button>
         <span className="text-[0.8125rem] text-text-subtle">
           {canPrint
-            ? "Inget sparas här – ta med dig resultatet som fil."
+            ? "Inget sparas här. Ta med dig resultatet som fil."
             : `Fyll i minst ${calc.spec?.minEfforts ?? 2} rader så räknas testet ut.`}
         </span>
       </div>

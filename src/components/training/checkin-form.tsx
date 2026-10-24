@@ -282,7 +282,7 @@ export function CheckinForm({
             ? "Sparat."
             : trained && rpe === null
               ? "Sätt hur passet kändes."
-              : "En incheckning per dag – en ny skriver över den gamla."}
+              : "En incheckning per dag. En ny skriver över den gamla."}
         </span>
       </div>
     </Card>

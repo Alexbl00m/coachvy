@@ -64,7 +64,7 @@ export async function signIn(
   }
 
   if (!email || !password) {
-    return { error: "Fyll i både e-post och lösenord.", values: { email } };
+    return { error: "Fyll i e-post och lösenord.", values: { email } };
   }
 
   const supabase = await createClient();

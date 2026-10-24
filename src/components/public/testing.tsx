@@ -3,11 +3,11 @@ import { ButtonLink } from "@/components/ui/button";
 
 const tests = [
   {
-    title: "Laktattest – cykel",
+    title: "Laktattest cykel",
     duration: "ca 1,5–2 h",
     price: "1 500 kr",
     description:
-      "Laktatnivåerna i blodet ger dina tränings- och tävlingszoner, så att du får ut det mesta av cykelträningen.",
+      "Laktatet i blodet visar var dina tränings- och tävlingszoner ligger, så att cykelträningen hamnar rätt.",
     features: [
       "Aerob tröskel (LT1)",
       "Anaerob tröskel (LT2/MLSS)",
@@ -18,11 +18,11 @@ const tests = [
     ],
   },
   {
-    title: "Laktattest – löpning",
+    title: "Laktattest löpning",
     duration: "ca 1,5–2 h",
     price: "1 500 kr",
     description:
-      "Samma underlag för löpningen: zoner som ser till att träningen ligger där den gör mest nytta.",
+      "Samma test för löpningen. Zonerna visar var löpträningen gör mest nytta.",
     features: [
       "Aerob tröskel (LT1)",
       "Anaerob tröskel (LT2/MLSS)",
@@ -33,7 +33,7 @@ const tests = [
     ],
   },
   {
-    title: "VLamax – anaerob kapacitet",
+    title: "VLamax, anaerob kapacitet",
     duration: "ca 1 h",
     price: "1 500 kr",
     description:
@@ -53,7 +53,7 @@ export function Testing() {
         label="Testning"
         title="Träna på dina egna siffror."
         continuation="Inte på en tabell."
-        description="Konditionstester i Norrköping som skräddarsyr träningen och visar utvecklingen över tid. Resultaten hamnar i din egen vy i Coachvy, så att du kan följa kurvan test för test."
+        description="Testerna görs i Norrköping. De ger zonerna som träningen byggs på och visar hur du utvecklas. Resultaten hamnar i din egen vy i Coachvy, så du kan följa kurvan test för test."
       />
 
       <div className="mt-14 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">

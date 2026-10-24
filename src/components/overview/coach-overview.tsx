@@ -267,7 +267,7 @@ export async function CoachOverview({
           <p className="mt-4 border-t border-line pt-3 text-[0.8125rem] leading-relaxed text-text-muted">
             Återhämtningen jämförs med adeptens eget snitt den senaste månaden,
             belastningen med månaden före. Det som nämns är sådant som skiljer
-            sig tydligt – vad det betyder är din bedömning.
+            sig tydligt. Vad det betyder är din bedömning.
           </p>
         </Card>
 

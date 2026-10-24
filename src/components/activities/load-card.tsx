@@ -130,7 +130,7 @@ export function LoadCard({
         Volym är tiden i träning. Strain är arbetet över CP (CS), räknat i W′
         (D′): 1 W′ är arbete ovanför tröskeln som motsvarar en full anaerob
         reserv. De hålls isär eftersom tre lugna timmar och en timme hårda
-        intervaller kan ge samma TSS men kostar helt olika.
+        intervaller kan ge samma TSS men kostar helt skilda saker.
         {estimated > 0 &&
           ` ${estimated} äldre pass har strain uppskattad ur den sparade serien, som jämnar ut korta toppar – värdet blir där något lågt.`}
         {withoutStrain > 0 &&

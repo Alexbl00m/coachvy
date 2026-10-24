@@ -30,6 +30,7 @@ import { listStrengthSessions } from "@/lib/strength/queries";
 import { strengthToPrompt } from "@/lib/strength/strength";
 import { philosophyBlocks } from "./philosophy";
 import { coachPhilosophyFor } from "./philosophy-queries";
+import { WRITING_RULES } from "@/lib/ai-coach/language";
 
 const MODEL = "claude-opus-5-5";
 
@@ -52,7 +53,9 @@ Hur du svarar:
 - Kort och konkret. Coachen är erfaren och behöver inte grunderna i träningslära förklarade.
 - Var ärlig om osäkerhet. Modellerna appen använder – critical power, W′bal, sRPE-belastning – är approximationer, och när en slutsats vilar på tunt underlag ska det stå.
 - Föreslå inte medicinsk behandling. Ser något ut att vara en skada eller ett hälsoproblem, säg att det hör hemma hos vården.
-- Du fattar inga beslut åt coachen. Du lägger fram vad talen säger och vad alternativen kostar.`;
+- Du fattar inga beslut åt coachen. Du lägger fram vad talen säger och vad alternativen kostar.
+
+${WRITING_RULES}`;
 
 export type AskResult =
   | { ok: true; answer: string }

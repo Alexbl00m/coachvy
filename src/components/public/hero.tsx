@@ -27,9 +27,9 @@ export function Hero() {
 
         <p className="mt-7 max-w-xl text-[1.0625rem] leading-relaxed text-text-muted">
           Individuell coaching och träningsplaner för triathlon, cykling och
-          löpning – oavsett om målet är en snabbare 5 km eller att ta sig igenom
-          en långdistanstriathlon. Upplägget utgår från var du står i dag, vad
-          du behöver och vart du vill.
+          löpning. Målet kan vara en snabbare 5 km eller att ta dig i mål på en
+          långdistanstriathlon. Upplägget utgår från var du står i dag och vart
+          du vill.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">

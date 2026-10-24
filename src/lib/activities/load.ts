@@ -205,13 +205,13 @@ export function loadReading(trend: LoadTrend): string[] {
         "Belastningen ökar genom mer träning, med intensiteten i samma nivå.",
       );
     else if (vUp && sUp)
-      lines.push("Både volym och intensitet ökar samtidigt.");
+      lines.push("Volym och intensitet ökar samtidigt.");
     else if (vDown && sDown)
       lines.push(
-        "Både volym och intensitet är nere – vila, toppning eller ett avbrott.",
+        "Volym och intensitet är nere. Det tyder på vila, toppning eller ett avbrott.",
       );
     else if (sDown && !vDown)
-      lines.push("Intensiteten är nere medan volymen håller i sig.");
+      lines.push("Intensiteten är nere, och volymen håller i sig.");
   }
   return lines;
 }

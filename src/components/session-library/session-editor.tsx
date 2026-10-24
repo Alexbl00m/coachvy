@@ -311,7 +311,7 @@ export function SessionEditor({
               10K, 5K och spann som{" "}
               <code className="text-text-muted">@HM-10K</code>.
               {withLevels &&
-                " Nivåerna är samma format i olika mängd – A mest, C minst."}
+                " Nivåerna är samma format i tre mängder. A är mest, C minst."}
             </p>
           </div>
 

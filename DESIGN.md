@@ -395,7 +395,7 @@ Sajten är samma instrument som appen, men den talar. Den delar paletten,
 typsnittet och komponenterna, och lägger till tre saker:
 
 - **Rubriker i två toner.** Påståendet i `text`, fortsättningen i
-  `text-muted` på samma rad: "Varje person är unik. Och tränar därefter."
+  `text-muted` på samma rad: "Ingen tränar som någon annan. Därför skrivs varje plan för en person."
   Display 44–76 px, vikt 600, spärrning −0.028 till −0.04 em.
 - **Sektioner delas med en linje**, inte med bakgrundsfärg. En etikett i
   Geist Mono 12 px `text-subtle` ovanför rubriken säger vad sektionen gäller.
@@ -407,7 +407,50 @@ laktattest som det ser ut i Coachvy, märkt som exempel; inga räknare över
 antal adepter eller lediga platser. Foton är riktiga bilder, aldrig
 genererade.
 
-## 8. Gör och gör inte
+## 8. Språk
+
+Texten i appen och på sajten låter som en coach som talar till en person. Den
+är skriven på naturlig, konkret svenska med tydligt tilltal: du till adepten,
+du till coachen. Meningar och stycken får variera i längd. En kort mening
+efter två långa gör mer än ännu en lång.
+
+Säg det som stämmer för just den här sidan. "Tröskeln har stigit 12 W sedan
+mars" säger något; "följ din utveckling över tid" gör det inte. Beröm,
+överdrifter och vaga löften stryks.
+
+De här orden och fraserna används inte. De flesta är utfyllnad, och några
+är det som får en text att låta maskinskriven:
+
+> det är viktigt att, notera, kom ihåg, komma ihåg, lägga på minnet, det är
+> inte bara X utan även Y, i en värld av, i en värld som ständigt förändras,
+> till nästa nivå, steg för steg-guide, skapa magi, i dagens snabbrörliga
+> digitala landskap, lås upp potentialen, sammanfattningsvis, det handlar om,
+> mycket bra fråga, utmärkt idé, kraftfull, banbrytande, revolutionera, unik,
+> fantastisk, imponerande, magnifik, vanligtvis, olika, enligt texten,
+> baserat på, medan, både, men också, nedan, exempel och till exempel.
+
+Ingen mening börjar med "Vilket" eller "Där". Rubrikerna "Slutsats" och
+"Sammanfattning" finns inte, och ingen text sammanfattar sig själv.
+
+Tre undantag gör listan användbar i ett gränssnitt. Ett ord som är namnet på
+en funktion står kvar: Exempelplan heter Exempelplan. "Medan" får stå när det
+gäller tid, som i "Visas medan passet laddas". Och ett bindestreck i ett
+intervall, som 12–16 veckor eller 4–6 repetitioner, hör till siffran.
+
+Punktlistor används för det som är en lista: övningar, zoner, intervaller,
+vad ett test ger. Resonemang skrivs som löptext. Tankstreck, fetstil och
+tretal används sparsamt, emojis och & inte alls.
+
+En sak har ett namn. Säger appen tröskel på ett ställe heter det inte FTP på
+nästa, om det inte är FTP som menas. Texten hänvisar inte vagt till
+"arbetet" eller "tillsammans"; den säger vem som gör vad. Den hittar inte på
+erfarenheter, ändrar aldrig fakta eller siffror och lägger inte till småord
+som "ju" eller "liksom".
+
+AI-coachen, passbyggaren och passanalysen får samma regler i sin systemprompt
+(`src/lib/ai-coach/language.ts`). Ändras reglerna här ändras de där.
+
+## 9. Gör och gör inte
 
 ### Gör
 - Låt sidrubriken säga läget när det finns ett: en mening med punkt.

@@ -68,10 +68,10 @@ export function calculateCriticalSpeed(
     .sort((a, b) => a.minutes - b.minutes);
 
   if (valid.length < 2) {
-    return { error: "Minst två test med både tid och distans krävs." };
+    return { error: "Minst två test med tid och distans krävs." };
   }
   if (valid[0].minutes === valid[valid.length - 1].minutes) {
-    return { error: "Testerna måste ha olika längd." };
+    return { error: "Testerna kan inte vara lika långa." };
   }
 
   const points = valid.map((t) => ({ seconds: t.minutes * 60, metres: t.metres }));

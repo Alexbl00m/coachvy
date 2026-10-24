@@ -95,7 +95,7 @@ const raceOf = (raceMetres: number | null | undefined): Race =>
 function readGoalTime(text: string | undefined, race: Race): number | string {
   const seconds = text?.trim() ? parseRaceTime(text) : null;
   if (seconds === null) {
-    return `Skriv måltiden som en tid, till exempel ${race.example}.`;
+    return `Skriv måltiden som en tid, som ${race.example}.`;
   }
   if (seconds < race.min || seconds > race.max) {
     return `Måltiden för ${race.name} ska ligga mellan ${raceTimeText(race.min)} och ${raceTimeText(race.max)}.`;
@@ -802,7 +802,7 @@ export async function saveFitnessEstimate(input: {
     const value = parseRaceTime(text);
     if (value === null) {
       return fail(
-        `Skriv tiden på ${race.name} som en tid, till exempel ${race.example}.`,
+        `Skriv tiden på ${race.name} som en tid, som ${race.example}.`,
       );
     }
     // Rimlighet: världsrekorden och en promenad sätter gränserna.

@@ -214,7 +214,7 @@ export default async function InstallningarPage() {
                 Grupperna adepternas tester jämförs mot under Progression → Mål
                 och referens, och som målnivå i gap-analysen. De står från lägst
                 till högst nivå. Byt värdena mot dina egna, döp om dem eller
-                lägg till en grupp – till exempel svensk elit ur dina labbdata.
+                lägg till en grupp, som svensk elit ur dina labbdata.
                 {levels.isDefault &&
                   " Nu gäller Coachvys utgångsnivåer, satta ur de spann som brukar anges för uthållighetsinriktade cyklister."}
               </p>

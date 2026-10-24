@@ -22,8 +22,7 @@ export default function ToolsPage() {
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed text-text-muted">
         Samma modeller som jag använder med mina adepter, fria att använda.
-        Ingen inloggning, inget konto – skriv in dina siffror och se vad de
-        säger.
+        Du behöver inget konto. Skriv in dina siffror och se vad de säger.
       </p>
 
       <div className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -60,8 +59,8 @@ export default function ToolsPage() {
         </h2>
         <p className="mt-3 max-w-2xl leading-relaxed text-text-muted">
           En prognos säger vad du klarar om allt stämmer. Vad du ska träna för
-          att flytta den är en annan fråga – och den är svår att svara på
-          själv. Vill du att vi tittar på dina siffror tillsammans?
+          att flytta den är en annan fråga, och den är svår att svara på
+          själv. Vill du att vi tittar på dina siffror?
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <ButtonLink href={routes.contact}>Hör av dig</ButtonLink>

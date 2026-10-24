@@ -23,6 +23,7 @@ import { activityStrain, loadTrend } from "./load";
 import { listLoadActivities } from "./load-queries";
 import { getActivity, listActivities } from "./queries";
 import { sessionBrief } from "./session-brief";
+import { WRITING_RULES } from "@/lib/ai-coach/language";
 
 const MODEL = "claude-opus-5-5";
 
@@ -43,9 +44,11 @@ Regler:
 - Skriv om passet, inte om personen: "passet", "pulsen", "effekten". Inga namn och inga pronomen för adepten, så att coachen kan dela texten med adepten om hen vill.
 - Konstaterande och kort. Coachen är erfaren och behöver inga grunder förklarade. Inga punktlistor, inga rubriker, ingen markdown.
 - Rubriken är en mening, högst 120 tecken, med det viktigaste.
-- Syftet är en kort etikett, högst sex ord, till exempel "Distans, lugnt" eller "VO₂max, 5 × 4 min".
-- Två till fyra stycken, sammanlagt högst 170 ord. Varje stycke börjar med det det handlar om ("Mot planen: …").
-- Föreslå inte medicinsk behandling. Ser något ut som en skada eller sjukdom, säg att det hör hemma hos vården.`;
+- Syftet är en kort etikett, högst sex ord, som "Distans, lugnt" eller "VO₂max, 5 × 4 min".
+- Två till fyra stycken, sammanlagt högst 170 ord. Varje stycke börjar med vad det gäller ("Mot planen: …").
+- Föreslå inte medicinsk behandling. Ser något ut som en skada eller sjukdom, säg att det hör hemma hos vården.
+
+${WRITING_RULES}`;
 
 const OUTPUT_SCHEMA = {
   type: "object",

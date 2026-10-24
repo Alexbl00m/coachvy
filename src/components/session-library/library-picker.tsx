@@ -18,7 +18,7 @@ export function LibraryPicker({
   onClose,
   sessions,
   onPick,
-  description = "Namn, typ och struktur fylls i på varje nivå. Skala sedan nivåerna – samma format, olika mängd.",
+  description = "Namn, typ och struktur fylls i på varje nivå. Skala sedan nivåerna: samma format, mer eller mindre av det.",
 }: {
   open: boolean;
   onClose: () => void;

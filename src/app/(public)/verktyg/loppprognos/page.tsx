@@ -12,7 +12,7 @@ export default function RacePredictorPage() {
     <>
       <ToolHeader
         title="Loppprognos"
-        description="Vad säger dina tidigare lopp om nästa distans? Ett lopp räcker för en prognos med Riegels schablon. Med två eller fler räknas din egen utmattningsexponent fram – och den skiljer sig mer mellan löpare än man tror."
+        description="Vad säger dina tidigare lopp om nästa distans? Ett lopp räcker för en prognos med Riegels schablon. Med två eller fler räknas din egen utmattningsexponent fram, och den skiljer sig mer mellan löpare än man tror."
       />
       <RacePredictor />
     </>

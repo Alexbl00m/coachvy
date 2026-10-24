@@ -52,7 +52,7 @@ export const PROMPT_LIBRARY: PromptCategory[] = [
     id: "fysiologi",
     label: "Fysiologi och fartstrategi",
     prompts: [
-      "Jämför adeptens effekt och fart över olika tävlingsdistanser. Hur väl håller det som fungerar på kortare lopp på längre?",
+      "Jämför adeptens effekt och fart över tävlingsdistanserna. Hur väl håller det som fungerar på kortare lopp på längre?",
       "Utifrån de senaste passen och testerna: vilken effekt och fart är rimlig för [lopp och distans]?",
       "Hur bör adepten köra backarna på [bana] för att ha kvar en stark avslutning?",
       "Hur stämmer testvärdena – VO2max, VLamax och trösklarna – med träningsdatan, och vad betyder det för fartstrategin i tävling?",

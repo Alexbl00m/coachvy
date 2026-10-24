@@ -47,7 +47,7 @@ const calculators = [
     icon: Activity,
     title: "Critical speed",
     description:
-      "CS och D' från tidtagna distanser, med tempozoner och loppprognoser. Fungerar för både löpning och simning.",
+      "CS och D' från tidtagna distanser, med tempozoner och loppprognoser. Fungerar för löpning och simning.",
     inputs: "Tid och distans",
   },
   {

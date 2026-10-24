@@ -281,7 +281,7 @@ export function metabolicProfile(
       zones: [],
       zoneUnit: "W",
       warnings: [
-        "Minst två av de längre insatserna (3, 6 och 12 minuter) behövs, med både tid och medeleffekt.",
+        "Minst två av de längre insatserna (3, 6 och 12 minuter) behövs, med tid och medeleffekt för varje.",
       ],
     };
   }

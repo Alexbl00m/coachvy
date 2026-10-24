@@ -185,7 +185,7 @@ export function LactateCalculator() {
       {!analysis && (
         <Card>
           <p className="text-sm text-text-muted">
-            Fyll i minst fyra steg med både belastning och laktat. Ett
+            Fyll i minst fyra steg med belastning och laktat. Ett
             vilovärde på belastning 0 är valfritt men gör Bsln+ användbar.
           </p>
         </Card>

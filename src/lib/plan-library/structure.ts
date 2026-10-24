@@ -90,7 +90,7 @@ function parseStep(raw: string): RawStep | string {
     else distanceM = value;
     rest = text.slice(amount[0].length);
   } else {
-    return `"${raw.trim()}" saknar längd – skriv till exempel 10 min eller 400 m.`;
+    return `"${raw.trim()}" saknar längd. Skriv 10 min, 400 m eller liknande.`;
   }
   if (durationSeconds !== null) durationSeconds = Math.round(durationSeconds);
   if (distanceM !== null) distanceM = Math.round(distanceM);
@@ -126,7 +126,7 @@ function parseStep(raw: string): RawStep | string {
     /^\s*@?\s*(\d+(?:[.,]\d+)?)\s*(?:%\s*)?(?:[-–]\s*(\d+(?:[.,]\d+)?)\s*)?%/,
   );
   if (!target) {
-    return `"${raw.trim()}" saknar mål – skriv till exempel 65%, 90-95% eller @LO.`;
+    return `"${raw.trim()}" saknar mål. Skriv 65%, 90-95%, @LO eller liknande.`;
   }
   const low = num(target[1]) / 100;
   const high = target[2] ? num(target[2]) / 100 : low;

@@ -196,7 +196,7 @@ export function RunningProfile({ profile }: { profile: SpeedProfile }) {
             <p className="mt-0.5 text-[0.75rem] text-text-subtle tabular-nums">
               {cs
                 ? `D′ ${Math.round(cs.dPrime)} m · ${sv(cs.speed * 3.6)} km/h`
-                : "kräver insatser av klart olika längd på 2–20 min"}
+                : "kräver insatser av klart skild längd på 2–20 min"}
             </p>
           </div>
           <div className="rounded-lg border border-line bg-surface p-4">

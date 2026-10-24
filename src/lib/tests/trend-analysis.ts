@@ -212,7 +212,7 @@ export function summariseProgress(series: SeriesLike[], today = new Date()) {
     Math.abs(Date.parse(thr.since) - Date.parse(v.since)) <= 183 * DAY;
   if (thr && v && !samePeriod) {
     sentences.push(
-      "Tröskeln och VO2max är mätta över olika perioder, så de jämförs inte med varandra här.",
+      "Tröskeln och VO2max är mätta över skilda perioder, så de jämförs inte med varandra här.",
     );
   }
   if (thr && v && samePeriod) {

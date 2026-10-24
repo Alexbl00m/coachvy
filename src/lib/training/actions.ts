@@ -66,7 +66,7 @@ export async function saveCheckin(
     return {
       ok: false,
       error:
-        "Ange både hur passet kändes och hur långt det var – belastningen är de två gånger varandra.",
+        "Ange hur passet kändes och hur långt det var. Belastningen är de två gånger varandra.",
     };
   }
 

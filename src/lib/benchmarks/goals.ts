@@ -137,7 +137,7 @@ export function computeGoals(input: {
       if (!goal) {
         return line(
           null,
-          "Skriv distansen och målet så att de går att räkna på – till exempel ”42,2 km” och ”under 3:15:00” – så räknas avståndet.",
+          "Skriv distansen och målet så att de går att räkna på, som ”42,2 km” och ”under 3:15:00”, så räknas avståndet.",
         );
       }
       if (race.sport === "löpning") {

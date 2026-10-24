@@ -159,7 +159,7 @@ export function MetabolicProgression({
         />
         <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
           Varje test räknas om ur rådatan med dagens modell, så att profiler
-          från olika år går att jämföra.
+          från skilda år går att jämföra.
         </p>
       </Card>
     </div>

@@ -8,7 +8,7 @@ const packages = [
   {
     title: "Individuell coaching",
     price: "2 000 kr",
-    description: "Komplett coaching med personlig uppföljning.",
+    description: "Coaching med personlig uppföljning varje vecka.",
     features: [
       "Personlig träningsplan",
       "Veckovis uppföljning",
@@ -21,7 +21,7 @@ const packages = [
   {
     title: "Träningsplan",
     price: "800 kr",
-    description: "Skräddarsydd träningsplan utan personlig coaching.",
+    description: "En plan skriven för dig, utan löpande coaching.",
     features: [
       "Personlig träningsplan",
       "Månadsvis uppdatering",
@@ -38,9 +38,9 @@ export function Coaching() {
     <Section id="coaching">
       <SectionHeading
         label="Coaching"
-        title="Varje person är unik."
-        continuation="Och tränar därefter."
-        description="Två upplägg, samma utgångspunkt: en plan som är din. Vill du ha någon som följer upp varje vecka, eller en plan att köra själv?"
+        title="Ingen tränar som någon annan."
+        continuation="Därför skrivs varje plan för en person."
+        description="Du väljer mellan två upplägg. Vill du ha någon som följer upp varje vecka, eller en plan att köra själv?"
       />
 
       <div className="mt-14 grid gap-4 md:grid-cols-2">

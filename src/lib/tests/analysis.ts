@@ -519,7 +519,7 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
     }
 
     warnings.push(
-      "Ett 20-minuterstest ger inget mått på anaerob kapacitet. Behöver du W′ krävs minst två insatser av olika längd.",
+      "Ett 20-minuterstest ger inget mått på anaerob kapacitet. Behöver du W′ krävs minst två insatser som inte är lika långa.",
     );
 
     return { metrics, zones: ftpZones(ftp), zoneUnit: "W", warnings };
@@ -688,7 +688,7 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         zones: [],
         zoneUnit: unit,
         warnings: [
-          "Minst två insatser med olika längd och både tid och sträcka krävs.",
+          "Minst två insatser som inte är lika långa krävs, med tid och sträcka för varje.",
         ],
       };
     }
@@ -785,7 +785,7 @@ export function analyseSession(args: AnalysisArgs): SessionAnalysis {
         zones: [],
         zoneUnit: unit,
         warnings: [
-          "Dela upp testet i minst fyra delintervall, till exempel var 30:e sekund, med sträckan för varje.",
+          "Dela upp testet i minst fyra delintervall, gärna var 30:e sekund, med sträckan för varje.",
         ],
       };
     }

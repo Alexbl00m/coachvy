@@ -14,9 +14,9 @@ export function Contact() {
     <Section id="kontakt">
       <SectionHeading
         label="Kontakt"
-        title="Låt oss prata."
+        title="Hör av dig."
         continuation="Det första samtalet kostar ingenting."
-        description="Är du redo att ta nästa steg? Berätta var du står och vart du vill, så pratar vi om hur vi tar oss dit."
+        description="Berätta var du står och vart du vill, så pratar vi om vägen dit."
       />
 
       <div className="mt-14 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">

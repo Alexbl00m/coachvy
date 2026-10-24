@@ -173,9 +173,9 @@ export const PROTOCOLS: Protocol[] = [
     label: "Critical power",
     sports: ["cykling"],
     purpose:
-      "Bästa fjärrtestet på cykel. Två eller tre maxinsatser ger både CP och den anaeroba kapaciteten.",
+      "Bästa fjärrtestet på cykel. Två eller tre maxinsatser ger CP och den anaeroba kapaciteten.",
     howTo:
-      "Två till tre maximala insatser på olika längd, till exempel 3, 8 och 12 minuter, med full återhämtning emellan.",
+      "Två till tre maximala insatser som inte är lika långa, gärna 3, 8 och 12 minuter, med full återhämtning emellan.",
     remote: true,
     minEfforts: 2,
     maxEfforts: 6,
@@ -203,7 +203,7 @@ export const PROTOCOLS: Protocol[] = [
     label: "3 min all-out",
     sports: ["cykling"],
     purpose:
-      "Ett enda pass som ger både CP och W′. Kräver att du kan läsa av medeleffekten för sista 30 sekunderna.",
+      "Ett enda pass som ger CP och W′. Kräver att du kan läsa av medeleffekten för sista 30 sekunderna.",
     howTo:
       "Efter uppvärmning: tramp maximalt i tre minuter utan att fördela krafterna. CP är medeleffekten under sista 30 sekunderna, W′ arbetet över den nivån.",
     remote: true,
@@ -265,7 +265,7 @@ export const PROTOCOLS: Protocol[] = [
     purpose:
       "Fjärrtest för löpning. Två eller tre tidtagna distanser ger CS och D'.",
     howTo:
-      "Två till tre maximala löpningar på olika distans, till exempel 1 200, 2 400 och 3 600 m, på skilda dagar eller med full vila.",
+      "Två till tre maximala löpningar på skilda distanser, gärna 1 200, 2 400 och 3 600 m, på skilda dagar eller med full vila.",
     remote: true,
     minEfforts: 2,
     maxEfforts: 6,
@@ -280,7 +280,7 @@ export const PROTOCOLS: Protocol[] = [
     purpose:
       "Två maxlöpningar på tid i stället för distans. Enkelt att göra på bana.",
     howTo:
-      "Spring maximalt i 3 minuter, vila fullt ut, spring maximalt i 5 minuter. Notera sträckan för båda.",
+      "Spring maximalt i 3 minuter, vila fullt ut, spring maximalt i 5 minuter. Skriv upp sträckan för båda.",
     remote: true,
     minEfforts: 2,
     maxEfforts: 2,
@@ -354,7 +354,7 @@ export const PROTOCOLS: Protocol[] = [
     label: "Lopp eller tidlopp",
     sports: ["löpning"],
     purpose:
-      "Ett tävlingsresultat på valfri distans. Ger samma svar som testerna, och flera lopp på olika distanser ger atletens egen fartprofil.",
+      "Ett tävlingsresultat på valfri distans. Ger samma svar som testerna, och flera lopp på skilda distanser ger atletens egen fartprofil.",
     howTo:
       "Ett lopp där atleten gav allt, på känd distans. En rad per kilometer eller per varv ger pacinganalysen; en enda rad med distans och sluttid (h:mm:ss) räcker annars.",
     remote: true,
@@ -409,7 +409,7 @@ export const PROTOCOLS: Protocol[] = [
     sports: ["simning"],
     purpose: "Fjärrtest i bassäng. Två tidtagna distanser räcker.",
     howTo:
-      "Två maximala simningar på olika distans, till exempel 200 och 400 m, med full vila emellan.",
+      "Två maximala simningar på skilda distanser, gärna 200 och 400 m, med full vila emellan.",
     remote: true,
     minEfforts: 2,
     maxEfforts: 6,

@@ -74,7 +74,7 @@ export function CriticalSpeedCalculator() {
       <Card>
         <CardTitle>Tidtagna distanser</CardTitle>
         <p className="mb-5 text-sm leading-relaxed text-text-muted">
-          Två maximala test på olika distanser räcker. Skriv tiden som{" "}
+          Två maximala test på skilda distanser räcker. Skriv tiden som{" "}
           <span className="text-text">mm:ss</span>. Testerna bör ligga mellan
           ungefär 2 och 20 minuter — kortare än så domineras resultatet av
           distanskapaciteten snarare än av uthålligheten.

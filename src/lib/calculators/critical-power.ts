@@ -60,12 +60,12 @@ export function calculateCriticalPower(
     .sort((a, b) => a.minutes - b.minutes);
 
   if (valid.length < 2) {
-    return { error: "Minst två test med både längd och effekt krävs." };
+    return { error: "Minst två test med längd och effekt krävs." };
   }
 
   // Testerna måste skilja sig i längd, annars finns ingen lutning att mäta.
   if (valid[0].minutes === valid[valid.length - 1].minutes) {
-    return { error: "Testerna måste ha olika längd." };
+    return { error: "Testerna kan inte vara lika långa." };
   }
 
   const points = valid.map((t) => ({ seconds: t.minutes * 60, watts: t.watts }));

@@ -154,7 +154,7 @@ export function AiCoachChat({
                 Fråga om {adeptName}. Svaret bygger på testtillfällena, den
                 rullande modellen, bakgrunden, incheckningarna och hela
                 historiken ur de uppladdade passen och loppen. Skriv en egen
-                fråga, eller välj en i frågebiblioteket nedan.
+                fråga eller välj en i frågebiblioteket.
               </p>
             </div>
           ) : (

@@ -185,7 +185,7 @@ export function LevelPanel({
         {SCENARIOS.find((s) => s.reason === reason) && (
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-text-muted">
             {SCENARIOS.find((s) => s.reason === reason)!.description} Förvalen
-            nedan går att ändra.
+            går att ändra.
           </p>
         )}
       </div>

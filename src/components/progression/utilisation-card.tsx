@@ -328,8 +328,8 @@ export function UtilisationCard({
       <p className="mt-3 text-[0.8125rem] leading-relaxed text-text-muted">
         Syreupptaget vid varje tröskel räknas med ACSM:s ekvation och delas med
         VO2max. Banden är referensspann: FatMax 50–70 %, LT1 65–75 %, och LT2
-        75–90 % – som också gäller anaerob tröskel, FTP, 4 mmol och CP, som alla
-        mäter ungefär samma gräns på olika sätt. Ett skattat VO2max har ett fel
+        75–90 %. Det sista spannet gäller också anaerob tröskel, FTP, 4 mmol och
+        CP, som alla mäter ungefär samma gräns på var sitt sätt. Ett skattat VO2max har ett fel
         på runt ±5 %, och det slår igenom på procenten.
       </p>
     </Card>

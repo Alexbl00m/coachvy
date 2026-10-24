@@ -197,7 +197,7 @@ export function FitReport({
           tre grader) och rött utanför – bara rött ger ett förslag att flytta
           sadeln. Bål och armbåge jämförs med erfarenhetsvärden ur praktiken,
           inte med en belagd norm. Axel och höft mäts men bedöms inte: studier
-          och bike-fit-guider definierar ledpunkten olika.
+          och bike-fit-guider placerar ledpunkten på skilda ställen.
         </p>
       </section>
 

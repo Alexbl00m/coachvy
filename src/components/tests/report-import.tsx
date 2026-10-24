@@ -119,7 +119,7 @@ export function ReportImport({
           </span>
           <span className="block text-[0.75rem] text-text-subtle">
             PDF eller ett foto av protokollet. Stegen, pulsen och laktatet läses
-            ut och fylls i nedan, så granskar du innan du sparar. Rapporter från
+            ut och fylls i här, så granskar du innan du sparar. Rapporter från
             Aktivitus, Ergonizer (Going Long) och 30K läses direkt ur PDF:en;
             andra skickas till AI-tjänsten. Coachvy sparar inte rapporten.
           </span>
@@ -202,7 +202,7 @@ export function ReportImport({
             </Button>
             <span className="text-[0.8125rem] text-text-subtle">
               {applied
-                ? "Granska stegen nedan mot rapporten innan du sparar."
+                ? "Granska stegen mot rapporten innan du sparar."
                 : "Det som står i formuläret nu ersätts."}
             </span>
           </div>

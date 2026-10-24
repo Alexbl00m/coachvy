@@ -212,7 +212,7 @@ export function readPowerProfile(points: ProfilePoint[]): string[] {
     p5 >= p5s + 0.5
   ) {
     lines.push(
-      "Profilen lutar mot tempo och klättring: motorn – VO2max och tröskeln – bär, medan spurten är svagast. Det är en uthållighetsprofil; spurten behöver bara tränas om loppen avgörs där.",
+      "Profilen lutar mot tempo och klättring: motorn, VO2max och tröskeln, bär och spurten är svagast. Det är en uthållighetsprofil; spurten behöver bara tränas om loppen avgörs där.",
     );
   } else if (
     p1 !== null &&

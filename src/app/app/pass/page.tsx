@@ -125,7 +125,7 @@ export default async function PassPage({
         notice = [
           `${libraryPass.title}${level} ur passbiblioteket.`,
           result.note,
-          "Ändra stegen nedan och spara på adepten.",
+          "Ändra stegen och spara på adepten.",
         ]
           .filter(Boolean)
           .join(" ");

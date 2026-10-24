@@ -72,7 +72,7 @@ export function PhasesEditor({
     >
       <p className="max-w-3xl text-[0.8125rem] leading-relaxed text-text-subtle">
         När en medlem väljer en kortare plan kortas faserna en vecka i taget,
-        från fasens början, i ordningen nedan – först den som kortas först.
+        från fasens början, i den ordning som står här. Den översta kortas först.
         Faser som inte kortas behåller alla sina veckor, typiskt den specifika
         fasen och tapern.
       </p>

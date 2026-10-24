@@ -66,7 +66,7 @@ export default async function NewSessionPage({
 
       <PageHeader
         title="Nytt testtillfälle"
-        description="Välj protokoll och fyll i rådatan. Värdena räknas ut medan du skriver – det som sparas är både stegen och det de gav."
+        description="Välj protokoll och fyll i rådatan. Värdena räknas ut medan du skriver. Det som sparas är stegen och det de gav."
       />
 
       <NewSessionForm
