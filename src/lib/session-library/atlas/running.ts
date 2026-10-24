@@ -11,7 +11,7 @@
  * och progressionen ändrar en variabel i taget.
  *
  * Varje pass har tre nivåer, som planmallarna: B är formatet som det heter,
- * A mer och C mindre – samma format, olika mängd.
+ * A mer och C mindre: samma format, mer eller mindre av det.
  *
  * Modulen är ren data. `seed.ts` gör SQL av den.
  */
@@ -92,7 +92,7 @@ const Z4 = {
 const RACE = {
   intensity: "Z4 Loppfart",
   adaptations:
-    "Löpekonomi och pacing i loppfart, trötthetsresistens vid tröskelnära belastning och vana vid farten – både i kroppen och i huvudet.",
+    "Löpekonomi och pacing i loppfart, trötthetsresistens vid tröskelnära belastning och vana vid farten, i kroppen och i huvudet.",
   fueling: Z4.fueling,
 };
 
@@ -341,7 +341,7 @@ export const RUNNING_ATLAS: LibraryInput[] = [
     purpose:
       "Kilometrar i tröskelfart med kort vila – samma idé som tidsdragen men på sträcka. Bra på bana eller utmätt slinga, där farten går att följa kilometer för kilometer.",
     description:
-      "Tröskelfart, RPE 6–7. En minut jogg mellan. Notera tiden per kilometer: den ska vara jämn, och den sista ska inte vara den snabbaste.",
+      "Tröskelfart, RPE 6–7. En minut jogg mellan. Skriv upp tiden per kilometer. Den ska vara jämn, och den sista ska inte vara den snabbaste.",
     progression:
       "Antalet drag: 5, 6, 8 över blocket. Därefter längre drag, 1,5 km, i nästa block. Farten ligger kvar så länge tiderna är jämna och sista draget går lätt.",
     levels: {
@@ -403,7 +403,7 @@ export const RUNNING_ATLAS: LibraryInput[] = [
     title: "20 × 400 m kort tröskel",
     phases: ["grund", "uppbyggnad", "specifik"],
     purpose:
-      "Många korta drag strax över tröskeln med mycket kort vila – ett norskt format. Den korta vilan håller laktatet stabilt medan farten blir något högre än i långa drag. Det tränar löpekonomin i snabbare fart utan att passet blir ett VO₂max-pass.",
+      "Många korta drag strax över tröskeln med mycket kort vila – ett norskt format. Den korta vilan håller laktatet stabilt, och farten blir ändå något högre än i långa drag. Det tränar löpekonomin i snabbare fart utan att passet blir ett VO₂max-pass.",
     description:
       "Halvmaratonfart, RPE 6–7. 30 sekunder stå eller gå mellan dragen. Tiden per 400 m ska vara jämn genom hela passet. Bana passar bäst.",
     progression:
@@ -744,7 +744,7 @@ export const RUNNING_ATLAS: LibraryInput[] = [
     description:
       "Uppvärmningen trappar upp genom zonerna och avslutas med fyra stegringar. Dragen i milfart, puls 88–92 % av max mot slutet av passet, RPE 7–8. 200 meter lugn jogg mellan – jogga, gå inte. Jämnt genom alla tio; behåll steget och avspänningen när det tar emot. Bana passar bäst.",
     adaptations:
-      "Aerob kraft: lång tid nära VO₂max, både centralt och perifert. Mitokondriell signalering av den höga aeroba belastningen. Joggen håller syreupptaget uppe och hjälper laktatet att förbrännas mellan dragen. Löpekonomi och trötthetsresistens i loppfart.",
+      "Aerob kraft: lång tid nära VO₂max, centralt och perifert. Mitokondriell signalering av den höga aeroba belastningen. Joggen håller syreupptaget uppe och hjälper laktatet att förbrännas mellan dragen. Löpekonomi och trötthetsresistens i loppfart.",
     timing:
       "Uppbyggnad och tävlingsspecifik period inför 5 och 10 km, en gång i veckan, för löpare med en stabil aerob grund. Bana.",
     progression:

@@ -9,7 +9,7 @@
  * ändrar en variabel i taget.
  *
  * Varje pass har tre nivåer, som planmallarna: B är formatet som det heter,
- * A mer och C mindre – samma format, olika mängd.
+ * A mer och C mindre: samma format, mer eller mindre av det.
  *
  * Modulen är ren data. `seed.ts` gör SQL av den.
  */
@@ -70,7 +70,7 @@ const Z1 = {
 };
 
 const Z2_ADAPT =
-  "Fler och effektivare mitokondrier, tätare kapillärnät och bättre förmåga att använda både fett och kolhydrater vid en given effekt. Över tid flyttas LT1 uppåt: mer watt med låg metabol belastning. Passen gör det också möjligt att tåla mer kvalitet.";
+  "Fler och effektivare mitokondrier, tätare kapillärnät och bättre förmåga att använda fett och kolhydrater vid en given effekt. Över tid flyttas LT1 uppåt: mer watt med låg metabol belastning. Passen gör det också möjligt att tåla mer kvalitet.";
 
 const Z3_ADAPT =
   "Höjer den effekt som går att hålla länge med måttlig kolhydratförbrukning, förbättrar muskulär uthållighet och trötthetsresistens, och vänjer kroppen vid att arbeta nära tävlingsintensiteten i långa lopp.";
@@ -94,7 +94,7 @@ const A5_SHORT =
 const A5_LONG =
   "Höjer VO₂max och den effekt som går att hålla i 3–8 minuter: större slagvolym, högre maximal syretransport och bättre syreupptag i musklerna. Ökar toleransen för hög belastning.";
 const A5_THRESHOLD =
-  "Höjer både VO₂max och LT2: förmågan att ta upp mycket syre och att utnyttja en stor andel av det länge. Förbättrar laktatomsättningen och den muskulära uthålligheten vid hög belastning.";
+  "Höjer VO₂max och LT2: förmågan att ta upp mycket syre och att utnyttja en stor andel av det länge. Förbättrar laktatomsättningen och den muskulära uthålligheten vid hög belastning.";
 const T5_BASE =
   "I grundperioden som veckans utvalda höga intensitet, en gång i veckan. I ett VO₂max-block i uppbyggnaden 1–2 gånger i veckan i 3–4 veckor, med lätta dagar runt. Inne på trainer eller i en jämn stigning.";
 const T5_BUILD =
@@ -194,7 +194,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     purpose:
       "Strukturerad övre Z2: långa block strax under LT1, med korta lätta pauser som håller kvaliteten jämn. Passet utvecklar den lågintensiva kapaciteten med en tydlig och upprepbar belastning – samma block vecka efter vecka gör det lätt att se om samma watt kostar mindre puls.",
     description:
-      "Blocken på 70–75 % av FTP, RPE 4. Fortfarande samtalsfart, men med fokus. Pauserna lätta men inte stillastående. Passar bra på trainer, där effekten går att hålla exakt. Notera snittpulsen per block: stiger den från första till sista blocket, behåll effekten längre innan du höjer.",
+      "Blocken på 70–75 % av FTP, RPE 4. Fortfarande samtalsfart, men med fokus. Pauserna lätta men inte stillastående. Passar bra på trainer, där effekten går att hålla exakt. Skriv upp snittpulsen per block. Stiger den från första till sista blocket, behåll effekten längre innan du höjer.",
     adaptations: Z2_ADAPT,
     fueling:
       "30–60 g kolhydrater per timme och 500–750 ml vätska. Inne svettas du mer – drick efter törst och lite till.",
@@ -214,7 +214,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     intensity: "Z2 Uthållighet",
     phases: ["grund", "uppbyggnad", "specifik"],
     purpose:
-      "Långpasset bygger både aerob kapacitet och trötthetsresistens: förmågan att hålla effekt och teknik när timmarna går. För långdistans är det också här energiplanen tränas. Värdet syns inte i ett enskilt pass utan över veckor – det är kontinuiteten som bygger grunden.",
+      "Långpasset bygger aerob kapacitet och trötthetsresistens: förmågan att hålla effekt och teknik när timmarna går. För långdistans är det också här energiplanen tränas. Värdet syns inte i ett enskilt pass utan över veckor – det är kontinuiteten som bygger grunden.",
     description:
       "Z2 hela vägen, 60–75 % av FTP, RPE 3–4. Låt effekten följa terrängen men inte lämna zonen – växla tidigt i backarna. Kadens 85–95 rpm. Ät och drick enligt planen från start, inte när du blir hungrig. Sista halvtimmen ska kännas kontrollerad; faller effekten mycket var intensiteten för hög tidigt eller energin för liten.",
     adaptations: `${Z2_ADAPT} Det långa passet tränar dessutom trötthetsresistensen.`,
@@ -419,7 +419,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "10 × 1/1",
     phases: P5_BASE,
     purpose:
-      "Minutdrag med lika lång vila – enkelt, upprepbart och lätt att följa över ett block. Syreupptaget stiger mot VO₂max under seriens gång. Formatet utvecklar både aerob kapacitet och förmågan att återhämta sig mellan hårda insatser, som i ett lopp med upprepade ryck.",
+      "Minutdrag med lika lång vila – enkelt, upprepbart och lätt att följa över ett block. Syreupptaget stiger mot VO₂max under seriens gång. Formatet utvecklar aerob kapacitet och förmågan att återhämta sig mellan hårda insatser, som i ett lopp med upprepade ryck.",
     description:
       "115–120 % av FTP i en minut, en minut lätt. RPE 8–9 i de sista dragen. Starta inte första draget hårdare än det sista ska bli – hitta en effekt du kan hålla i alla tio. Kadens 90–100 rpm.",
     adaptations: A5_SHORT,
@@ -543,7 +543,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "8 × 20/10 · Tabata",
     phases: P5_BUILD,
     purpose:
-      "Tabatas protokoll från 1996: åtta drag på 20 sekunder nära maximalt med tio sekunders vila. Det belastar både den aeroba och den anaeroba kapaciteten på kort tid. Kort men mycket krävande – och fel pass för att bygga aerob grund. Det hör hemma där specificiteten är hög och loppet kräver upprepade maximala insatser.",
+      "Tabatas protokoll från 1996: åtta drag på 20 sekunder nära maximalt med tio sekunders vila. Det belastar den aeroba och den anaeroba kapaciteten på kort tid. Kort men mycket krävande – och fel pass för att bygga aerob grund. Det hör hemma där specificiteten är hög och loppet kräver upprepade maximala insatser.",
     description:
       "Så hårt som går att hålla i 20 sekunder och upprepa. Originalet låg på 170 % av effekten vid VO₂max, långt över Z5; här 150–170 % av FTP. Räkna med att effekten faller drag för drag – det är meningen. RPE 10 mot slutet. Ordentlig uppvärmning och lång nedvarvning. Hoppa över passet om du inte är utvilad.",
     adaptations:
@@ -685,7 +685,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "4 × 8 min",
     phases: P5_BUILD,
     purpose:
-      "Mittengruppen i Seilers studie från 2013: 4 × 8 min med två minuters vila gav större förbättringar än både 4 × 4 och 4 × 16. Formatet ligger mellan tröskel och VO₂max – högt nog för att belasta syreupptaget, långt nog för att samla mycket arbete.",
+      "Mittengruppen i Seilers studie från 2013: 4 × 8 min med två minuters vila gav större förbättringar än 4 × 4 och 4 × 16. Formatet ligger mellan tröskel och VO₂max: högt nog för att belasta syreupptaget, långt nog för att samla mycket arbete.",
     description:
       "98–104 % av FTP, RPE 8–9. Högsta effekt du kan hålla i alla fyra; beroende på pacing glider formatet mellan Z4 och Z5. Två minuter lätt mellan. Styr på watt, följ pulsen.",
     adaptations: A5_THRESHOLD,
@@ -825,7 +825,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     purpose:
       "Drag på sex minuter där varje drag är lite hårdare än det förra. Passet börjar vid tröskeln och slutar i VO₂max – en kontrollerad väg upp som lär ut pacing och visar var kvaliteten börjar falla.",
     description:
-      "Första draget 100–103 % av FTP, sedan tre procentenheter mer per drag, sist 112–115 %. Tre minuter lätt mellan. RPE 7 i första draget och 9 i det sista. Når du inte effekten i sista draget har du hittat dagens tak – notera det.",
+      "Första draget 100–103 % av FTP, sedan tre procentenheter mer per drag, sist 112–115 %. Tre minuter lätt mellan. RPE 7 i första draget och 9 i det sista. Når du inte effekten i sista draget har du hittat dagens tak. Skriv upp det.",
     adaptations: A5_THRESHOLD,
     fueling: Z5_FUEL,
     timing: T5_LONG,
@@ -857,7 +857,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "4 × 7 min",
     phases: P5_BUILD,
     purpose:
-      "Långa VO₂max-drag i övre tröskelområdet. Sju minuter ger lång tid nära maximal syreupptagning och ett stort tröskelinslag; beroende på pacing glider formatet mellan Z4 och Z5. Bra när både VO₂max och tröskel ska utvecklas.",
+      "Långa VO₂max-drag i övre tröskelområdet. Sju minuter ger lång tid nära maximal syreupptagning och ett stort tröskelinslag; beroende på pacing glider formatet mellan Z4 och Z5. Bra när VO₂max och tröskel ska utvecklas samtidigt.",
     description:
       "103–108 % av FTP, RPE 9 mot slutet. Tre och en halv minut lätt. Jämn effekt – starta inte för hårt. Kadens 85–95 rpm.",
     adaptations: A5_THRESHOLD,
@@ -977,7 +977,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "4 × 9 min",
     phases: P5_BUILD,
     purpose:
-      "Långa drag runt och strax över FTP. Beroende på pacing glider formatet mellan Z4 och Z5, och det belastar både tröskel och syreupptag – mycket arbete nära kapaciteten. Passar när målet är långa, hårda partier.",
+      "Långa drag runt och strax över FTP. Beroende på pacing glider formatet mellan Z4 och Z5, och det belastar tröskel och syreupptag med mycket arbete nära kapaciteten. Passar när målet är långa, hårda partier.",
     description:
       "100–105 % av FTP, RPE 8–9. Tre minuter lätt. Starta i nedre delen av spannet. Faller fjärde draget under 98 % var effekten för hög – sänk nästa gång i stället för att korta.",
     adaptations: A5_THRESHOLD,
@@ -996,7 +996,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "20 × 30/15",
     phases: P5_BASE,
     purpose:
-      "En lång, sammanhängande 30/15-serie: femton minuter där syreupptaget ligger nära max nästan hela tiden. Utan pauser mellan set blir det ett test av både kapacitet och förmågan att hålla kvalitet – ett naturligt steg efter 3 × 13 × 30/15.",
+      "En lång, sammanhängande 30/15-serie: femton minuter där syreupptaget ligger nära max nästan hela tiden. Utan pauser mellan set blir det ett test av kapaciteten och av förmågan att hålla kvalitet. Ett naturligt steg efter 3 × 13 × 30/15.",
     description:
       "30 s på 120–128 % av FTP, 15 s lätt, tjugo gånger. RPE 9 i sista tredjedelen. Ligg i nedre delen av spannet i början; de sista sex dragen avgör om effekten var rätt.",
     adaptations: A5_SHORT,
@@ -1076,7 +1076,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     title: "Aerob kraft under trötthet · 2 × 21 min",
     phases: P5_BUILD,
     purpose:
-      "Ett långt pass med 24 minuter på hög intensitet medvetet lagda djupt in i det. Målet är inte bara högt syreupptag i utvilat läge, utan att behålla aerob kraft och effektkontroll när timmarna och glykogenförbrukningen redan börjat kosta – det som avgör slutet av ett långt lopp.",
+      "Ett långt pass med 24 minuter på hög intensitet medvetet lagda djupt in i det. Högt syreupptag i utvilat läge räcker inte här. Målet är att behålla aerob kraft och effektkontroll när timmarna och glykogenförbrukningen redan börjat kosta, och det är det som avgör slutet av ett långt lopp.",
     description:
       "Uppvärmningen innehåller 20 minuter på 90 %. Sedan 45 minuter lugnt. Huvudseten är 21 minuter: tre minuter på 110–115 % och tre minuter på 60 % om vartannat, fyra hårda och tre lätta. 25 minuter lugnt mellan seten. Håll VO₂-dragen kontrollerade, inte maximala, och byt effekt mjukt. Ät tidigt och jämnt.",
     adaptations:
@@ -1253,7 +1253,7 @@ export const CYCLING_ATLAS: LibraryInput[] = [
     purpose:
       "Lamberts och Lamberts submaximala cykeltest: trötthet och form varje vecka utan att trötta. Effekten vid tre bestämda pulsnivåer, pulsåterhämtningen och RPE jämförs med adeptens egen norm. Testet svarar på om veckans planerade belastning går att genomföra – och om formen rör sig åt rätt håll. Viktigast för de mest tränade, där marginalen mellan produktiv belastning och överbelastning är liten.",
     description:
-      "Styr på puls, inte på watt: 6 min vid 60 % av maxpuls, 6 min vid 80 %, 3 min vid 90 %, sedan 90 s sittande utan att trampa. Börja varje steg lite hårdare så att pulsen når målet inom första minuten, och justera sedan effekten så att pulsen ligger stilla. Fritt läge på trainern, inte ERG, och ingen autopaus. Notera snitteffekt och snittpuls utan första minuten, tiden till målpulsen och RPE 1–10 i slutet av varje steg, och pulsen efter 60 s vila. Effekten i strukturen är bara ett riktvärde. Lägg in resultatet som ett LSCT-test på adepten.",
+      "Styr på puls, inte på watt: 6 min vid 60 % av maxpuls, 6 min vid 80 %, 3 min vid 90 %, sedan 90 s sittande utan att trampa. Börja varje steg lite hårdare så att pulsen når målet inom första minuten, och justera sedan effekten så att pulsen ligger stilla. Fritt läge på trainern, inte ERG, och ingen autopaus. Skriv upp snitteffekt och snittpuls utan första minuten, tiden till målpulsen och RPE 1–10 i slutet av varje steg, och pulsen efter 60 s vila. Effekten i strukturen är bara ett riktvärde. Lägg in resultatet som ett LSCT-test på adepten.",
     adaptations:
       "Testet tränar ingenting särskilt – det mäter. Effekt mot puls följer den aeroba formen, pulsåterhämtningen och RPE fångar trötthet tidigt, och tiden till 90 % visar om pulsen svarar trögt.",
     fueling:
