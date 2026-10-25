@@ -67,7 +67,7 @@ export function TemplateActions({
               onClick={() => {
                 if (
                   !confirm(
-                    "Publicera? Versionen kan inte ändras efteråt – nya medlemmar får den här, och planer som redan startats behåller sin version.",
+                    "Publicera? Versionen går inte att ändra efteråt. De du delat planen med får den här versionen, och planer som redan startats behåller sin.",
                   )
                 )
                   return;

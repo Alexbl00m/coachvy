@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireAdmin } from "@/lib/auth/session";
+import { requirePlanBuilder } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/types/plan-library.generated";
@@ -13,9 +13,10 @@ import { parseStructure, structureSeconds } from "./structure";
 import type { SeasonPhase, WeekKind } from "./types";
 
 /**
- * Mallverktygen. Bara admin: varje åtgärd kontrollerar det, och RLS och
- * triggrarna i databasen gör det igen – och stoppar ändringar i en
- * publicerad version oavsett vem som försöker.
+ * Mallverktygen, för coacher med medlemskap och admin. Varje åtgärd
+ * kontrollerar det; RLS ser till att en coach bara ändrar sina egna planer,
+ * och triggrarna i databasen stoppar ändringar i en publicerad version
+ * oavsett vem som försöker.
  */
 
 export type AdminResult =
@@ -131,7 +132,7 @@ export async function createTemplate(input: {
   title: string;
   categoryId: string | null;
 }): Promise<AdminResult> {
-  const user = await requireAdmin();
+  const user = await requirePlanBuilder();
   const title = text(input.title, 120);
   if (!title) return fail("Ge mallen ett namn.");
   const supabase = await createClient();
@@ -157,17 +158,27 @@ export async function createTemplate(input: {
     raceMetres = key ? raceByKey(key).metres : null;
   }
 
-  const { data: template, error } = await supabase
-    .from("plan_templates")
-    .insert({
-      slug,
-      category_id: input.categoryId,
-      race_distance_m: raceMetres,
-      created_by: user.id,
-    })
-    .select("id")
-    .single();
-  if (error) return dbError(error);
+  // Andra coachers planer syns inte här, så adressen kan vara tagen ändå.
+  // Då får den ett kort tillägg.
+  let template: { id: string } | null = null;
+  for (let attempt = 0; attempt < 4 && !template; attempt++) {
+    const tryslug =
+      attempt === 0 ? slug : `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+    const { data, error } = await supabase
+      .from("plan_templates")
+      .insert({
+        slug: tryslug,
+        category_id: input.categoryId,
+        race_distance_m: raceMetres,
+        created_by: user.id,
+        owner_id: user.id,
+      })
+      .select("id")
+      .single();
+    if (data) template = data;
+    else if (error?.code !== "23505") return dbError(error ?? { message: "okänt fel" });
+  }
+  if (!template) return fail("Det gick inte att ge mallen en adress. Försök igen.");
 
   const { data: version, error: vError } = await supabase
     .from("plan_template_versions")
@@ -225,7 +236,7 @@ export async function updateTemplate(input: {
   /** Loppet planen leder fram till, i meter. Utelämnad: oförändrad. */
   raceMetres?: number | null;
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const slug = await slugify(input.slug);
   const race =
     input.raceMetres === undefined ? undefined : raceByMetres(input.raceMetres);
@@ -248,11 +259,26 @@ export async function updateTemplate(input: {
   return { ok: true };
 }
 
+/**
+ * En kopia av en plan i de egna mallarna, som utkast: den egna planens
+ * senaste version, eller den publicerade versionen av en plan som delats.
+ */
+export async function copyTemplate(templateId: string): Promise<AdminResult> {
+  await requirePlanBuilder();
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("copy_plan_template", {
+    p_template: templateId,
+  });
+  if (error) return dbError(error);
+  refresh(data);
+  return { ok: true, id: data };
+}
+
 export async function setTemplateArchived(
   templateId: string,
   archived: boolean,
 ): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_templates")
@@ -277,7 +303,7 @@ export async function saveVersionMeta(input: {
   minWeeks: number;
   volumeUnit: "km" | "h";
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const title = text(input.title, 120);
   if (!title) return fail("Ge planen ett namn.");
   const supabase = await createClient();
@@ -309,7 +335,7 @@ export async function saveVersionMeta(input: {
 }
 
 export async function publishVersion(versionId: string): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { error } = await supabase.rpc("publish_plan_version", {
     draft: versionId,
@@ -320,7 +346,7 @@ export async function publishVersion(versionId: string): Promise<AdminResult> {
 }
 
 export async function newDraft(templateId: string): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("new_plan_draft", {
     template: templateId,
@@ -332,7 +358,7 @@ export async function newDraft(templateId: string): Promise<AdminResult> {
 
 /** Tar bort ett utkast. En mall utan versioner tas bort helt. */
 export async function deleteDraft(versionId: string): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const templateId = await templateOf(versionId);
   const { error } = await supabase
@@ -389,7 +415,7 @@ export async function saveLevels(input: {
   versionId: string;
   levels: LevelInput[];
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   if (input.levels.length === 0) return fail("Planen behöver minst en nivå.");
   const keys = input.levels.map((l) => (l.key ?? "").trim());
   if (keys.some((k) => !k || k.length > 12)) {
@@ -471,7 +497,7 @@ export async function savePhases(input: {
   versionId: string;
   phases: PhaseInput[];
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   if (input.phases.length === 0) return fail("Planen behöver minst en fas.");
   if (input.phases.some((p) => !text(p.name, 80))) {
     return fail("Varje fas behöver ett namn.");
@@ -559,7 +585,7 @@ export async function addWeek(input: {
   versionId: string;
   phaseId: string;
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("plan_template_weeks")
@@ -580,7 +606,7 @@ export async function addWeek(input: {
 }
 
 export async function copyWeek(weekId: string): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("copy_plan_week", {
     week: weekId,
@@ -594,7 +620,7 @@ export async function deleteWeek(input: {
   versionId: string;
   weekId: string;
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_template_weeks")
@@ -616,7 +642,7 @@ export async function saveWeek(input: {
   note: string;
   checkpoint: boolean;
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_template_weeks")
@@ -641,7 +667,7 @@ export async function saveWeekVolumes(input: {
   weekId: string;
   volumes: { levelId: string; min: number | null; max: number | null }[];
 }): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const rows: {
     version_id: string;
     week_id: string;
@@ -718,7 +744,7 @@ export type SessionInput = {
 };
 
 export async function saveSession(input: SessionInput): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const title = text(input.title, 120);
   if (!title) return fail("Ge passet ett namn.");
   if (input.day !== null && !(input.day >= 0 && input.day <= 6)) {
@@ -830,7 +856,7 @@ export async function saveSession(input: SessionInput): Promise<AdminResult> {
 }
 
 export async function deleteSession(sessionId: string): Promise<AdminResult> {
-  await requireAdmin();
+  await requirePlanBuilder();
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_template_sessions")

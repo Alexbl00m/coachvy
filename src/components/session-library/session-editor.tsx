@@ -56,7 +56,6 @@ export const emptyLibraryInput = (sport: Sport = "löpning"): LibraryInput => ({
   basis: BASES_FOR_SPORT[sport][0],
   structure: "",
   levels: [],
-  shared: false,
 });
 
 export const inputOf = (s: LibrarySession): LibraryInput => ({
@@ -74,7 +73,6 @@ export const inputOf = (s: LibrarySession): LibraryInput => ({
   basis: s.basis,
   structure: s.structure,
   levels: s.levels.map((l) => ({ key: l.key, structure: l.structure })),
-  shared: s.shared,
 });
 
 const PLACEHOLDER: Partial<Record<TargetBasis, string>> = {
@@ -92,7 +90,6 @@ export function SessionEditor({
   onClose,
   sessionId,
   initial,
-  isAdmin,
   onSaved,
 }: {
   open: boolean;
@@ -100,7 +97,6 @@ export function SessionEditor({
   /** Passet som ändras; null för ett nytt. */
   sessionId: string | null;
   initial: LibraryInput;
-  isAdmin: boolean;
   onSaved?: (id: string) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -445,20 +441,6 @@ export function SessionEditor({
             </div>
           </fieldset>
 
-          {isAdmin && (
-            <label className="flex items-center gap-2 text-sm sm:col-span-6">
-              <input
-                type="checkbox"
-                checked={draft.shared}
-                onChange={(e) => patch({ shared: e.target.checked })}
-                className="size-4 accent-[var(--accent)]"
-              />
-              Dela med alla coacher
-              <span className="text-[0.75rem] text-text-subtle">
-                – de kan använda och kopiera passet, men inte ändra det.
-              </span>
-            </label>
-          )}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-3">

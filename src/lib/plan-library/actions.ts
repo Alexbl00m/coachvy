@@ -29,13 +29,14 @@ import { parseRaceTime, raceTimeText } from "./paces";
 import { RACES, raceByKey, raceByMetres, type Race } from "./races";
 import { proposePeriodization } from "./periodization";
 import { loadPlanView } from "./plan-view";
-import { loadVersion } from "./queries";
+import { loadVersion, planAccessFor } from "./queries";
 import { suggestReentry } from "./reentry";
 import type { ChangeReason, PlannedChange } from "./types";
 
 /**
  * Medlemmens åtgärder i planbiblioteket. RLS avgör vem som får: adepten
- * själv och adeptens coach, så länge adepten är medlem.
+ * själv och adeptens coach, när planen kom från coachen eller adepten är
+ * medlem.
  */
 
 export type PlanResult =
@@ -113,11 +114,18 @@ export async function startPlan(input: StartPlanInput): Promise<PlanResult> {
   if (user.profile?.role !== "adept" || !adept) {
     return fail("Planer startas av medlemmen själv.");
   }
-  if (!isMember(user)) return fail("Planbiblioteket ingår i medlemskapet.");
-
   const content = await loadVersion(input.versionId);
   if (!content || content.version.status !== "publicerad") {
     return fail("Planen finns inte längre i biblioteket. Ladda om sidan.");
+  }
+  // En plan coachen delat kräver inget medlemskap; resten av biblioteket gör
+  // det. Databasen avgör samma sak igen när planen sparas.
+  if (!(await planAccessFor(adept.id, content.version.template_id))) {
+    return fail(
+      isMember(user)
+        ? "Planen är inte delad med dig längre."
+        : "Planbiblioteket ingår i medlemskapet.",
+    );
   }
   const { version, domain } = content;
   if (!domain.levels.some((l) => l.id === input.levelId)) {
@@ -288,8 +296,8 @@ async function context(instanceId: string): Promise<Ctx | PlanResult> {
     return fail("Planen är avslutad och kan inte ändras.");
   }
   const supabase = await createClient();
-  const { data: canEdit } = await supabase.rpc("can_edit_plan", {
-    adept: view.instance.adept_id,
+  const { data: canEdit } = await supabase.rpc("can_edit_plan_instance", {
+    p_instance: view.instance.id,
   });
   if (!canEdit) {
     return fail(

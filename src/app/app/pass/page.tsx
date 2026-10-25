@@ -175,7 +175,7 @@ export default async function PassPage({
         selfService={selfService}
         blocked={blocked}
         notice={notice}
-        library={selfService ? null : { canShare: user.isAdmin }}
+        library={!selfService}
       />
     </>
   );

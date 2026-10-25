@@ -31,6 +31,7 @@ import {
   type WorkoutBlock,
   type WorkoutStep,
 } from "@/lib/workouts/schema";
+import type { Share } from "@/lib/sharing/shares";
 
 export type LibraryLevelKey = "A" | "B" | "C";
 
@@ -49,10 +50,16 @@ export type LibraryLevel = {
 
 export type LibrarySession = {
   id: string;
-  /** Ägs av den inloggade, som då kan ändra och ta bort det. */
+  /** Ägs av den inloggade, som då kan ändra, dela och ta bort det. */
   own: boolean;
-  /** Syns för alla coacher. */
-  shared: boolean;
+  ownerId: string;
+  /**
+   * Vem passet kommer från, sett från den inloggade: "Från din coach",
+   * "Coachvy" eller coachens namn. Null för det egna.
+   */
+  author: string | null;
+  /** Vem som ser passet; bara för det egna, annars tom. */
+  shares: Share[];
   title: string;
   sport: Sport;
   /** Typen, som i planmallarna: "Kvalitet", "Långpass". */
@@ -98,7 +105,6 @@ export type LibraryInput = {
   structure: string;
   /** Tom, eller en rad per nivå A, B och C. */
   levels: { key: LibraryLevelKey; structure: string }[];
-  shared: boolean;
 };
 
 export type ValidInput = Omit<LibraryInput, "phases" | "levels"> & {
@@ -211,7 +217,6 @@ export function validateLibraryInput(
       phases,
       basis: input.basis,
       structure: main.structure,
-      shared: input.shared,
       blocks: main.blocks,
       levels,
     },
@@ -330,7 +335,6 @@ export function fromWorkout(workout: Workout): LibraryInput {
       zones: workout.basis === "MP",
     }),
     levels: [],
-    shared: false,
   };
 }
 

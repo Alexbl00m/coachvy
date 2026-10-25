@@ -20,7 +20,7 @@ type Levels = { A: string; B: string; C: string };
 
 type Atlas = Omit<
   LibraryInput,
-  "sport" | "basis" | "structure" | "levels" | "shared"
+  "sport" | "basis" | "structure" | "levels"
 > & { levels: Levels };
 
 const cycling = (pass: Atlas): LibraryInput => ({
@@ -32,7 +32,6 @@ const cycling = (pass: Atlas): LibraryInput => ({
     key,
     structure: pass.levels[key],
   })),
-  shared: true,
 });
 
 // ---------------------------------------------------------------------------

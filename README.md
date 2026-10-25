@@ -465,6 +465,7 @@ verktygen:
 | VLamax ur stegtestet | – | ✓ |
 | Passbyggaren för **adepter** (egna pass) | – | ✓ |
 | Community | – | ✓ |
+| Bygga egna planer och dela dem (coacher) | – | ✓ |
 
 Coacher bygger pass åt sina adepter oavsett nivå.
 
@@ -1718,15 +1719,20 @@ adept och en webhook som tar emot varje nytt pass och kör samma analys.
 
 ## Planbiblioteket
 
-Färdiga planer mot ett mål – maraton, 70.3, cykel – som ingår i
-medlemskapet. Medlemmen väljer plan, längd och nivå och följer den som den är.
+Färdiga planer mot ett mål: maraton, 70.3, cykel. Planerna som delats med
+alla medlemmar ingår i medlemskapet; det en coach delat med sina egna adepter
+når de utan medlemskap (se Delning av pass och planer). Adepten väljer plan,
+längd och nivå och följer den som den är.
 Planen är **statisk**: ingenting i appen ändrar den utifrån sömn, dagsform
 eller annan data. Medlemmen loggar passen, flyttar dem och byter nivå själv;
 coachen kan göra detsamma åt sina adepter, och AI-coachen kan bara föreslå.
 
 ### Mallarna
 
-Admin skriver mallarna under **Planmallar** (`/app/planbibliotek/mallar`).
+Coacher med medlemskap och admin skriver sina egna planer under
+**Planmallar** (`/app/planbibliotek/mallar`). Listan visar bara de egna; en
+plan som delats med coachen kopieras dit med *Kopiera till mina planmallar*
+(`copy_plan_template`), som utkast.
 En mall har versioner. Ett utkast går att ändra fritt; en publicerad version
 är låst av triggrar i databasen, så att en plan som redan startats aldrig
 ändras i efterhand. Att redigera en publicerad mall ger ett nytt utkast.
@@ -1774,9 +1780,11 @@ adeptens flik **Plan**.
 
 ### Medlemskapet
 
-Så länge adepten är medlem kan adepten och coachen ändra planen. Upphör
-medlemskapet blir planen skrivskyddad – ingenting raderas – och pausen
-loggas. När medlemskapet kommer tillbaka erbjuds en återstart: med lopp
+En startad plan har en åtkomst (`plan_instances.access`), satt när den
+startas: `coach` när adeptens coach delat planen med adepten, annars
+`medlem`. En plan från coachen går alltid att ändra för adepten och coachen.
+En plan ur medlemskapet går att ändra så länge adepten är medlem. Upphör
+medlemskapet blir den skrivskyddad, ingenting raderas, och pausen loggas. När medlemskapet kommer tillbaka erbjuds en återstart: med lopp
 ligger datumet fast och nivån anpassas, utan lopp kan planen också skjutas
 fram. Hur många aktiva planer en medlem får ha styrs av
 `plan_library_settings` (en som utgångspunkt).
@@ -1888,9 +1896,9 @@ påverkas), **instruktionen** och **hur det byggs på**, en variabel i taget.
   formuppskattningen, uttryckt som andel av CS eller LT2
   (`toAdeptWorkout` i `src/lib/session-library/library.ts`). Ett byggt pass
   sparas i biblioteket med *Spara i passbiblioteket*.
-- **Delning.** Biblioteket är coachens eget. En admin kan dela ett pass med
-  alla coacher; de kan använda och kopiera det men bara ägaren ändrar det.
-  RLS säger detsamma.
+- **Delning.** Ägaren väljer vem som ser ett pass med *Dela*: adepter,
+  medlemmar eller coacher (se Delning av pass och planer). Bara ägaren
+  ändrar originalet; coacher kopierar det till sitt eget bibliotek.
 
 ### Nivåer och passets förklaring
 
@@ -1964,8 +1972,63 @@ node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts --ow
 
 Utan `--owner-email` blir den första admin ägare. Inläsningen går att köra
 igen: ett pass med samma namn och gren hos ägaren hoppas över, så ett pass som
-ändrats skrivs inte över. Skriptet kör appens TypeScript direkt och kräver
-Node 22.18 eller senare.
+ändrats skrivs inte över. Passen delas med alla coacher, och en delning som
+redan finns läggs inte till igen. Skriptet kör appens TypeScript direkt och
+kräver Node 22.18 eller senare.
+
+## Delning av pass och planer
+
+Ett pass i passbiblioteket och en plan i planbiblioteket har en ägare, och
+ägaren väljer vem som ser dem i rutan *Vem ser det här?*
+(`components/sharing/share-dialog.tsx`). Utan något val är det privat.
+Mottagarna går att kombinera:
+
+| Mottagare | Vem | Granskas |
+|---|---|---|
+| Dina adepter | alla coachens adepter, eller utvalda | nej |
+| Medlemmar i Coachvy | alla adepter med medlemskap, med eller utan coach | ja, om ägaren inte är admin |
+| Coacher | alla coacher, eller utvalda på e-post | nej |
+
+Varje mottagare är en rad i `library_shares` (migrationen
+`20261027090000_library_sharing.sql`): `audience` är `adepter`, `adept`,
+`medlemmar`, `coacher` eller `coach`, med `adept_id` eller `coach_id` för de
+utvalda. Vad den inloggade ser avgör en enda funktion, `share_reaches_me`,
+som policyerna för passen och planerna läser via `session_shared_with_me`
+och `template_shared_with_me`.
+
+**Grupper** läggs till som en mottagare till: ett värde i `audience`, en
+kolumn `group_id`, tabeller för grupperna och deras medlemmar, och ett
+villkor i `share_reaches_me`. Policyerna och appen behöver inte ändras.
+
+Reglerna:
+
+- **Planer bygger coacher med medlemskap och admin** (`can_build_plans`).
+  Pass i passbiblioteket skriver alla coacher, som förut.
+- **En coachs egna adepter behöver inget medlemskap** för det coachen delat
+  med dem. De läser passen, och startar planerna i planbiblioteket
+  (`plan_access_for` ger `coach`). Att lägga ett pass i sin egen kalender
+  ingår i medlemskapet, som passbyggaren.
+- **Det som delas med alla medlemmar granskas** av admin under Admin →
+  Granskning (`library_review_queue`, `review_library_share`). En ny version
+  av planen, eller en ändring i passet, skickar det till granskning igen
+  (`resubmit_library_shares`). Admins egna pass och planer syns direkt.
+- **Bara ägaren ändrar originalet.** Mottagarna använder det; coacher
+  kopierar det till sitt eget bibliotek, där kopian är privat.
+- **Den som redan följer en plan fortsätter** när delningen tas bort eller
+  planen granskas igen. Versionen planen bygger på går alltid att läsa.
+- **Admin ser inte andras privata** pass och planer, bara det som delats med
+  alla medlemmar och därför ska granskas.
+- **Namnen.** Kortet säger *Från din coach*, *Coachvy* (admin) eller coachens
+  namn (`library_authors`). Namn lämnas bara ut för det den inloggade ser.
+
+Det som fanns före migrationen behåller sina mottagare: pass som var delade
+med alla coacher är det fortfarande, och planerna i biblioteket är delade med
+alla medlemmar och alla coacher. Nya planer är privata tills ägaren väljer.
+
+RLS-reglerna är prövade med riktiga roller i en transaktion: privat pass och
+plan, alla adepter, utvald adept och coach, granskning före och efter
+ändring, medlemskap som upphör, kopiering med och utan medlemskap, och att
+admin inte ser coachers privata pass.
 
 ## Löpplaneraren
 

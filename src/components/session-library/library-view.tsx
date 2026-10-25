@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarPlus, Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarPlus, Copy, Pencil, Plus, Share2, Trash2 } from "lucide-react";
 
 import { useAction } from "@/components/plan-library/use-action";
+import { ShareDialog } from "@/components/sharing/share-dialog";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/field";
@@ -23,7 +24,7 @@ import { LibraryCard } from "./library-card";
 import { ScheduleDialog } from "./schedule-dialog";
 import { emptyLibraryInput, inputOf, SessionEditor } from "./session-editor";
 
-type Owner = "alla" | "mina" | "delade";
+type Owner = "alla" | "mina" | "andras";
 
 const matches = (s: LibrarySession, q: string) =>
   !q ||
@@ -33,20 +34,31 @@ const matches = (s: LibrarySession, q: string) =>
     .includes(q);
 
 /**
- * Biblioteket med sök och filter. Ett pass läggs direkt i en adepts
- * kalender, eller öppnas i passbyggaren för att justeras först.
+ * Biblioteket med sök och filter. Coachen lägger ett pass direkt i en
+ * adepts kalender, öppnar det i passbyggaren, eller delar det. En adept ser
+ * det som delats med hen, och lägger det i sin egen kalender som medlem.
  */
 export function LibraryView({
   sessions,
   adepts,
   isAdmin,
+  self = null,
+  initialQuery = "",
 }: {
   sessions: LibrarySession[];
+  /** Sökningen sidan öppnas med, som från granskningen. */
+  initialQuery?: string;
   /** Coachens adepter; tom för en admin utan egna adepter. */
   adepts: { id: string; full_name: string }[];
   isAdmin: boolean;
+  /**
+   * Adepten som tittar. Utan medlemskap (`canSchedule` falskt) är passen
+   * till för att läsa; coachen lägger in dem.
+   */
+  self?: { id: string; full_name: string; canSchedule: boolean } | null;
 }) {
-  const [query, setQuery] = useState("");
+  const coach = self === null;
+  const [query, setQuery] = useState(initialQuery);
   const [sport, setSport] = useState("alla");
   const [phase, setPhase] = useState("alla");
   const [intensity, setIntensity] = useState("alla");
@@ -60,6 +72,7 @@ export function LibraryView({
     session: LibrarySession;
     level: LibraryLevelKey | null;
   } | null>(null);
+  const [sharing, setSharing] = useState<LibrarySession | null>(null);
   const { pending, error, run } = useAction();
 
   const hasShared = sessions.some((s) => !s.own);
@@ -170,7 +183,7 @@ export function LibraryView({
             </Select>
           </>
         )}
-        {hasShared && (
+        {coach && hasShared && (
           <>
             <label className="sr-only" htmlFor="bib-agare">
               Visa
@@ -181,17 +194,26 @@ export function LibraryView({
               onChange={(e) => setOwner(e.target.value as Owner)}
               className="sm:w-auto"
             >
-              <option value="alla">Mina och delade</option>
+              <option value="alla">Mina och andras</option>
               <option value="mina">Bara mina</option>
-              <option value="delade">Bara delade</option>
+              <option value="andras">Från andra</option>
             </Select>
           </>
         )}
-        <Button onClick={openNew}>
-          <Plus aria-hidden className="size-4" />
-          Nytt pass
-        </Button>
+        {coach && (
+          <Button onClick={openNew}>
+            <Plus aria-hidden className="size-4" />
+            Nytt pass
+          </Button>
+        )}
       </div>
+
+      {self && !self.canSchedule && sessions.length > 0 && (
+        <p className="text-[0.8125rem] text-text-muted">
+          Din coach lägger in passen i din kalender. Att lägga in dem själv
+          ingår i medlemskapet.
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="text-sm text-warn">
@@ -200,11 +222,18 @@ export function LibraryView({
       )}
 
       {sessions.length === 0 ? (
-        <EmptyState
-          title="Biblioteket är tomt"
-          description="Lägg in de kvalitetsformat du återkommer till – med syfte och hur de byggs på – så hämtar du dem till planmallar och till adepter i passbyggaren."
-          action={<Button onClick={openNew}>Lägg in första passet</Button>}
-        />
+        coach ? (
+          <EmptyState
+            title="Biblioteket är tomt"
+            description="Lägg in de kvalitetsformat du återkommer till, med syfte och hur de byggs på. Sedan hämtar du dem till planmallar och till adepter i passbyggaren."
+            action={<Button onClick={openNew}>Lägg in första passet</Button>}
+          />
+        ) : (
+          <EmptyState
+            title="Inga pass än"
+            description="Här hamnar passen din coach delar med dig, och passen Coachvy delar med medlemmarna."
+          />
+        )
       ) : shown.length === 0 ? (
         <p className="text-sm text-text-muted">Inga pass matchar filtret.</p>
       ) : (
@@ -215,6 +244,20 @@ export function LibraryView({
                 session={s}
                 actions={(level) => (
                   <>
+                    {self?.canSchedule && (
+                      <Button
+                        size="sm"
+                        className="font-semibold"
+                        onClick={() =>
+                          setScheduling({ session: s, level: level ?? null })
+                        }
+                      >
+                        <CalendarPlus aria-hidden className="size-3.5" />
+                        {level
+                          ? `Nivå ${level} i min kalender`
+                          : "Lägg i min kalender"}
+                      </Button>
+                    )}
                     {s.own && (
                       <Button
                         size="sm"
@@ -231,15 +274,27 @@ export function LibraryView({
                         Ändra
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={pending}
-                      onClick={() => run(() => copyLibrarySession(s.id))}
-                    >
-                      <Copy aria-hidden className="size-3.5" />
-                      {s.own ? "Kopiera" : "Kopiera till mina"}
-                    </Button>
+                    {s.own && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSharing(s)}
+                      >
+                        <Share2 aria-hidden className="size-3.5" />
+                        Dela
+                      </Button>
+                    )}
+                    {coach && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={pending}
+                        onClick={() => run(() => copyLibrarySession(s.id))}
+                      >
+                        <Copy aria-hidden className="size-3.5" />
+                        {s.own ? "Kopiera" : "Kopiera till mina"}
+                      </Button>
+                    )}
                     {s.own && (
                       <Button
                         size="sm"
@@ -255,7 +310,7 @@ export function LibraryView({
                         Ta bort
                       </Button>
                     )}
-                    {adepts.length > 0 && (
+                    {coach && adepts.length > 0 && (
                       <Button
                         size="sm"
                         className="font-semibold"
@@ -283,9 +338,25 @@ export function LibraryView({
         }
         session={scheduling?.session ?? null}
         initialLevel={scheduling?.level ?? null}
-        adepts={adepts}
+        adepts={self ? [{ id: self.id, full_name: self.full_name }] : adepts}
+        initialAdeptId={self?.id ?? null}
+        self={self !== null}
         onClose={() => setScheduling(null)}
       />
+
+      {sharing && (
+        <ShareDialog
+          key={sharing.id}
+          open
+          onClose={() => setSharing(null)}
+          kind="pass"
+          itemId={sharing.id}
+          title={sharing.title}
+          shares={sharing.shares}
+          adepts={adepts}
+          ownerIsAdmin={isAdmin}
+        />
+      )}
 
       {editing && (
         <SessionEditor
@@ -294,7 +365,6 @@ export function LibraryView({
           onClose={() => setEditing(null)}
           sessionId={editing.id}
           initial={editing.initial}
-          isAdmin={isAdmin}
         />
       )}
     </div>

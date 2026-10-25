@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { ShareButton } from "@/components/sharing/share-button";
 import { LevelsEditor } from "@/components/plan-library/admin/levels-editor";
 import { MetaForm } from "@/components/plan-library/admin/meta-form";
 import { PhasesEditor } from "@/components/plan-library/admin/phases-editor";
@@ -12,7 +13,8 @@ import { PillLinks } from "@/components/plan-library/pill-links";
 import { StatusChip } from "@/components/plan-library/status-chip";
 import { TemplateWeeks } from "@/components/plan-library/template-weeks";
 import { Card, CardTitle } from "@/components/ui/card";
-import { requireAdmin } from "@/lib/auth/session";
+import { listAdepts } from "@/lib/adepts/queries";
+import { requirePlanBuilder } from "@/lib/auth/session";
 import { intensityParts } from "@/lib/plan-library/labels";
 import {
   listAdminTemplates,
@@ -23,6 +25,8 @@ import {
 import { validateVersion } from "@/lib/plan-library/validate";
 import { routes } from "@/lib/routes";
 import { listLibrary } from "@/lib/session-library/queries";
+import { listShares } from "@/lib/sharing/queries";
+import { shareSummary } from "@/lib/sharing/shares";
 
 export const metadata = { title: "Planmall" };
 
@@ -38,7 +42,7 @@ export default async function PlanTemplatePage({
   params,
   searchParams,
 }: PageProps<"/app/planbibliotek/mallar/[id]">) {
-  await requireAdmin();
+  const user = await requirePlanBuilder();
   const { id } = await params;
   const query = await searchParams;
   const one = (v: string | string[] | undefined) =>
@@ -55,12 +59,17 @@ export default async function PlanTemplatePage({
     template.versions[0];
   if (!chosen) notFound();
 
-  const [content, categories, disciplines, library] = await Promise.all([
-    loadVersion(chosen.id),
-    listCategories(),
-    listDisciplines(),
-    listLibrary(),
-  ]);
+  const [content, categories, disciplines, library, shares, adepts] =
+    await Promise.all([
+      loadVersion(chosen.id),
+      listCategories(),
+      listDisciplines(),
+      listLibrary(),
+      listShares("plan", id),
+      user.profile?.role === "coach" ? listAdepts() : Promise.resolve([]),
+    ]);
+  const members = shares.find((s) => s.audience === "medlemmar");
+  const published = template.versions.some((v) => v.status === "publicerad");
   if (!content) notFound();
 
   const { version, domain } = content;
@@ -87,9 +96,9 @@ export default async function PlanTemplatePage({
         title={version.title}
         description={
           editable
-            ? "Ett utkast. Ingen medlem ser det förrän det publiceras."
+            ? "Ett utkast. Ingen ser det förrän det publiceras."
             : version.status === "publicerad"
-              ? "Publicerad och låst. Gör ett nytt utkast för att ändra – planer som redan startats behåller den här versionen."
+              ? "Publicerad och låst. Gör ett nytt utkast för att ändra. Planer som redan startats behåller den här versionen."
               : "En äldre version, låst. Planer som startades på den följer den fortfarande."
         }
         action={
@@ -163,50 +172,81 @@ export default async function PlanTemplatePage({
               }}
             />
           </Card>
-          <Card className="h-fit">
-            <CardTitle>
-              {editable ? "Redo att publicera?" : "Innehåll"}
-            </CardTitle>
-            <dl className="grid grid-cols-2 gap-y-1.5 text-sm">
-              <dt className="text-text-muted">Längd</dt>
-              <dd className="text-right tabular-nums">
-                {version.min_weeks === version.max_weeks
-                  ? `${version.max_weeks} v`
-                  : `${version.min_weeks}–${version.max_weeks} v`}
-              </dd>
-              <dt className="text-text-muted">Nivåer</dt>
-              <dd className="text-right tabular-nums">
-                {content.levels.length}
-              </dd>
-              <dt className="text-text-muted">Faser</dt>
-              <dd className="text-right tabular-nums">
-                {content.phases.length}
-              </dd>
-              <dt className="text-text-muted">Pass</dt>
-              <dd className="text-right tabular-nums">
-                {content.sessions.length}
-              </dd>
-            </dl>
-            {editable && (
-              <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-[0.8125rem] leading-snug">
-                {issues.length === 0 ? (
-                  <li className="text-good">Allt ser bra ut.</li>
-                ) : (
-                  issues.map((issue) => (
-                    <li
-                      key={issue.text}
-                      className={
-                        issue.level === "fel" ? "text-warn" : "text-text-muted"
-                      }
-                    >
-                      {issue.level === "fel" ? "Måste rättas: " : ""}
-                      {issue.text}
-                    </li>
-                  ))
-                )}
-              </ul>
-            )}
-          </Card>
+          <div className="space-y-6">
+            <Card className="h-fit">
+              <CardTitle>Vem ser planen?</CardTitle>
+              <p className="text-sm text-text">{shareSummary(shares)}</p>
+              <p className="mt-1 text-[0.8125rem] leading-snug text-text-muted">
+                {shares.length === 0
+                  ? "Ingen annan ser planen. Välj vem som ska se den när den är publicerad."
+                  : published
+                    ? "Mottagarna ser den publicerade versionen."
+                    : "Mottagarna ser planen när den är publicerad."}
+                {members && members.status === "avslagen" && members.reviewNote
+                  ? ` Coachvy: ${members.reviewNote}`
+                  : ""}
+              </p>
+              <div className="mt-4">
+                <ShareButton
+                  kind="plan"
+                  itemId={id}
+                  title={version.title}
+                  shares={shares}
+                  adepts={adepts.map((a) => ({
+                    id: a.id,
+                    full_name: a.full_name,
+                  }))}
+                  ownerIsAdmin={user.isAdmin}
+                />
+              </div>
+            </Card>
+            <Card className="h-fit">
+              <CardTitle>
+                {editable ? "Redo att publicera?" : "Innehåll"}
+              </CardTitle>
+              <dl className="grid grid-cols-2 gap-y-1.5 text-sm">
+                <dt className="text-text-muted">Längd</dt>
+                <dd className="text-right tabular-nums">
+                  {version.min_weeks === version.max_weeks
+                    ? `${version.max_weeks} v`
+                    : `${version.min_weeks}–${version.max_weeks} v`}
+                </dd>
+                <dt className="text-text-muted">Nivåer</dt>
+                <dd className="text-right tabular-nums">
+                  {content.levels.length}
+                </dd>
+                <dt className="text-text-muted">Faser</dt>
+                <dd className="text-right tabular-nums">
+                  {content.phases.length}
+                </dd>
+                <dt className="text-text-muted">Pass</dt>
+                <dd className="text-right tabular-nums">
+                  {content.sessions.length}
+                </dd>
+              </dl>
+              {editable && (
+                <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-[0.8125rem] leading-snug">
+                  {issues.length === 0 ? (
+                    <li className="text-good">Allt ser bra ut.</li>
+                  ) : (
+                    issues.map((issue) => (
+                      <li
+                        key={issue.text}
+                        className={
+                          issue.level === "fel"
+                            ? "text-warn"
+                            : "text-text-muted"
+                        }
+                      >
+                        {issue.level === "fel" ? "Måste rättas: " : ""}
+                        {issue.text}
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
+            </Card>
+          </div>
         </div>
       )}
 

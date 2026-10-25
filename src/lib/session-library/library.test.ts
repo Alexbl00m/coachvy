@@ -29,7 +29,6 @@ const base: LibraryInput = {
   basis: "MP",
   structure: "3 km @LO; 4x(2 km @HM-10K + 2 min @RK); 2 km @LO",
   levels: [],
-  shared: false,
 };
 
 const blocksOf = (text: string): WorkoutBlock[] => {

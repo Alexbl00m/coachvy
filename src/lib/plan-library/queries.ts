@@ -1,5 +1,8 @@
 import "server-only";
 
+import { getSessionUser } from "@/lib/auth/session";
+import { listAuthors } from "@/lib/sharing/queries";
+import { authorLabel } from "@/lib/sharing/shares";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { PlanLibraryTables } from "@/lib/types/plan-library.generated";
@@ -256,7 +259,7 @@ export async function loadVersion(
 }
 
 // ---------------------------------------------------------------------------
-// Admin: mallarna med alla versioner
+// Mallverktyget: de egna mallarna med alla versioner
 // ---------------------------------------------------------------------------
 
 export type AdminTemplate = TemplateRow & {
@@ -268,8 +271,14 @@ export type AdminTemplate = TemplateRow & {
   instances: number;
 };
 
+/**
+ * Den inloggades egna mallar. Admin förvaltar också mallar vars ägare inte
+ * finns längre; andra coachers mallar, också de som granskas, står inte här.
+ */
 export async function listAdminTemplates(): Promise<AdminTemplate[]> {
   if (!isSupabaseConfigured()) return [];
+  const user = await getSessionUser();
+  if (!user) return [];
   const supabase = await createClient();
   const [templates, versions, categories, instances] = await Promise.all([
     supabase
@@ -288,12 +297,16 @@ export async function listAdminTemplates(): Promise<AdminTemplate[]> {
   const vs = rows(versions, "versionerna");
   const cs = rows(categories, "målen");
   const is = rows(instances, "planerna");
-  return rows(templates, "mallarna").map((t) => ({
-    ...t,
-    category: cs.find((c) => c.id === t.category_id) ?? null,
-    versions: vs.filter((v) => v.template_id === t.id),
-    instances: is.filter((i) => i.template_id === t.id).length,
-  }));
+  return rows(templates, "mallarna")
+    .filter(
+      (t) => t.owner_id === user.id || (t.owner_id === null && user.isAdmin),
+    )
+    .map((t) => ({
+      ...t,
+      category: cs.find((c) => c.id === t.category_id) ?? null,
+      versions: vs.filter((v) => v.template_id === t.id),
+      instances: is.filter((i) => i.template_id === t.id).length,
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -302,6 +315,10 @@ export async function listAdminTemplates(): Promise<AdminTemplate[]> {
 
 export type LibraryEntry = {
   template: TemplateRow;
+  /** Den inloggade äger planen. */
+  own: boolean;
+  /** "Från din coach", "Coachvy" eller coachens namn; null för den egna. */
+  author: string | null;
   version: VersionRow;
   category: CategoryRow | null;
   levels: LevelRow[];
@@ -332,6 +349,11 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
       supabase.from("plan_template_weeks").select("phase_id"),
     ]);
   const ts = rows(templates, "mallarna");
+  const user = await getSessionUser();
+  const viewer = { id: user?.id ?? "", coachId: user?.adept?.coach_id ?? null };
+  const authors = await listAuthors(
+    ts.flatMap((t) => (t.owner_id && t.owner_id !== viewer.id ? [t.owner_id] : [])),
+  );
   const cs = rows(categories, "målen");
   const ls = rows(levels, "nivåerna");
   const ps = rows(phases, "faserna");
@@ -340,8 +362,15 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
   for (const version of rows(versions, "versionerna")) {
     const template = ts.find((t) => t.id === version.template_id);
     if (!template) continue;
+    const own = template.owner_id === viewer.id;
     entries.push({
       template,
+      own,
+      author: own
+        ? null
+        : template.owner_id
+          ? authorLabel(authors.get(template.owner_id), viewer)
+          : "Coachvy",
       version,
       category: cs.find((c) => c.id === template.category_id) ?? null,
       levels: ls.filter((l) => l.version_id === version.id),
@@ -359,6 +388,23 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
       (a.category?.sort ?? 999) - (b.category?.sort ?? 999) ||
       a.version.title.localeCompare(b.version.title, "sv"),
   );
+}
+
+/**
+ * Hur adepten når planen: via sin coach, via medlemskapet, eller inte alls
+ * (null). Samma regel som databasen använder när planen startas.
+ */
+export async function planAccessFor(
+  adeptId: string,
+  templateId: string,
+): Promise<"coach" | "medlem" | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("plan_access_for", {
+    p_adept: adeptId,
+    p_template: templateId,
+  });
+  return data === "coach" || data === "medlem" ? data : null;
 }
 
 /** Den publicerade versionen av en mall, med innehåll. */

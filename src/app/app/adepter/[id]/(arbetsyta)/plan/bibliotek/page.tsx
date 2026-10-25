@@ -41,9 +41,11 @@ export default async function AdeptPlanPage({
 
   const header = (
     <p className="mb-4 max-w-2xl text-sm text-text-muted">
-      {adept.plan === "medlem"
-        ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
-        : "Adepten är inte medlem just nu, så planen är skrivskyddad."}
+      {chosen?.access === "coach"
+        ? "Planen adepten följer, delad av dig. Du kan byta nivå och flytta pass åt adepten."
+        : adept.plan === "medlem"
+          ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
+          : "Planen ingår i medlemskapet, som adepten inte har just nu. Därför är den skrivskyddad."}
     </p>
   );
 
@@ -53,7 +55,7 @@ export default async function AdeptPlanPage({
         {header}
         <EmptyState
           title="Ingen plan ur biblioteket"
-          description="Adepten startar en plan själv i planbiblioteket, som medlem."
+          description="Adepten startar en plan själv i planbiblioteket: en du delat med adepten, eller en ur biblioteket som medlem."
         />
       </>
     );
@@ -61,7 +63,7 @@ export default async function AdeptPlanPage({
 
   const [view, canEdit, workouts, fitness] = await Promise.all([
     loadPlanView(chosen.id, today),
-    canEditPlan(id),
+    canEditPlan(chosen.id),
     listWorkoutOptions(id),
     loadRunningFitness(id),
   ]);

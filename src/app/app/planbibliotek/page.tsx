@@ -7,7 +7,7 @@ import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
-import { isMember } from "@/lib/auth/membership";
+import { canBuildPlans, isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { rangeText } from "@/lib/plan-library/labels";
 import { getActiveInstance, listLibrary } from "@/lib/plan-library/queries";
@@ -16,9 +16,10 @@ import { routes } from "@/lib/routes";
 export const metadata = { title: "Planbibliotek" };
 
 /**
- * Biblioteket: standardiserade planer för ett mål, som ingår i
- * medlemskapet. Medlemmen väljer plan, längd och nivå och följer den som
- * den är; nivån byter medlemmen själv när livet kräver det.
+ * Biblioteket: planer mot ett mål. Coachvys och andra coachers planer som
+ * delats med alla medlemmar ingår i medlemskapet; det adeptens egen coach
+ * delat når adepten utan. Adepten väljer plan, längd och nivå och följer
+ * den som den är; nivån byter adepten själv när livet kräver det.
  */
 export default async function PlanLibraryPage({
   searchParams,
@@ -30,9 +31,9 @@ export default async function PlanLibraryPage({
   const header = (
     <PageHeader
       title="Planbibliotek"
-      description="Färdiga planer mot ett mål, från ospecifikt till specifikt. Välj längd och nivå när du startar – och byt nivå när livet kräver det."
+      description="Färdiga planer mot ett mål, från ospecifikt till specifikt. Välj längd och nivå när du startar, och byt nivå när livet kräver det."
       action={
-        user.isAdmin ? (
+        canBuildPlans(user) ? (
           <ButtonLink href={routes.planTemplates} variant="secondary" size="sm">
             <LayoutTemplate aria-hidden className="size-4" />
             Planmallar
@@ -42,22 +43,24 @@ export default async function PlanLibraryPage({
     />
   );
 
-  if (role === "adept" && !isMember(user)) {
+  const [entries, active] = await Promise.all([
+    listLibrary(),
+    user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
+  ]);
+
+  // Utan medlemskap ser adepten bara det coachen delat med hen.
+  const memberless = role === "adept" && !isMember(user);
+  if (memberless && entries.length === 0) {
     return (
       <>
         {header}
         <MembersOnly
           feature="Planbiblioteket"
-          description="Som medlem väljer du en färdig plan mot ditt mål – maraton, triathlon, cykel eller simning – i den längd och nivå som passar dig, och byter nivå själv när det behövs."
+          description="Som medlem väljer du en färdig plan mot ditt mål, för maraton, triathlon, cykel eller simning, i den längd och nivå som passar dig. Planer din coach delar med dig når du utan medlemskap."
         />
       </>
     );
   }
-
-  const [entries, active] = await Promise.all([
-    listLibrary(),
-    user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
-  ]);
 
   const categories = [
     ...new Map(
@@ -93,6 +96,13 @@ export default async function PlanLibraryPage({
         </Card>
       )}
 
+      {memberless && (
+        <p className="mb-5 text-[0.8125rem] text-text-muted">
+          Planerna din coach delat med dig. Som medlem når du hela
+          planbiblioteket.
+        </p>
+      )}
+
       {entries.length === 0 ? (
         <EmptyState
           title="Inga planer ännu"
@@ -117,59 +127,75 @@ export default async function PlanLibraryPage({
             </div>
           )}
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {shown.map(({ template, version, category, levels, phases }) => {
-              const weeks =
-                version.min_weeks === version.max_weeks
-                  ? `${version.max_weeks} veckor`
-                  : `${version.min_weeks}–${version.max_weeks} veckor`;
-              const lows = levels.flatMap(
-                (l) => l.hours_min ?? l.hours_max ?? [],
-              );
-              const highs = levels.flatMap(
-                (l) => l.hours_max ?? l.hours_min ?? [],
-              );
-              const hours =
-                lows.length > 0
-                  ? rangeText(Math.min(...lows), Math.max(...highs), "h/vecka")
-                  : "";
-              return (
-                <li key={template.id}>
-                  <Link
-                    href={`${routes.planLibrary}/${template.slug}`}
-                    className="lift flex h-full flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-line-strong"
-                  >
-                    <span className="text-[0.75rem] text-text-subtle">
-                      {[category?.name, weeks].filter(Boolean).join(" · ")}
-                    </span>
-                    <span className="mt-1 text-base font-semibold text-text">
-                      {version.title}
-                    </span>
-                    {version.summary && (
-                      <span className="mt-1 text-sm leading-relaxed text-text-muted">
-                        {version.summary}
+            {shown.map(
+              ({
+                template,
+                version,
+                category,
+                levels,
+                phases,
+                own,
+                author,
+              }) => {
+                const weeks =
+                  version.min_weeks === version.max_weeks
+                    ? `${version.max_weeks} veckor`
+                    : `${version.min_weeks}–${version.max_weeks} veckor`;
+                const lows = levels.flatMap(
+                  (l) => l.hours_min ?? l.hours_max ?? [],
+                );
+                const highs = levels.flatMap(
+                  (l) => l.hours_max ?? l.hours_min ?? [],
+                );
+                const hours =
+                  lows.length > 0
+                    ? rangeText(
+                        Math.min(...lows),
+                        Math.max(...highs),
+                        "h/vecka",
+                      )
+                    : "";
+                return (
+                  <li key={template.id}>
+                    <Link
+                      href={`${routes.planLibrary}/${template.slug}`}
+                      className="lift flex h-full flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-line-strong"
+                    >
+                      <span className="text-[0.75rem] text-text-subtle">
+                        {[own ? "Din plan" : author, category?.name, weeks]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </span>
-                    )}
-                    <span className="mt-auto pt-5">
-                      <PhaseLadder
-                        phases={phases}
-                        showLabels={false}
-                        className="opacity-90"
-                      />
-                      <span className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-text-muted">
-                        <span>
-                          {levels.length}{" "}
-                          {levels.length === 1 ? "nivå" : "nivåer"}:{" "}
-                          {levels.map((l) => l.key).join(", ")}
+                      <span className="mt-1 text-base font-semibold text-text">
+                        {version.title}
+                      </span>
+                      {version.summary && (
+                        <span className="mt-1 text-sm leading-relaxed text-text-muted">
+                          {version.summary}
                         </span>
-                        {hours && !hours.includes("Infinity") && (
-                          <span>{hours}</span>
-                        )}
+                      )}
+                      <span className="mt-auto pt-5">
+                        <PhaseLadder
+                          phases={phases}
+                          showLabels={false}
+                          className="opacity-90"
+                        />
+                        <span className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-text-muted">
+                          <span>
+                            {levels.length}{" "}
+                            {levels.length === 1 ? "nivå" : "nivåer"}:{" "}
+                            {levels.map((l) => l.key).join(", ")}
+                          </span>
+                          {hours && !hours.includes("Infinity") && (
+                            <span>{hours}</span>
+                          )}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
+                    </Link>
+                  </li>
+                );
+              },
+            )}
           </ul>
         </>
       )}

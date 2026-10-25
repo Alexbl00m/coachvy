@@ -4,11 +4,11 @@ import { ChevronLeft } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { StartWizard } from "@/components/plan-library/start-wizard";
-import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   getActiveInstance,
   loadPublishedBySlug,
+  planAccessFor,
 } from "@/lib/plan-library/queries";
 import { RUNNING_BASES } from "@/lib/plan-library/paces";
 import { raceByKey, raceByMetres } from "@/lib/plan-library/races";
@@ -25,9 +25,9 @@ export default async function StartPlanPage({
   const user = await requireSessionUser();
   const { slug } = await params;
   const back = `${routes.planLibrary}/${slug}`;
-  // Medlemmen startar sin plan själv.
-  if (user.profile?.role !== "adept" || !user.adept || !isMember(user))
-    redirect(back);
+  // Adepten startar sin plan själv: en plan coachen delat, eller en ur
+  // biblioteket som medlem.
+  if (user.profile?.role !== "adept" || !user.adept) redirect(back);
 
   const [content, active, races] = await Promise.all([
     loadPublishedBySlug(slug),
@@ -36,6 +36,7 @@ export default async function StartPlanPage({
   ]);
   if (!content) notFound();
   if (active) redirect(routes.myPlan);
+  if (!(await planAccessFor(user.adept.id, content.template.id))) redirect(back);
 
   const today = todayIso();
   const { version, levels, domain } = content;
@@ -51,7 +52,7 @@ export default async function StartPlanPage({
       </Link>
       <PageHeader
         title={`Starta ${version.title}`}
-        description="Förslaget räknas fram ur målet och längden. Justera faserna om du vill – planen ändras inte efter start, men nivån byter du när du vill."
+        description="Förslaget räknas fram ur målet och längden. Justera faserna om du vill. Planen ändras inte efter start, men nivån byter du när du vill."
       />
       <div className="max-w-3xl">
         <StartWizard

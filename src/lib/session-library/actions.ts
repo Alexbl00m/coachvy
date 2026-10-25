@@ -10,8 +10,9 @@ import type { Json } from "@/lib/types/plan-library.generated";
 import { validateLibraryInput, type LibraryInput } from "./library";
 
 /**
- * Passbibliotekets åtgärder. Coacher och admin skriver i sitt eget bibliotek;
- * bara admin delar ett pass med alla coacher. RLS säger detsamma igen.
+ * Passbibliotekets åtgärder. Coacher och admin skriver i sitt eget bibliotek.
+ * Vem som ser ett pass väljs för sig (sharing/actions.ts); RLS säger
+ * detsamma igen.
  */
 
 export type LibraryResult =
@@ -41,9 +42,6 @@ export async function saveLibrarySession(
   const checked = validateLibraryInput(input);
   if (!checked.ok) return fail(checked.error);
   const v = checked.value;
-  if (v.shared && !user.isAdmin) {
-    return fail("Bara en admin kan dela pass med alla coacher.");
-  }
 
   const row = {
     title: v.title,
@@ -61,7 +59,6 @@ export async function saveLibrarySession(
     structure: v.structure,
     blocks: v.blocks as unknown as Json,
     levels: v.levels as unknown as Json,
-    shared: v.shared,
   };
 
   const supabase = await createClient();
@@ -91,7 +88,7 @@ export async function saveLibrarySession(
   return { ok: true, id: data.id };
 }
 
-/** En kopia i det egna biblioteket – av ett eget pass eller ett delat. */
+/** En kopia i det egna biblioteket, av ett eget pass eller ett delat. Kopian är privat. */
 export async function copyLibrarySession(id: string): Promise<LibraryResult> {
   const user = await libraryUser();
   if (!user) return fail("Passbiblioteket är till för coacher.");
@@ -120,7 +117,6 @@ export async function copyLibrarySession(id: string): Promise<LibraryResult> {
     .insert({
       ...rest,
       title: own ? `${source.title} (kopia)`.slice(0, 120) : source.title,
-      shared: false,
       owner_id: user.id,
     })
     .select("id")

@@ -2,12 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Library } from "lucide-react";
 
-import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
-import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   canEditPlan,
@@ -47,19 +45,6 @@ export default async function MyPlanPage({
     instances.find((i) => i.id === query.plan) ??
     instances.find((i) => i.status === "aktiv");
 
-  // Utan medlemskap och utan plan: det finns inget att visa än.
-  if (!chosen && !isMember(user)) {
-    return (
-      <>
-        <PageHeader title="Min plan" />
-        <MembersOnly
-          feature="Planbiblioteket"
-          description="Som medlem väljer du en färdig plan mot ditt mål och följer den här, vecka för vecka."
-        />
-      </>
-    );
-  }
-
   const past = instances.filter((i) => i.id !== chosen?.id);
   const pastList = past.length > 0 && (
     <Card className="mt-6">
@@ -88,7 +73,7 @@ export default async function MyPlanPage({
         <PageHeader title="Min plan" />
         <EmptyState
           title="Ingen aktiv plan"
-          description="Välj en plan mot ditt mål i planbiblioteket. Du väljer längd och nivå när du startar."
+          description="Välj en plan mot ditt mål i planbiblioteket: en din coach delat med dig, eller en ur biblioteket som medlem. Du väljer längd och nivå när du startar."
           action={
             <ButtonLink href={routes.planLibrary}>
               <Library aria-hidden className="size-4" />
@@ -103,7 +88,7 @@ export default async function MyPlanPage({
 
   const [view, canEdit, workouts, fitness] = await Promise.all([
     loadPlanView(chosen.id, today),
-    canEditPlan(user.adept.id),
+    canEditPlan(chosen.id),
     listWorkoutOptions(user.adept.id),
     loadRunningFitness(user.adept.id),
   ]);

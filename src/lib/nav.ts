@@ -70,15 +70,11 @@ function coachSections(isAdmin: boolean): NavSection[] {
               icon: LibraryBig,
             },
             { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
-            ...(isAdmin
-              ? [
-                  {
-                    label: "Planmallar",
-                    href: routes.planTemplates,
-                    icon: LayoutTemplate,
-                  },
-                ]
-              : []),
+            {
+              label: "Planmallar",
+              href: routes.planTemplates,
+              icon: LayoutTemplate,
+            },
           ],
         },
         {
@@ -185,6 +181,11 @@ function adeptSections(adeptId: string | null): NavSection[] {
               label: "Löpplanerare",
               href: routes.runningPlanner,
               icon: ChartBarBig,
+            },
+            {
+              label: "Passbibliotek",
+              href: routes.sessionLibrary,
+              icon: LibraryBig,
             },
             { label: "Planbibliotek", href: routes.planLibrary, icon: Library },
             { label: "Inställningar", href: routes.settings, icon: Settings },

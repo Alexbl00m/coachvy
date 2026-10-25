@@ -42,6 +42,7 @@ const TABLES = [
   "plan_instance_events",
   "fitness_estimates",
   "session_library",
+  "library_shares",
 ];
 
 const FUNCTIONS = [
@@ -53,6 +54,15 @@ const FUNCTIONS = [
   "can_read_plan_version",
   "can_edit_plan",
   "plan_week_of",
+  "can_build_plans",
+  "can_edit_plan_instance",
+  "plan_access_for",
+  "copy_plan_template",
+  "review_library_share",
+  "library_authors",
+  "library_share_list",
+  "find_coach_by_email",
+  "library_review_queue",
 ];
 
 const query = `
@@ -83,7 +93,16 @@ select json_build_object(
       'name', p.proname,
       'args', coalesce(p.proargnames, '{}'),
       'argTypes', (select json_agg(format_type(t, null)) from unnest(p.proargtypes) t),
-      'returns', format_type(p.prorettype, null)
+      'returns', format_type(p.prorettype, null),
+      'retset', p.proretset,
+      -- Kolumnerna i "returns table (…)": argumenten med läget t.
+      'tableCols', (
+        select json_agg(json_build_object(
+          'name', p.proargnames[i], 'type', format_type(p.proallargtypes[i], null)
+        ) order by i)
+        from generate_subscripts(p.proargmodes, 1) i
+        where p.proargmodes[i] = 't'
+      )
     ))
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
@@ -204,19 +223,25 @@ for (const name of FUNCTIONS) {
   }
   const argTypes = fn.argTypes ?? [];
   const pgBase = (t) =>
-    BASE[
-      {
-        "timestamp with time zone": "timestamptz",
-        integer: "int4",
-      }[t] ?? t
-    ] ?? "unknown";
+    t.endsWith("[]")
+      ? `${pgBase(t.slice(0, -2))}[]`
+      : (BASE[
+          {
+            "timestamp with time zone": "timestamptz",
+            integer: "int4",
+          }[t] ?? t
+        ] ?? "unknown");
   const args =
     argTypes.length === 0
       ? "Record<string, never>"
       : `{ ${argTypes.map((t, i) => `${fn.args[i]}: ${pgBase(t)}`).join("; ")} }`;
+  // "returns table (…)" blir en lista av rader; övriga ger sin typ.
+  const returns = fn.tableCols
+    ? `{ ${fn.tableCols.map((c) => `${c.name}: ${pgBase(c.type)} | null`).join("; ")} }[]`
+    : pgBase(fn.returns);
   ts += `  ${name}: {
     Args: ${args};
-    Returns: ${pgBase(fn.returns)};
+    Returns: ${returns};
   };
 `;
 }

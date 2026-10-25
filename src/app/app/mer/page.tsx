@@ -3,6 +3,7 @@ import {
   ChartBarBig,
   Dumbbell,
   Library,
+  LibraryBig,
   LogOut,
   MessageSquare,
   MessagesSquare,
@@ -56,13 +57,19 @@ export default async function MorePage() {
       title: "Passbyggare",
       description: member
         ? "Bygg egna pass ur dina zoner."
-        : "Bygg egna pass ur dina zoner – ingår i medlemskapet.",
+        : "Bygg egna pass ur dina zoner. Ingår i medlemskapet.",
     },
     {
       href: routes.runningPlanner,
       icon: ChartBarBig,
       title: "Löpplanerare",
       description: "Vägen till ett lopp vecka för vecka.",
+    },
+    {
+      href: routes.sessionLibrary,
+      icon: LibraryBig,
+      title: "Passbibliotek",
+      description: "Pass från din coach och från Coachvy, med syfte och utförande.",
     },
     {
       href: routes.planLibrary,

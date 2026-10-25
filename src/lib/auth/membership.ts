@@ -15,3 +15,14 @@ export function isMember(user: SessionUser | null): boolean {
     user?.adept?.plan === "medlem"
   );
 }
+
+/**
+ * Får kontot bygga egna planer? Coacher med medlemskap och admin. Databasen
+ * säger detsamma (can_build_plans).
+ */
+export function canBuildPlans(user: SessionUser | null): boolean {
+  return (
+    user?.isAdmin === true ||
+    (user?.profile?.role === "coach" && user.coach?.plan === "medlem")
+  );
+}

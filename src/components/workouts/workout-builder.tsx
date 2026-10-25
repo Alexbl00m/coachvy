@@ -85,8 +85,8 @@ export function WorkoutBuilder({
   blocked?: string | null;
   /** Hur ett pass ur passbiblioteket räknades om, eller varför det inte gick. */
   notice?: string | null;
-  /** Coachen kan spara passet i passbiblioteket; admin kan också dela det. */
-  library?: { canShare: boolean } | null;
+  /** Coachen kan spara passet i passbiblioteket. */
+  library?: boolean | null;
 }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
@@ -505,7 +505,6 @@ export function WorkoutBuilder({
           onClose={() => setToLibrary(null)}
           sessionId={null}
           initial={fromWorkout(workout)}
-          isAdmin={library.canShare}
           onSaved={() => setSaved("Passet är sparat i passbiblioteket.")}
         />
       )}

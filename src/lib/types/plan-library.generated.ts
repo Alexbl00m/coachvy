@@ -88,6 +88,7 @@ export type PlanLibraryTables = {
       created_at: string;
       updated_at: string;
       race_distance_m: number | null;
+      owner_id: string | null;
     };
     Insert: {
       id?: string;
@@ -99,6 +100,7 @@ export type PlanLibraryTables = {
       created_at?: string;
       updated_at?: string;
       race_distance_m?: number | null;
+      owner_id?: string | null;
     };
     Update: {
       id?: string;
@@ -110,6 +112,7 @@ export type PlanLibraryTables = {
       created_at?: string;
       updated_at?: string;
       race_distance_m?: number | null;
+      owner_id?: string | null;
     };
     Relationships: [];
   };
@@ -462,6 +465,7 @@ export type PlanLibraryTables = {
       rounds: Json | null;
       pace_mode: "form" | "mål";
       goal_seconds: number | null;
+      access: "medlem" | "coach";
     };
     Insert: {
       id?: string;
@@ -484,6 +488,7 @@ export type PlanLibraryTables = {
       rounds?: Json | null;
       pace_mode?: "form" | "mål";
       goal_seconds?: number | null;
+      access?: "medlem" | "coach";
     };
     Update: {
       id?: string;
@@ -506,6 +511,7 @@ export type PlanLibraryTables = {
       rounds?: Json | null;
       pace_mode?: "form" | "mål";
       goal_seconds?: number | null;
+      access?: "medlem" | "coach";
     };
     Relationships: [];
   };
@@ -816,7 +822,6 @@ export type PlanLibraryTables = {
     Row: {
       id: string;
       owner_id: string;
-      shared: boolean;
       title: string;
       sport: "löpning" | "cykling" | "simning";
       kind: string | null;
@@ -838,7 +843,6 @@ export type PlanLibraryTables = {
     Insert: {
       id?: string;
       owner_id?: string;
-      shared?: boolean;
       title: string;
       sport: "löpning" | "cykling" | "simning";
       kind?: string | null;
@@ -860,7 +864,6 @@ export type PlanLibraryTables = {
     Update: {
       id?: string;
       owner_id?: string;
-      shared?: boolean;
       title?: string;
       sport?: "löpning" | "cykling" | "simning";
       kind?: string | null;
@@ -878,6 +881,51 @@ export type PlanLibraryTables = {
       adaptations?: string | null;
       fueling?: string | null;
       timing?: string | null;
+    };
+    Relationships: [];
+  };
+  library_shares: {
+    Row: {
+      id: string;
+      session_id: string | null;
+      template_id: string | null;
+      audience: "adepter" | "adept" | "medlemmar" | "coacher" | "coach";
+      adept_id: string | null;
+      coach_id: string | null;
+      status: "aktiv" | "granskas" | "avslagen";
+      review_note: string | null;
+      reviewed_at: string | null;
+      reviewed_by: string | null;
+      created_by: string;
+      created_at: string;
+    };
+    Insert: {
+      id?: string;
+      session_id?: string | null;
+      template_id?: string | null;
+      audience: "adepter" | "adept" | "medlemmar" | "coacher" | "coach";
+      adept_id?: string | null;
+      coach_id?: string | null;
+      status?: "aktiv" | "granskas" | "avslagen";
+      review_note?: string | null;
+      reviewed_at?: string | null;
+      reviewed_by?: string | null;
+      created_by?: string;
+      created_at?: string;
+    };
+    Update: {
+      id?: string;
+      session_id?: string | null;
+      template_id?: string | null;
+      audience?: "adepter" | "adept" | "medlemmar" | "coacher" | "coach";
+      adept_id?: string | null;
+      coach_id?: string | null;
+      status?: "aktiv" | "granskas" | "avslagen";
+      review_note?: string | null;
+      reviewed_at?: string | null;
+      reviewed_by?: string | null;
+      created_by?: string;
+      created_at?: string;
     };
     Relationships: [];
   };
@@ -915,5 +963,68 @@ export type PlanLibraryFunctions = {
   plan_week_of: {
     Args: { instance: string; day: string };
     Returns: number;
+  };
+  can_build_plans: {
+    Args: Record<string, never>;
+    Returns: boolean;
+  };
+  can_edit_plan_instance: {
+    Args: { p_instance: string };
+    Returns: boolean;
+  };
+  plan_access_for: {
+    Args: { p_adept: string; p_template: string };
+    Returns: string;
+  };
+  copy_plan_template: {
+    Args: { p_template: string };
+    Returns: string;
+  };
+  review_library_share: {
+    Args: { p_share: string; p_approve: boolean; p_note: string };
+    Returns: undefined;
+  };
+  library_authors: {
+    Args: { p_owners: string[] };
+    Returns: {
+      id: string | null;
+      name: string | null;
+      company: string | null;
+      coachvy: boolean | null;
+    }[];
+  };
+  library_share_list: {
+    Args: { p_sessions: string[]; p_templates: string[] };
+    Returns: {
+      id: string | null;
+      item_id: string | null;
+      audience: string | null;
+      status: string | null;
+      review_note: string | null;
+      reviewed_at: string | null;
+      adept_id: string | null;
+      adept_name: string | null;
+      coach_id: string | null;
+      coach_name: string | null;
+    }[];
+  };
+  find_coach_by_email: {
+    Args: { p_email: string };
+    Returns: { id: string | null; name: string | null }[];
+  };
+  library_review_queue: {
+    Args: Record<string, never>;
+    Returns: {
+      id: string | null;
+      kind: string | null;
+      item_id: string | null;
+      title: string | null;
+      slug: string | null;
+      owner_name: string | null;
+      status: string | null;
+      review_note: string | null;
+      created_at: string | null;
+      reviewed_at: string | null;
+    }[];
   };
 };

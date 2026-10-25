@@ -1,12 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
 import { NewTemplateForm } from "@/components/plan-library/admin/new-template-form";
 import { StatusChip } from "@/components/plan-library/status-chip";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
-import { requireAdmin } from "@/lib/auth/session";
+import { canBuildPlans } from "@/lib/auth/membership";
+import { requireSessionUser } from "@/lib/auth/session";
 import { listAdminTemplates, listCategories } from "@/lib/plan-library/queries";
 import { routes } from "@/lib/routes";
+import { listSharesFor } from "@/lib/sharing/queries";
+import { shareSummary } from "@/lib/sharing/shares";
 
 export const metadata = { title: "Planmallar" };
 
@@ -18,23 +23,45 @@ const shortDate = (iso: string) =>
   }).format(new Date(iso));
 
 /**
- * Mallarna bakom planbiblioteket. Bara admin skriver dem: en publicerad
- * version ändras aldrig, så en ändring blir ett nytt utkast som publiceras
- * när det är klart.
+ * Coachens egna planer. Coacher med medlemskap och admin skriver dem: en
+ * publicerad version ändras aldrig, så en ändring blir ett nytt utkast som
+ * publiceras när det är klart. Vem som ser en plan väljer ägaren.
  */
 export default async function PlanTemplatesPage() {
-  await requireAdmin();
+  const user = await requireSessionUser();
+  if (user.profile?.role !== "coach" && !user.isAdmin) {
+    redirect(routes.planLibrary);
+  }
+  const header = (
+    <PageHeader
+      title="Planmallar"
+      description="Dina egna planer. En publicerad version ändras aldrig: ändringar görs i ett nytt utkast, och planer som redan startats behåller sin version. Du väljer vem som ser varje plan."
+    />
+  );
+  if (!canBuildPlans(user)) {
+    return (
+      <>
+        {header}
+        <MembersOnly
+          feature="Egna planer"
+          description="Med medlemskap bygger du egna planer mot ett mål, i nivåer och faser, och delar dem med dina adepter, med alla medlemmar eller med andra coacher. Dina adepter behöver inget eget medlemskap för det du delar med dem."
+        />
+      </>
+    );
+  }
+
   const [templates, categories] = await Promise.all([
     listAdminTemplates(),
     listCategories(),
   ]);
+  const shares = await listSharesFor(
+    "plan",
+    templates.map((t) => t.id),
+  );
 
   return (
     <>
-      <PageHeader
-        title="Planmallar"
-        description="Mallarna medlemmarna väljer bland i planbiblioteket. En publicerad version ändras aldrig – ändringar görs i ett nytt utkast, och planer som redan startats behåller sin version."
-      />
+      {header}
 
       <div className="space-y-6">
         <Card>
@@ -47,7 +74,7 @@ export default async function PlanTemplatesPage() {
         {templates.length === 0 ? (
           <EmptyState
             title="Inga mallar ännu"
-            description="Skapa en mall ovan. Den börjar som ett utkast med tre nivåer och fyra faser att bygga vidare på."
+            description="Skapa en mall ovan, eller kopiera en plan ur planbiblioteket. En ny mall börjar som ett utkast med tre nivåer och fyra faser att bygga vidare på."
           />
         ) : (
           <Card className="p-0 sm:p-0">
@@ -82,6 +109,9 @@ export default async function PlanTemplatesPage() {
                           ]
                             .filter(Boolean)
                             .join(" · ")}
+                        </span>
+                        <span className="block text-[0.8125rem] text-text-subtle">
+                          Ser planen: {shareSummary(shares.get(t.id) ?? [])}
                         </span>
                       </span>
                       <span className="flex gap-1.5">

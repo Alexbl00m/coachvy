@@ -13,6 +13,7 @@ import {
   type LibraryLevelKey,
   type LibrarySession,
 } from "@/lib/session-library/library";
+import { shareSummary } from "@/lib/sharing/shares";
 
 const chip =
   "rounded-sm bg-surface-3 px-1.5 py-px text-[0.6875rem] font-medium text-text-muted";
@@ -74,12 +75,16 @@ export function LibraryCard({
               <span className={chip}>{session.intensity}</span>
             )}
             {!session.own && (
-              <span className={cn(chip, "text-text")}>Delat</span>
-            )}
-            {session.own && session.shared && (
-              <span className={cn(chip, "text-text")}>Delas med coacher</span>
+              <span className={cn(chip, "text-text")}>
+                {session.author ?? "Delat"}
+              </span>
             )}
           </p>
+          {session.own && session.shares.length > 0 && (
+            <p className="mt-1 text-[0.75rem] text-text-subtle">
+              Ser passet: {shareSummary(session.shares)}
+            </p>
+          )}
         </div>
         {amount && (
           <span className="shrink-0 text-[0.8125rem] tabular-nums text-text-muted">

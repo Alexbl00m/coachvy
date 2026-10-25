@@ -2,9 +2,10 @@
  * Passbibliotekets färdiga pass som SQL, för att läsa in dem i en databas:
  * cykelatlasen och löppassen.
  *
- * Passen ägs av en admin och delas med alla coacher. Inläsningen går att
- * köra igen: ett pass med samma namn och gren hos samma ägare hoppas över,
- * så ett pass coachen ändrat skrivs inte över. Grenen räknas med, eftersom
+ * Passen ägs av en admin och delas med alla coacher (library_shares).
+ * Inläsningen går att köra igen: ett pass med samma namn och gren hos samma
+ * ägare hoppas över, så ett pass coachen ändrat skrivs inte över, och en
+ * delning som redan finns läggs inte till igen. Grenen räknas med, eftersom
  * 4 × 4 min och 30/15 finns både som cykel- och löppass.
  *
  * Modulen är ren. `scripts/session-library-atlas.ts` skriver ut SQL:en.
@@ -47,9 +48,9 @@ export const FIRST_ADMIN =
   "(select profile_id from public.admins order by created_at limit 1)";
 
 /**
- * En insert per pass. Tidsstämplarna sjunker en sekund per pass, så att
- * biblioteket – som visar det senast ändrade först – står i atlasens
- * ordning.
+ * En insert per pass, och delningen med alla coacher. Tidsstämplarna sjunker
+ * en sekund per pass, så att biblioteket, som visar det senast ändrade
+ * först, står i atlasens ordning.
  */
 export function atlasStatements(
   owner: string = FIRST_ADMIN,
@@ -59,12 +60,12 @@ export function atlasStatements(
     const stamp = `now() - interval '${i} seconds'`;
     return [
       "insert into public.session_library (",
-      "  owner_id, shared, title, sport, kind, intensity, purpose, description,",
+      "  owner_id, title, sport, kind, intensity, purpose, description,",
       "  progression, adaptations, fueling, timing, phases, basis, structure,",
       "  blocks, levels, created_at, updated_at",
       ")",
       "select",
-      `  o.id, ${row.shared}, ${literal(row.title)}, ${literal(row.sport)},`,
+      `  o.id, ${literal(row.title)}, ${literal(row.sport)},`,
       `  ${literal(row.kind)}, ${literal(row.intensity)},`,
       `  ${literal(row.purpose)},`,
       `  ${literal(row.description)},`,
@@ -84,6 +85,12 @@ export function atlasStatements(
       `    where s.owner_id = o.id and s.title = ${literal(row.title)}`,
       `      and s.sport = ${literal(row.sport)}`,
       "  );",
+      "insert into public.library_shares (session_id, audience, created_by)",
+      "select s.id, 'coacher', s.owner_id",
+      "from public.session_library s",
+      `where s.owner_id = ${owner} and s.title = ${literal(row.title)}`,
+      `  and s.sport = ${literal(row.sport)}`,
+      "on conflict do nothing;",
     ].join("\n");
   });
 }

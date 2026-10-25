@@ -292,11 +292,16 @@ export async function listWorkoutOptions(
   return data ?? [];
 }
 
-/** Får den inloggade ändra adeptens plan just nu? */
-export async function canEditPlan(adeptId: string): Promise<boolean> {
+/**
+ * Får den inloggade ändra planen just nu? En plan coachen delat går alltid
+ * att ändra; en ur biblioteket så länge adepten är medlem.
+ */
+export async function canEditPlan(instanceId: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
   const supabase = await createClient();
-  const { data } = await supabase.rpc("can_edit_plan", { adept: adeptId });
+  const { data } = await supabase.rpc("can_edit_plan_instance", {
+    p_instance: instanceId,
+  });
   return data === true;
 }
 

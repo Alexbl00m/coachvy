@@ -222,7 +222,6 @@ export function SessionDialog({
               structure: all[i].structure,
             }))
           : [],
-        shared: false,
       },
     });
   };
@@ -592,7 +591,6 @@ export function SessionDialog({
           onClose={() => setSaving(null)}
           sessionId={null}
           initial={saving.initial}
-          isAdmin
         />
       )}
     </dialog>

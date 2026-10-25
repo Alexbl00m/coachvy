@@ -53,6 +53,7 @@ export function ScheduleDialog({
   initialLevel = null,
   initialAdeptId = null,
   initialDate = null,
+  self = false,
 }: {
   /** Passet; null stänger dialogen. */
   session: LibrarySession | null;
@@ -62,6 +63,8 @@ export function ScheduleDialog({
   /** Låser adepten, som från kalendern när en adept redan är vald. */
   initialAdeptId?: string | null;
   initialDate?: string | null;
+  /** Adepten lägger in åt sig själv. */
+  self?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
@@ -146,7 +149,7 @@ export function ScheduleDialog({
       <div className="space-y-4 p-5 sm:p-6">
         <div>
           <p className="text-[0.75rem] font-medium text-text-muted">
-            Lägg i kalendern
+            {self ? "Lägg i min kalender" : "Lägg i kalendern"}
           </p>
           <h2 id="schema-rubrik" className="text-lg font-semibold">
             {session.title}
@@ -157,8 +160,8 @@ export function ScheduleDialog({
           <div className="space-y-3">
             <p role="status" className="text-sm text-text">
               {done.dates.length > 1
-                ? `Inlagt för ${done.adeptName}: ${done.dates.length} pass, ${weekdayName(done.date)} ${shortDate(done.date)} till ${weekdayName(done.dates[done.dates.length - 1])} ${shortDate(done.dates[done.dates.length - 1])}`
-                : `Inlagt för ${done.adeptName}, ${weekdayName(done.date)} ${longDate(done.date, todayIso())}`}
+                ? `Inlagt ${self ? "i din kalender" : `för ${done.adeptName}`}: ${done.dates.length} pass, ${weekdayName(done.date)} ${shortDate(done.date)} till ${weekdayName(done.dates[done.dates.length - 1])} ${shortDate(done.dates[done.dates.length - 1])}`
+                : `Inlagt ${self ? "i din kalender" : `för ${done.adeptName}`}, ${weekdayName(done.date)} ${longDate(done.date, todayIso())}`}
               {done.level ? `, nivå ${done.level}` : ""}.
             </p>
             {done.note && (
@@ -222,32 +225,34 @@ export function ScheduleDialog({
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Adept" htmlFor="schema-adept">
-                {locked ? (
-                  <p
-                    id="schema-adept"
-                    className="rounded-md border border-line px-3 py-2 text-sm"
-                  >
-                    {adeptName}
-                  </p>
-                ) : (
-                  <Select
-                    id="schema-adept"
-                    value={adeptId}
-                    onChange={(e) => setAdeptId(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Välj adept…
-                    </option>
-                    {adepts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.full_name}
+            <div className={cn("grid gap-4", !self && "sm:grid-cols-2")}>
+              {!self && (
+                <Field label="Adept" htmlFor="schema-adept">
+                  {locked ? (
+                    <p
+                      id="schema-adept"
+                      className="rounded-md border border-line px-3 py-2 text-sm"
+                    >
+                      {adeptName}
+                    </p>
+                  ) : (
+                    <Select
+                      id="schema-adept"
+                      value={adeptId}
+                      onChange={(e) => setAdeptId(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Välj adept…
                       </option>
-                    ))}
-                  </Select>
-                )}
-              </Field>
+                      {adepts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.full_name}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </Field>
+              )}
               <Field label="Datum" htmlFor="schema-datum">
                 <DatePicker id="schema-datum" value={date} onChange={setDate} />
               </Field>
@@ -256,9 +261,9 @@ export function ScheduleDialog({
             <RepeatPicker start={date} value={repeat} onChange={setRepeat} />
 
             <p className="text-[0.75rem] text-text-subtle">
-              Zonerna räknas om mot adeptens tröskel i passets gren – löpzonerna
-              mot formuppskattningen. Passet går att ändra i passbyggaren
-              efteråt.
+              {self
+                ? "Zonerna räknas om mot din tröskel i passets gren, och löpzonerna mot din formuppskattning. Passet går att ändra i passbyggaren efteråt."
+                : "Zonerna räknas om mot adeptens tröskel i passets gren, och löpzonerna mot formuppskattningen. Passet går att ändra i passbyggaren efteråt."}
             </p>
 
             {error && (
@@ -278,7 +283,9 @@ export function ScheduleDialog({
                   ? "Lägger in…"
                   : dates.length > 1
                     ? `Lägg in ${dates.length} pass`
-                    : "Lägg i kalendern"}
+                    : self
+                      ? "Lägg i min kalender"
+                      : "Lägg i kalendern"}
               </Button>
               {adeptId ? (
                 <Link

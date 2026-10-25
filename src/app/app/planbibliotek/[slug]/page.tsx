@@ -4,12 +4,13 @@ import { ArrowRight, ChevronLeft } from "lucide-react";
 
 import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
+import { CopyPlanButton } from "@/components/plan-library/copy-plan-button";
 import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
 import { TemplateWeeks } from "@/components/plan-library/template-weeks";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { isMember } from "@/lib/auth/membership";
+import { canBuildPlans, isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   intensityText,
@@ -20,6 +21,7 @@ import {
   getActiveInstance,
   listDisciplines,
   loadPublishedBySlug,
+  planAccessFor,
 } from "@/lib/plan-library/queries";
 import { peakVolume, volumeText } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
@@ -40,24 +42,31 @@ export default async function LibraryPlanPage({
   const query = await searchParams;
   const role = user.profile?.role;
 
-  if (role === "adept" && !isMember(user)) {
-    return (
-      <>
-        <PageHeader title="Planbibliotek" />
-        <MembersOnly
-          feature="Planbiblioteket"
-          description="Som medlem väljer du en färdig plan mot ditt mål, i den längd och nivå som passar dig."
-        />
-      </>
-    );
-  }
-
   const [content, disciplines, active] = await Promise.all([
     loadPublishedBySlug(slug),
     listDisciplines(),
     user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
   ]);
-  if (!content) notFound();
+  // En plan adepten inte når: den ingår i medlemskapet, eller finns inte.
+  if (!content) {
+    if (role === "adept" && !isMember(user)) {
+      return (
+        <>
+          <PageHeader title="Planbiblioteket" />
+          <MembersOnly
+            feature="Planbiblioteket"
+            description="Som medlem väljer du en färdig plan mot ditt mål, i den längd och nivå som passar dig. Planer din coach delar med dig når du utan medlemskap."
+          />
+        </>
+      );
+    }
+    notFound();
+  }
+  const access =
+    role === "adept" && user.adept
+      ? await planAccessFor(user.adept.id, content.template.id)
+      : null;
+  const own = content.template.owner_id === user.id;
 
   const { version, levels, phases, weeks, domain } = content;
   const peak = (levelId: string) => peakVolume(domain.volumes, levelId);
@@ -73,7 +82,7 @@ export default async function LibraryPlanPage({
     const pick = own.find((w) => w.kind === "normal") ?? own[0];
     return pick ? [pick] : [];
   });
-  const canStart = role === "adept" && isMember(user) && !active;
+  const canStart = role === "adept" && access !== null && !active;
   const length =
     version.min_weeks === version.max_weeks
       ? `${version.max_weeks} veckor`
@@ -106,6 +115,15 @@ export default async function LibraryPlanPage({
             <ButtonLink href={routes.myPlan} variant="secondary">
               Du följer {active.title}
             </ButtonLink>
+          ) : own ? (
+            <ButtonLink
+              href={`${routes.planTemplates}/${content.template.id}`}
+              variant="secondary"
+            >
+              Ändra i planmallar
+            </ButtonLink>
+          ) : canBuildPlans(user) ? (
+            <CopyPlanButton templateId={content.template.id} />
           ) : undefined
         }
       />

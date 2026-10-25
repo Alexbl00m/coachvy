@@ -87,6 +87,19 @@ export async function requireCoach(): Promise<SessionUser> {
   return user;
 }
 
+/**
+ * Inloggad coach med medlemskap, eller admin: den som bygger egna planer.
+ * Andra går till planbiblioteket.
+ */
+export async function requirePlanBuilder(): Promise<SessionUser> {
+  const user = await requireSessionUser();
+  const builder =
+    user.isAdmin ||
+    (user.profile?.role === "coach" && user.coach?.plan === "medlem");
+  if (!builder) redirect(routes.planLibrary);
+  return user;
+}
+
 /** Inloggad admin, annars till översikten. */
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireSessionUser();

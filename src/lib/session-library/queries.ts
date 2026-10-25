@@ -8,6 +8,9 @@ import type { Sport } from "@/lib/calculators/lactate";
 import type { TrainingPhase } from "@/lib/tests/phases";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 
+import { listAuthors, listSharesFor } from "@/lib/sharing/queries";
+import { authorLabel, type Author, type Share } from "@/lib/sharing/shares";
+
 import type { LibraryLevel, LibrarySession } from "./library";
 
 type LibraryRow = PlanLibraryTables["session_library"]["Row"];
@@ -16,11 +19,21 @@ type LibraryRow = PlanLibraryTables["session_library"]["Row"];
 const notMigrated = (error: { code?: string } | null) =>
   error?.code === "PGRST205" || error?.code === "42P01";
 
-function toSession(row: LibraryRow, userId: string | null): LibrarySession {
+type Viewer = { id: string; coachId: string | null };
+
+function toSession(
+  row: LibraryRow,
+  viewer: Viewer,
+  authors: Map<string, Author> = new Map(),
+  shares: Share[] = [],
+): LibrarySession {
+  const own = row.owner_id === viewer.id;
   return {
     id: row.id,
-    own: row.owner_id === userId,
-    shared: row.shared,
+    own,
+    ownerId: row.owner_id,
+    author: own ? null : authorLabel(authors.get(row.owner_id), viewer),
+    shares: own ? shares : [],
     title: row.title,
     sport: row.sport as Sport,
     kind: row.kind ?? "",
@@ -43,13 +56,15 @@ function toSession(row: LibraryRow, userId: string | null): LibrarySession {
 }
 
 /**
- * Passen den inloggade ser: de egna och de delade. RLS avgör; här sorteras
- * bara, de egna först och det senast ändrade överst.
+ * Passen den inloggade ser: de egna och det som delats med hen. RLS avgör;
+ * här hämtas vem passen kommer från och vem de egna är delade med, och de
+ * egna sorteras först med det senast ändrade överst.
  */
 export async function listLibrary(): Promise<LibrarySession[]> {
   if (!isSupabaseConfigured()) return [];
   const user = await getSessionUser();
   if (!user) return [];
+  const viewer = { id: user.id, coachId: user.adept?.coach_id ?? null };
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("session_library")
@@ -60,7 +75,15 @@ export async function listLibrary(): Promise<LibrarySession[]> {
     if (notMigrated(error)) return [];
     throw new Error(`Kunde inte läsa passbiblioteket: ${error.message}`);
   }
-  const sessions = (data ?? []).map((row) => toSession(row, user.id));
+  const rows = data ?? [];
+  const ownIds = rows.filter((r) => r.owner_id === user.id).map((r) => r.id);
+  const [shares, authors] = await Promise.all([
+    listSharesFor("pass", ownIds),
+    listAuthors(rows.filter((r) => r.owner_id !== user.id).map((r) => r.owner_id)),
+  ]);
+  const sessions = rows.map((row) =>
+    toSession(row, viewer, authors, shares.get(row.id)),
+  );
   return [...sessions.filter((s) => s.own), ...sessions.filter((s) => !s.own)];
 }
 
@@ -77,5 +100,5 @@ export async function getLibrarySession(
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return null;
-  return toSession(data, user.id);
+  return toSession(data, { id: user.id, coachId: user.adept?.coach_id ?? null });
 }

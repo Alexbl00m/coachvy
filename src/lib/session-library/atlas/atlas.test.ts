@@ -87,7 +87,6 @@ describe("cykelatlasen", () => {
         ).toBeGreaterThan(40);
       }
       expect(input.phases.length, input.title).toBeGreaterThan(0);
-      expect(input.shared).toBe(true);
     }
   });
 });
@@ -158,6 +157,9 @@ describe("atlasStatements", () => {
     expect(statements[0]).toContain("and s.sport = 'cykling'");
     expect(statements[0]).toContain("now() - interval '0 seconds'");
     expect(statements[88]).toContain("now() - interval '88 seconds'");
+    // Atlasen delas med alla coacher, som förut.
+    expect(statements[0]).toContain("insert into public.library_shares");
+    expect(statements[0]).toContain("'coacher'");
   });
 
   it("dubblar apostrofer i texten", () => {
