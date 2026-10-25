@@ -142,6 +142,13 @@ export type CalculatorOptions = {
    * sidan inte ens har en referens till den.
    */
   previewOnServer?: (args: AnalysisArgs) => Promise<SessionAnalysis>;
+  /** Ett sparat test att börja från, när det ändras i stället för skapas. */
+  initial?: {
+    protocol: ProtocolKey;
+    unit: IntensityUnit;
+    finish: FinishFields;
+    rows: Partial<Omit<EffortRow, "id">>[];
+  };
 };
 
 export type ProtocolCalculator = {
@@ -199,18 +206,29 @@ export function useProtocolCalculator(
     membersOnly !== "open" && Boolean(protocolByKey(key)?.membersOnly);
 
   const [sport, setSportState] = useState<Sport>(initialSport);
+  const initial = options.initial;
   const [protocol, setProtocolState] = useState<ProtocolKey>(
-    listFor(initialSport).find((p) => !isLocked(p.key))?.key ?? "laktat-steg",
+    initial?.protocol ??
+      listFor(initialSport).find((p) => !isLocked(p.key))?.key ??
+      "laktat-steg",
   );
-  const [unit, setUnit] = useState<IntensityUnit>(defaultUnitFor(initialSport));
+  const [unit, setUnit] = useState<IntensityUnit>(
+    initial?.unit ?? defaultUnitFor(initialSport),
+  );
   const [weight, setWeight] = useState(initialWeight);
   const [bodyFat, setBodyFat] = useState(initialBody.bodyFat);
   const [sex, setSex] = useState<Sex | "">(initialBody.sex);
-  const [finish, setFinishState] = useState<FinishFields>(EMPTY_FINISH);
+  const [finish, setFinishState] = useState<FinishFields>(
+    initial?.finish ?? EMPTY_FINISH,
+  );
   const setFinish = (patch: Partial<FinishFields>) =>
     setFinishState((current) => ({ ...current, ...patch }));
-  const [rows, setRows] = useState<EffortRow[]>([0, 1, 2].map((id) => emptyRow(id)));
-  const [nextId, setNextId] = useState(3);
+  const [rows, setRows] = useState<EffortRow[]>(() =>
+    initial?.rows.length
+      ? initial.rows.map((patch, i) => ({ ...emptyRow(i), ...patch }))
+      : [0, 1, 2].map((id) => emptyRow(id)),
+  );
+  const [nextId, setNextId] = useState(Math.max(3, initial?.rows.length ?? 0));
 
   /**
    * Byte av protokoll trimmar raderna till det nya protokollets gränser.

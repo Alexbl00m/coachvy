@@ -22,13 +22,22 @@ import { blockOn } from "@/lib/season/season";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import type { TrainingBlockRow } from "@/lib/types/database";
 import { previewOnServer } from "@/lib/tests/preview-actions";
-import { saveTestSession } from "@/lib/tests/session-actions";
+import { saveTestSession, updateTestSession } from "@/lib/tests/session-actions";
 import { FIT_SLOTS, kindFor } from "@/lib/tests/fit-efforts";
 import type { ReportReading } from "@/lib/tests/report-read";
 import {
   formatDuration,
   useProtocolCalculator,
+  type CalculatorOptions,
 } from "@/lib/tests/use-protocol-calculator";
+
+/** Ett sparat test som ändras. Fälten är skrivna som i formuläret. */
+export type SessionEdit = NonNullable<CalculatorOptions["initial"]> & {
+  sessionId: string;
+  performedOn: string;
+  trainingPhase: string;
+  notes: string;
+};
 
 const decimal = (raw: string) => Number(raw.replace(",", "."));
 const positive = (raw: string) => {
@@ -50,6 +59,7 @@ export function NewSessionForm({
   adeptSex = null,
   member = false,
   season = [],
+  edit,
 }: {
   adeptId: string;
   adeptSport: Sport;
@@ -60,6 +70,8 @@ export function NewSessionForm({
   member?: boolean;
   /** Säsongens perioder, för att förvälja fasen testet togs i. */
   season?: Pick<TrainingBlockRow, "phase" | "starts_on" | "ends_on">[];
+  /** Ändrar ett sparat test i stället för att skapa ett nytt. */
+  edit?: SessionEdit;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -70,24 +82,27 @@ export function NewSessionForm({
       bodyFat: adeptBodyFat ? String(adeptBodyFat).replace(".", ",") : "",
       sex: adeptSex ?? "",
     },
-    { membersOnly: member ? "open" : "locked", previewOnServer },
+    { membersOnly: member ? "open" : "locked", previewOnServer, initial: edit },
   );
 
   const [performedOn, setPerformedOn] = useState(
-    new Date().toISOString().slice(0, 10),
+    edit?.performedOn ?? new Date().toISOString().slice(0, 10),
   );
   // Fasen följer säsongsplanen för det valda datumet tills coachen väljer
   // själv; då gäller valet, även om datumet ändras efteråt.
-  const [phaseChoice, setPhaseChoice] = useState<string | null>(null);
+  // Ett sparat test behåller sin fas, också när den lämnades tom.
+  const [phaseChoice, setPhaseChoice] = useState<string | null>(
+    edit ? edit.trainingPhase : null,
+  );
   const planned = blockOn(season, performedOn)?.phase ?? "";
   const trainingPhase = phaseChoice ?? planned;
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(edit?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const save = () => {
     setError(null);
     startTransition(async () => {
-      const result = await saveTestSession({
+      const data = {
         adeptId,
         protocol: calc.protocol,
         sport: calc.sport,
@@ -107,13 +122,17 @@ export function NewSessionForm({
         trainingPhase: trainingPhase || null,
         notes: notes.trim() || null,
         efforts: calc.filled,
-      });
+      };
+      const result = edit
+        ? await updateTestSession(edit.sessionId, data)
+        : await saveTestSession(data);
 
       if (!result.ok) {
         setError(result.error);
         return;
       }
       router.push(`${routes.adepts}/${adeptId}/test/${result.sessionId}`);
+      router.refresh();
     });
   };
 
@@ -170,7 +189,7 @@ export function NewSessionForm({
 
   return (
     <div className="space-y-6">
-      <ReportImport adeptId={adeptId} onApply={applyReport} />
+      {!edit && <ReportImport adeptId={adeptId} onApply={applyReport} />}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card className="min-w-0">
@@ -289,7 +308,7 @@ export function NewSessionForm({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={save} disabled={!canSave}>
-          {pending ? "Sparar …" : "Spara testtillfället"}
+          {pending ? "Sparar …" : edit ? "Spara ändringarna" : "Spara testtillfället"}
         </Button>
         <span className="text-[0.8125rem] text-text-subtle">
           {calc.pending && calc.filled.length > 0

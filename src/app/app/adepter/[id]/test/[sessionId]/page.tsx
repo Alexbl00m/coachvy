@@ -22,6 +22,7 @@ import {
   IntervalZonesCard,
 } from "@/components/tests/training-zone-cards";
 import { LsctCard } from "@/components/tests/lsct-card";
+import { SessionActionsBar } from "@/components/tests/session-actions-bar";
 import { ZonesCard } from "@/components/tests/zones-card";
 import { linearFit } from "@/lib/calculators/regression";
 import { heartRateAtIntensity } from "@/lib/tests/lactate-points";
@@ -45,7 +46,7 @@ const sv = (value: number, digits: number) =>
 export default async function SessionPage({
   params,
 }: PageProps<"/app/adepter/[id]/test/[sessionId]">) {
-  await requireSessionUser();
+  const user = await requireSessionUser();
   const { id, sessionId } = await params;
 
   const [adept, session] = await Promise.all([getAdept(id), getSession(sessionId)]);
@@ -283,6 +284,12 @@ export default async function SessionPage({
             ? ` · ${sv(Number(session.body_fat_pct), 1)} % kroppsfett`
             : ""
         }`}
+        action={
+          // Bara adeptens egen coach ändrar och tar bort.
+          user.profile?.role === "coach" && adept.coach_id === user.id ? (
+            <SessionActionsBar adeptId={adept.id} sessionId={session.id} />
+          ) : undefined
+        }
       />
 
       {primary.length > 0 && (
