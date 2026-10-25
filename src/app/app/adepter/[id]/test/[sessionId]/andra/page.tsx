@@ -7,11 +7,11 @@ import { PageHeader } from "@/components/page-header";
 import { getAdept } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
+import { formatDuration } from "@/lib/calculators/time";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { listBlocks } from "@/lib/season/queries";
 import { getSession } from "@/lib/tests/session-queries";
-import { formatDuration } from "@/lib/tests/use-protocol-calculator";
 
 export const metadata = { title: "Ändra test" };
 
@@ -73,7 +73,7 @@ export default async function EditSessionPage({
           },
           rows: session.test_efforts.map((e) => ({
             intensity: sv(e.intensity),
-            duration: e.duration_seconds === null ? "" : formatDuration(e.duration_seconds),
+            duration: e.duration_seconds ? formatDuration(e.duration_seconds) : "",
             distance: sv(e.distance_m),
             lactate: sv(e.lactate),
             heartRate: sv(e.heart_rate),
