@@ -4,6 +4,7 @@ import { ArrowRight, ChevronLeft } from "lucide-react";
 
 import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
+import { AssignPlanButton } from "@/components/plan-library/assign-plan-button";
 import { CopyPlanButton } from "@/components/plan-library/copy-plan-button";
 import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
@@ -11,6 +12,7 @@ import { TemplateWeeks } from "@/components/plan-library/template-weeks";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { canBuildPlans, isMember } from "@/lib/auth/membership";
+import { listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   intensityText,
@@ -42,10 +44,12 @@ export default async function LibraryPlanPage({
   const query = await searchParams;
   const role = user.profile?.role;
 
-  const [content, disciplines, active] = await Promise.all([
+  const [content, disciplines, active, adepts] = await Promise.all([
     loadPublishedBySlug(slug),
     listDisciplines(),
     user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
+    // Coachen lägger planen på sina adepter.
+    role === "coach" ? listAdepts() : Promise.resolve([]),
   ]);
   // En plan adepten inte når: den ingår i medlemskapet, eller finns inte.
   if (!content) {
@@ -103,7 +107,22 @@ export default async function LibraryPlanPage({
           .filter(Boolean)
           .join(" · ")}
         action={
-          canStart ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {role === "coach" && (
+              <AssignPlanButton
+                versionId={version.id}
+                title={version.title}
+                minWeeks={version.min_weeks}
+                maxWeeks={version.max_weeks}
+                levels={[...levels]
+                  .sort((a, b) => b.rank - a.rank)
+                  .map((l) => ({ id: l.id, key: l.key, name: l.name }))}
+                adepts={adepts
+                  .filter((a) => a.coach_id === user.id)
+                  .map((a) => ({ id: a.id, full_name: a.full_name }))}
+              />
+            )}
+            {canStart ? (
             <ButtonLink
               href={`${routes.planLibrary}/${slug}/starta`}
               className="font-semibold"
@@ -124,7 +143,8 @@ export default async function LibraryPlanPage({
             </ButtonLink>
           ) : canBuildPlans(user) ? (
             <CopyPlanButton templateId={content.template.id} />
-          ) : undefined
+          ) : undefined}
+          </div>
         }
       />
 

@@ -16,6 +16,7 @@ export type QueueResult = { ok: true } | { ok: false; error: string };
 const fail = (error: string): QueueResult => ({ ok: false, error });
 
 function refresh(adeptId: string) {
+  revalidatePath(adeptHref(adeptId, "plan"));
   revalidatePath(adeptHref(adeptId, "bibliotek"));
   revalidatePath(routes.calendar);
   revalidatePath(routes.myPlan);
