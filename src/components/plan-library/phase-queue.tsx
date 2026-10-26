@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
@@ -8,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { formatDate } from "@/lib/format";
-import { queuePhase, removeQueuedPhase } from "@/lib/plan-library/queue-actions";
+import {
+  endActivePhase,
+  queuePhase,
+  removeQueuedPhase,
+} from "@/lib/plan-library/queue-actions";
+import { adeptHref, routes } from "@/lib/routes";
 
 export type QueueItem = {
   id: string;
@@ -37,8 +43,8 @@ const addDays = (iso: string, days: number) => {
 
 /**
  * Adeptens faser i ordning: den aktiva och de som står i kö. Coachen lägger
- * till en plan sist i kön, i så många veckor planen tillåter, och tar bort
- * en kommande fas; faserna efter den flyttas fram.
+ * till en plan sist i kön, i så många veckor planen tillåter, tar bort en
+ * kommande fas och avslutar den pågående; faserna efter flyttas fram.
  */
 export function PhaseQueue({
   adeptId,
@@ -140,6 +146,37 @@ export function PhaseQueue({
               >
                 {item.status === "aktiv" ? "Pågår" : "I kö"}
               </span>
+              {item.status === "aktiv" && (
+                <span className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem]">
+                  <Link
+                    href={adeptHref(adeptId, "bibliotek")}
+                    className="font-medium text-accent-text hover:underline"
+                  >
+                    Öppna planen
+                  </Link>
+                  <Link
+                    href={`${routes.calendar}?adept=${adeptId}`}
+                    className="font-medium text-accent-text hover:underline"
+                  >
+                    Se passen i kalendern
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      const next = items.find((i) => i.status === "kommande");
+                      const message = next
+                        ? `Avsluta ${item.title} nu? ${next.title} flyttas fram och börjar i dag eller närmast efter, på samma veckodag.`
+                        : `Avsluta ${item.title} nu? Planens pass försvinner ur kalendern.`;
+                      if (!window.confirm(message)) return;
+                      run(() => endActivePhase({ adeptId, instanceId: item.id }));
+                    }}
+                    className="ml-auto rounded-md px-2 py-1 text-text-muted hover:bg-surface-2 hover:text-text"
+                  >
+                    Avsluta fasen
+                  </button>
+                </span>
+              )}
               {item.status === "kommande" && (
                 <button
                   type="button"

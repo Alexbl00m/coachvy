@@ -69,3 +69,32 @@ export function closeGap(
   }
   return moves;
 }
+
+/**
+ * Nya startdatum när den aktiva fasen avslutas i förtid: kön flyttas fram
+ * så att nästa fas börjar i dag eller närmast efter, på samma veckodag som
+ * kön redan går i. Faserna efter följer direkt på varandra.
+ */
+export function pullForward(
+  phases: QueuedPhase[],
+  endedId: string,
+  today: string,
+): { id: string; start_date: string }[] {
+  const rest = queueOf(phases).filter(
+    (p) => p.id !== endedId && p.status === "kommande",
+  );
+  if (rest.length === 0) return [];
+  const first = rest[0].start_date;
+  if (first <= today) return [];
+  // Hela veckor bakåt från den första fasen, så att veckodagen behålls.
+  const days = Math.round(
+    (Date.parse(`${first}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000,
+  );
+  let start = addDays(first, -Math.floor(days / 7) * 7);
+  const moves: { id: string; start_date: string }[] = [];
+  for (const p of rest) {
+    if (p.start_date !== start) moves.push({ id: p.id, start_date: start });
+    start = phaseEnd({ start_date: start, weeks: p.weeks });
+  }
+  return moves;
+}

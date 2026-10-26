@@ -1902,7 +1902,9 @@ uppbyggnad, specifik och toppning. En fas i kö är en startad plan med status
 (`queue.ts`). När den aktiva fasens sista vecka är slut avslutas den och
 nästa tar vid (`advance_plan_queue`, som körs när planen visas). Faserna i
 kön syns i kalendern på sina datum. Tas en kommande fas bort flyttas
-faserna efter fram.
+faserna efter fram. Avslutar coachen den pågående fasen i förtid flyttas kön
+fram så att nästa fas börjar i dag eller närmast efter, på samma veckodag
+(`pullForward`).
 
 En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
 med coachen, får åtkomsten `coach` och kräver inget medlemskap

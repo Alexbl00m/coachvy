@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { proposePeriodization } from "./periodization";
 import { loadVersion } from "./queries";
-import { closeGap, nextPhaseStart, type QueuedPhase } from "./queue";
+import { closeGap, nextPhaseStart, pullForward, type QueuedPhase } from "./queue";
 
 export type QueueResult = { ok: true } | { ok: false; error: string };
 
@@ -20,6 +20,7 @@ function refresh(adeptId: string) {
   revalidatePath(adeptHref(adeptId, "bibliotek"));
   revalidatePath(routes.calendar);
   revalidatePath(routes.myPlan);
+  revalidatePath(routes.dashboard);
 }
 
 /** Adeptens faser, och att adepten är den inloggade coachens. */
@@ -103,7 +104,7 @@ export async function queuePhase(input: {
 
 /**
  * Tar bort en kommande fas ur kön. Faserna efter den flyttas fram så att
- * kön hänger ihop. Den aktiva fasen avslutas i planvyn, inte här.
+ * kön hänger ihop. Den aktiva fasen avslutas med endActivePhase.
  */
 export async function removeQueuedPhase(input: {
   adeptId: string;
@@ -131,6 +132,43 @@ export async function removeQueuedPhase(input: {
       .eq("id", move.id);
     if (moveError) return fail(moveError.message);
   }
+
+  refresh(input.adeptId);
+  return { ok: true };
+}
+
+/**
+ * Avslutar den pågående fasen i förtid. Kön flyttas fram så att nästa fas
+ * börjar i dag eller närmast efter, på samma veckodag som kön går i; börjar
+ * den i dag tar den vid direkt.
+ */
+export async function endActivePhase(input: {
+  adeptId: string;
+  instanceId: string;
+}): Promise<QueueResult> {
+  const ctx = await coachQueue(input.adeptId);
+  if (!ctx) return fail("Bara adeptens coach ändrar kön.");
+  const { supabase, phases } = ctx;
+  const target = phases.find((p) => p.id === input.instanceId);
+  if (!target || target.status !== "aktiv") {
+    return fail("Fasen pågår inte längre. Ladda om sidan.");
+  }
+
+  const moves = pullForward(phases, target.id, todayIso());
+  const { error } = await supabase
+    .from("plan_instances")
+    .update({ status: "avbruten" })
+    .eq("id", target.id);
+  if (error) return fail(error.message);
+  // Den första flyttas först, så att ingen fas krockar med nästa på vägen.
+  for (const move of moves) {
+    const { error: moveError } = await supabase
+      .from("plan_instances")
+      .update({ start_date: move.start_date })
+      .eq("id", move.id);
+    if (moveError) return fail(moveError.message);
+  }
+  await supabase.rpc("advance_plan_queue", { p_adept: input.adeptId });
 
   refresh(input.adeptId);
   return { ok: true };

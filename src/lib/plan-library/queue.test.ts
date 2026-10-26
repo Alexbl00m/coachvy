@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { closeGap, nextPhaseStart, phaseEnd, queueOf, type QueuedPhase } from "./queue";
+import {
+  closeGap,
+  nextPhaseStart,
+  phaseEnd,
+  pullForward,
+  queueOf,
+  type QueuedPhase,
+} from "./queue";
 
 const p = (id: string, status: QueuedPhase["status"], start: string, weeks: number): QueuedPhase => ({
   id,
@@ -42,5 +49,27 @@ describe("faskön", () => {
       { id: "d", start_date: "2027-01-25" },
     ]);
     expect(closeGap(phases, "d")).toEqual([]);
+  });
+
+  it("flyttar fram kön när den aktiva fasen avslutas, på samma veckodag", () => {
+    const phases = [
+      p("a", "aktiv", "2026-10-26", 24),
+      p("b", "kommande", "2027-04-12", 6),
+      p("c", "kommande", "2027-05-24", 2),
+    ];
+    // Onsdag: nästa måndag.
+    expect(pullForward(phases, "a", "2026-10-28")).toEqual([
+      { id: "b", start_date: "2026-11-02" },
+      { id: "c", start_date: "2026-12-14" },
+    ]);
+    // Måndag: i dag.
+    expect(pullForward(phases, "a", "2026-11-02")[0]).toEqual({
+      id: "b",
+      start_date: "2026-11-02",
+    });
+  });
+
+  it("flyttar ingenting utan kö", () => {
+    expect(pullForward([p("a", "aktiv", "2026-10-26", 8)], "a", "2026-10-28")).toEqual([]);
   });
 });
