@@ -1877,6 +1877,50 @@ Migrationen `20261008090000_plan_library_example.sql` lägger in ett kort
 exempel, Maraton (exempel), i tre nivåer att prova med. Det är märkt som
 exempel och kan arkiveras under Planmallar.
 
+### Fokus och förslag
+
+En plan kan ha ett **fokus** (`plan_templates.focus`): grundträning, lyft
+taket, boosta VO2max, höj tröskeln, styrka på cykeln, ultra eller
+durability. Kategorin säger vilket lopp planen leder mot; fokus säger vad
+den utvecklar. Fokus väljs i mallverktyget och går att filtrera på i
+biblioteket.
+
+Appen föreslår fokus ur det senaste testet och huvudloppet
+(`recommend.ts`): taket när tröskeln ligger högt mot VO2max, tröskeln när
+den ligger lågt eller VLamax är hög inför ett långt lopp, loppets intensitet
+när det är åtta veckor eller mindre kvar, och grund med ett test när inget
+test finns. Förslaget visas med motivering och planerna med det fokuset på
+coachens Plan-flik och i medlemmens planbibliotek, när ingen plan är igång.
+Det är en hypotes; coachen väljer.
+
+### Faser i kö
+
+Coachen lägger planer på sina adepter under adeptens Plan-flik, en fas i
+taget sist i en kö: en grundperiod i så många veckor planen tillåter, sedan
+uppbyggnad, specifik och toppning. En fas i kö är en startad plan med status
+`kommande` och egna datum; nästa fas börjar dagen efter den förra
+(`queue.ts`). När den aktiva fasens sista vecka är slut avslutas den och
+nästa tar vid (`advance_plan_queue`, som körs när planen visas). Faserna i
+kön syns i kalendern på sina datum. Tas en kommande fas bort flyttas
+faserna efter fram.
+
+En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
+med coachen, får åtkomsten `coach` och kräver inget medlemskap
+(`coach_can_assign_plan`).
+
+### Färdiga planer
+
+Planer skrivna som data ligger i `src/lib/plan-library/seeds/`: sju
+cykelplaner, en per fokus, och tio löpplaner per fas – grund, tröskel,
+VO2max, specifik mot 5–10 km, halvmaraton, maraton och trail/ultra,
+toppning för kort och långt lopp, och övergång. Löpplanerna är byggda av
+cykler om fyra veckor och kortas från början, så att de går att lägga i
+valfritt antal veckor. `build.ts` kontrollerar varje plan som mallverktyget
+gör, att en vanlig veckas timmar ryms i nivåns spann, och räknar
+veckovolymen ur passen. Admin läser in och publicerar dem under **Färdiga
+planer** på adminsidan; `scripts/plan-library-seeds.ts` skriver samma
+planer som SQL.
+
 ## Passbiblioteket
 
 `/app/passbibliotek` är coachens egna pass att återanvända – de

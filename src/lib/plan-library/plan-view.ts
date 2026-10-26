@@ -143,6 +143,8 @@ export async function activeInstanceId(
 ): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
+  // Nästa fas i kön tar vid när den förra är slut.
+  await supabase.rpc("advance_plan_queue", { p_adept: adeptId });
   const { data, error } = await supabase
     .from("plan_instances")
     .select("id")
@@ -170,7 +172,8 @@ export async function listPlanSessionsBetween(
   let query = supabase
     .from("plan_instances")
     .select("id, adept_id, start_date, weeks")
-    .eq("status", "aktiv")
+    // Faserna i kön syns också, på sina datum.
+    .in("status", ["aktiv", "kommande"])
     .lte("start_date", to);
   if (adeptId) query = query.eq("adept_id", adeptId);
   const { data, error } = await query;

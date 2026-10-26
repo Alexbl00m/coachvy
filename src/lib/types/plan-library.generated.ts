@@ -453,7 +453,7 @@ export type PlanLibraryTables = {
       template_id: string;
       version_id: string;
       title: string;
-      status: "aktiv" | "avslutad" | "avbruten";
+      status: "aktiv" | "kommande" | "avslutad" | "avbruten";
       start_date: string;
       weeks: number;
       goal_mode: "lopp" | "fritt";
@@ -476,7 +476,7 @@ export type PlanLibraryTables = {
       template_id: string;
       version_id: string;
       title: string;
-      status?: "aktiv" | "avslutad" | "avbruten";
+      status?: "aktiv" | "kommande" | "avslutad" | "avbruten";
       start_date: string;
       weeks: number;
       goal_mode: "lopp" | "fritt";
@@ -499,7 +499,7 @@ export type PlanLibraryTables = {
       template_id?: string;
       version_id?: string;
       title?: string;
-      status?: "aktiv" | "avslutad" | "avbruten";
+      status?: "aktiv" | "kommande" | "avslutad" | "avbruten";
       start_date?: string;
       weeks?: number;
       goal_mode?: "lopp" | "fritt";
@@ -973,6 +973,14 @@ export type PlanLibraryFunctions = {
   };
   can_edit_plan_instance: {
     Args: { p_instance: string };
+    Returns: boolean;
+  };
+  advance_plan_queue: {
+    Args: { p_adept: string };
+    Returns: undefined;
+  };
+  coach_can_assign_plan: {
+    Args: { p_adept: string; p_template: string };
     Returns: boolean;
   };
   plan_access_for: {

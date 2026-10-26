@@ -56,6 +56,8 @@ const FUNCTIONS = [
   "plan_week_of",
   "can_build_plans",
   "can_edit_plan_instance",
+  "advance_plan_queue",
+  "coach_can_assign_plan",
   "plan_access_for",
   "copy_plan_template",
   "review_library_share",

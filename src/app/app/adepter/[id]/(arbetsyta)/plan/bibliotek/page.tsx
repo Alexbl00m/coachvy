@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
+import { PhaseQueue } from "@/components/plan-library/phase-queue";
 import { PlanSuggestions } from "@/components/plan-library/plan-suggestions";
-import { EmptyState } from "@/components/ui/card";
 import { loadWorkspace } from "@/lib/adepts/workspace";
 import {
   canEditPlan,
@@ -11,7 +11,9 @@ import {
   loadPlanView,
 } from "@/lib/plan-library/plan-view";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
-import { listInstances } from "@/lib/plan-library/queries";
+import { focusLabel } from "@/lib/plan-library/focus";
+import { listInstances, listLibrary } from "@/lib/plan-library/queries";
+import { phaseEnd, queueOf } from "@/lib/plan-library/queue";
 import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
@@ -35,10 +37,39 @@ export default async function AdeptPlanPage({
   const today = todayIso();
   const base = adeptHref(id, "bibliotek");
 
-  const [instances, suggestions] = await Promise.all([
+  const [instances, suggestions, library] = await Promise.all([
     listInstances(id),
     planSuggestions(id),
+    listLibrary(),
   ]);
+
+  // Faserna: den aktiva och de som står i kö, och planerna att välja bland.
+  const queue = (
+    <PhaseQueue
+      adeptId={id}
+      today={today}
+      items={queueOf(instances).map((i) => ({
+        id: i.id,
+        title: i.title,
+        status: i.status as "aktiv" | "kommande",
+        startDate: i.start_date,
+        endDate: phaseEnd(i),
+        weeks: i.weeks,
+      }))}
+      options={library.map((e) => ({
+        versionId: e.version.id,
+        title: e.version.title,
+        group: [e.category?.name, focusLabel(e.template.focus)]
+          .filter(Boolean)
+          .join(" · ") || "Övrigt",
+        minWeeks: e.version.min_weeks,
+        maxWeeks: e.version.max_weeks,
+        levels: [...e.levels]
+          .sort((a, b) => b.rank - a.rank)
+          .map((l) => ({ id: l.id, key: l.key, name: l.name })),
+      }))}
+    />
+  );
   const chosen =
     instances.find((i) => i.id === query.plan) ??
     instances.find((i) => i.status === "aktiv") ??
@@ -59,10 +90,7 @@ export default async function AdeptPlanPage({
       <>
         {header}
         <PlanSuggestions suggestions={suggestions} forCoach />
-        <EmptyState
-          title="Ingen plan ur biblioteket"
-          description="Adepten startar en plan själv i planbiblioteket: en du delat med adepten, eller en ur biblioteket som medlem."
-        />
+        {queue}
       </>
     );
   }
@@ -82,6 +110,7 @@ export default async function AdeptPlanPage({
       {chosen.status !== "aktiv" && (
         <PlanSuggestions suggestions={suggestions} forCoach />
       )}
+      {queue}
       {instances.length > 1 && (
         <p className="mb-4 text-[0.8125rem] text-text-muted">
           Andra planer:{" "}

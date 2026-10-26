@@ -449,6 +449,8 @@ export type EventRow = Row<"plan_instance_events">;
 export async function listInstances(adeptId: string): Promise<InstanceRow[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
+  // Nästa fas i kön tar vid när den förra är slut.
+  await supabase.rpc("advance_plan_queue", { p_adept: adeptId });
   return rows(
     await supabase
       .from("plan_instances")

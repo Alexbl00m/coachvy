@@ -8,9 +8,10 @@ import { createClient } from "@/lib/supabase/server";
 
 import { seedRows, type PlanSeed } from "./build";
 import { CYCLING_PLANS } from "./cycling";
+import { RUNNING_PLANS } from "./running";
 
 /** Alla färdiga planer som finns som data. */
-const SEEDS: PlanSeed[] = [...CYCLING_PLANS];
+const SEEDS: PlanSeed[] = [...CYCLING_PLANS, ...RUNNING_PLANS];
 
 export type SeedStatus = {
   slug: string;
@@ -99,6 +100,7 @@ export async function importSeedPlans(): Promise<ImportResult[]> {
             slug: rows.template.slug,
             category_id: categoryId.get(rows.template.category) ?? null,
             focus: rows.template.focus,
+            race_distance_m: rows.template.race_distance_m,
             created_by: user.id,
             owner_id: user.id,
           } as never),

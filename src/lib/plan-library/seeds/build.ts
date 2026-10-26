@@ -38,7 +38,7 @@ export type SeedLevel = {
 /** Ett pass: struktur per nivå, eller för styrka bara en längd i minuter. */
 export type SeedSession = {
   day: number;
-  discipline: "cykling" | "styrka";
+  discipline: "cykling" | "löpning" | "styrka";
   type: string;
   title: string;
   description: string;
@@ -69,7 +69,11 @@ export type SeedPhase = {
 export type PlanSeed = {
   slug: string;
   category: string;
-  focus: PlanFocus;
+  focus: PlanFocus | null;
+  /** Vad passens mål är andelar av: FTP för cykel, maratonfart (MP) för löpning med zoner. */
+  basis?: "FTP" | "MP";
+  /** Loppet planen leder mot, i meter, för löpplanernas tempon. */
+  raceMetres?: number | null;
   title: string;
   summary: string;
   goal: string;
@@ -217,7 +221,13 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 type Row = Record<string, string | number | boolean | null | object>;
 
 export type SeedRows = {
-  template: { id: string; slug: string; category: string; focus: string };
+  template: {
+    id: string;
+    slug: string;
+    category: string;
+    focus: string | null;
+    race_distance_m: number | null;
+  };
   version: Row;
   levels: Row[];
   phases: Row[];
@@ -239,7 +249,13 @@ export function seedRows(seed: PlanSeed): SeedRows {
   const v = seedId(seed.slug, "version");
   const levelId = (k: LevelKey) => seedId(seed.slug, "level", k);
   const rows: SeedRows = {
-    template: { id: t, slug: seed.slug, category: seed.category, focus: seed.focus },
+    template: {
+      id: t,
+      slug: seed.slug,
+      category: seed.category,
+      focus: seed.focus,
+      race_distance_m: seed.raceMetres ?? null,
+    },
     version: {
       id: v,
       template_id: t,
@@ -346,7 +362,7 @@ export function seedRows(seed: PlanSeed): SeedRows {
           rows.variants.push({
             ...base,
             duration_s: structureSeconds(parsed.blocks),
-            basis: "FTP",
+            basis: seed.basis ?? "FTP",
             blocks: parsed.blocks,
           });
         }
@@ -396,7 +412,7 @@ export function seedSql(seed: PlanSeed, owner: string): string {
     `declare v_owner uuid := ${owner};`,
     "begin",
     `  if exists (select 1 from public.plan_templates where slug = ${lit(t.slug)}) then return; end if;`,
-    `  insert into public.plan_templates (id, slug, category_id, focus, created_by, owner_id) values (${lit(t.id)}, ${lit(t.slug)}, (select id from public.plan_categories where key = ${lit(t.category)}), ${lit(t.focus)}, v_owner, v_owner);`,
+    `  insert into public.plan_templates (id, slug, category_id, focus, race_distance_m, created_by, owner_id) values (${lit(t.id)}, ${lit(t.slug)}, (select id from public.plan_categories where key = ${lit(t.category)}), ${lit(t.focus)}, ${lit(t.race_distance_m)}, v_owner, v_owner);`,
     insert("plan_template_versions", [{ ...r.version, created_by: sql("v_owner") }]),
     insert("plan_template_levels", r.levels),
     insert("plan_template_phases", r.phases),

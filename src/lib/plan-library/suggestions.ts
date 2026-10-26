@@ -16,7 +16,7 @@ import { recommendFocus, type Suggestion } from "./recommend";
 /** Kategorin för loppets gren, så att cykelplaner kommer först för ett cykellopp. */
 const SPORT_CATEGORY: Record<string, string[]> = {
   cykling: ["cykel"],
-  löpning: ["maraton", "halvmaraton", "10-km", "trail-ultra"],
+  löpning: ["lopning", "maraton", "halvmaraton", "10-km", "trail-ultra"],
   simning: ["simning"],
   triathlon: ["ironman", "70-3", "olympisk-triathlon", "xterra"],
 };
