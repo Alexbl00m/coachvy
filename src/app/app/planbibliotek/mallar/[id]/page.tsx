@@ -160,6 +160,7 @@ export default async function PlanTemplatePage({
                   ? null
                   : Number(content.template.race_distance_m)
               }
+              focus={content.template.focus ?? null}
               categories={categories.map((c) => ({ id: c.id, name: c.name }))}
               initial={{
                 title: version.title,

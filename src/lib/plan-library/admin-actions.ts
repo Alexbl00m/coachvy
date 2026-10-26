@@ -9,6 +9,7 @@ import type { Json } from "@/lib/types/plan-library.generated";
 import { TARGET_BASES, type TargetBasis } from "@/lib/workouts/schema";
 
 import { CATEGORY_RACE, raceByKey, raceByMetres } from "./races";
+import { isPlanFocus } from "./focus";
 import { parseStructure, structureSeconds } from "./structure";
 import type { SeasonPhase, WeekKind } from "./types";
 
@@ -235,8 +236,11 @@ export async function updateTemplate(input: {
   categoryId: string | null;
   /** Loppet planen leder fram till, i meter. Utelämnad: oförändrad. */
   raceMetres?: number | null;
+  /** Vad planen utvecklar. Utelämnad: oförändrad. */
+  focus?: string | null;
 }): Promise<AdminResult> {
   await requirePlanBuilder();
+  if (input.focus && !isPlanFocus(input.focus)) return fail("Välj ett av fokusen.");
   const slug = await slugify(input.slug);
   const race =
     input.raceMetres === undefined ? undefined : raceByMetres(input.raceMetres);
@@ -248,6 +252,7 @@ export async function updateTemplate(input: {
       slug,
       category_id: input.categoryId,
       ...(race === undefined ? {} : { race_distance_m: race?.metres ?? null }),
+      ...(input.focus === undefined ? {} : { focus: input.focus || null }),
     })
     .eq("id", input.templateId);
   if (error) {

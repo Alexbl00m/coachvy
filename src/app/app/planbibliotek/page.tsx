@@ -5,12 +5,15 @@ import { MembersOnly } from "@/components/members-only";
 import { PageHeader } from "@/components/page-header";
 import { PhaseLadder } from "@/components/plan-library/phase-ladder";
 import { PillLinks } from "@/components/plan-library/pill-links";
+import { PlanSuggestions } from "@/components/plan-library/plan-suggestions";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
 import { canBuildPlans, isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
+import { focusLabel, PLAN_FOCUS } from "@/lib/plan-library/focus";
 import { rangeText } from "@/lib/plan-library/labels";
 import { getActiveInstance, listLibrary } from "@/lib/plan-library/queries";
+import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { routes } from "@/lib/routes";
 
 export const metadata = { title: "Planbibliotek" };
@@ -43,9 +46,11 @@ export default async function PlanLibraryPage({
     />
   );
 
-  const [entries, active] = await Promise.all([
+  const [entries, active, suggestions] = await Promise.all([
     listLibrary(),
     user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
+    // Förslaget gäller adepten själv, och bara när ingen plan är igång.
+    user.adept ? planSuggestions(user.adept.id) : Promise.resolve([]),
   ]);
 
   // Utan medlemskap ser adepten bara det coachen delat med hen.
@@ -70,10 +75,23 @@ export default async function PlanLibraryPage({
     ).values(),
   ];
   const chosen = typeof query.mal === "string" ? query.mal : "alla";
-  const shown =
-    chosen === "alla"
-      ? entries
-      : entries.filter((e) => e.category?.key === chosen);
+  // Fokus: vad planen utvecklar. Filtren kombineras.
+  const focuses = PLAN_FOCUS.filter((f) =>
+    entries.some((e) => e.template.focus === f.key),
+  );
+  const chosenFocus = typeof query.fokus === "string" ? query.fokus : "alla";
+  const shown = entries.filter(
+    (e) =>
+      (chosen === "alla" || e.category?.key === chosen) &&
+      (chosenFocus === "alla" || e.template.focus === chosenFocus),
+  );
+  const href = (mal: string, fokus: string) => {
+    const params = new URLSearchParams();
+    if (mal !== "alla") params.set("mal", mal);
+    if (fokus !== "alla") params.set("fokus", fokus);
+    const qs = params.toString();
+    return qs ? `${routes.planLibrary}?${qs}` : routes.planLibrary;
+  };
 
   return (
     <>
@@ -96,6 +114,8 @@ export default async function PlanLibraryPage({
         </Card>
       )}
 
+      {!active && <PlanSuggestions suggestions={suggestions} forCoach={false} />}
+
       {memberless && (
         <p className="mb-5 text-[0.8125rem] text-text-muted">
           Planerna din coach delat med dig. Som medlem når du hela
@@ -110,21 +130,40 @@ export default async function PlanLibraryPage({
         />
       ) : (
         <>
-          {categories.length > 1 && (
-            <div className="mb-5">
-              <PillLinks
-                label="Mål"
-                active={chosen}
-                items={[
-                  { key: "alla", label: "Alla", href: routes.planLibrary },
-                  ...categories.map((c) => ({
-                    key: c.key,
-                    label: c.name,
-                    href: `${routes.planLibrary}?mal=${c.key}`,
-                  })),
-                ]}
-              />
+          {(categories.length > 1 || focuses.length > 1) && (
+            <div className="mb-5 space-y-3">
+              {categories.length > 1 && (
+                <PillLinks
+                  label="Mål"
+                  active={chosen}
+                  items={[
+                    { key: "alla", label: "Alla", href: href("alla", chosenFocus) },
+                    ...categories.map((c) => ({
+                      key: c.key,
+                      label: c.name,
+                      href: href(c.key, chosenFocus),
+                    })),
+                  ]}
+                />
+              )}
+              {focuses.length > 1 && (
+                <PillLinks
+                  label="Fokus"
+                  active={chosenFocus}
+                  items={[
+                    { key: "alla", label: "Alla", href: href(chosen, "alla") },
+                    ...focuses.map((f) => ({
+                      key: f.key,
+                      label: f.label,
+                      href: href(chosen, f.key),
+                    })),
+                  ]}
+                />
+              )}
             </div>
+          )}
+          {shown.length === 0 && (
+            <p className="text-sm text-text-muted">Inga planer med de valen.</p>
           )}
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map(
@@ -162,7 +201,12 @@ export default async function PlanLibraryPage({
                       className="lift flex h-full flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-line-strong"
                     >
                       <span className="text-[0.75rem] text-text-subtle">
-                        {[own ? "Din plan" : author, category?.name, weeks]
+                        {[
+                          own ? "Din plan" : author,
+                          category?.name,
+                          focusLabel(template.focus),
+                          weeks,
+                        ]
                           .filter(Boolean)
                           .join(" · ")}
                       </span>

@@ -1,7 +1,9 @@
 import { MemberList } from "@/components/admin/member-list";
 import { ReviewQueue } from "@/components/admin/review-queue";
+import { SeedPlans } from "@/components/admin/seed-plans";
 import { PageHeader } from "@/components/page-header";
 import { requireAdmin } from "@/lib/auth/session";
+import { seedStatus } from "@/lib/plan-library/seeds/import-actions";
 import { listReviewQueue } from "@/lib/sharing/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,9 +13,10 @@ export default async function AdminPage() {
   await requireAdmin();
 
   const supabase = await createClient();
-  const [{ data, error }, review] = await Promise.all([
+  const [{ data, error }, review, seeds] = await Promise.all([
     supabase.rpc("admin_member_overview"),
     listReviewQueue(),
+    seedStatus(),
   ]);
   if (error) throw new Error(`Kunde inte hämta kontona: ${error.message}`);
 
@@ -28,6 +31,7 @@ export default async function AdminPage() {
         description={`${members.length} konton · ${coaches} coacher och ${members.length - coaches} adepter · ${paying} med medlemskap.`}
       />
       <ReviewQueue items={review} />
+      <SeedPlans plans={seeds} />
       <MemberList members={members} />
     </>
   );

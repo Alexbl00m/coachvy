@@ -89,6 +89,7 @@ export type PlanLibraryTables = {
       updated_at: string;
       race_distance_m: number | null;
       owner_id: string | null;
+      focus: string | null;
     };
     Insert: {
       id?: string;
@@ -101,6 +102,7 @@ export type PlanLibraryTables = {
       updated_at?: string;
       race_distance_m?: number | null;
       owner_id?: string | null;
+      focus?: string | null;
     };
     Update: {
       id?: string;
@@ -113,6 +115,7 @@ export type PlanLibraryTables = {
       updated_at?: string;
       race_distance_m?: number | null;
       owner_id?: string | null;
+      focus?: string | null;
     };
     Relationships: [];
   };

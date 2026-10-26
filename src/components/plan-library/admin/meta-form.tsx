@@ -9,6 +9,7 @@ import {
   updateTemplate,
 } from "@/lib/plan-library/admin-actions";
 
+import { PLAN_FOCUS } from "@/lib/plan-library/focus";
 import { RACES } from "@/lib/plan-library/races";
 
 import { useAction } from "../use-action";
@@ -33,6 +34,7 @@ export function MetaForm({
   slug: initialSlug,
   categoryId: initialCategory,
   raceMetres: initialRace,
+  focus: initialFocus,
   categories,
 }: {
   templateId: string;
@@ -44,6 +46,8 @@ export function MetaForm({
   categoryId: string | null;
   /** Loppet planen leder fram till, i meter. */
   raceMetres: number | null;
+  /** Vad planen utvecklar. Appen föreslår planer efter det. */
+  focus: string | null;
   categories: { id: string; name: string }[];
 }) {
   const [meta, setMeta] = useState(initial);
@@ -52,6 +56,7 @@ export function MetaForm({
   const [raceMetres, setRaceMetres] = useState(
     initialRace === null ? "" : String(initialRace),
   );
+  const [focus, setFocus] = useState(initialFocus ?? "");
   const { pending, error, run } = useAction();
   const [saved, setSaved] = useState(false);
   const set = (patch: Partial<Meta>) => {
@@ -71,6 +76,7 @@ export function MetaForm({
               slug,
               categoryId: categoryId || null,
               raceMetres: raceMetres ? Number(raceMetres) : null,
+              focus: focus || null,
             });
             if (!t.ok || !editable) return t;
             return saveVersionMeta({ versionId, ...meta });
@@ -206,6 +212,27 @@ export function MetaForm({
               </option>
             ))}
             <option value="">Inget bestämt lopp</option>
+          </Select>
+        </Field>
+        <Field
+          label="Fokus"
+          htmlFor="meta-focus"
+          hint="Vad planen utvecklar. Appen föreslår planen när testet och huvudloppet pekar hit."
+        >
+          <Select
+            id="meta-focus"
+            value={focus}
+            onChange={(e) => {
+              setSaved(false);
+              setFocus(e.target.value);
+            }}
+          >
+            {PLAN_FOCUS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+            <option value="">Inget fokus</option>
           </Select>
         </Field>
         <Field

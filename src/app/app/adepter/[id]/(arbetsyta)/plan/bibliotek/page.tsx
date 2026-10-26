@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
+import { PlanSuggestions } from "@/components/plan-library/plan-suggestions";
 import { EmptyState } from "@/components/ui/card";
 import { loadWorkspace } from "@/lib/adepts/workspace";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/lib/plan-library/plan-view";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { listInstances } from "@/lib/plan-library/queries";
+import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
 
@@ -33,7 +35,10 @@ export default async function AdeptPlanPage({
   const today = todayIso();
   const base = adeptHref(id, "bibliotek");
 
-  const instances = await listInstances(id);
+  const [instances, suggestions] = await Promise.all([
+    listInstances(id),
+    planSuggestions(id),
+  ]);
   const chosen =
     instances.find((i) => i.id === query.plan) ??
     instances.find((i) => i.status === "aktiv") ??
@@ -53,6 +58,7 @@ export default async function AdeptPlanPage({
     return (
       <>
         {header}
+        <PlanSuggestions suggestions={suggestions} forCoach />
         <EmptyState
           title="Ingen plan ur biblioteket"
           description="Adepten startar en plan själv i planbiblioteket: en du delat med adepten, eller en ur biblioteket som medlem."
@@ -73,6 +79,9 @@ export default async function AdeptPlanPage({
   return (
     <>
       {header}
+      {chosen.status !== "aktiv" && (
+        <PlanSuggestions suggestions={suggestions} forCoach />
+      )}
       {instances.length > 1 && (
         <p className="mb-4 text-[0.8125rem] text-text-muted">
           Andra planer:{" "}
