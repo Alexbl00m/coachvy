@@ -8,13 +8,14 @@ import { PillLinks } from "@/components/plan-library/pill-links";
 import { PlanSuggestions } from "@/components/plan-library/plan-suggestions";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
+import { listAdepts } from "@/lib/adepts/queries";
 import { canBuildPlans, isMember } from "@/lib/auth/membership";
 import { requireSessionUser } from "@/lib/auth/session";
 import { focusLabel, PLAN_FOCUS } from "@/lib/plan-library/focus";
 import { rangeText } from "@/lib/plan-library/labels";
 import { getActiveInstance, listLibrary } from "@/lib/plan-library/queries";
 import { planSuggestions } from "@/lib/plan-library/suggestions";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 
 export const metadata = { title: "Planbibliotek" };
 
@@ -46,12 +47,16 @@ export default async function PlanLibraryPage({
     />
   );
 
-  const [entries, active, suggestions] = await Promise.all([
+  const [entries, active, suggestions, adepts] = await Promise.all([
     listLibrary(),
     user.adept ? getActiveInstance(user.adept.id) : Promise.resolve(null),
     // Förslaget gäller adepten själv, och bara när ingen plan är igång.
     user.adept ? planSuggestions(user.adept.id) : Promise.resolve([]),
+    // Coachen som kom hit från en adept väljer plan åt den.
+    role === "coach" && typeof query.adept === "string" ? listAdepts() : Promise.resolve([]),
   ]);
+  const forAdept =
+    adepts.find((a) => a.id === query.adept && a.coach_id === user.id) ?? null;
 
   // Utan medlemskap ser adepten bara det coachen delat med hen.
   const memberless = role === "adept" && !isMember(user);
@@ -87,6 +92,7 @@ export default async function PlanLibraryPage({
   );
   const href = (mal: string, fokus: string) => {
     const params = new URLSearchParams();
+    if (forAdept) params.set("adept", forAdept.id);
     if (mal !== "alla") params.set("mal", mal);
     if (fokus !== "alla") params.set("fokus", fokus);
     const qs = params.toString();
@@ -115,6 +121,27 @@ export default async function PlanLibraryPage({
       )}
 
       {!active && <PlanSuggestions suggestions={suggestions} forCoach={false} />}
+
+      {forAdept && (
+        <Card className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-text">
+              Du väljer plan för {forAdept.full_name}
+            </p>
+            <p className="text-[0.8125rem] text-text-muted">
+              Öppna en plan och lägg på den därifrån. Den hamnar sist i
+              adeptens faser.
+            </p>
+          </div>
+          <ButtonLink
+            href={`${adeptHref(forAdept.id, "plan")}?fas=valj`}
+            size="sm"
+            variant="secondary"
+          >
+            Tillbaka till {forAdept.full_name.split(" ")[0]}
+          </ButtonLink>
+        </Card>
+      )}
 
       {memberless && (
         <p className="mb-5 text-[0.8125rem] text-text-muted">
@@ -197,7 +224,7 @@ export default async function PlanLibraryPage({
                 return (
                   <li key={template.id}>
                     <Link
-                      href={`${routes.planLibrary}/${template.slug}`}
+                      href={`${routes.planLibrary}/${template.slug}${forAdept ? `?adept=${forAdept.id}` : ""}`}
                       className="lift flex h-full flex-col rounded-lg border border-line bg-surface p-5 transition-colors hover:border-line-strong"
                     >
                       <span className="text-[0.75rem] text-text-subtle">

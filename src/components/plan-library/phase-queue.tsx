@@ -1,21 +1,17 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { Field, Input, Select } from "@/components/ui/field";
 import { formatDate } from "@/lib/format";
-import { defaultLevel } from "@/lib/plan-library/queue";
-import {
-  endActivePhase,
-  queuePhase,
-  removeQueuedPhase,
-} from "@/lib/plan-library/queue-actions";
+import { endActivePhase, removeQueuedPhase } from "@/lib/plan-library/queue-actions";
 import { adeptHref, routes } from "@/lib/routes";
+
+import { PlanPicker, type PickerPlan, type PickerSuggestion } from "./plan-picker";
 
 export type QueueItem = {
   id: string;
@@ -27,16 +23,6 @@ export type QueueItem = {
   weeks: number;
 };
 
-export type QueueOption = {
-  versionId: string;
-  title: string;
-  group: string;
-  minWeeks: number;
-  maxWeeks: number;
-  /** Högst först, med timmarna i etiketten. */
-  levels: { id: string; key: string; label: string }[];
-};
-
 const addDays = (iso: string, days: number) => {
   const d = new Date(`${iso}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -45,60 +31,56 @@ const addDays = (iso: string, days: number) => {
 
 /**
  * Adeptens faser i ordning: den aktiva och de som står i kö. Coachen lägger
- * till en plan sist i kön, i så många veckor planen tillåter, tar bort en
- * kommande fas och avslutar den pågående; faserna efter flyttas fram.
+ * till en plan sist i kön med planväljaren, tar bort en kommande fas och
+ * avslutar den pågående; faserna efter flyttas fram. Utan pågående fas står
+ * förslaget ur testet och huvudloppet i kortet.
  */
 export function PhaseQueue({
-  adeptId,
+  adept,
   items,
-  options,
+  plans,
+  suggestions,
+  sportName,
   defaultStart,
   previousLevelKey,
+  initial,
 }: {
-  adeptId: string;
+  adept: { id: string; firstName: string };
   items: QueueItem[];
-  options: QueueOption[];
+  plans: PickerPlan[];
+  suggestions: PickerSuggestion[];
+  /** Adeptens gren i text, "löpning"; null när den saknas. */
+  sportName: string | null;
   /** Förvald start när kön är tom: i dag om det är måndag, annars nästa måndag. */
   defaultStart: string;
   /** Nivån fasen före börjar på; en ny fas förväljs på samma nivå. */
   previousLevelKey: string | null;
+  /** Väljaren öppen från adressen, med fokus eller en plan utpekad. */
+  initial: { open: boolean; focus: string | null; versionId: string | null };
 }) {
+  const adeptId = adept.id;
   const router = useRouter();
+  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [versionId, setVersionId] = useState(options[0]?.versionId ?? "");
-  const chosen = options.find((o) => o.versionId === versionId) ?? null;
-  const [weeks, setWeeks] = useState(String(chosen?.maxWeeks ?? 4));
-  const [levelId, setLevelId] = useState(
-    chosen ? (defaultLevel(chosen.levels, previousLevelKey)?.id ?? "") : "",
-  );
-  const [startDate, setStartDate] = useState(defaultStart);
-
-  const groups = useMemo(() => {
-    const out = new Map<string, QueueOption[]>();
-    for (const o of options) out.set(o.group, [...(out.get(o.group) ?? []), o]);
-    return [...out.entries()];
-  }, [options]);
+  const [picking, setPicking] = useState(initial.open);
+  const [fromUrl, setFromUrl] = useState(initial.open);
 
   const last = items.at(-1);
-  const startsOn = last ? last.endDate : startDate;
-  const weeksNumber = Number(weeks);
-  const endsOn =
-    Number.isFinite(weeksNumber) && weeksNumber > 0
-      ? addDays(startsOn, weeksNumber * 7 - 1)
-      : null;
+  const active = items.some((i) => i.status === "aktiv");
+  const first = suggestions[0];
 
-  const choose = (id: string) => {
-    setVersionId(id);
-    const o = options.find((x) => x.versionId === id);
-    if (o) {
-      setWeeks(String(o.maxWeeks));
-      setLevelId(defaultLevel(o.levels, previousLevelKey)?.id ?? "");
+  // Väljaren öppnad från en länk: adressen städas när den stängs, så att
+  // den inte öppnas igen när sidan laddas om.
+  const closePicker = () => {
+    setPicking(false);
+    if (fromUrl) {
+      setFromUrl(false);
+      router.replace(pathname, { scroll: false });
     }
   };
 
-  const run = (action: () => Promise<{ ok: true } | { ok: false; error: string }>, done?: () => void) => {
+  const run = (action: () => Promise<{ ok: true } | { ok: false; error: string }>) => {
     setError(null);
     startTransition(async () => {
       const result = await action();
@@ -106,7 +88,6 @@ export function PhaseQueue({
         setError(result.error);
         return;
       }
-      done?.();
       router.refresh();
     });
   };
@@ -115,8 +96,8 @@ export function PhaseQueue({
     <Card className="mb-6">
       <CardTitle
         action={
-          !adding && options.length > 0 ? (
-            <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+          plans.length > 0 ? (
+            <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
               <Plus aria-hidden className="size-4" />
               Lägg till fas
             </Button>
@@ -125,6 +106,20 @@ export function PhaseQueue({
       >
         Faser
       </CardTitle>
+
+      {!active && first && (
+        <div className="mb-4 rounded-md border border-line bg-surface-2 px-4 py-3">
+          <p className="text-[0.75rem] font-medium text-text-subtle">
+            Förslag ur testet och huvudloppet
+          </p>
+          <p className="mt-1 text-sm text-text-muted">
+            <span className="font-medium text-text">{first.label}.</span> {first.reason}
+          </p>
+          <Button size="sm" className="mt-3 font-semibold" onClick={() => setPicking(true)}>
+            Välj plan för {adept.firstName}
+          </Button>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <p className="text-sm text-text-muted">
@@ -204,102 +199,29 @@ export function PhaseQueue({
         </ol>
       )}
 
-      {adding && chosen && (
-        <form
-          className="mt-5 space-y-4 border-t border-line pt-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            run(
-              () =>
-                queuePhase({
-                  adeptId,
-                  versionId,
-                  weeks: weeksNumber,
-                  levelId,
-                  startDate: last ? null : startDate,
-                }),
-              () => setAdding(false),
-            );
-          }}
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Plan" htmlFor="fas-plan">
-              <Select id="fas-plan" value={versionId} onChange={(e) => choose(e.target.value)}>
-                {groups.map(([group, list]) => (
-                  <optgroup key={group} label={group}>
-                    {list.map((o) => (
-                      <option key={o.versionId} value={o.versionId}>
-                        {o.title}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </Select>
-            </Field>
-            <Field
-              label="Veckor"
-              htmlFor="fas-veckor"
-              hint={`${chosen.minWeeks}–${chosen.maxWeeks} veckor. Kortare planer kortas i den ospecifika delen.`}
-            >
-              <Input
-                id="fas-veckor"
-                type="number"
-                inputMode="numeric"
-                min={chosen.minWeeks}
-                max={chosen.maxWeeks}
-                value={weeks}
-                onChange={(e) => setWeeks(e.target.value)}
-              />
-            </Field>
-            <Field label="Nivå" htmlFor="fas-niva">
-              <Select id="fas-niva" value={levelId} onChange={(e) => setLevelId(e.target.value)}>
-                {chosen.levels.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.label}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            {last ? (
-              <Field label="Börjar" htmlFor="fas-start" hint="Direkt efter fasen före.">
-                <Input id="fas-start" value={formatDate(startsOn)} disabled readOnly />
-              </Field>
-            ) : (
-              <Field
-                label="Börjar"
-                htmlFor="fas-start"
-                hint="Planens veckor börjar på den här veckodagen. Måndag är förvalt."
-              >
-                <Input
-                  id="fas-start"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </Field>
-            )}
-          </div>
-          {endsOn && (
-            <p className="text-[0.8125rem] text-text-muted">
-              {formatDate(startsOn)} – {formatDate(endsOn)}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit" disabled={pending}>
-              {pending ? "Lägger till …" : "Lägg till i kön"}
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
-              Avbryt
-            </Button>
-          </div>
-        </form>
-      )}
-
       {error && (
         <p role="alert" className="mt-3 text-sm text-warn">
           {error}
         </p>
       )}
+
+      <PlanPicker
+        open={picking}
+        onClose={closePicker}
+        onAdded={() => {
+          closePicker();
+          router.refresh();
+        }}
+        adept={adept}
+        plans={plans}
+        suggestions={suggestions}
+        sportName={sportName}
+        fixedStart={last ? { start: last.endDate, after: last.title } : null}
+        defaultStart={defaultStart}
+        previousLevelKey={previousLevelKey}
+        initialFocus={initial.focus}
+        initialVersionId={initial.versionId}
+      />
     </Card>
   );
 }

@@ -24,6 +24,7 @@ export function AssignPlanButton({
   defaultStart,
   adepts,
   queues,
+  initialAdeptId,
 }: {
   versionId: string;
   title: string;
@@ -38,13 +39,16 @@ export function AssignPlanButton({
   adepts: { id: string; full_name: string }[];
   /** Var nästa fas börjar för adepterna som har en kö. */
   queues: Record<string, { start: string; after: string }>;
+  /** Adepten coachen kom från; knappen heter då efter adepten. */
+  initialAdeptId?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [adeptId, setAdeptId] = useState(adepts[0]?.id ?? "");
+  const from = adepts.find((a) => a.id === initialAdeptId) ?? null;
+  const [adeptId, setAdeptId] = useState(from?.id ?? adepts[0]?.id ?? "");
   const [weeks, setWeeks] = useState(String(maxWeeks));
   const [levelId, setLevelId] = useState(initialLevelId);
   const [startDate, setStartDate] = useState(defaultStart);
@@ -61,9 +65,13 @@ export function AssignPlanButton({
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button
+        variant={from ? "primary" : "secondary"}
+        className={from ? "font-semibold" : undefined}
+        onClick={() => setOpen(true)}
+      >
         <UserPlus aria-hidden className="size-4" />
-        Lägg på adept
+        {from ? `Lägg på ${from.full_name.split(" ")[0]}` : "Lägg på adept"}
       </Button>
       <dialog
         ref={ref}

@@ -122,6 +122,16 @@ function buildCommands({
         href: routes.newAdept,
         keywords: ["ny adept", "bjud in"],
       },
+      // "kim plan" öppnar planväljaren hos Kim.
+      ...adepts.map((adept) => ({
+        id: `gor-plan-${adept.id}`,
+        group: "Handlingar" as const,
+        label: "Lägg på plan",
+        hint: adept.name,
+        href: `${adeptHref(adept.id, "plan")}?fas=valj`,
+        keywords: ["plan", "fas", "lägg till fas", "planbibliotek"],
+        deep: true,
+      })),
     );
   }
   return out;

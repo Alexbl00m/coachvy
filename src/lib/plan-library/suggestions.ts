@@ -12,14 +12,8 @@ import { listFullSessions } from "@/lib/tests/session-queries";
 import { focusLabel } from "./focus";
 import { listLibrary, type LibraryEntry } from "./queries";
 import { recommendFocus, type Suggestion } from "./recommend";
+import { SPORT_CATEGORY } from "./sports";
 
-/** Kategorin för loppets gren, så att cykelplaner kommer först för ett cykellopp. */
-const SPORT_CATEGORY: Record<string, string[]> = {
-  cykling: ["cykel"],
-  löpning: ["lopning", "maraton", "halvmaraton", "10-km", "trail-ultra"],
-  simning: ["simning"],
-  triathlon: ["ironman", "70-3", "olympisk-triathlon", "xterra"],
-};
 
 export type PlanSuggestion = Suggestion & {
   label: string;

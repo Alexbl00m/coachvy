@@ -4,9 +4,11 @@ import { ArrowLeft } from "lucide-react";
 
 import { DataTable, ResultGrid } from "@/components/calculators/result-grid";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardTitle } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
+import { Card, CardHeadline, CardLabel, CardTitle } from "@/components/ui/card";
 import { getAdept } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
+import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { formatDate, digitsForMetric } from "@/lib/format";
 import { adeptHref } from "@/lib/routes";
 import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
@@ -35,6 +37,7 @@ import { protocolByKey } from "@/lib/tests/protocols";
 import {
   getSession,
   listFullSessions,
+  listSessions,
   toEfforts,
 } from "@/lib/tests/session-queries";
 
@@ -262,6 +265,17 @@ export default async function SessionPage({
       session.sport,
       digitsForMetric(m.key, m.unit),
     );
+  // Coachen får planförslaget på adeptens senaste test: förslaget räknas ur
+  // det, så ett äldre test skulle visa ett förslag det inte står för.
+  const isCoach = user.profile?.role === "coach" && adept.coach_id === user.id;
+  const suggestion = isCoach
+    ? await (async () => {
+        const latest = (await listSessions(adept.id))[0];
+        if (latest?.id !== session.id) return null;
+        return (await planSuggestions(adept.id))[0] ?? null;
+      })()
+    : null;
+
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
 
@@ -286,7 +300,7 @@ export default async function SessionPage({
         }`}
         action={
           // Bara adeptens egen coach ändrar och tar bort.
-          user.profile?.role === "coach" && adept.coach_id === user.id ? (
+          isCoach ? (
             <SessionActionsBar adeptId={adept.id} sessionId={session.id} />
           ) : undefined
         }
@@ -310,6 +324,22 @@ export default async function SessionPage({
       )}
 
       <div className="space-y-6">
+        {suggestion && (
+          <Card level="lead">
+            <CardLabel aside="ur testet och huvudloppet">Planförslag</CardLabel>
+            <CardHeadline>{suggestion.label}</CardHeadline>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-text-muted">
+              {suggestion.reason}
+            </p>
+            <ButtonLink
+              href={`${adeptHref(adept.id, "plan")}?fas=valj&fokus=${suggestion.focus}`}
+              className="mt-4 font-semibold"
+            >
+              Välj plan för {adept.full_name.split(" ")[0]}
+            </ButtonLink>
+          </Card>
+        )}
+
         {lsct && (
           <LsctCard assessment={lsct.assessment} history={lsct.history} />
         )}

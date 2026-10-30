@@ -1906,13 +1906,24 @@ faserna efter fram. Avslutar coachen den pågående fasen i förtid flyttas kön
 fram så att nästa fas börjar i dag eller närmast efter, på samma veckodag
 (`pullForward`).
 
-En ny fas förväljs på måndag och på samma nivå som fasen före, annars
-mittennivån (`nextMonday`, `defaultLevel`); nivåerna visas med sina timmar.
-Lägger coachen planen på en adept från planbiblioteket visar dialogen dagen
-fasen börjar, och nivån coachen tittade på följer med. Utan pågående fas
-står förslagen ur testet och huvudloppet ovanför faserna. Adepten ser faser
-i kö under Nästa faser på Min plan, och när ingen fas pågår vilken som
-börjar och när.
+Faserna läggs till med planväljaren (`plan-picker.tsx`): förslagen ur
+testet och huvudloppet överst, sedan planerna för adeptens gren
+(`categoriesForSport`; en triathlet får också cykel-, löp- och
+simplanerna), med sökning och filter på fokus. En plan fälls ut med veckor,
+nivå och datum och läggs på utan att coachen lämnar adepten. En ny fas
+förväljs på måndag och på samma nivå som fasen före, annars mittennivån
+(`nextMonday`, `defaultLevel`); nivåerna visas med sina timmar. `?fas=valj`
+på Säsong öppnar väljaren, `fokus` och `mall` pekar ut ett fokus eller en
+plan. Länkarna dit finns på adeptens senaste test (planförslaget), i ⌘K
+("kim plan") och från planbiblioteket.
+
+Kommer coachen till planbiblioteket från en adept (`?adept=`) följer
+adepten med genom listan och planens sida, och knappen heter Lägg på och
+adeptens namn. Dialogen visar dagen fasen börjar, och nivån coachen tittade
+på följer med. Utan pågående fas står förslaget i Faser-kortet. Adepten ser
+faser i kö under Nästa faser på Min plan, och när ingen fas pågår vilken
+som börjar och när. Adepten byter nivå själv också i en plan coachen lagt
+på (`can_edit_plan_instance`).
 
 En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
 med coachen, får åtkomsten `coach` och kräver inget medlemskap

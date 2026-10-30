@@ -31,7 +31,16 @@ export default async function AdeptSeasonPage({
   return (
     <>
       {/* Coachen lägger planer på adepten som faser, efter varandra. */}
-      {isCoach && <AdeptPhaseQueue adeptId={adept.id} />}
+      {isCoach && (
+        <AdeptPhaseQueue
+          adept={adept}
+          query={{
+            fas: typeof query.fas === "string" ? query.fas : undefined,
+            fokus: typeof query.fokus === "string" ? query.fokus : undefined,
+            mall: typeof query.mall === "string" ? query.mall : undefined,
+          }}
+        />
+      )}
       <SeasonPlan
         adept={adept}
         // Coachen planerar; en adept utan coach planerar sin egen säsong.

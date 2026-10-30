@@ -29,7 +29,7 @@ import {
 } from "@/lib/plan-library/queries";
 import { nextMonday } from "@/lib/plan-library/queue";
 import { peakVolume, volumeText } from "@/lib/plan-library/volume";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
 
 export const metadata = { title: "Plan" };
@@ -78,6 +78,10 @@ export default async function LibraryPlanPage({
   // Coachens egna adepter, och var nästa fas börjar för dem som har en kö.
   const ownAdepts = adepts.filter((a) => a.coach_id === user.id);
   const queues = await listQueueEnds(ownAdepts.map((a) => a.id));
+  // Coachen kom hit från en adept: adepten följer med i länkarna.
+  const forAdept = ownAdepts.find((a) => a.id === query.adept) ?? null;
+  const withAdept = (href: string) =>
+    forAdept ? `${href}${href.includes("?") ? "&" : "?"}adept=${forAdept.id}` : href;
 
   const { version, levels, phases, weeks, domain } = content;
   const peak = (levelId: string) => peakVolume(domain.volumes, levelId);
@@ -101,13 +105,24 @@ export default async function LibraryPlanPage({
 
   return (
     <>
-      <Link
-        href={routes.planLibrary}
-        className="mb-3 inline-flex items-center gap-1 text-[0.8125rem] text-text-muted hover:text-text"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        Planbibliotek
-      </Link>
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem]">
+        <Link
+          href={withAdept(routes.planLibrary)}
+          className="inline-flex items-center gap-1 text-text-muted hover:text-text"
+        >
+          <ChevronLeft aria-hidden className="size-4" />
+          Planbibliotek
+        </Link>
+        {forAdept && (
+          <Link
+            href={`${adeptHref(forAdept.id, "plan")}?fas=valj`}
+            className="inline-flex items-center gap-1 text-text-muted hover:text-text"
+          >
+            <ChevronLeft aria-hidden className="size-4" />
+            Välj plan för {forAdept.full_name.split(" ")[0]}
+          </Link>
+        )}
+      </div>
       <PageHeader
         title={version.title}
         description={[content.category?.name, length, version.summary]
@@ -130,6 +145,7 @@ export default async function LibraryPlanPage({
                 defaultStart={nextMonday(todayIso())}
                 adepts={ownAdepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
                 queues={Object.fromEntries(queues)}
+                initialAdeptId={forAdept?.id}
               />
             )}
             {canStart ? (
@@ -216,7 +232,7 @@ export default async function LibraryPlanPage({
                   items={levels.map((l) => ({
                     key: l.id,
                     label: `${l.key} · ${l.name}`,
-                    href: `${routes.planLibrary}/${slug}?niva=${l.id}`,
+                    href: withAdept(`${routes.planLibrary}/${slug}?niva=${l.id}`),
                   }))}
                 />
               </div>
