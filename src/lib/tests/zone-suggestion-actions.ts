@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
-import { listBlocks } from "@/lib/season/queries";
+import { listSeasonBlocks } from "@/lib/season/queries";
 import { blockOn, todayIso } from "@/lib/season/season";
 import { createClient } from "@/lib/supabase/server";
 import type { Effort } from "./analysis";
@@ -69,7 +69,7 @@ export async function acceptZoneSuggestion(
   const { suggestion: s, weightKg } = current;
 
   const today = todayIso();
-  const phase = blockOn(await listBlocks(adeptId), today)?.phase ?? null;
+  const phase = blockOn(await listSeasonBlocks(adeptId), today)?.phase ?? null;
   const saved = await saveTestSession({
     adeptId,
     protocol: s.kind === "power" ? "critical-power" : "critical-speed",

@@ -18,7 +18,11 @@ import {
   type DisciplineRow,
   type InstanceContent,
 } from "./queries";
-import { mainZone, sessionGoal } from "@/lib/season/distribution";
+import {
+  mainZone,
+  sessionGoal,
+  type PlannedGoal,
+} from "@/lib/season/distribution";
 import { workText } from "@/lib/workouts/summary";
 
 import { buildSchedule, currentPlanWeek, type ScheduleWeek } from "./schedule";
@@ -242,6 +246,20 @@ export async function listPlanSessionsBetween(
     }
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Planens pass med huvudsyfte mellan två datum, för intensitetsfördelningen:
+ * de räknas som passen coachen byggt själv.
+ */
+export async function listPlanGoalsBetween(
+  from: string,
+  to: string,
+  adeptId: string,
+  today: string,
+): Promise<PlannedGoal[]> {
+  const sessions = await listPlanSessionsBetween(from, to, adeptId, today);
+  return sessions.flatMap((s) => (s.goal ? [{ date: s.date, goal: s.goal }] : []));
 }
 
 const addDaysIso = (iso: string, days: number) =>

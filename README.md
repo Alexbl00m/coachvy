@@ -1929,6 +1929,24 @@ En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
 med coachen, får åtkomsten `coach` och kräver inget medlemskap
 (`coach_can_assign_plan`).
 
+### Säsongen ur planen
+
+Planens faser är säsongens perioder. Varje fas i en biblioteksplan har en
+säsongsfas (grund, uppbyggnad, specifik, topp), och `seasonBlocks` i
+`season/plan-season.ts` gör faserna i adeptens planer till perioder. De
+perioder coachen lagt in för hand gäller bara där ingen plan når; inom
+planens datum kortas, delas eller döljs de, men ligger kvar och tar vid om
+planen avbryts. Pågående, köade och avslutade planer formar säsongen, inte
+avbrutna.
+
+`listSeasonBlocks` och `listSeasonBlocksBetween` (`season/queries.ts`) är
+den säsong tidslinjen, Läge, adeptlistans fas, Översikt (också varningen om
+saknad toppning), kalendern, testformulären och AI-underlaget räknar på.
+`listBlocks` är bara perioderna för hand, de som ändras under Perioder; där
+står planens faser skrivskyddade med planens namn, och en period som planen
+täcker är nedtonad. Intensitetsfördelningen räknar planens pass med
+huvudsyfte (`listPlanGoalsBetween`) tillsammans med passen coachen byggt.
+
 ### Färdiga planer
 
 Planer skrivna som data ligger i `src/lib/plan-library/seeds/`: sju

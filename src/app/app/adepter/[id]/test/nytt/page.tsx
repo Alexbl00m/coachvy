@@ -11,7 +11,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import type { Sport } from "@/lib/calculators/lactate";
 import { adeptHref, routes } from "@/lib/routes";
-import { listBlocks } from "@/lib/season/queries";
+import { listSeasonBlocks } from "@/lib/season/queries";
 import { listSessions } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Nytt testtillfälle" };
@@ -41,7 +41,7 @@ export default async function NewSessionPage({
     getAdept(id),
     getAdeptProfile(id),
     listSessions(id),
-    listBlocks(id),
+    listSeasonBlocks(id),
   ]);
   if (!adept) notFound();
 

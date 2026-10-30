@@ -10,7 +10,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { formatDuration } from "@/lib/calculators/time";
 import { formatDate } from "@/lib/format";
 import { routes } from "@/lib/routes";
-import { listBlocks } from "@/lib/season/queries";
+import { listSeasonBlocks } from "@/lib/season/queries";
 import { getSession } from "@/lib/tests/session-queries";
 
 export const metadata = { title: "Ändra test" };
@@ -29,7 +29,7 @@ export default async function EditSessionPage({
   const [adept, session, season] = await Promise.all([
     getAdept(id),
     getSession(sessionId),
-    listBlocks(id),
+    listSeasonBlocks(id),
   ]);
   if (!adept || !session || session.adept_id !== adept.id) notFound();
   // Bara adeptens egen coach ändrar testet.

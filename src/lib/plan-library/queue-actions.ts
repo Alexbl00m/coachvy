@@ -15,11 +15,15 @@ export type QueueResult = { ok: true } | { ok: false; error: string };
 
 const fail = (error: string): QueueResult => ({ ok: false, error });
 
+// Faserna formar säsongen, så läget, adeptlistan och säsongssidorna ändras.
 function refresh(adeptId: string) {
+  revalidatePath(adeptHref(adeptId));
   revalidatePath(adeptHref(adeptId, "plan"));
   revalidatePath(adeptHref(adeptId, "bibliotek"));
+  revalidatePath(routes.adepts);
   revalidatePath(routes.calendar);
   revalidatePath(routes.myPlan);
+  revalidatePath(routes.plans);
   revalidatePath(routes.dashboard);
 }
 

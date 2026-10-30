@@ -45,7 +45,8 @@ import {
   raceDemand,
   sessionGoal,
 } from "@/lib/season/distribution";
-import { listBlocks, listRaces } from "@/lib/season/queries";
+import { listPlanGoalsBetween } from "@/lib/plan-library/plan-view";
+import { listRaces, listSeasonBlocks } from "@/lib/season/queries";
 import {
   addDays,
   blockOn,
@@ -140,7 +141,7 @@ export async function AdeptStatus({
     load,
     calls,
   ] = await Promise.all([
-    listBlocks(adept.id),
+    listSeasonBlocks(adept.id),
     listRaces(adept.id),
     listCheckins(adept.id, 60),
     countUnread(adept.id, viewerId),
@@ -249,11 +250,17 @@ export async function AdeptStatus({
 
   // Periodens fördelning, mot fasens riktmärke.
   const block = blockOn(blocks, today);
-  const planned = workouts.flatMap((w) =>
-    w.scheduled_for
-      ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
-      : [],
-  );
+  // Planens pass räknas som de egna: en adept med plan har sina pass där.
+  const planned = [
+    ...workouts.flatMap((w) =>
+      w.scheduled_for
+        ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
+        : [],
+    ),
+    ...(block
+      ? await listPlanGoalsBetween(block.starts_on, block.ends_on, adept.id, today)
+      : []),
+  ];
   const counts = block ? blockDistribution(block, planned) : null;
   // Det som faktiskt gjordes i perioden, klassat på samma sätt.
   const doneInBlock = block
@@ -501,8 +508,8 @@ export async function AdeptStatus({
           </CardTitle>
           {!block || !counts || !target ? (
             <p className="text-sm text-text-muted">
-              Ingen period pågår. Lägg upp säsongens perioder under Plan, så
-              räknas de planerade passen mot fasens riktmärke.
+              Ingen period pågår. Lägg en plan på adepten eller säsongens
+              perioder under Plan, så räknas passen mot fasens riktmärke.
             </p>
           ) : (
             <div className="space-y-4">

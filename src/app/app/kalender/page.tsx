@@ -21,7 +21,7 @@ import {
   listSessionsBetween,
 } from "@/lib/calendar/queries";
 import { routes } from "@/lib/routes";
-import { listBlocks, listRacesBetween } from "@/lib/season/queries";
+import { listRacesBetween, listSeasonBlocks } from "@/lib/season/queries";
 import { listLibrary } from "@/lib/session-library/queries";
 import { listActivitiesBetween } from "@/lib/activities/queries";
 import { listCallsBetween } from "@/lib/calls/queries";
@@ -124,7 +124,7 @@ export default async function KalenderPage({
       listScheduledWorkouts(from, to, adeptId),
       listSessionsBetween(from, to, adeptId),
       listRacesBetween(from, to),
-      adeptId ? listBlocks(adeptId) : Promise.resolve([]),
+      adeptId ? listSeasonBlocks(adeptId) : Promise.resolve([]),
       adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
       listActivitiesBetween(from, to, adeptId),
       // Samtalen räknas i svensk tid; en dags marginal åt båda hållen.

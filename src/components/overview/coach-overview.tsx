@@ -30,7 +30,7 @@ import {
 } from "@/lib/overview/attention";
 import { listCheckinsSince, unreadByAdept } from "@/lib/overview/queries";
 import { adeptHref, routes } from "@/lib/routes";
-import { listBlocksBetween, listRacesBetween } from "@/lib/season/queries";
+import { listRacesBetween, listSeasonBlocksBetween } from "@/lib/season/queries";
 import {
   addDays,
   blockOn,
@@ -93,7 +93,7 @@ export async function CoachOverview({
       listCheckinsSince(addDays(today, -60)),
       unreadByAdept(coachId),
       listRacesBetween(today, addDays(today, 60)),
-      listBlocksBetween(today, addDays(today, 60)),
+      listSeasonBlocksBetween(today, addDays(today, 60)),
       listScheduledWorkouts(monday, sunday, null),
       listSessionsBetween(addDays(today, -90), today, null),
       consentByProfile(

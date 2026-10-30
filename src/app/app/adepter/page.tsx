@@ -15,7 +15,7 @@ import {
 } from "@/lib/overview/attention";
 import { listCheckinsSince, unreadByAdept } from "@/lib/overview/queries";
 import { routes } from "@/lib/routes";
-import { listBlocksBetween, listRacesBetween } from "@/lib/season/queries";
+import { listRacesBetween, listSeasonBlocksBetween } from "@/lib/season/queries";
 import {
   addDays,
   blockOn,
@@ -40,7 +40,7 @@ export default async function AdepterPage({
     listCheckinsSince(addDays(today, -60)),
     unreadByAdept(user.id),
     listRacesBetween(today, addDays(today, 366)),
-    listBlocksBetween(today, addDays(today, 60)),
+    listSeasonBlocksBetween(today, addDays(today, 60)),
   ]);
 
   const consents = await consentByProfile(

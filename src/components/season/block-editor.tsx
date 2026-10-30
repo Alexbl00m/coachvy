@@ -24,6 +24,7 @@ import {
   weekSpan,
 } from "@/lib/season/season";
 import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
+import type { SeasonBlock } from "@/lib/season/plan-season";
 import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
 import { seasonMarks } from "./marks";
 import { PHASE_SHORT, phaseFill } from "./phase-style";
@@ -108,9 +109,16 @@ export function BlockEditor({
   today,
   canEdit,
   openNew,
+  fromPlans = [],
 }: {
   adeptId: string;
+  /** Perioderna för hand, de som ändras här. */
   blocks: TrainingBlockRow[];
+  /**
+   * Faserna ur adeptens planer i biblioteket. De gäller på sina datum och
+   * ändras i planen; perioderna för hand gäller utanför dem.
+   */
+  fromPlans?: SeasonBlock[];
   races?: AdeptRaceRow[];
   today: string;
   canEdit: boolean;
@@ -120,7 +128,7 @@ export function BlockEditor({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState<Draft | null>(
-    openNew && canEdit ? draftAfter(blocks, today) : null,
+    openNew && canEdit ? draftAfter([...blocks, ...fromPlans], today) : null,
   );
   // Veckorna medan de skrivs; tomt fält ska inte flytta slutdatumet.
   const [weeksInput, setWeeksInput] = useState<string | null>(null);
@@ -135,9 +143,13 @@ export function BlockEditor({
     }
   }, [openNew]);
 
-  const sorted = [...blocks].sort((a, b) =>
+  const sorted: SeasonBlock[] = [...blocks, ...fromPlans].sort((a, b) =>
     a.starts_on.localeCompare(b.starts_on),
   );
+  // En ny period förifylls efter det sista på säsongen, planerna medräknade.
+  const after = () => draftAfter(sorted, today);
+  const coveredByPlan = (block: TrainingBlockRow) =>
+    fromPlans.some((p) => p.starts_on <= block.ends_on && p.ends_on >= block.starts_on);
 
   const open = (next: Draft | null) => {
     setDraft(next);
@@ -216,7 +228,7 @@ export function BlockEditor({
               variant="secondary"
               onClick={() => {
                 setSaved(null);
-                open(draftAfter(blocks, today));
+                open(after());
               }}
             >
               <Plus aria-hidden className="size-4" />
@@ -238,12 +250,13 @@ export function BlockEditor({
         <ul className="divide-y divide-line">
           {sorted.map((block) => {
             const length = daysBetween(block.starts_on, block.ends_on) + 1;
-            const now = block.starts_on <= today && today <= block.ends_on;
+            const covered = !block.plan && coveredByPlan(block);
+            const now = !covered && block.starts_on <= today && today <= block.ends_on;
             const past = block.ends_on < today;
             return (
               <li
                 key={block.id}
-                className={`flex items-start gap-3 py-3 ${past ? "opacity-60" : ""}`}
+                className={`flex items-start gap-3 py-3 ${past || covered ? "opacity-60" : ""}`}
               >
                 <span
                   aria-hidden
@@ -276,8 +289,19 @@ export function BlockEditor({
                       {block.focus}
                     </p>
                   )}
+                  {block.plan && (
+                    <p className="mt-0.5 text-[0.8125rem] text-text-muted">
+                      Ur planen {block.plan.title}. Ändras i planen.
+                    </p>
+                  )}
+                  {covered && (
+                    <p className="mt-0.5 text-[0.8125rem] text-text-muted">
+                      Planen gäller de här datumen. Perioden används där
+                      planen inte når.
+                    </p>
+                  )}
                 </div>
-                {canEdit && (
+                {canEdit && !block.plan && (
                   <div className="flex shrink-0 gap-1">
                     <Button
                       size="sm"

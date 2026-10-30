@@ -33,6 +33,8 @@ export type TimelineBlock = {
   starts_on: string;
   ends_on: string;
   focus: string | null;
+  /** Perioden är en fas i en plan ur biblioteket. */
+  plan?: { title: string };
 };
 
 export type TimelineRace = {
@@ -320,6 +322,7 @@ export function SeasonTimeline({
               const lines = [
                 `${dateRange(block.starts_on, block.ends_on)} · ${weekSpan(block.starts_on, block.ends_on)} · ${lengthText(days)}`,
                 ...(block.focus ? [`Fokus: ${block.focus}`] : []),
+                ...(block.plan ? [`Ur planen ${block.plan.title}`] : []),
               ];
               return (
                 <button

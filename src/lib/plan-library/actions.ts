@@ -57,6 +57,8 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function refreshPlan() {
   revalidatePath(routes.myPlan);
+  // Planens faser formar säsongen.
+  revalidatePath(routes.plans);
   revalidatePath(routes.planLibrary, "layout");
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);

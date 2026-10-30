@@ -13,8 +13,9 @@ import {
 } from "@/lib/tests/rolling";
 import { listMaximalEfforts, listSessions } from "@/lib/tests/session-queries";
 import { sessionGoal } from "@/lib/season/distribution";
-import { listBlocks, listRaces } from "@/lib/season/queries";
-import { seasonToPrompt, todayIso } from "@/lib/season/season";
+import { listPlanGoalsBetween } from "@/lib/plan-library/plan-view";
+import { listRaces, listSeasonBlocks } from "@/lib/season/queries";
+import { blockOn, seasonToPrompt, todayIso } from "@/lib/season/season";
 import { buildLoadSeries, loadToPrompt } from "@/lib/training/load";
 import { listCheckins, toCheckin } from "@/lib/training/queries";
 import { philosophyBlocks } from "@/lib/ai-coach/philosophy";
@@ -111,9 +112,15 @@ export async function contextForAdept(
       getAdeptProfile(adeptId),
       listCheckins(adeptId, 60),
       listRaces(adeptId),
-      listBlocks(adeptId),
+      listSeasonBlocks(adeptId),
       listWorkouts(adeptId),
     ]);
+  // Planens pass i perioden räknas i fördelningen som de egna passen.
+  const today = todayIso();
+  const current = blockOn(blocks, today);
+  const fromPlan = current
+    ? await listPlanGoalsBetween(current.starts_on, current.ends_on, adeptId, today)
+    : [];
 
   const lastFullTestOn = sessions[0]?.performed_on ?? null;
   const rolling =
@@ -135,16 +142,14 @@ export async function contextForAdept(
     loadSummary: loadToPrompt(
       buildLoadSeries(checkins.map(toCheckin), { days: 28 }),
     ),
-    season: seasonToPrompt(
-      races,
-      blocks,
-      todayIso(),
-      workouts.flatMap((w) =>
+    season: seasonToPrompt(races, blocks, today, [
+      ...workouts.flatMap((w) =>
         w.scheduled_for
           ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
           : [],
       ),
-    ),
+      ...fromPlan,
+    ]),
   });
 }
 

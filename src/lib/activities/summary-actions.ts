@@ -11,7 +11,7 @@ import { requireCoach } from "@/lib/auth/session";
 import { listScheduledWorkouts } from "@/lib/calendar/queries";
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
-import { listBlocks, listRaces } from "@/lib/season/queries";
+import { listRaces, listSeasonBlocks } from "@/lib/season/queries";
 import { addDays, blockOn } from "@/lib/season/season";
 import { createClient } from "@/lib/supabase/server";
 import { phaseLabel } from "@/lib/tests/phases";
@@ -99,7 +99,7 @@ async function briefFor(activityId: string) {
 
   const [races, blocks, planned, checkin, load, heads] = await Promise.all([
     listRaces(adeptId),
-    listBlocks(adeptId),
+    listSeasonBlocks(adeptId),
     listScheduledWorkouts(date, date, adeptId),
     supabase
       .from("adept_checkins")

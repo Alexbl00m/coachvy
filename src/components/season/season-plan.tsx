@@ -12,6 +12,9 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { listActivities } from "@/lib/activities/queries";
 import { routes } from "@/lib/routes";
 import { sessionGoal } from "@/lib/season/distribution";
+import { listPlanGoalsBetween } from "@/lib/plan-library/plan-view";
+import { listPlansForSeason } from "@/lib/plan-library/season-plans";
+import { seasonBlocks } from "@/lib/season/plan-season";
 import { listBlocks, listRaces } from "@/lib/season/queries";
 import {
   addDays,
@@ -78,13 +81,16 @@ export async function SeasonPlan({
   header?: { eyebrow: string };
 }) {
   const today = todayIso();
-  const [blocks, races, sessions, activities, workouts] = await Promise.all([
+  const [manual, plans, races, sessions, activities, workouts] = await Promise.all([
     listBlocks(adept.id),
+    listPlansForSeason(adept.id),
     listRaces(adept.id),
     listSessions(adept.id),
     listActivities(adept.id),
     listWorkouts(adept.id),
   ]);
+  // Säsongen: planernas faser, och perioderna för hand där ingen plan gäller.
+  const blocks = seasonBlocks(manual, plans);
   // Senast uppladdade loppet per tävling – listan är nyast först.
   const analyses: Record<string, string> = {};
   for (const a of activities) {
@@ -136,12 +142,18 @@ export async function SeasonPlan({
       })()
     : undefined;
 
-  // Inplanerade pass med sitt huvudsyfte, för intensitetsfördelningen.
-  const planned = workouts.flatMap((w) =>
-    w.scheduled_for
-      ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
-      : [],
-  );
+  // Inplanerade pass med sitt huvudsyfte, för intensitetsfördelningen:
+  // de egna och planens.
+  const planned = [
+    ...workouts.flatMap((w) =>
+      w.scheduled_for
+        ? [{ date: w.scheduled_for, goal: sessionGoal(w, w.reference) }]
+        : [],
+    ),
+    ...(plans.length > 0
+      ? await listPlanGoalsBetween(from, to, adept.id, today)
+      : []),
+  ];
   // Genomförda pass i de perioder som visas, klassade på samma sätt.
   const doneFrom = blocks
     .filter((b) => b.ends_on >= from)
@@ -314,7 +326,8 @@ export async function SeasonPlan({
         <div id="perioder" className="min-w-0 scroll-mt-24">
           <BlockEditor
             adeptId={adept.id}
-            blocks={blocks}
+            blocks={manual}
+            fromPlans={blocks.filter((b) => b.plan)}
             races={races}
             today={today}
             canEdit={canPlan}

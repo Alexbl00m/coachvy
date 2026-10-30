@@ -22,7 +22,7 @@ import { callState } from "@/lib/calls/time";
 import { countUnread, listMessages } from "@/lib/messages/queries";
 import { hoursMinutes } from "@/lib/plan-library/labels";
 import { adeptHref, routes } from "@/lib/routes";
-import { listBlocks, listRaces } from "@/lib/season/queries";
+import { listRaces, listSeasonBlocks } from "@/lib/season/queries";
 import {
   addDays,
   isoWeek,
@@ -97,7 +97,7 @@ export async function AdeptToday({
     calls,
   ] = await Promise.all([
     listRaces(adept.id),
-    listBlocks(adept.id),
+    listSeasonBlocks(adept.id),
     listCheckins(adept.id, 14),
     countUnread(adept.id, userId),
     listScheduledWorkouts(monday, addDays(today, 13), adept.id),

@@ -1,6 +1,9 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
+import { listPlansForSeason } from "@/lib/plan-library/season-plans";
 import type { AdeptRaceRow, TrainingBlockRow } from "@/lib/types/database";
+
+import { seasonBlocks, type SeasonBlock } from "./plan-season";
 
 const RACE_COLUMNS =
   "id, adept_id, name, race_date, sport, distance, priority, target, note, created_by, created_at, updated_at";
@@ -112,4 +115,41 @@ export async function listBlocksBetween(
   return ((data ?? []) as unknown as (TrainingBlockRow & Embedded)[]).map(
     ({ adepts, ...block }) => ({ ...block, adept_name: adeptName({ adepts }) }),
   );
+}
+
+/**
+ * Säsongens perioder för en adept: planernas faser ur biblioteket, och
+ * perioderna för hand där ingen plan gäller (plan-season.ts). Det är den
+ * säsong tidslinjen, läget och fördelningen räknar på; `listBlocks` är bara
+ * perioderna för hand, de coachen ändrar.
+ */
+export async function listSeasonBlocks(adeptId: string): Promise<SeasonBlock[]> {
+  const [manual, plans] = await Promise.all([
+    listBlocks(adeptId),
+    listPlansForSeason(adeptId),
+  ]);
+  return seasonBlocks(manual, plans);
+}
+
+/** Säsongens perioder som berör intervallet, för alla adepter den inloggade ser. */
+export async function listSeasonBlocksBetween(
+  from: string,
+  to: string,
+): Promise<SeasonBlock[]> {
+  const [manual, plans] = await Promise.all([
+    listBlocksBetween(from, to),
+    listPlansForSeason(null),
+  ]);
+  const adepts = new Set([
+    ...manual.map((b) => b.adept_id),
+    ...plans.map((p) => p.adept_id),
+  ]);
+  return [...adepts]
+    .flatMap((id) =>
+      seasonBlocks(
+        manual.filter((b) => b.adept_id === id),
+        plans.filter((p) => p.adept_id === id),
+      ),
+    )
+    .filter((b) => b.starts_on <= to && b.ends_on >= from);
 }

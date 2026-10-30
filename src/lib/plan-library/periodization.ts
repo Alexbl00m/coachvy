@@ -412,8 +412,8 @@ export const planWeekStart = (startDate: string, week: number) =>
 export function spansFromWeekMap(input: {
   startDate: string;
   weekMap: string[];
-  weeks: TemplateWeek[];
-  phases: Phase[];
+  weeks: Pick<TemplateWeek, "id" | "phaseId">[];
+  phases: Pick<Phase, "id" | "name" | "seasonPhase">[];
 }): PhaseSpan[] {
   const weekById = new Map(input.weeks.map((w) => [w.id, w]));
   const phaseById = new Map(input.phases.map((p) => [p.id, p]));
