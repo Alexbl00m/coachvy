@@ -1895,8 +1895,8 @@ Det är en hypotes; coachen väljer.
 
 ### Faser i kö
 
-Coachen lägger planer på sina adepter under adeptens Plan-flik, en fas i
-taget sist i en kö: en grundperiod i så många veckor planen tillåter, sedan
+Coachen lägger planer på sina adepter under adeptens Plan-flik, på Säsong,
+en fas i taget sist i en kö: en grundperiod i så många veckor planen tillåter, sedan
 uppbyggnad, specifik och toppning. En fas i kö är en startad plan med status
 `kommande` och egna datum; nästa fas börjar dagen efter den förra
 (`queue.ts`). När den aktiva fasens sista vecka är slut avslutas den och
@@ -1905,6 +1905,14 @@ kön syns i kalendern på sina datum. Tas en kommande fas bort flyttas
 faserna efter fram. Avslutar coachen den pågående fasen i förtid flyttas kön
 fram så att nästa fas börjar i dag eller närmast efter, på samma veckodag
 (`pullForward`).
+
+En ny fas förväljs på måndag och på samma nivå som fasen före, annars
+mittennivån (`nextMonday`, `defaultLevel`); nivåerna visas med sina timmar.
+Lägger coachen planen på en adept från planbiblioteket visar dialogen dagen
+fasen börjar, och nivån coachen tittade på följer med. Utan pågående fas
+står förslagen ur testet och huvudloppet ovanför faserna. Adepten ser faser
+i kö under Nästa faser på Min plan, och när ingen fas pågår vilken som
+börjar och när.
 
 En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
 med coachen, får åtkomsten `coach` och kräver inget medlemskap
@@ -2159,7 +2167,7 @@ Menyn är byggd efter arbetet, inte efter verktygen (`src/lib/nav.ts`).
   | Flik | Adress | Innehåll |
   | --- | --- | --- |
   | Läge | `/app/adepter/<id>` | Värt en titt (mående, belastning, LSCT, olästa, lopp), säsongen, veckan dag för dag, periodens fördelning, senaste test och utnyttjandegrad, återhämtning, styrka |
-  | Plan | `/plan`, `/plan/pass`, `/plan/bibliotek` | Säsongsplanen, passen som byggts åt adepten, planen ur planbiblioteket |
+  | Plan | `/plan`, `/plan/bibliotek`, `/plan/pass` | Säsong med faserna, Veckoplan (planen ur planbiblioteket vecka för vecka) och Egna pass, de som byggts åt adepten |
   | Träning | `/traning`, `/traning/styrka` | Lopp och aktiviteter med utvecklingen ur träningen, styrkeloggen |
   | Tester | `/tester`, `/tester/progression`, `/tester/varden` | Testtillfällen, progressionen, enstaka värden |
   | Mående | `/maende` | Incheckningar och belastning |

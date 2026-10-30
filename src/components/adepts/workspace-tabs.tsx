@@ -68,7 +68,7 @@ export function WorkspaceTabs({
 }
 
 /**
- * Undervyerna i en flik – Säsong · Pass · Planbiblioteket – som en rad små
+ * Undervyerna i en flik – Säsong · Veckoplan · Egna pass – som en rad små
  * knappar under flikraden.
  */
 export function WorkspaceSubnav({

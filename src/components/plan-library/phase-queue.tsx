@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { formatDate } from "@/lib/format";
+import { defaultLevel } from "@/lib/plan-library/queue";
 import {
   endActivePhase,
   queuePhase,
@@ -32,7 +33,8 @@ export type QueueOption = {
   group: string;
   minWeeks: number;
   maxWeeks: number;
-  levels: { id: string; key: string; name: string }[];
+  /** Högst först, med timmarna i etiketten. */
+  levels: { id: string; key: string; label: string }[];
 };
 
 const addDays = (iso: string, days: number) => {
@@ -50,12 +52,16 @@ export function PhaseQueue({
   adeptId,
   items,
   options,
-  today,
+  defaultStart,
+  previousLevelKey,
 }: {
   adeptId: string;
   items: QueueItem[];
   options: QueueOption[];
-  today: string;
+  /** Förvald start när kön är tom: i dag om det är måndag, annars nästa måndag. */
+  defaultStart: string;
+  /** Nivån fasen före börjar på; en ny fas förväljs på samma nivå. */
+  previousLevelKey: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -64,8 +70,10 @@ export function PhaseQueue({
   const [versionId, setVersionId] = useState(options[0]?.versionId ?? "");
   const chosen = options.find((o) => o.versionId === versionId) ?? null;
   const [weeks, setWeeks] = useState(String(chosen?.maxWeeks ?? 4));
-  const [levelId, setLevelId] = useState(chosen?.levels[0]?.id ?? "");
-  const [startDate, setStartDate] = useState(today);
+  const [levelId, setLevelId] = useState(
+    chosen ? (defaultLevel(chosen.levels, previousLevelKey)?.id ?? "") : "",
+  );
+  const [startDate, setStartDate] = useState(defaultStart);
 
   const groups = useMemo(() => {
     const out = new Map<string, QueueOption[]>();
@@ -86,7 +94,7 @@ export function PhaseQueue({
     const o = options.find((x) => x.versionId === id);
     if (o) {
       setWeeks(String(o.maxWeeks));
-      setLevelId(o.levels[0]?.id ?? "");
+      setLevelId(defaultLevel(o.levels, previousLevelKey)?.id ?? "");
     }
   };
 
@@ -120,8 +128,8 @@ export function PhaseQueue({
 
       {items.length === 0 ? (
         <p className="text-sm text-text-muted">
-          Ingen plan igång. Lägg till den första fasen, till exempel en
-          grundperiod i så många veckor du vill, och bygg på med nästa.
+          Ingen plan igång. Lägg till den första fasen, en grundperiod i så
+          många veckor du vill, och bygg på med nästa.
         </p>
       ) : (
         <ol className="divide-y divide-line rounded-md border border-line">
@@ -152,7 +160,7 @@ export function PhaseQueue({
                     href={adeptHref(adeptId, "bibliotek")}
                     className="font-medium text-accent-text hover:underline"
                   >
-                    Öppna planen
+                    Veckoplanen
                   </Link>
                   <Link
                     href={`${routes.calendar}?adept=${adeptId}`}
@@ -171,7 +179,7 @@ export function PhaseQueue({
                       if (!window.confirm(message)) return;
                       run(() => endActivePhase({ adeptId, instanceId: item.id }));
                     }}
-                    className="ml-auto rounded-md px-2 py-1 text-text-muted hover:bg-surface-2 hover:text-text"
+                    className="ml-auto rounded-md px-2.5 py-1.5 text-text-muted hover:bg-surface-2 hover:text-text"
                   >
                     Avsluta fasen
                   </button>
@@ -186,7 +194,7 @@ export function PhaseQueue({
                     if (!window.confirm(`Ta bort ${item.title} ur kön? Faserna efter flyttas fram.`)) return;
                     run(() => removeQueuedPhase({ adeptId, instanceId: item.id }));
                   }}
-                  className="rounded-full p-1 text-text-subtle hover:bg-surface-2 hover:text-text"
+                  className="-my-1 rounded-full p-2 text-text-subtle hover:bg-surface-2 hover:text-text"
                 >
                   <X aria-hidden className="size-4" />
                 </button>
@@ -247,7 +255,7 @@ export function PhaseQueue({
               <Select id="fas-niva" value={levelId} onChange={(e) => setLevelId(e.target.value)}>
                 {chosen.levels.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.key} · {l.name}
+                    {l.label}
                   </option>
                 ))}
               </Select>
@@ -257,7 +265,11 @@ export function PhaseQueue({
                 <Input id="fas-start" value={formatDate(startsOn)} disabled readOnly />
               </Field>
             ) : (
-              <Field label="Börjar" htmlFor="fas-start" hint="Veckorna börjar på den här veckodagen.">
+              <Field
+                label="Börjar"
+                htmlFor="fas-start"
+                hint="Planens veckor börjar på den här veckodagen. Måndag är förvalt."
+              >
                 <Input
                   id="fas-start"
                   type="date"

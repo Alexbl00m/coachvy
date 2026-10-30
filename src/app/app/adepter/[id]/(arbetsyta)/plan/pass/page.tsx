@@ -2,7 +2,7 @@ import { WorkoutPanel } from "@/components/workouts/workout-panel";
 import { loadWorkspace } from "@/lib/adepts/workspace";
 import { listWorkouts } from "@/lib/workouts/queries";
 
-export const metadata = { title: "Pass" };
+export const metadata = { title: "Egna pass" };
 
 /** Passen som byggts åt adepten, med datum eller i reserv. */
 export default async function AdeptWorkoutsPage({

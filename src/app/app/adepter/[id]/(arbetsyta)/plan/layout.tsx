@@ -14,16 +14,12 @@ export default async function AdeptPlanLayout({
         label="Plan"
         items={[
           { href: adeptHref(adept.id, "plan"), label: "Säsong" },
-          { href: adeptHref(adept.id, "pass"), label: "Pass" },
-          // Planen ur planbiblioteket: adepten själv har den under Min plan.
+          // Planen ur planbiblioteket vecka för vecka: adepten själv har den
+          // under Min plan.
           ...(isCoach
-            ? [
-                {
-                  href: adeptHref(adept.id, "bibliotek"),
-                  label: "Planbiblioteket",
-                },
-              ]
+            ? [{ href: adeptHref(adept.id, "bibliotek"), label: "Veckoplan" }]
             : []),
+          { href: adeptHref(adept.id, "pass"), label: "Egna pass" },
         ]}
       />
       {children}

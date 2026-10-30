@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { PlanLibraryTables } from "@/lib/types/plan-library.generated";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 
+import { phaseEnd } from "./queue";
 import type {
   Level,
   Phase,
@@ -459,6 +460,43 @@ export async function listInstances(adeptId: string): Promise<InstanceRow[]> {
       .order("created_at", { ascending: false }),
     "planerna",
   );
+}
+
+/** Nivåns nyckel, "C", eller null. */
+export async function levelKeyOf(levelId: string): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("plan_template_levels")
+    .select("key")
+    .eq("id", levelId)
+    .maybeSingle();
+  return data?.key ?? null;
+}
+
+/**
+ * Var nästa fas börjar för var och en av adepterna: dagen efter den sista
+ * fasen i kön, och vilken fas det är. Adepter utan kö saknas i svaret.
+ */
+export async function listQueueEnds(
+  adeptIds: string[],
+): Promise<Map<string, { start: string; after: string }>> {
+  const out = new Map<string, { start: string; after: string }>();
+  if (!isSupabaseConfigured() || adeptIds.length === 0) return out;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("plan_instances")
+    .select("adept_id, title, status, start_date, weeks")
+    .in("adept_id", adeptIds)
+    .in("status", ["aktiv", "kommande"]);
+  for (const row of data ?? []) {
+    const start = phaseEnd(row);
+    const known = out.get(row.adept_id);
+    if (!known || start > known.start) {
+      out.set(row.adept_id, { start, after: row.title });
+    }
+  }
+  return out;
 }
 
 export async function getActiveInstance(

@@ -128,3 +128,22 @@ export function intensityParts(
     hög: Number(v.hög) || 0,
   };
 }
+
+/** En nivå i ett val, med timmarna: "C · Medel, 7–10 h/vecka". */
+export function levelOptionLabel(level: {
+  key: string;
+  name: string;
+  hours_min: number | null;
+  hours_max: number | null;
+}): string {
+  const hours = rangeText(level.hours_min, level.hours_max, "h/vecka");
+  return `${level.key} · ${level.name}${hours ? `, ${hours}` : ""}`;
+}
+
+/** En startad plans status som den läses i appen. */
+export const INSTANCE_STATUS_LABEL: Record<string, string> = {
+  aktiv: "pågår",
+  kommande: "i kö",
+  avslutad: "avslutad",
+  avbruten: "avbruten",
+};

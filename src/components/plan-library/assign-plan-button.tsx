@@ -6,20 +6,13 @@ import { UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
+import { formatDate } from "@/lib/format";
 import { queuePhase } from "@/lib/plan-library/queue-actions";
 import { adeptHref } from "@/lib/routes";
 
-/** Nästa måndag, eller i dag om det är måndag. */
-function nextMonday(): string {
-  const d = new Date();
-  const day = (d.getDay() + 6) % 7;
-  if (day !== 0) d.setDate(d.getDate() + 7 - day);
-  return d.toISOString().slice(0, 10);
-}
-
 /**
  * Lägger planen på en av coachens adepter, sist i adeptens kö av faser.
- * Har adepten ingen plan börjar den på det valda datumet.
+ * Har adepten en kö visas dagen fasen börjar; annars väljer coachen den.
  */
 export function AssignPlanButton({
   versionId,
@@ -27,14 +20,24 @@ export function AssignPlanButton({
   minWeeks,
   maxWeeks,
   levels,
+  initialLevelId,
+  defaultStart,
   adepts,
+  queues,
 }: {
   versionId: string;
   title: string;
   minWeeks: number;
   maxWeeks: number;
-  levels: { id: string; key: string; name: string }[];
+  /** Högst först, med timmarna i etiketten. */
+  levels: { id: string; label: string }[];
+  /** Nivån coachen tittar på i planen. */
+  initialLevelId: string;
+  /** Förvald start för en adept utan kö: i dag om det är måndag, annars nästa. */
+  defaultStart: string;
   adepts: { id: string; full_name: string }[];
+  /** Var nästa fas börjar för adepterna som har en kö. */
+  queues: Record<string, { start: string; after: string }>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
@@ -43,8 +46,9 @@ export function AssignPlanButton({
   const [error, setError] = useState<string | null>(null);
   const [adeptId, setAdeptId] = useState(adepts[0]?.id ?? "");
   const [weeks, setWeeks] = useState(String(maxWeeks));
-  const [levelId, setLevelId] = useState(levels[Math.floor(levels.length / 2)]?.id ?? "");
-  const [startDate, setStartDate] = useState(nextMonday);
+  const [levelId, setLevelId] = useState(initialLevelId);
+  const [startDate, setStartDate] = useState(defaultStart);
+  const queued = queues[adeptId] ?? null;
 
   useEffect(() => {
     const dialog = ref.current;
@@ -78,7 +82,7 @@ export function AssignPlanButton({
                 versionId,
                 weeks: Number(weeks),
                 levelId,
-                startDate,
+                startDate: queued ? null : startDate,
               });
               if (!result.ok) {
                 setError(result.error);
@@ -95,8 +99,7 @@ export function AssignPlanButton({
               {title}
             </h2>
             <p className="mt-1 text-[0.8125rem] text-text-muted">
-              Planen läggs sist i adeptens faser, direkt efter den sista. Har
-              adepten ingen plan börjar den på datumet du väljer.
+              Planen läggs sist i adeptens faser, direkt efter den sista.
             </p>
           </div>
 
@@ -129,20 +132,30 @@ export function AssignPlanButton({
               <Select id="lagg-pa-niva" value={levelId} onChange={(e) => setLevelId(e.target.value)}>
                 {levels.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.key} · {l.name}
+                    {l.label}
                   </option>
                 ))}
               </Select>
             </Field>
           </div>
-          <Field label="Börjar, om adepten saknar plan" htmlFor="lagg-pa-start">
-            <Input
-              id="lagg-pa-start"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </Field>
+          {queued ? (
+            <Field label="Börjar" htmlFor="lagg-pa-start" hint={`Direkt efter ${queued.after}.`}>
+              <Input id="lagg-pa-start" value={formatDate(queued.start)} disabled readOnly />
+            </Field>
+          ) : (
+            <Field
+              label="Börjar"
+              htmlFor="lagg-pa-start"
+              hint="Planens veckor börjar på den här veckodagen. Måndag är förvalt."
+            >
+              <Input
+                id="lagg-pa-start"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </Field>
+          )}
 
           {error && (
             <p role="alert" className="text-sm text-warn">

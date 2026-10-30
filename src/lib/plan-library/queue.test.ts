@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   closeGap,
+  defaultLevel,
+  nextMonday,
   nextPhaseStart,
   phaseEnd,
   pullForward,
@@ -71,5 +73,20 @@ describe("faskön", () => {
 
   it("flyttar ingenting utan kö", () => {
     expect(pullForward([p("a", "aktiv", "2026-10-26", 8)], "a", "2026-10-28")).toEqual([]);
+  });
+
+  it("förväljer måndag som start", () => {
+    expect(nextMonday("2026-10-26")).toBe("2026-10-26");
+    expect(nextMonday("2026-10-30")).toBe("2026-11-02");
+    expect(nextMonday("2026-11-01")).toBe("2026-11-02");
+  });
+
+  it("förväljer nivån från fasen före, annars mitten", () => {
+    const levels = ["A", "B", "C", "D"].map((key) => ({ key }));
+    expect(defaultLevel(levels, "B")?.key).toBe("B");
+    expect(defaultLevel(levels, "E")?.key).toBe("C");
+    expect(defaultLevel(levels, null)?.key).toBe("C");
+    expect(defaultLevel([{ key: "A" }], null)?.key).toBe("A");
+    expect(defaultLevel([], null)).toBeUndefined();
   });
 });

@@ -6,7 +6,7 @@
  * Modulen är ren: datum in, datum ut.
  */
 
-import { addDays } from "@/lib/season/season";
+import { addDays, mondayOf } from "@/lib/season/season";
 
 export type QueuedPhase = {
   id: string;
@@ -97,4 +97,24 @@ export function pullForward(
     start = phaseEnd({ start_date: start, weeks: p.weeks });
   }
   return moves;
+}
+
+/** Dagen en ny fas helst börjar: i dag om det är måndag, annars nästa måndag. */
+export function nextMonday(today: string): string {
+  const monday = mondayOf(today);
+  return monday === today ? today : addDays(monday, 7);
+}
+
+/**
+ * Nivån en ny fas förväljs på: samma nivå som fasen före, när planen har
+ * den, annars mittennivån. Nivåerna kommer högst först (A först).
+ */
+export function defaultLevel<T extends { key: string }>(
+  levels: T[],
+  previousKey: string | null,
+): T | undefined {
+  return (
+    levels.find((l) => previousKey !== null && l.key === previousKey) ??
+    levels[Math.floor(levels.length / 2)]
+  );
 }

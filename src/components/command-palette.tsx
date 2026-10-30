@@ -26,8 +26,8 @@ export type PaletteAdept = { id: string; name: string };
 /** Adeptens flikar och undervyer, med ord att hitta dem på. */
 const ADEPT_PAGES: [AdeptSection, string, string[]][] = [
   ["plan", "Säsongsplan", ["plan", "säsong", "perioder", "tävlingar"]],
-  ["pass", "Pass", ["plan", "byggda pass"]],
-  ["bibliotek", "Planbiblioteket", ["plan", "bibliotek"]],
+  ["bibliotek", "Veckoplan", ["plan", "veckor", "planbiblioteket"]],
+  ["pass", "Egna pass", ["plan", "byggda pass"]],
   ["traning", "Lopp och aktiviteter", ["träning", "fit", "klockan"]],
   ["styrka", "Styrka", ["träning", "gym"]],
   ["tester", "Tester", ["testtillfällen", "laktat"]],

@@ -16,17 +16,21 @@ import { listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   intensityText,
+  levelOptionLabel,
   rangeText,
   SPECIFICITY_LABEL,
 } from "@/lib/plan-library/labels";
 import {
   getActiveInstance,
   listDisciplines,
+  listQueueEnds,
   loadPublishedBySlug,
   planAccessFor,
 } from "@/lib/plan-library/queries";
+import { nextMonday } from "@/lib/plan-library/queue";
 import { peakVolume, volumeText } from "@/lib/plan-library/volume";
 import { routes } from "@/lib/routes";
+import { todayIso } from "@/lib/season/season";
 
 export const metadata = { title: "Plan" };
 
@@ -71,6 +75,9 @@ export default async function LibraryPlanPage({
       ? await planAccessFor(user.adept.id, content.template.id)
       : null;
   const own = content.template.owner_id === user.id;
+  // Coachens egna adepter, och var nästa fas börjar för dem som har en kö.
+  const ownAdepts = adepts.filter((a) => a.coach_id === user.id);
+  const queues = await listQueueEnds(ownAdepts.map((a) => a.id));
 
   const { version, levels, phases, weeks, domain } = content;
   const peak = (levelId: string) => peakVolume(domain.volumes, levelId);
@@ -110,16 +117,19 @@ export default async function LibraryPlanPage({
           <div className="flex flex-wrap items-center gap-2">
             {role === "coach" && (
               <AssignPlanButton
+                // Nivån coachen tittar på följer med in i dialogen.
+                key={level?.id}
                 versionId={version.id}
                 title={version.title}
                 minWeeks={version.min_weeks}
                 maxWeeks={version.max_weeks}
                 levels={[...levels]
                   .sort((a, b) => b.rank - a.rank)
-                  .map((l) => ({ id: l.id, key: l.key, name: l.name }))}
-                adepts={adepts
-                  .filter((a) => a.coach_id === user.id)
-                  .map((a) => ({ id: a.id, full_name: a.full_name }))}
+                  .map((l) => ({ id: l.id, label: levelOptionLabel(l) }))}
+                initialLevelId={level?.id ?? ""}
+                defaultStart={nextMonday(todayIso())}
+                adepts={ownAdepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
+                queues={Object.fromEntries(queues)}
               />
             )}
             {canStart ? (

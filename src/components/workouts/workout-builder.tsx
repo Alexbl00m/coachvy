@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookmarkPlus, Sparkles } from "lucide-react";
 
@@ -20,6 +21,7 @@ import { generateWorkout } from "@/lib/workouts/generate";
 import { saveWorkout } from "@/lib/workouts/actions";
 import type { Workout } from "@/lib/workouts/schema";
 import { fromWorkout } from "@/lib/session-library/library";
+import { routes } from "@/lib/routes";
 
 type AdeptOption = { id: string; full_name: string };
 
@@ -107,6 +109,12 @@ export function WorkoutBuilder({
   const [usedPrompt, setUsedPrompt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  /** Passet som senast sparades på adepten, för länkarna efteråt. */
+  const [savedPass, setSavedPass] = useState<{
+    id: string;
+    adeptId: string;
+    date: string | null;
+  } | null>(null);
   /** Datumet passet läggs på i kalendern när det sparas. Valfritt. */
   const [scheduledFor, setScheduledFor] = useState("");
   const [toLibrary, setToLibrary] = useState<string | null>(null);
@@ -204,6 +212,7 @@ export function WorkoutBuilder({
         setError(result.error);
         return;
       }
+      setSavedPass({ id: result.id, adeptId, date: scheduledFor || null });
       setSaved(
         selfService
           ? "Passet är sparat i dina pass."
@@ -494,6 +503,24 @@ export function WorkoutBuilder({
                     ? "Välj en adept för att kunna spara passet."
                     : "Sparas med de tröskelvärden det byggdes mot.")}
             </span>
+            {saved && savedPass && (
+              <span className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem]">
+                <Link
+                  href={`${routes.adepts}/${savedPass.adeptId}/pass/${savedPass.id}`}
+                  className="font-medium text-accent-text hover:underline"
+                >
+                  Öppna passet
+                </Link>
+                {savedPass.date && (
+                  <Link
+                    href={`${routes.calendar}?adept=${savedPass.adeptId}&manad=${savedPass.date.slice(0, 7)}&dag=${savedPass.date}`}
+                    className="font-medium text-accent-text hover:underline"
+                  >
+                    Se dagen i kalendern
+                  </Link>
+                )}
+              </span>
+            )}
           </div>
         </>
       )}

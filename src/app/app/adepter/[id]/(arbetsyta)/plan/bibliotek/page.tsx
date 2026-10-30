@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
-import { AdeptPhaseQueue } from "@/components/plan-library/adept-phase-queue";
-import { PlanSuggestions } from "@/components/plan-library/plan-suggestions";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/card";
 import { loadWorkspace } from "@/lib/adepts/workspace";
 import {
   canEditPlan,
@@ -11,17 +12,18 @@ import {
   loadPlanView,
 } from "@/lib/plan-library/plan-view";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
+import { INSTANCE_STATUS_LABEL } from "@/lib/plan-library/labels";
 import { listInstances } from "@/lib/plan-library/queries";
-import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
 
-export const metadata = { title: "Planbiblioteket" };
+export const metadata = { title: "Veckoplan" };
 
 /**
- * Adeptens plan ur biblioteket, för coachen. Coachen ser samma vy som
- * medlemmen och kan byta nivå och flytta pass åt adepten; bytena står
- * som coachens i historiken.
+ * Veckoplanen: adeptens plan ur biblioteket vecka för vecka, för coachen.
+ * Coachen ser samma vy som medlemmen och kan byta nivå och flytta pass åt
+ * adepten; bytena står som coachens i historiken. Faserna läggs in under
+ * Säsong.
  */
 export default async function AdeptPlanPage({
   params,
@@ -35,37 +37,43 @@ export default async function AdeptPlanPage({
   const today = todayIso();
   const base = adeptHref(id, "bibliotek");
 
-  const [instances, suggestions] = await Promise.all([
-    listInstances(id),
-    planSuggestions(id),
-  ]);
-
-  // Faserna: den aktiva och de som står i kö.
-  const queue = <AdeptPhaseQueue adeptId={id} />;
+  const instances = await listInstances(id);
+  const season = adeptHref(id, "plan");
   const chosen =
     instances.find((i) => i.id === query.plan) ??
     instances.find((i) => i.status === "aktiv") ??
     instances[0];
 
-  const header = (
-    <p className="mb-4 max-w-2xl text-sm text-text-muted">
-      {chosen?.access === "coach"
-        ? "Planen adepten följer, delad av dig. Du kan byta nivå och flytta pass åt adepten."
-        : adept.plan === "medlem"
-          ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
-          : "Planen ingår i medlemskapet, som adepten inte har just nu. Därför är den skrivskyddad."}
-    </p>
-  );
-
   if (!chosen) {
     return (
-      <>
-        {header}
-        <PlanSuggestions suggestions={suggestions} forCoach />
-        {queue}
-      </>
+      <EmptyState
+        title="Ingen plan igång"
+        description="Lägg in den första fasen under Säsong, så visas veckorna här."
+        action={
+          <ButtonLink href={season}>
+            Till Säsong
+            <ArrowRight aria-hidden className="size-4" />
+          </ButtonLink>
+        }
+      />
     );
   }
+
+  const header = (
+    <p className="mb-4 max-w-2xl text-sm text-text-muted">
+      {chosen.access === "coach"
+        ? "Planen adepten följer, lagd av dig. Du kan byta nivå och flytta pass åt adepten."
+        : adept.plan === "medlem"
+          ? "Planen adepten följer ur planbiblioteket. Du kan byta nivå och flytta pass åt adepten."
+          : "Planen ingår i medlemskapet, som adepten inte har just nu. Därför är den skrivskyddad."}{" "}
+      <Link
+        href={season}
+        className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+      >
+        Faserna lägger du in under Säsong.
+      </Link>
+    </p>
+  );
 
   const [view, canEdit, workouts, fitness] = await Promise.all([
     loadPlanView(chosen.id, today),
@@ -79,10 +87,6 @@ export default async function AdeptPlanPage({
   return (
     <>
       {header}
-      {chosen.status !== "aktiv" && (
-        <PlanSuggestions suggestions={suggestions} forCoach />
-      )}
-      {queue}
       {instances.length > 1 && (
         <p className="mb-4 text-[0.8125rem] text-text-muted">
           Andra planer:{" "}
@@ -95,7 +99,7 @@ export default async function AdeptPlanPage({
                   href={`${base}?plan=${i.id}`}
                   className="underline decoration-line-strong underline-offset-2 hover:text-text"
                 >
-                  {i.title} ({i.status})
+                  {i.title} ({INSTANCE_STATUS_LABEL[i.status] ?? i.status})
                 </Link>
               </span>
             ))}
