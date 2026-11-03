@@ -242,6 +242,7 @@ export async function listPlanSessionsBetween(
           // Planen pekas ut: en adept kan följa en plan per gren samtidigt.
           href: `${href}?plan=${instance.id}&vecka=${s.week}`,
           fromPlan: true,
+          planRef: { instanceId: instance.id, sessionId: s.session.id, week: s.week },
           ...planDetail(s.session, s.variant),
         });
       }

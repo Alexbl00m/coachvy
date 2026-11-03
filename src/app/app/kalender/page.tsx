@@ -8,6 +8,7 @@ import {
 } from "@/components/calendar/calendar-items";
 import { DayPanel, Upcoming } from "@/components/calendar/day-panel";
 import { AddFromLibrary } from "@/components/session-library/add-from-library";
+import { CalendarDnd } from "@/components/calendar/calendar-dnd";
 import { MonthGrid } from "@/components/calendar/month-grid";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
@@ -204,16 +205,19 @@ export default async function KalenderPage({
             )}
           </div>
 
-          <MonthGrid
-            month={month}
-            today={today}
-            selected={selected}
-            days={days}
-            phases={phases}
-            showNames={showNames}
-            // Ankaret tar telefonen ned till dagspanelen under rutnätet.
-            hrefFor={(dag) => `${href({ manad: dag.slice(0, 7), dag })}#dag`}
-          />
+          <CalendarDnd>
+            <MonthGrid
+              month={month}
+              today={today}
+              selected={selected}
+              days={days}
+              phases={phases}
+              showNames={showNames}
+              // Ankaret tar telefonen ned till dagspanelen under rutnätet.
+              hrefFor={(dag) => `${href({ manad: dag.slice(0, 7), dag })}#dag`}
+              movable
+            />
+          </CalendarDnd>
 
           {phasesShown.length > 0 && (
             <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem] text-text-muted">
@@ -250,6 +254,7 @@ export default async function KalenderPage({
               ) : null
             }
             showNames={showNames}
+            movable
           />
           <Upcoming
             dates={soon}

@@ -52,6 +52,8 @@ export type CalendarWorkout = {
   /** Ett pass ur planbiblioteket: länken går till planen, inte till passet. */
   href?: string;
   fromPlan?: boolean;
+  /** Passet i planen, för att flytta det: planen, passet och planveckan. */
+  planRef?: { instanceId: string; sessionId: string; week: number };
   /** Huvudsyftet och huvudzonen, räknade som i fördelningen (distribution.ts). */
   goal?: SessionGoal | null;
   zone?: IntensityZone | null;

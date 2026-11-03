@@ -4,6 +4,7 @@ import { Video } from "lucide-react";
 import { phaseFill } from "@/components/season/phase-style";
 import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
+import { dragOf } from "@/lib/calendar/drag";
 import { callTime } from "@/lib/calls/time";
 import { cn } from "@/lib/cn";
 import {
@@ -43,6 +44,9 @@ function describe(date: string, items: DayItems): string {
  * Månaden som rutnät. Varje dag är en länk som väljer dagen; det som hänt
  * eller ska hända den dagen visas i panelen bredvid, med länkar vidare.
  *
+ * Med `movable` går passen att dra till en annan dag (CalendarDnd runt
+ * rutnätet tar emot dem).
+ *
  * På en telefon ryms ingen text i rutorna, så där blir innehållet prickar –
  * dagspanelen under rutnätet bär resten.
  */
@@ -54,6 +58,7 @@ export function MonthGrid({
   phases,
   showNames,
   hrefFor,
+  movable = false,
 }: {
   month: string;
   today: string;
@@ -63,6 +68,8 @@ export function MonthGrid({
   phases: Map<string, TrainingBlockRow["phase"]> | null;
   showNames: boolean;
   hrefFor: (date: string) => string;
+  /** Passen går att dra till en annan dag. */
+  movable?: boolean;
 }) {
   const dates = monthDates(month);
   const weeks = Array.from({ length: dates.length / 7 }, (_, i) =>
@@ -130,8 +137,10 @@ export function MonthGrid({
                 href={hrefFor(date)}
                 aria-label={describe(date, items)}
                 aria-current={isSelected ? "date" : undefined}
+                data-drop-date={movable ? date : undefined}
                 className={cn(
                   "relative flex min-h-[3.4rem] min-w-0 flex-col gap-1 border-r border-line p-1 transition-colors last:border-r-0 hover:bg-surface-2/70 sm:min-h-[6rem] sm:p-1.5",
+                  "data-[drop-over]:bg-accent/10 data-[drop-over]:ring-2 data-[drop-over]:ring-inset data-[drop-over]:ring-accent",
                   !inMonth && "bg-surface-2/30",
                   isSelected && "bg-surface-2 ring-2 ring-inset ring-accent",
                 )}
@@ -256,10 +265,17 @@ export function MonthGrid({
                       );
                     }
                     if (row.kind === "workout") {
+                      const drag = movable ? dragOf(row.workout) : null;
                       return (
                         <span
                           key={row.key}
-                          className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text-muted"
+                          draggable={drag ? true : undefined}
+                          data-drag={drag ? JSON.stringify(drag) : undefined}
+                          title={drag ? `Dra för att flytta ${row.workout.title}` : undefined}
+                          className={cn(
+                            "flex min-w-0 items-center gap-1 rounded-sm text-[0.6875rem] leading-tight text-text-muted",
+                            drag && "cursor-grab hover:bg-surface-3 active:cursor-grabbing",
+                          )}
                         >
                           <SportIcon
                             sport={row.workout.sport}

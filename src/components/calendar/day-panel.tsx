@@ -23,7 +23,9 @@ import {
 import { toCheckin } from "@/lib/training/queries";
 import type { TrainingBlockRow } from "@/lib/types/database";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
+import { dragOf } from "@/lib/calendar/drag";
 import { SportIcon, TestIcon, type DayItems } from "./calendar-items";
+import { MovePassButton } from "./move-pass-button";
 
 const sv = (v: number) => String(v).replace(".", ",");
 
@@ -53,10 +55,16 @@ export function DayContent({
   items,
   today,
   showNames,
+  date,
+  movable = false,
 }: {
   items: DayItems;
   today: string;
   showNames: boolean;
+  /** Dagen innehållet gäller; behövs för att flytta passen. */
+  date?: string;
+  /** Passen går att flytta till en annan dag. */
+  movable?: boolean;
 }) {
   const who = (name: string) => (showNames ? `${name} · ` : "");
   const checkin = items.checkin ? toCheckin(items.checkin) : null;
@@ -154,8 +162,11 @@ export function DayContent({
           </ItemLink>
         </li>
       ))}
-      {items.workouts.map((w) => (
-        <li key={w.id}>
+      {items.workouts.map((w) => {
+        const drag = movable && date ? dragOf(w) : null;
+        return (
+        <li key={w.id} className="flex flex-wrap items-start gap-1">
+          <div className="min-w-0 flex-1">
           <ItemLink
             href={w.href ?? `${routes.adepts}/${w.adeptId}/pass/${w.id}`}
           >
@@ -174,8 +185,11 @@ export function DayContent({
               <WorkoutStrip blocks={w.profile} className="mt-2 h-6" />
             </span>
           </ItemLink>
+          </div>
+          {drag && date && <MovePassButton pass={drag} date={date} />}
         </li>
-      ))}
+        );
+      })}
       {items.tests.map((t) => (
         <li key={t.id}>
           <ItemLink href={`${routes.adepts}/${t.adeptId}/test/${t.id}`}>
@@ -236,6 +250,7 @@ export function DayPanel({
   blockName = null,
   showNames,
   action = null,
+  movable = false,
 }: {
   date: string;
   items: DayItems;
@@ -246,6 +261,8 @@ export function DayPanel({
   showNames: boolean;
   /** Det coachen kan göra med dagen, som att lägga in ett pass. */
   action?: React.ReactNode;
+  /** Passen går att flytta till en annan dag. */
+  movable?: boolean;
 }) {
   return (
     // Ankaret dagarna i rutnätet länkar till, så att telefonen scrollar hit.
@@ -269,7 +286,13 @@ export function DayPanel({
             )}
           </p>
         </div>
-        <DayContent items={items} today={today} showNames={showNames} />
+        <DayContent
+          items={items}
+          today={today}
+          showNames={showNames}
+          date={date}
+          movable={movable}
+        />
         {action && (
           <div className="mt-4 border-t border-line pt-4">{action}</div>
         )}
