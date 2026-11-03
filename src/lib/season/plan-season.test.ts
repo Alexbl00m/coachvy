@@ -22,6 +22,7 @@ const plan: PlanForSeason = {
   id: "p1",
   adept_id: "kim",
   title: "Halvmaraton i tratten",
+  track: "löpning",
   start_date: "2026-10-26",
   weeks: 24,
   spans: [
@@ -89,5 +90,31 @@ describe("säsongen ur planen", () => {
   it("lämnar perioderna orörda utan plan", () => {
     const manual = [block("g", "grund", "2026-10-26", "2026-12-27")];
     expect(seasonBlocks(manual, [])).toEqual(manual);
+  });
+
+  it("låter den första planen sätta fasen när två planer går samtidigt", () => {
+    // En cykelplan som börjar två veckor senare och slutar efter löpplanen.
+    const bike: PlanForSeason = {
+      id: "p2",
+      adept_id: "kim",
+      title: "Boosta VO2max",
+      track: "cykling",
+      start_date: "2026-11-09",
+      weeks: 26,
+      spans: [
+        { name: "Grund", seasonPhase: "grund", fromWeek: 1, startsOn: "2026-11-09", endsOn: "2027-01-03" },
+        { name: "VO2max", seasonPhase: "uppbyggnad", fromWeek: 9, startsOn: "2027-01-04", endsOn: "2027-05-09" },
+      ],
+    };
+    const merged = seasonBlocks([], [bike, plan]);
+    const days = (b: { starts_on: string; ends_on: string }) => [b.starts_on, b.ends_on];
+    // Löpplanen började först och sätter fasen hela sin tid; cykelplanen fyller resten.
+    expect(merged.map((b) => [b.plan?.title, ...days(b)])).toEqual([
+      ["Halvmaraton i tratten", "2026-10-26", "2026-12-27"],
+      ["Halvmaraton i tratten", "2026-12-28", "2027-02-07"],
+      ["Halvmaraton i tratten", "2027-02-08", "2027-03-28"],
+      ["Halvmaraton i tratten", "2027-03-29", "2027-04-11"],
+      ["Boosta VO2max", "2027-04-12", "2027-05-09"],
+    ]);
   });
 });

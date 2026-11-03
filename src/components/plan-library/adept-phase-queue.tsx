@@ -1,6 +1,6 @@
 import { focusLabel } from "@/lib/plan-library/focus";
 import { levelOptionLabel, rangeText } from "@/lib/plan-library/labels";
-import { levelKeyOf, listInstances, listLibrary } from "@/lib/plan-library/queries";
+import { levelKeysOf, listInstances, listLibrary } from "@/lib/plan-library/queries";
 import { nextMonday, phaseEnd, queueOf } from "@/lib/plan-library/queue";
 import { categoriesForSport } from "@/lib/plan-library/sports";
 import { planSuggestions } from "@/lib/plan-library/suggestions";
@@ -26,8 +26,8 @@ export async function AdeptPhaseQueue({
     planSuggestions(adept.id),
   ]);
   const queue = queueOf(instances);
-  const last = queue.at(-1);
-  const previousLevelKey = last ? await levelKeyOf(last.start_level_id) : null;
+  // Nivån varje fas började på: en ny fas i samma gren förväljs på den.
+  const levelKeys = await levelKeysOf(queue.map((i) => i.start_level_id));
   const categories = categoriesForSport(adept.sport);
   const forSport = (key: string | undefined) =>
     categories !== null && key !== undefined && categories.includes(key);
@@ -39,6 +39,7 @@ export async function AdeptPhaseQueue({
       return {
         versionId: e.version.id,
         slug: e.template.slug,
+        track: e.track,
         title: e.version.title,
         summary: e.version.summary,
         category: e.category?.name ?? null,
@@ -72,6 +73,8 @@ export async function AdeptPhaseQueue({
         startDate: i.start_date,
         endDate: phaseEnd(i),
         weeks: i.weeks,
+        track: i.track,
+        levelKey: levelKeys.get(i.start_level_id) ?? null,
       }))}
       plans={plans}
       suggestions={suggestions.map((s) => ({
@@ -82,7 +85,6 @@ export async function AdeptPhaseQueue({
       }))}
       sportName={categories ? (adept.sport?.trim().toLowerCase() ?? null) : null}
       defaultStart={nextMonday(todayIso())}
-      previousLevelKey={previousLevelKey}
       initial={{
         open: query.fas === "valj",
         focus: query.fokus ?? null,

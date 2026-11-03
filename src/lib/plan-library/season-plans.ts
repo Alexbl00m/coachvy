@@ -18,7 +18,7 @@ export async function listPlansForSeason(
   const supabase = await createClient();
   let query = supabase
     .from("plan_instances")
-    .select("id, adept_id, title, start_date, weeks, week_map, version_id")
+    .select("id, adept_id, title, start_date, weeks, week_map, version_id, track")
     .in("status", ["aktiv", "kommande", "avslutad"]);
   if (adeptId) query = query.eq("adept_id", adeptId);
   const { data: instances, error } = await query;
@@ -40,6 +40,7 @@ export async function listPlansForSeason(
     id: i.id,
     adept_id: i.adept_id,
     title: i.title,
+    track: i.track,
     start_date: i.start_date,
     weeks: i.weeks,
     spans: spansFromWeekMap({

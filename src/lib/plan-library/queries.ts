@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { PlanLibraryTables } from "@/lib/types/plan-library.generated";
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 
-import { phaseEnd } from "./queue";
+import { isTrack, queueEnd, type Track } from "./queue";
 import type {
   Level,
   Phase,
@@ -322,6 +322,8 @@ export type LibraryEntry = {
   author: string | null;
   version: VersionRow;
   category: CategoryRow | null;
+  /** Grenen planen köas i (plan_version_track). */
+  track: Track;
   levels: LevelRow[];
   phases: (Pick<PhaseRow, "id" | "name" | "position" | "specificity"> & {
     weeks: number;
@@ -359,8 +361,16 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
   const ls = rows(levels, "nivåerna");
   const ps = rows(phases, "faserna");
   const ws = rows(weeks, "veckorna");
+  const vs = rows(versions, "versionerna");
+  // Spåret varje plan går i, som databasen räknar det när planen startas.
+  const { data: trackRows } = vs.length
+    ? await supabase.rpc("plan_version_tracks", { p_versions: vs.map((v) => v.id) })
+    : { data: [] };
+  const tracks = new Map(
+    (trackRows ?? []).map((r: { version_id: string; track: string }) => [r.version_id, r.track]),
+  );
   const entries: LibraryEntry[] = [];
-  for (const version of rows(versions, "versionerna")) {
+  for (const version of vs) {
     const template = ts.find((t) => t.id === version.template_id);
     if (!template) continue;
     const own = template.owner_id === viewer.id;
@@ -374,6 +384,10 @@ export async function listLibrary(): Promise<LibraryEntry[]> {
           : "Coachvy",
       version,
       category: cs.find((c) => c.id === template.category_id) ?? null,
+      track: (() => {
+        const t = tracks.get(version.id);
+        return t && isTrack(t) ? t : "alla";
+      })(),
       levels: ls.filter((l) => l.version_id === version.id),
       phases: ps
         .filter((p) => p.version_id === version.id)
@@ -462,39 +476,48 @@ export async function listInstances(adeptId: string): Promise<InstanceRow[]> {
   );
 }
 
-/** Nivåns nyckel, "C", eller null. */
-export async function levelKeyOf(levelId: string): Promise<string | null> {
-  if (!isSupabaseConfigured()) return null;
+/** Grenen en version köas i, som databasen räknar den (plan_version_track). */
+export async function versionTrack(versionId: string): Promise<Track> {
+  if (!isSupabaseConfigured()) return "alla";
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("plan_version_track", { p_version: versionId });
+  return typeof data === "string" && isTrack(data) ? data : "alla";
+}
+
+/** Nivåernas nycklar, "C", per nivå. */
+export async function levelKeysOf(levelIds: string[]): Promise<Map<string, string>> {
+  if (!isSupabaseConfigured() || levelIds.length === 0) return new Map();
   const supabase = await createClient();
   const { data } = await supabase
     .from("plan_template_levels")
-    .select("key")
-    .eq("id", levelId)
-    .maybeSingle();
-  return data?.key ?? null;
+    .select("id, key")
+    .in("id", levelIds);
+  return new Map((data ?? []).map((l) => [l.id, l.key]));
 }
 
 /**
- * Var nästa fas börjar för var och en av adepterna: dagen efter den sista
- * fasen i kön, och vilken fas det är. Adepter utan kö saknas i svaret.
+ * Var nästa fas i spåret börjar för var och en av adepterna: dagen efter
+ * den sista fasen i kön i samma gren, och vilken fas det är. Adepter utan
+ * kö i spåret saknas i svaret.
  */
 export async function listQueueEnds(
   adeptIds: string[],
+  track: Track,
 ): Promise<Map<string, { start: string; after: string }>> {
   const out = new Map<string, { start: string; after: string }>();
   if (!isSupabaseConfigured() || adeptIds.length === 0) return out;
   const supabase = await createClient();
   const { data } = await supabase
     .from("plan_instances")
-    .select("adept_id, title, status, start_date, weeks")
+    .select("id, adept_id, title, status, start_date, weeks, track")
     .in("adept_id", adeptIds)
     .in("status", ["aktiv", "kommande"]);
-  for (const row of data ?? []) {
-    const start = phaseEnd(row);
-    const known = out.get(row.adept_id);
-    if (!known || start > known.start) {
-      out.set(row.adept_id, { start, after: row.title });
-    }
+  for (const id of adeptIds) {
+    const end = queueEnd(
+      (data ?? []).filter((r) => r.adept_id === id),
+      track,
+    );
+    if (end) out.set(id, end);
   }
   return out;
 }

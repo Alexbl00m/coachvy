@@ -57,6 +57,8 @@ const FUNCTIONS = [
   "can_build_plans",
   "can_edit_plan_instance",
   "advance_plan_queue",
+  "plan_version_track",
+  "plan_version_tracks",
   "coach_can_assign_plan",
   "plan_access_for",
   "copy_plan_template",

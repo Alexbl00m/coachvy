@@ -8,6 +8,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
+import { TRACK_LABEL, tracksMeet, type Track } from "@/lib/plan-library/queue";
 import { endActivePhase, removeQueuedPhase } from "@/lib/plan-library/queue-actions";
 import { adeptHref, routes } from "@/lib/routes";
 
@@ -21,7 +22,14 @@ export type QueueItem = {
   /** Första dagen efter sista veckan. */
   endDate: string;
   weeks: number;
+  /** Grenen fasen köas i. */
+  track: Track;
+  /** Nivån fasen började på, "C". */
+  levelKey: string | null;
 };
+
+/** Spårens ordning i kortet. */
+const TRACK_ORDER: Track[] = ["alla", "löpning", "cykling", "simning", "styrka"];
 
 const addDays = (iso: string, days: number) => {
   const d = new Date(`${iso}T12:00:00Z`);
@@ -30,10 +38,11 @@ const addDays = (iso: string, days: number) => {
 };
 
 /**
- * Adeptens faser i ordning: den aktiva och de som står i kö. Coachen lägger
- * till en plan sist i kön med planväljaren, tar bort en kommande fas och
- * avslutar den pågående; faserna efter flyttas fram. Utan pågående fas står
- * förslaget ur testet och huvudloppet i kortet.
+ * Adeptens faser i ordning, ett spår per gren: den aktiva och de som står i
+ * kö. Coachen lägger till en plan sist i dess gren med planväljaren, tar
+ * bort en kommande fas och avslutar en pågående; faserna efter i samma gren
+ * flyttas fram. Utan pågående fas står förslaget ur testet och huvudloppet
+ * i kortet.
  */
 export function PhaseQueue({
   adept,
@@ -42,7 +51,6 @@ export function PhaseQueue({
   suggestions,
   sportName,
   defaultStart,
-  previousLevelKey,
   initial,
 }: {
   adept: { id: string; firstName: string };
@@ -53,8 +61,6 @@ export function PhaseQueue({
   sportName: string | null;
   /** Förvald start när kön är tom: i dag om det är måndag, annars nästa måndag. */
   defaultStart: string;
-  /** Nivån fasen före börjar på; en ny fas förväljs på samma nivå. */
-  previousLevelKey: string | null;
   /** Väljaren öppen från adressen, med fokus eller en plan utpekad. */
   initial: { open: boolean; focus: string | null; versionId: string | null };
 }) {
@@ -66,8 +72,12 @@ export function PhaseQueue({
   const [picking, setPicking] = useState(initial.open);
   const [fromUrl, setFromUrl] = useState(initial.open);
 
-  const last = items.at(-1);
   const active = items.some((i) => i.status === "aktiv");
+  // Ett spår per gren; med bara ett spår står ingen rubrik.
+  const lanes = TRACK_ORDER.flatMap((track) => {
+    const list = items.filter((i) => i.track === track);
+    return list.length ? [{ track, list }] : [];
+  });
   const first = suggestions[0];
 
   // Väljaren öppnad från en länk: adressen städas när den stängs, så att
@@ -91,6 +101,77 @@ export function PhaseQueue({
       router.refresh();
     });
   };
+
+  const row = (item: QueueItem) => (
+    <li
+      key={item.id}
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium text-text">{item.title}</span>
+        <span className="text-[0.8125rem] text-text-muted">
+          {formatDate(item.startDate)} – {formatDate(addDays(item.endDate, -1))} ·{" "}
+          {item.weeks} veckor
+        </span>
+      </span>
+      <span
+        className={
+          item.status === "aktiv"
+            ? "text-[0.8125rem] font-medium text-accent-text"
+            : "text-[0.8125rem] text-text-subtle"
+        }
+      >
+        {item.status === "aktiv" ? "Pågår" : "I kö"}
+      </span>
+      {item.status === "aktiv" && (
+        <span className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem]">
+          <Link
+            href={`${adeptHref(adeptId, "bibliotek")}?plan=${item.id}`}
+            className="font-medium text-accent-text hover:underline"
+          >
+            Veckoplanen
+          </Link>
+          <Link
+            href={`${routes.calendar}?adept=${adeptId}`}
+            className="font-medium text-accent-text hover:underline"
+          >
+            Se passen i kalendern
+          </Link>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              const next = items.find(
+                (i) => i.status === "kommande" && tracksMeet(i.track, item.track),
+              );
+              const message = next
+                ? `Avsluta ${item.title} nu? ${next.title} flyttas fram och börjar i dag eller närmast efter, på samma veckodag.`
+                : `Avsluta ${item.title} nu? Planens pass försvinner ur kalendern.`;
+              if (!window.confirm(message)) return;
+              run(() => endActivePhase({ adeptId, instanceId: item.id }));
+            }}
+            className="ml-auto rounded-md px-2.5 py-1.5 text-text-muted hover:bg-surface-2 hover:text-text"
+          >
+            Avsluta fasen
+          </button>
+        </span>
+      )}
+      {item.status === "kommande" && (
+        <button
+          type="button"
+          aria-label={`Ta bort ${item.title} ur kön`}
+          disabled={pending}
+          onClick={() => {
+            if (!window.confirm(`Ta bort ${item.title} ur kön? Faserna efter flyttas fram.`)) return;
+            run(() => removeQueuedPhase({ adeptId, instanceId: item.id }));
+          }}
+          className="-my-1 rounded-full p-2 text-text-subtle hover:bg-surface-2 hover:text-text"
+        >
+          <X aria-hidden className="size-4" />
+        </button>
+      )}
+    </li>
+  );
 
   return (
     <Card className="mb-6">
@@ -127,76 +208,20 @@ export function PhaseQueue({
           många veckor du vill, och bygg på med nästa.
         </p>
       ) : (
-        <ol className="divide-y divide-line rounded-md border border-line">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm"
-            >
-              <span className="min-w-0 flex-1">
-                <span className="block font-medium text-text">{item.title}</span>
-                <span className="text-[0.8125rem] text-text-muted">
-                  {formatDate(item.startDate)} – {formatDate(addDays(item.endDate, -1))} ·{" "}
-                  {item.weeks} veckor
-                </span>
-              </span>
-              <span
-                className={
-                  item.status === "aktiv"
-                    ? "text-[0.8125rem] font-medium text-accent-text"
-                    : "text-[0.8125rem] text-text-subtle"
-                }
-              >
-                {item.status === "aktiv" ? "Pågår" : "I kö"}
-              </span>
-              {item.status === "aktiv" && (
-                <span className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem]">
-                  <Link
-                    href={adeptHref(adeptId, "bibliotek")}
-                    className="font-medium text-accent-text hover:underline"
-                  >
-                    Veckoplanen
-                  </Link>
-                  <Link
-                    href={`${routes.calendar}?adept=${adeptId}`}
-                    className="font-medium text-accent-text hover:underline"
-                  >
-                    Se passen i kalendern
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      const next = items.find((i) => i.status === "kommande");
-                      const message = next
-                        ? `Avsluta ${item.title} nu? ${next.title} flyttas fram och börjar i dag eller närmast efter, på samma veckodag.`
-                        : `Avsluta ${item.title} nu? Planens pass försvinner ur kalendern.`;
-                      if (!window.confirm(message)) return;
-                      run(() => endActivePhase({ adeptId, instanceId: item.id }));
-                    }}
-                    className="ml-auto rounded-md px-2.5 py-1.5 text-text-muted hover:bg-surface-2 hover:text-text"
-                  >
-                    Avsluta fasen
-                  </button>
-                </span>
+        <div className="space-y-4">
+          {lanes.map(({ track, list }) => (
+            <section key={track} aria-label={lanes.length > 1 ? TRACK_LABEL[track] : undefined}>
+              {lanes.length > 1 && (
+                <h3 className="mb-2 text-[0.75rem] font-medium text-text-subtle">
+                  {TRACK_LABEL[track]}
+                </h3>
               )}
-              {item.status === "kommande" && (
-                <button
-                  type="button"
-                  aria-label={`Ta bort ${item.title} ur kön`}
-                  disabled={pending}
-                  onClick={() => {
-                    if (!window.confirm(`Ta bort ${item.title} ur kön? Faserna efter flyttas fram.`)) return;
-                    run(() => removeQueuedPhase({ adeptId, instanceId: item.id }));
-                  }}
-                  className="-my-1 rounded-full p-2 text-text-subtle hover:bg-surface-2 hover:text-text"
-                >
-                  <X aria-hidden className="size-4" />
-                </button>
-              )}
-            </li>
+              <ol className="divide-y divide-line rounded-md border border-line">
+                {list.map((item) => row(item))}
+              </ol>
+            </section>
           ))}
-        </ol>
+        </div>
       )}
 
       {error && (
@@ -216,9 +241,8 @@ export function PhaseQueue({
         plans={plans}
         suggestions={suggestions}
         sportName={sportName}
-        fixedStart={last ? { start: last.endDate, after: last.title } : null}
+        queue={items}
         defaultStart={defaultStart}
-        previousLevelKey={previousLevelKey}
         initialFocus={initial.focus}
         initialVersionId={initial.versionId}
       />

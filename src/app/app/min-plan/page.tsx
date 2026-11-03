@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight, Library } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PillLinks } from "@/components/plan-library/pill-links";
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle, EmptyState } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { INSTANCE_STATUS_LABEL } from "@/lib/plan-library/labels";
 import { listInstances } from "@/lib/plan-library/queries";
+import { TRACK_LABEL } from "@/lib/plan-library/queue";
 import { routes } from "@/lib/routes";
 import { longDate, todayIso, weekdayName } from "@/lib/season/season";
 
@@ -42,9 +44,11 @@ export default async function MyPlanPage({
   const today = todayIso();
 
   const instances = await listInstances(user.adept.id);
-  const chosen =
-    instances.find((i) => i.id === query.plan) ??
-    instances.find((i) => i.status === "aktiv");
+  // En plan per gren kan pågå samtidigt; den som började först visas först.
+  const activePlans = instances
+    .filter((i) => i.status === "aktiv")
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
+  const chosen = instances.find((i) => i.id === query.plan) ?? activePlans[0];
 
   // Faserna coachen lagt i kö, först den som börjar först, och de som är slut.
   const upcoming = instances
@@ -145,10 +149,23 @@ export default async function MyPlanPage({
         title="Min plan"
         description="Planen ligger fast. Du loggar passen, flyttar dem när veckan kräver det och byter nivå själv – från nästa vecka, stegvis eller tillfälligt."
       />
+      {activePlans.length > 1 && (
+        <div className="mb-4">
+          <PillLinks
+            label="Pågående planer"
+            active={chosen.id}
+            items={activePlans.map((i) => ({
+              key: i.id,
+              label: `${TRACK_LABEL[i.track]} · ${i.title}`,
+              href: `${routes.myPlan}?plan=${i.id}`,
+            }))}
+          />
+        </div>
+      )}
       <PlanPage
         view={view}
         basePath={
-          chosen.status === "aktiv"
+          chosen.id === activePlans[0]?.id
             ? routes.myPlan
             : `${routes.myPlan}?plan=${chosen.id}`
         }

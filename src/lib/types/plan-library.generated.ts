@@ -467,6 +467,7 @@ export type PlanLibraryTables = {
       ended_at: string | null;
       rounds: Json | null;
       pace_mode: "form" | "mål";
+      track: "cykling" | "löpning" | "simning" | "styrka" | "alla";
       goal_seconds: number | null;
       access: "medlem" | "coach";
     };
@@ -490,6 +491,7 @@ export type PlanLibraryTables = {
       ended_at?: string | null;
       rounds?: Json | null;
       pace_mode?: "form" | "mål";
+      track?: "cykling" | "löpning" | "simning" | "styrka" | "alla";
       goal_seconds?: number | null;
       access?: "medlem" | "coach";
     };
@@ -513,6 +515,7 @@ export type PlanLibraryTables = {
       ended_at?: string | null;
       rounds?: Json | null;
       pace_mode?: "form" | "mål";
+      track?: "cykling" | "löpning" | "simning" | "styrka" | "alla";
       goal_seconds?: number | null;
       access?: "medlem" | "coach";
     };
@@ -978,6 +981,14 @@ export type PlanLibraryFunctions = {
   advance_plan_queue: {
     Args: { p_adept: string };
     Returns: undefined;
+  };
+  plan_version_track: {
+    Args: { p_version: string };
+    Returns: string;
+  };
+  plan_version_tracks: {
+    Args: { p_versions: string[] };
+    Returns: { version_id: string; track: string }[];
   };
   coach_can_assign_plan: {
     Args: { p_adept: string; p_template: string };

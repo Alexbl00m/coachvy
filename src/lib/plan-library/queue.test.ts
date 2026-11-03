@@ -7,15 +7,25 @@ import {
   nextPhaseStart,
   phaseEnd,
   pullForward,
+  queueEnd,
   queueOf,
+  tracksMeet,
   type QueuedPhase,
+  type Track,
 } from "./queue";
 
-const p = (id: string, status: QueuedPhase["status"], start: string, weeks: number): QueuedPhase => ({
+const p = (
+  id: string,
+  status: QueuedPhase["status"],
+  start: string,
+  weeks: number,
+  track: Track = "löpning",
+): QueuedPhase => ({
   id,
   status,
   start_date: start,
   weeks,
+  track,
 });
 
 describe("faskön", () => {
@@ -88,5 +98,54 @@ describe("faskön", () => {
     expect(defaultLevel(levels, null)?.key).toBe("C");
     expect(defaultLevel([{ key: "A" }], null)?.key).toBe("A");
     expect(defaultLevel([], null)).toBeUndefined();
+  });
+
+  describe("spår per gren", () => {
+    // Fredrik: tröskel i löpning och VO2max på cykeln samtidigt.
+    const phases = [
+      { ...p("lop", "aktiv", "2026-11-02", 8, "löpning"), title: "Höj tröskeln" },
+      { ...p("cykel", "aktiv", "2026-11-02", 6, "cykling"), title: "Boosta VO2max" },
+      { ...p("cykel2", "kommande", "2026-12-14", 4, "cykling"), title: "Durability" },
+    ];
+
+    it("låter spåren krocka bara med sig själva och alla", () => {
+      expect(tracksMeet("löpning", "cykling")).toBe(false);
+      expect(tracksMeet("löpning", "löpning")).toBe(true);
+      expect(tracksMeet("alla", "cykling")).toBe(true);
+    });
+
+    it("lägger nästa fas efter kön i planens eget spår", () => {
+      expect(nextPhaseStart(phases, null, "2026-11-03", "löpning")).toEqual({
+        ok: true,
+        start: "2026-12-28",
+      });
+      expect(nextPhaseStart(phases, null, "2026-11-03", "cykling")).toEqual({
+        ok: true,
+        start: "2027-01-11",
+      });
+      // En plan i flera grenar väntar in alla spår.
+      expect(nextPhaseStart(phases, null, "2026-11-03", "alla")).toEqual({
+        ok: true,
+        start: "2027-01-11",
+      });
+      // Ett spår utan kö börjar på det valda datumet.
+      expect(nextPhaseStart(phases, "2026-11-09", "2026-11-03", "simning")).toEqual({
+        ok: true,
+        start: "2026-11-09",
+      });
+    });
+
+    it("visar slutet på kön per spår", () => {
+      expect(queueEnd(phases, "löpning")).toEqual({ start: "2026-12-28", after: "Höj tröskeln" });
+      expect(queueEnd(phases, "cykling")).toEqual({ start: "2027-01-11", after: "Durability" });
+      expect(queueEnd(phases, "simning")).toBeNull();
+    });
+
+    it("flyttar bara kön i det avslutade spåret", () => {
+      expect(pullForward(phases, "lop", "2026-11-10")).toEqual([]);
+      expect(pullForward(phases, "cykel", "2026-11-10")).toEqual([
+        { id: "cykel2", start_date: "2026-11-16" },
+      ]);
+    });
   });
 });

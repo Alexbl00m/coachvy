@@ -9,7 +9,14 @@ import { createClient } from "@/lib/supabase/server";
 
 import { proposePeriodization } from "./periodization";
 import { loadVersion } from "./queries";
-import { closeGap, nextPhaseStart, pullForward, type QueuedPhase } from "./queue";
+import {
+  closeGap,
+  isTrack,
+  nextPhaseStart,
+  pullForward,
+  tracksMeet,
+  type QueuedPhase,
+} from "./queue";
 
 export type QueueResult = { ok: true } | { ok: false; error: string };
 
@@ -35,7 +42,7 @@ async function coachQueue(adeptId: string) {
     supabase.from("adepts").select("id, coach_id").eq("id", adeptId).maybeSingle(),
     supabase
       .from("plan_instances")
-      .select("id, status, start_date, weeks")
+      .select("id, status, start_date, weeks, track")
       .eq("adept_id", adeptId),
   ]);
   if (!adept || adept.coach_id !== user.id) return null;
@@ -43,9 +50,10 @@ async function coachQueue(adeptId: string) {
 }
 
 /**
- * Lägger en plan sist i adeptens kö: direkt efter den sista fasen, eller
- * på det valda datumet när kön är tom. Börjar den i dag eller tidigare och
- * ingen plan är aktiv blir den aktiv direkt.
+ * Lägger en plan sist i adeptens kö i planens spår: direkt efter den sista
+ * fasen i samma gren, eller på det valda datumet när spåret är tomt. Börjar
+ * den i dag eller tidigare och ingen plan i spåret är aktiv blir den aktiv
+ * direkt.
  */
 export async function queuePhase(input: {
   adeptId: string;
@@ -69,8 +77,14 @@ export async function queuePhase(input: {
     return fail(`Välj ${version.min_weeks}–${version.max_weeks} veckor.`);
   }
 
+  // Spåret räknas som databasen gör när planen sparas.
+  const { data: trackName } = await supabase.rpc("plan_version_track", {
+    p_version: version.id,
+  });
+  const track = typeof trackName === "string" && isTrack(trackName) ? trackName : "alla";
+
   const today = todayIso();
-  const start = nextPhaseStart(phases, input.startDate, today);
+  const start = nextPhaseStart(phases, input.startDate, today, track);
   if (!start.ok) return fail(start.error);
 
   const proposal = proposePeriodization({
@@ -83,7 +97,7 @@ export async function queuePhase(input: {
   });
   if (!proposal.ok) return fail(proposal.error);
 
-  const hasActive = phases.some((p) => p.status === "aktiv");
+  const hasActive = phases.some((p) => p.status === "aktiv" && tracksMeet(p.track, track));
   const status = !hasActive && start.start <= today ? "aktiv" : "kommande";
 
   const { error } = await supabase.from("plan_instances").insert({

@@ -1929,6 +1929,25 @@ En plan coachen lägger på sin adept, ur de egna planerna eller en som delats
 med coachen, får åtkomsten `coach` och kräver inget medlemskap
 (`coach_can_assign_plan`).
 
+### Spår per gren
+
+En triathlet kan följa en tröskelplan i löpning och en VO2max-plan på
+cykeln samtidigt. Varje startad plan har ett spår (`plan_instances.track`):
+grenen dess pass räknas i, styrka för en plan med bara pass utan struktur,
+och alla för en plan med pass i flera grenar. Databasen räknar spåret ur
+versionen när planen startas (`plan_version_track`) och håller det fast.
+En plan per spår är aktiv, kön och krockkontrollen går per spår, och
+`advance_plan_queue` avslutar bara den aktiva planen i samma spår. En plan i
+spåret alla krockar med alla spår, så en triathlonplan går som förut.
+
+I appen går kön per spår (`queue.ts`: `queueOf`, `nextPhaseStart`,
+`closeGap`, `pullForward`), Faser-kortet visar ett spår per gren, och
+väljaren och dialogen i planbiblioteket räknar dagen fasen börjar i
+planens gren. Min plan och Veckoplan väljer mellan de pågående planerna,
+och AI-underlaget tar med alla. På säsongen sätter den första planen fasen
+där två planer överlappar: en plan i flera grenar före en i en gren,
+annars den som började först.
+
 ### Säsongen ur planen
 
 Planens faser är säsongens perioder. Varje fas i en biblioteksplan har en

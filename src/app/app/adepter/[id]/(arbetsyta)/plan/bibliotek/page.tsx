@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
+import { PillLinks } from "@/components/plan-library/pill-links";
 import { PlanPage } from "@/components/plan-library/plan/plan-page";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import {
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
 import { INSTANCE_STATUS_LABEL } from "@/lib/plan-library/labels";
 import { listInstances } from "@/lib/plan-library/queries";
+import { TRACK_LABEL } from "@/lib/plan-library/queue";
 import { adeptHref, routes } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
 
@@ -39,10 +41,12 @@ export default async function AdeptPlanPage({
 
   const instances = await listInstances(id);
   const season = adeptHref(id, "plan");
+  // En plan per gren kan pågå samtidigt; den som började först visas först.
+  const activePlans = instances
+    .filter((i) => i.status === "aktiv")
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
   const chosen =
-    instances.find((i) => i.id === query.plan) ??
-    instances.find((i) => i.status === "aktiv") ??
-    instances[0];
+    instances.find((i) => i.id === query.plan) ?? activePlans[0] ?? instances[0];
 
   if (!chosen) {
     return (
@@ -87,6 +91,20 @@ export default async function AdeptPlanPage({
   return (
     <>
       {header}
+      {/* En plan per gren kan pågå samtidigt: löpning och cykel var för sig. */}
+      {activePlans.length > 1 && (
+        <div className="mb-4">
+          <PillLinks
+            label="Pågående planer"
+            active={chosen.id}
+            items={activePlans.map((i) => ({
+              key: i.id,
+              label: `${TRACK_LABEL[i.track]} · ${i.title}`,
+              href: `${base}?plan=${i.id}`,
+            }))}
+          />
+        </div>
+      )}
       {instances.length > 1 && (
         <p className="mb-4 text-[0.8125rem] text-text-muted">
           Andra planer:{" "}
@@ -107,7 +125,7 @@ export default async function AdeptPlanPage({
       )}
       <PlanPage
         view={view}
-        basePath={base}
+        basePath={chosen.id === activePlans[0]?.id ? base : `${base}?plan=${chosen.id}`}
         weekParam={
           Number.isFinite(weekParam) && weekParam > 0 ? weekParam : null
         }

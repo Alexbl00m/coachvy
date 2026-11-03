@@ -141,11 +141,12 @@ export async function loadPlanView(
   };
 }
 
-/** Den aktiva planens id för en adept, eller null. */
-export async function activeInstanceId(
-  adeptId: string,
-): Promise<string | null> {
-  if (!isSupabaseConfigured()) return null;
+/**
+ * De aktiva planernas id för en adept, en per gren, äldst först. En
+ * triathlet kan följa en löpplan och en cykelplan samtidigt.
+ */
+export async function activeInstanceIds(adeptId: string): Promise<string[]> {
+  if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
   // Nästa fas i kön tar vid när den förra är slut.
   await supabase.rpc("advance_plan_queue", { p_adept: adeptId });
@@ -154,9 +155,9 @@ export async function activeInstanceId(
     .select("id")
     .eq("adept_id", adeptId)
     .eq("status", "aktiv")
-    .maybeSingle();
-  if (error) return null;
-  return data?.id ?? null;
+    .order("start_date");
+  if (error) return [];
+  return (data ?? []).map((r) => r.id);
 }
 
 const SPORTS: Sport[] = ["cykling", "löpning", "simning"];
@@ -238,7 +239,8 @@ export async function listPlanSessionsBetween(
             .filter(Boolean)
             .join(" · "),
           profile: templateProfile(s.variant.blocks, s.variant.basis),
-          href: `${href}?vecka=${s.week}`,
+          // Planen pekas ut: en adept kan följa en plan per gren samtidigt.
+          href: `${href}?plan=${instance.id}&vecka=${s.week}`,
           fromPlan: true,
           ...planDetail(s.session, s.variant),
         });
@@ -267,13 +269,22 @@ const addDaysIso = (iso: string, days: number) =>
     .toISOString()
     .slice(0, 10);
 
-/** Planen i text för AI-coachens underlag, eller null utan aktiv plan. */
+/**
+ * Planerna i text för AI-coachens underlag, en per aktiv plan, eller null
+ * utan aktiv plan.
+ */
 export async function planSummaryFor(
   adeptId: string,
   today: string,
 ): Promise<string | null> {
-  const id = await activeInstanceId(adeptId);
-  if (!id) return null;
+  const ids = await activeInstanceIds(adeptId);
+  const texts = (await Promise.all(ids.map((id) => planSummaryOf(id, today)))).filter(
+    (t): t is string => t !== null,
+  );
+  return texts.length ? texts.join("\n\n") : null;
+}
+
+async function planSummaryOf(id: string, today: string): Promise<string | null> {
   const view = await loadPlanView(id, today);
   if (!view) return null;
   const race = view.instance.race_date

@@ -25,6 +25,7 @@ import {
   listDisciplines,
   listQueueEnds,
   loadPublishedBySlug,
+  versionTrack,
   planAccessFor,
 } from "@/lib/plan-library/queries";
 import { nextMonday } from "@/lib/plan-library/queue";
@@ -77,7 +78,14 @@ export default async function LibraryPlanPage({
   const own = content.template.owner_id === user.id;
   // Coachens egna adepter, och var nästa fas börjar för dem som har en kö.
   const ownAdepts = adepts.filter((a) => a.coach_id === user.id);
-  const queues = await listQueueEnds(ownAdepts.map((a) => a.id));
+  // Planen läggs sist i sin gren; en löpplan väntar inte på cykelplanen.
+  const queues =
+    ownAdepts.length > 0
+      ? await listQueueEnds(
+          ownAdepts.map((a) => a.id),
+          await versionTrack(content.version.id),
+        )
+      : new Map<string, { start: string; after: string }>();
   // Coachen kom hit från en adept: adepten följer med i länkarna.
   const forAdept = ownAdepts.find((a) => a.id === query.adept) ?? null;
   const withAdept = (href: string) =>

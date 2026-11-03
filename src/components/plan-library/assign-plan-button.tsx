@@ -107,7 +107,8 @@ export function AssignPlanButton({
               {title}
             </h2>
             <p className="mt-1 text-[0.8125rem] text-text-muted">
-              Planen läggs sist i adeptens faser, direkt efter den sista.
+              Planen läggs sist i sin gren. Löpning, cykel och sim har var
+              sin kö, så planer i olika grenar kan gå samtidigt.
             </p>
           </div>
 

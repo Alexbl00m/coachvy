@@ -9,7 +9,14 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { normalize } from "@/lib/command-search";
 import { formatDate } from "@/lib/format";
-import { defaultLevel } from "@/lib/plan-library/queue";
+import {
+  defaultLevel,
+  queueEnd,
+  queueOf,
+  TRACK_LABEL,
+  type QueuedPhase,
+  type Track,
+} from "@/lib/plan-library/queue";
 import { queuePhase } from "@/lib/plan-library/queue-actions";
 import { routes } from "@/lib/routes";
 
@@ -19,6 +26,8 @@ import { PhaseLadder } from "./phase-ladder";
 export type PickerPlan = {
   versionId: string;
   slug: string;
+  /** Grenen planen köas i. */
+  track: Track;
   title: string;
   summary: string | null;
   category: string | null;
@@ -33,6 +42,18 @@ export type PickerPlan = {
   phases: { id: string; name: string; weeks: number; specificity: number | null }[];
   /** Högst först, med timmarna i etiketten. */
   levels: { id: string; key: string; label: string }[];
+};
+
+/** En fas i adeptens kö, för att räkna var en ny plan i samma gren börjar. */
+export type PickerQueueItem = {
+  id: string;
+  title: string;
+  status: "aktiv" | "kommande";
+  startDate: string;
+  weeks: number;
+  track: Track;
+  /** Nivån fasen började på, "C". */
+  levelKey: string | null;
 };
 
 /** Ett förslag ur testet och huvudloppet, med planerna som har fokuset. */
@@ -74,9 +95,8 @@ export function PlanPicker({
   plans,
   suggestions,
   sportName,
-  fixedStart,
+  queue,
   defaultStart,
-  previousLevelKey,
   initialFocus,
   initialVersionId,
 }: {
@@ -88,16 +108,26 @@ export function PlanPicker({
   suggestions: PickerSuggestion[];
   /** Adeptens gren i text, "löpning"; null när den saknas. */
   sportName: string | null;
-  /** Dagen fasen börjar när adepten har en kö, och fasen före. */
-  fixedStart: { start: string; after: string } | null;
-  /** Förvald start när kön är tom. */
+  /** Adeptens faser; en ny plan läggs sist i sin gren. */
+  queue: PickerQueueItem[];
+  /** Förvald start när grenen saknar kö. */
   defaultStart: string;
-  previousLevelKey: string | null;
   initialFocus: string | null;
   initialVersionId: string | null;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [pending, startTransition] = useTransition();
+  // Kön som faser: var en plan börjar och vilken nivå den förväljs på beror
+  // på planens gren.
+  const phases = queue.map((q) => ({
+    ...q,
+    start_date: q.startDate,
+  })) satisfies (QueuedPhase & { title: string })[];
+  const fixedStartFor = (plan: PickerPlan) => queueEnd(phases, plan.track);
+  const levelFor = (plan: PickerPlan) => {
+    const before = queueOf(phases, plan.track).at(-1);
+    return defaultLevel(plan.levels, before?.levelKey ?? null)?.id ?? "";
+  };
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const focuses = useMemo(() => {
@@ -120,9 +150,7 @@ export function PlanPicker({
     initial ? `lista-${initial.versionId}` : null,
   );
   const [weeks, setWeeks] = useState(initial ? String(initial.maxWeeks) : "");
-  const [levelId, setLevelId] = useState(
-    initial ? (defaultLevel(initial.levels, previousLevelKey)?.id ?? "") : "",
-  );
+  const [levelId, setLevelId] = useState(initial ? levelFor(initial) : "");
   const [startDate, setStartDate] = useState(defaultStart);
 
   const expand = (key: string, plan: PickerPlan) => {
@@ -133,7 +161,7 @@ export function PlanPicker({
     }
     setExpanded(key);
     setWeeks(String(plan.maxWeeks));
-    setLevelId(defaultLevel(plan.levels, previousLevelKey)?.id ?? "");
+    setLevelId(levelFor(plan));
   };
 
   useEffect(() => {
@@ -163,6 +191,7 @@ export function PlanPicker({
         .filter((s) => s.plans.length > 0);
 
   const submit = (plan: PickerPlan) => {
+    const fixedStart = fixedStartFor(plan);
     setError(null);
     startTransition(async () => {
       const result = await queuePhase({
@@ -183,6 +212,7 @@ export function PlanPicker({
 
   const row = (key: string, plan: PickerPlan) => {
     const isOpen = expanded === key;
+    const fixedStart = fixedStartFor(plan);
     const start = fixedStart?.start ?? startDate;
     const n = Number(weeks);
     const ends = Number.isFinite(n) && n > 0 && start ? addDays(start, n * 7 - 1) : null;
@@ -256,7 +286,11 @@ export function PlanPicker({
                 <Field
                   label="Börjar"
                   htmlFor={`${key}-start`}
-                  hint={`Direkt efter ${fixedStart.after}.`}
+                  hint={
+                    plan.track === "alla"
+                      ? `Direkt efter ${fixedStart.after}.`
+                      : `Direkt efter ${fixedStart.after}, sist i ${TRACK_LABEL[plan.track].toLowerCase()}.`
+                  }
                 >
                   <Input id={`${key}-start`} value={formatDate(fixedStart.start)} disabled readOnly />
                 </Field>
@@ -313,9 +347,8 @@ export function PlanPicker({
               Välj plan för {adept.firstName}
             </h2>
             <p className="mt-1 text-[0.8125rem] text-text-muted">
-              {fixedStart
-                ? `Fasen börjar ${formatDate(fixedStart.start)}, direkt efter ${fixedStart.after}.`
-                : "Den första fasen. Du väljer startdag när du fäller ut planen."}
+              Planen läggs sist i sin gren. Löpning, cykel och sim har var
+              sin kö, så en löpplan och en cykelplan kan gå samtidigt.
             </p>
           </div>
           <button

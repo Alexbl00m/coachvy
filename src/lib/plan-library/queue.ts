@@ -3,27 +3,60 @@
  * före specifik före toppning. Varje fas är en vanlig plan med sina datum;
  * kön räknar bara ut var nästa börjar.
  *
+ * Kön går per spår: grenen planens pass räknas i. En tröskelplan i löpning
+ * och en VO2max-plan på cykeln går samtidigt, var och en i sin kö. En plan i
+ * spåret alla (pass i flera grenar) delar kö med alla spår.
+ *
  * Modulen är ren: datum in, datum ut.
  */
 
 import { addDays, mondayOf } from "@/lib/season/season";
+
+export type Track = "cykling" | "löpning" | "simning" | "styrka" | "alla";
+
+export const TRACK_LABEL: Record<Track, string> = {
+  cykling: "Cykel",
+  löpning: "Löpning",
+  simning: "Simning",
+  styrka: "Styrka",
+  alla: "Alla grenar",
+};
+
+export const isTrack = (value: string): value is Track => value in TRACK_LABEL;
+
+/** Krockar två spår? Samma spår, eller något av dem är alla (som i databasen). */
+export const tracksMeet = (a: Track, b: Track) => a === b || a === "alla" || b === "alla";
 
 export type QueuedPhase = {
   id: string;
   status: "aktiv" | "kommande" | "avslutad" | "avbruten";
   start_date: string;
   weeks: number;
+  track: Track;
 };
 
 /** Första dagen efter planens sista vecka. */
 export const phaseEnd = (p: Pick<QueuedPhase, "start_date" | "weeks">) =>
   addDays(p.start_date, p.weeks * 7);
 
-/** Den aktiva fasen och de kommande, i ordning. */
-export function queueOf<T extends QueuedPhase>(phases: T[]): T[] {
+/** Den aktiva fasen och de kommande, i ordning; med ett spår bara de som delar kö med det. */
+export function queueOf<T extends QueuedPhase>(phases: T[], track?: Track): T[] {
   return phases
     .filter((p) => p.status === "aktiv" || p.status === "kommande")
+    .filter((p) => !track || tracksMeet(p.track, track))
     .sort((a, b) => a.start_date.localeCompare(b.start_date));
+}
+
+/** Var en ny fas i spåret börjar när det har en kö, och fasen före; null utan kö. */
+export function queueEnd<T extends QueuedPhase & { title: string }>(
+  phases: T[],
+  track: Track,
+): { start: string; after: string } | null {
+  const queue = queueOf(phases, track);
+  if (queue.length === 0) return null;
+  // Den som slutar sist, om faserna i olika spår slutar olika dagar.
+  const last = queue.reduce((a, b) => (phaseEnd(b) > phaseEnd(a) ? b : a));
+  return { start: phaseEnd(last), after: last.title };
 }
 
 /**
@@ -34,10 +67,11 @@ export function nextPhaseStart(
   phases: QueuedPhase[],
   chosen: string | null,
   today: string,
+  track: Track = "alla",
 ): { ok: true; start: string } | { ok: false; error: string } {
-  const queue = queueOf(phases);
+  const queue = queueOf(phases, track);
   if (queue.length > 0) {
-    return { ok: true, start: phaseEnd(queue[queue.length - 1]) };
+    return { ok: true, start: queue.map(phaseEnd).sort().at(-1)! };
   }
   if (!chosen || !/^\d{4}-\d{2}-\d{2}$/.test(chosen)) {
     return { ok: false, error: "Välj när den första fasen börjar." };
@@ -49,14 +83,16 @@ export function nextPhaseStart(
 }
 
 /**
- * Nya startdatum när en kommande fas tas bort: faserna efter den flyttas
- * fram så att kön hänger ihop. Den aktiva fasen rörs aldrig.
+ * Nya startdatum när en kommande fas tas bort: faserna efter den i samma
+ * spår flyttas fram så att kön hänger ihop. Den aktiva fasen rörs aldrig.
  */
 export function closeGap(
   phases: QueuedPhase[],
   removedId: string,
 ): { id: string; start_date: string }[] {
-  const queue = queueOf(phases);
+  const target = phases.find((p) => p.id === removedId);
+  if (!target) return [];
+  const queue = queueOf(phases, target.track);
   const index = queue.findIndex((p) => p.id === removedId);
   if (index < 0) return [];
   const removed = queue[index];
@@ -71,16 +107,18 @@ export function closeGap(
 }
 
 /**
- * Nya startdatum när den aktiva fasen avslutas i förtid: kön flyttas fram
- * så att nästa fas börjar i dag eller närmast efter, på samma veckodag som
- * kön redan går i. Faserna efter följer direkt på varandra.
+ * Nya startdatum när den aktiva fasen avslutas i förtid: kön i samma spår
+ * flyttas fram så att nästa fas börjar i dag eller närmast efter, på samma
+ * veckodag som kön redan går i. Faserna efter följer direkt på varandra.
  */
 export function pullForward(
   phases: QueuedPhase[],
   endedId: string,
   today: string,
 ): { id: string; start_date: string }[] {
-  const rest = queueOf(phases).filter(
+  const ended = phases.find((p) => p.id === endedId);
+  if (!ended) return [];
+  const rest = queueOf(phases, ended.track).filter(
     (p) => p.id !== endedId && p.status === "kommande",
   );
   if (rest.length === 0) return [];

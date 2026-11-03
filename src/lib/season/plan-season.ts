@@ -22,6 +22,8 @@ export type PlanForSeason = {
   id: string;
   adept_id: string;
   title: string;
+  /** Grenen planen köas i; alla för en plan i flera grenar. */
+  track: string;
   start_date: string;
   weeks: number;
   spans: {
@@ -87,14 +89,28 @@ export function clipToRanges<T extends Pick<TrainingBlockRow, "id" | "starts_on"
 /**
  * Säsongens perioder för en adept: planernas faser, och perioderna för hand
  * där ingen plan gäller. I datumordning.
+ *
+ * Går två planer samtidigt, en per gren, sätter den första fasen: en plan i
+ * flera grenar före en plan i en gren, annars den som började först. Den
+ * andra planens faser fyller dagarna den första inte når.
  */
 export function seasonBlocks(
   manual: TrainingBlockRow[],
   plans: PlanForSeason[],
 ): SeasonBlock[] {
   const ranges = plans.map(planRange);
-  return [
-    ...manual.flatMap((b) => clipToRanges(b, ranges)),
-    ...plans.flatMap(planBlocks),
-  ].sort((a, b) => a.starts_on.localeCompare(b.starts_on));
+  const ordered = [...plans].sort(
+    (a, b) =>
+      Number(b.track === "alla") - Number(a.track === "alla") ||
+      a.start_date.localeCompare(b.start_date) ||
+      a.id.localeCompare(b.id),
+  );
+  const fromPlans: SeasonBlock[] = [];
+  for (const plan of ordered) {
+    const taken = fromPlans.map((b) => ({ start: b.starts_on, end: b.ends_on }));
+    fromPlans.push(...planBlocks(plan).flatMap((b) => clipToRanges(b, taken)));
+  }
+  return [...manual.flatMap((b) => clipToRanges(b, ranges)), ...fromPlans].sort((a, b) =>
+    a.starts_on.localeCompare(b.starts_on),
+  );
 }
