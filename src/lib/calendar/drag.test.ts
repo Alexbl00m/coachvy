@@ -4,7 +4,9 @@ import { dragOf, parseDrag } from "./drag";
 
 describe("pass som dras i kalendern", () => {
   it("drar ett eget pass med sitt id", () => {
-    expect(dragOf({ id: "w1", adeptId: "a", title: "Tröskel", fromPlan: false })).toEqual({
+    expect(
+      dragOf({ id: "w1", adeptId: "a", title: "Tröskel", fromPlan: false }),
+    ).toEqual({
       kind: "pass",
       id: "w1",
       adeptId: "a",
@@ -21,11 +23,20 @@ describe("pass som dras i kalendern", () => {
         fromPlan: true,
         planRef: { instanceId: "i", sessionId: "s", week: 3 },
       }),
-    ).toEqual({ kind: "planpass", instanceId: "i", sessionId: "s", week: 3, adeptId: "a", title: "Långpass" });
+    ).toEqual({
+      kind: "planpass",
+      instanceId: "i",
+      sessionId: "s",
+      week: 3,
+      adeptId: "a",
+      title: "Långpass",
+    });
   });
 
   it("drar inte ett planpass utan koppling till planen", () => {
-    expect(dragOf({ id: "plan-x", adeptId: "a", title: "x", fromPlan: true })).toBeNull();
+    expect(
+      dragOf({ id: "plan-x", adeptId: "a", title: "x", fromPlan: true }),
+    ).toBeNull();
   });
 
   it("läser bara Coachvys pass ur datan", () => {

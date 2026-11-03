@@ -31,8 +31,16 @@ export type DragPass =
 export const DRAG_TYPE = "application/x-coachvy-pass";
 
 /** Passet som det dras, eller null för det som inte går att flytta. */
-export function dragOf(w: Pick<CalendarWorkout, "id" | "adeptId" | "title" | "fromPlan" | "planRef">): DragPass | null {
-  if (w.planRef) return { kind: "planpass", ...w.planRef, adeptId: w.adeptId, title: w.title };
+export function dragOf(
+  w: Pick<CalendarWorkout, "id" | "adeptId" | "title" | "fromPlan" | "planRef">,
+): DragPass | null {
+  if (w.planRef)
+    return {
+      kind: "planpass",
+      ...w.planRef,
+      adeptId: w.adeptId,
+      title: w.title,
+    };
   if (w.fromPlan) return null;
   return { kind: "pass", id: w.id, adeptId: w.adeptId, title: w.title };
 }
@@ -41,9 +49,12 @@ export function dragOf(w: Pick<CalendarWorkout, "id" | "adeptId" | "title" | "fr
 export function parseDrag(text: string): DragPass | null {
   try {
     const value = JSON.parse(text) as Partial<DragPass>;
-    if (value.kind === "pass" && typeof value.id === "string") return value as DragPass;
-    if (value.kind === "planpass" && typeof value.instanceId === "string") return value as DragPass;
-    if (value.kind === "mall" && typeof value.sessionId === "string") return value as DragPass;
+    if (value.kind === "pass" && typeof value.id === "string")
+      return value as DragPass;
+    if (value.kind === "planpass" && typeof value.instanceId === "string")
+      return value as DragPass;
+    if (value.kind === "mall" && typeof value.sessionId === "string")
+      return value as DragPass;
     return null;
   } catch {
     return null;

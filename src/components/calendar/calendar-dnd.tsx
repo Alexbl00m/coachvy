@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { DRAG_TYPE, parseDrag } from "@/lib/calendar/drag";
@@ -17,8 +17,21 @@ import { longDate, weekdayName } from "@/lib/season/season";
 export function CalendarDnd({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    error: boolean;
+  } | null>(null);
   const over = useRef<HTMLElement | null>(null);
+
+  // Notisen försvinner av sig själv; ett fel står kvar lite längre.
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(
+      () => setMessage(null),
+      message.error ? 8000 : 4000,
+    );
+    return () => clearTimeout(timer);
+  }, [message]);
 
   const mark = (cell: HTMLElement | null) => {
     if (over.current === cell) return;
@@ -28,13 +41,17 @@ export function CalendarDnd({ children }: { children: React.ReactNode }) {
   };
 
   const cellOf = (target: EventTarget | null) =>
-    target instanceof Element ? target.closest<HTMLElement>("[data-drop-date]") : null;
+    target instanceof Element
+      ? target.closest<HTMLElement>("[data-drop-date]")
+      : null;
 
   return (
     <div
       onDragStart={(e) => {
         const item =
-          e.target instanceof Element ? e.target.closest<HTMLElement>("[data-drag]") : null;
+          e.target instanceof Element
+            ? e.target.closest<HTMLElement>("[data-drag]")
+            : null;
         if (!item?.dataset.drag) return;
         const pass = parseDrag(item.dataset.drag);
         if (!pass) return;
@@ -49,7 +66,8 @@ export function CalendarDnd({ children }: { children: React.ReactNode }) {
         const cell = cellOf(e.target);
         if (!cell) return;
         e.preventDefault();
-        e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
+        e.dataTransfer.dropEffect =
+          e.dataTransfer.effectAllowed === "copy" ? "copy" : "move";
         mark(cell);
       }}
       onDragLeave={(e) => {
@@ -80,14 +98,17 @@ export function CalendarDnd({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      {/* Notisen syns där passet släpptes, vart man än tittar på sidan. */}
       <p
         role="status"
         aria-live="polite"
         className={
-          message?.error ? "mt-2 text-[0.8125rem] text-warn" : "mt-2 text-[0.8125rem] text-text-muted"
+          pending || message
+            ? `fixed bottom-6 left-1/2 z-40 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-md border border-line-strong bg-surface px-4 py-2.5 text-sm shadow-xl ${message?.error ? "text-warn" : "text-text"}`
+            : "sr-only"
         }
       >
-        {pending ? "Flyttar …" : (message?.text ?? "")}
+        {pending ? "Sparar …" : (message?.text ?? "")}
       </p>
     </div>
   );

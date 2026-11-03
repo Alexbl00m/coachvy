@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns2 } from "lucide-react";
 
 import {
   groupByDay,
@@ -10,6 +10,7 @@ import { DayPanel, Upcoming } from "@/components/calendar/day-panel";
 import { AddFromLibrary } from "@/components/session-library/add-from-library";
 import { CalendarDnd } from "@/components/calendar/calendar-dnd";
 import { MonthGrid } from "@/components/calendar/month-grid";
+import { PlanBeside } from "@/components/calendar/plan-beside";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
 import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
@@ -149,11 +150,28 @@ export default async function KalenderPage({
   const phases = adeptId ? phaseByDay(blocks, [...dates, ...soon]) : null;
   const showNames = isCoach && !adeptId;
 
-  const href = (params: { manad?: string; dag?: string }) => {
+  // En plan bredvid kalendern: coachen hämtar pass ur den till adepten.
+  const beside =
+    isCoach && adept && typeof query.bredvid === "string"
+      ? query.bredvid
+      : null;
+  const besideLevel = typeof query.niva === "string" ? query.niva : null;
+
+  const href = (params: {
+    manad?: string;
+    dag?: string;
+    bredvid?: string | null;
+    niva?: string | null;
+  }) => {
     const search = new URLSearchParams();
     if (isCoach && adeptId) search.set("adept", adeptId);
     search.set("manad", params.manad ?? month);
     if (params.dag) search.set("dag", params.dag);
+    // Planen bredvid följer med när månaden eller dagen byts.
+    const plan = params.bredvid === undefined ? beside : params.bredvid;
+    if (plan) search.set("bredvid", plan);
+    const level = params.niva === undefined ? besideLevel : params.niva;
+    if (plan && level) search.set("niva", level);
     return `${routes.calendar}?${search.toString()}`;
   };
 
@@ -170,42 +188,61 @@ export default async function KalenderPage({
             ? "Alla dina adepters pass, tester och tävlingar. Välj en adept för att se fas och incheckningar."
             : "Pass, tester, tävlingar och säsongens faser, dag för dag."
         }
-        action={picker}
-      />
-
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="min-w-0 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1">
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {isCoach && adept && !beside && (
               <Link
-                href={href({ manad: shiftMonth(month, -1) })}
-                aria-label="Föregående månad"
-                className="grid size-9 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
+                href={href({ dag: selected, bredvid: "valj", niva: null })}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line-strong px-3 text-[0.8125rem] font-medium text-text hover:border-text-subtle"
               >
-                <ChevronLeft aria-hidden className="size-5" />
-              </Link>
-              <h2 className="min-w-[10.5rem] text-center text-lg font-semibold text-text">
-                {monthTitle(month)}
-              </h2>
-              <Link
-                href={href({ manad: shiftMonth(month, 1) })}
-                aria-label="Nästa månad"
-                className="grid size-9 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
-              >
-                <ChevronRight aria-hidden className="size-5" />
-              </Link>
-            </div>
-            {month !== today.slice(0, 7) && (
-              <Link
-                href={href({ manad: today.slice(0, 7), dag: today })}
-                className="rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text hover:border-accent"
-              >
-                I dag
+                <Columns2 aria-hidden className="size-4" />
+                Plan bredvid
               </Link>
             )}
+            {picker}
           </div>
+        }
+      />
 
-          <CalendarDnd>
+      <CalendarDnd>
+        <div
+          className={
+            beside
+              ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]"
+              : "grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]"
+          }
+        >
+          <div className="min-w-0 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1">
+                <Link
+                  href={href({ manad: shiftMonth(month, -1) })}
+                  aria-label="Föregående månad"
+                  className="grid size-9 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
+                >
+                  <ChevronLeft aria-hidden className="size-5" />
+                </Link>
+                <h2 className="min-w-[10.5rem] text-center text-lg font-semibold text-text">
+                  {monthTitle(month)}
+                </h2>
+                <Link
+                  href={href({ manad: shiftMonth(month, 1) })}
+                  aria-label="Nästa månad"
+                  className="grid size-9 place-items-center rounded-md text-text-muted hover:bg-surface-2 hover:text-text"
+                >
+                  <ChevronRight aria-hidden className="size-5" />
+                </Link>
+              </div>
+              {month !== today.slice(0, 7) && (
+                <Link
+                  href={href({ manad: today.slice(0, 7), dag: today })}
+                  className="rounded-md border border-line-strong px-3 py-1.5 text-[0.8125rem] text-text hover:border-accent"
+                >
+                  I dag
+                </Link>
+              )}
+            </div>
+
             <MonthGrid
               month={month}
               today={today}
@@ -217,53 +254,78 @@ export default async function KalenderPage({
               hrefFor={(dag) => `${href({ manad: dag.slice(0, 7), dag })}#dag`}
               movable
             />
-          </CalendarDnd>
 
-          {phasesShown.length > 0 && (
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem] text-text-muted">
-              {phasesShown.map((p) => (
-                <li key={p.key} className="flex items-center gap-1.5">
-                  <span
-                    aria-hidden
-                    className="h-[3px] w-4 rounded-full"
-                    style={{ background: phaseFill(p.key) }}
-                  />
-                  {PHASE_SHORT[p.key]}
-                </li>
-              ))}
-            </ul>
+            {phasesShown.length > 0 && (
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[0.75rem] text-text-muted">
+                {phasesShown.map((p) => (
+                  <li key={p.key} className="flex items-center gap-1.5">
+                    <span
+                      aria-hidden
+                      className="h-[3px] w-4 rounded-full"
+                      style={{ background: phaseFill(p.key) }}
+                    />
+                    {PHASE_SHORT[p.key]}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {beside && adept && (
+            <div className="min-w-0 xl:sticky xl:top-20 xl:row-span-2 xl:max-h-[calc(100dvh-6rem)] xl:self-start xl:overflow-y-auto">
+              <PlanBeside
+                adept={adept}
+                slug={beside === "valj" ? null : beside}
+                levelId={besideLevel}
+                hrefWith={(p) =>
+                  href({
+                    dag: selected,
+                    bredvid: p.bredvid,
+                    niva: p.niva ?? null,
+                  })
+                }
+                closeHref={href({ dag: selected, bredvid: null })}
+                defaultDate={selected}
+              />
+            </div>
           )}
-        </div>
 
-        <div className="grid min-w-0 content-start gap-6 md:grid-cols-2 2xl:grid-cols-1">
-          <DayPanel
-            date={selected}
-            items={days.get(selected) ?? emptyDay()}
-            today={today}
-            phase={phases?.get(selected) ?? null}
-            blockName={
-              adeptId ? (blockOn(blocks, selected)?.name ?? null) : null
+          <div
+            className={
+              beside
+                ? "grid min-w-0 content-start gap-6 md:grid-cols-2"
+                : "grid min-w-0 content-start gap-6 md:grid-cols-2 2xl:grid-cols-1"
             }
-            action={
-              isCoach && adept ? (
-                <AddFromLibrary
-                  sessions={library}
-                  adept={{ id: adept.id, full_name: adept.full_name }}
-                  date={selected}
-                />
-              ) : null
-            }
-            showNames={showNames}
-            movable
-          />
-          <Upcoming
-            dates={soon}
-            days={days}
-            today={today}
-            showNames={showNames}
-          />
+          >
+            <DayPanel
+              date={selected}
+              items={days.get(selected) ?? emptyDay()}
+              today={today}
+              phase={phases?.get(selected) ?? null}
+              blockName={
+                adeptId ? (blockOn(blocks, selected)?.name ?? null) : null
+              }
+              action={
+                isCoach && adept ? (
+                  <AddFromLibrary
+                    sessions={library}
+                    adept={{ id: adept.id, full_name: adept.full_name }}
+                    date={selected}
+                  />
+                ) : null
+              }
+              showNames={showNames}
+              movable
+            />
+            <Upcoming
+              dates={soon}
+              days={days}
+              today={today}
+              showNames={showNames}
+            />
+          </div>
         </div>
-      </div>
+      </CalendarDnd>
     </>
   );
 }

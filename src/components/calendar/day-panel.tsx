@@ -165,29 +165,30 @@ export function DayContent({
       {items.workouts.map((w) => {
         const drag = movable && date ? dragOf(w) : null;
         return (
-        <li key={w.id} className="flex flex-wrap items-start gap-1">
-          <div className="min-w-0 flex-1">
-          <ItemLink
-            href={w.href ?? `${routes.adepts}/${w.adeptId}/pass/${w.id}`}
-          >
-            <SportIcon
-              sport={w.sport}
-              className="mt-0.5 size-4 shrink-0 text-text-subtle"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-text">
-                {w.title}
-              </span>
-              <span className="block text-[0.75rem] text-text-subtle">
-                {who(w.adeptName)}
-                {[w.duration, w.summary].filter(Boolean).join(" · ") || "Pass"}
-              </span>
-              <WorkoutStrip blocks={w.profile} className="mt-2 h-6" />
-            </span>
-          </ItemLink>
-          </div>
-          {drag && date && <MovePassButton pass={drag} date={date} />}
-        </li>
+          <li key={w.id} className="flex flex-wrap items-start gap-1">
+            <div className="min-w-0 flex-1">
+              <ItemLink
+                href={w.href ?? `${routes.adepts}/${w.adeptId}/pass/${w.id}`}
+              >
+                <SportIcon
+                  sport={w.sport}
+                  className="mt-0.5 size-4 shrink-0 text-text-subtle"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-text">
+                    {w.title}
+                  </span>
+                  <span className="block text-[0.75rem] text-text-subtle">
+                    {who(w.adeptName)}
+                    {[w.duration, w.summary].filter(Boolean).join(" · ") ||
+                      "Pass"}
+                  </span>
+                  <WorkoutStrip blocks={w.profile} className="mt-2 h-6" />
+                </span>
+              </ItemLink>
+            </div>
+            {drag && date && <MovePassButton pass={drag} date={date} />}
+          </li>
         );
       })}
       {items.tests.map((t) => (

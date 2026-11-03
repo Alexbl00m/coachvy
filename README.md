@@ -1948,6 +1948,24 @@ och AI-underlaget tar med alla. På säsongen sätter den första planen fasen
 där två planer överlappar: en plan i flera grenar före en i en gren,
 annars den som började först.
 
+### Kalendern: dra, flytta och hämta pass ur en plan
+
+Passen i kalenderns månadsvy dras till en annan dag (`CalendarDnd` runt
+rutnätet; pass med `data-drag`, dagar med `data-drop-date`). Ett eget pass
+får nytt datum (`scheduleWorkout`), ett pass ur en startad plan flyttas i
+planen (`moveSession`), så planen fortfarande vet var passet ligger.
+Dagspanelen har en knapp per pass som gör samma flytt utan att dra, för
+tangentbord och telefon (`MovePassButton`, `movePass`).
+
+Med en adept vald öppnar **Plan bredvid** en plan ur biblioteket bredvid
+kalendern (`?bredvid=<slug>&niva=<nivå>`, `plan-beside.tsx`), vecka för
+vecka i vald nivå. Ett pass som dras till en dag läggs in som adeptens
+eget pass, omräknat mot adeptens tröskel i passets gren som ett pass ur
+passbiblioteket (`copyPlanSession`), och följer sedan inte planen. Planen
+blir en verktygslåda: coachen hämtar tröskelpassen och ett par
+volympass, inte hela veckan. Pass utan struktur, som styrka, läggs in
+under Styrka.
+
 ### Säsongen ur planen
 
 Planens faser är säsongens perioder. Varje fas i en biblioteksplan har en

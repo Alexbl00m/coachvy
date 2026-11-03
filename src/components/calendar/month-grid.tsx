@@ -271,10 +271,15 @@ export function MonthGrid({
                           key={row.key}
                           draggable={drag ? true : undefined}
                           data-drag={drag ? JSON.stringify(drag) : undefined}
-                          title={drag ? `Dra för att flytta ${row.workout.title}` : undefined}
+                          title={
+                            drag
+                              ? `Dra för att flytta ${row.workout.title}`
+                              : undefined
+                          }
                           className={cn(
                             "flex min-w-0 items-center gap-1 rounded-sm text-[0.6875rem] leading-tight text-text-muted",
-                            drag && "cursor-grab hover:bg-surface-3 active:cursor-grabbing",
+                            drag &&
+                              "cursor-grab hover:bg-surface-3 active:cursor-grabbing",
                           )}
                         >
                           <SportIcon
