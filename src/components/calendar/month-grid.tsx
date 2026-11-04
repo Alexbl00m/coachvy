@@ -273,7 +273,7 @@ export function MonthGrid({
                           data-drag={drag ? JSON.stringify(drag) : undefined}
                           title={
                             drag
-                              ? `Dra för att flytta ${row.workout.title}`
+                              ? `${row.workout.title}: dra för att flytta, håll Ctrl (Alt på Mac) för att kopiera`
                               : undefined
                           }
                           className={cn(

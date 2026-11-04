@@ -15,6 +15,9 @@ export type StrengthResult =
 /**
  * Sparar ett styrkepass – nytt, eller ändrat när `id` finns. Adepten och
  * hennes coach får båda skriva (RLS: can_view_adept).
+ *
+ * Ett planerat pass är coachens mål för dagen. När adepten loggar det sparas
+ * samma rad som genomförd, med det som faktiskt gjordes.
  */
 export async function saveStrengthSession(input: {
   id?: string | null;
@@ -24,6 +27,8 @@ export async function saveStrengthSession(input: {
   exercises: unknown;
   note: string;
   sessionRpe: number | null;
+  /** Planerat eller genomfört; utan anges genomfört, som förut. */
+  status?: "planerad" | "genomförd";
 }): Promise<StrengthResult> {
   const user = await requireSessionUser();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.performedOn)) {
@@ -38,13 +43,16 @@ export async function saveStrengthSession(input: {
     return { ok: false, error: "RPE för passet är 0–10." };
   }
 
+  const status = input.status ?? "genomförd";
   const row = {
     adept_id: input.adeptId,
     performed_on: input.performedOn,
+    status,
     title: input.title.trim().slice(0, 80) || null,
     exercises,
     note: input.note.trim().slice(0, 1000) || null,
-    session_rpe: rpe,
+    // Ett planerat pass har ingen upplevd ansträngning än.
+    session_rpe: status === "planerad" ? null : rpe,
   };
 
   const supabase = await createClient();
@@ -69,9 +77,68 @@ export async function saveStrengthSession(input: {
     };
   }
 
-  revalidatePath(routes.strength);
-  revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
+  refresh(input.adeptId);
   return { ok: true, id };
+}
+
+function refresh(adeptId: string) {
+  revalidatePath(routes.strength);
+  revalidatePath(`${routes.adepts}/${adeptId}`, "layout");
+  revalidatePath(routes.calendar);
+  revalidatePath(routes.dashboard);
+}
+
+/** Flyttar ett planerat styrkepass till en annan dag. */
+export async function moveStrengthSession(
+  id: string,
+  date: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireSessionUser();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+    return { ok: false, error: "Välj ett datum." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("strength_sessions")
+    .update({ performed_on: date })
+    .eq("id", id)
+    .eq("status", "planerad")
+    .select("adept_id");
+  if (error) return { ok: false, error: `Kunde inte flytta: ${error.message}` };
+  if (!data || data.length === 0) {
+    return { ok: false, error: "Bara ett planerat styrkepass går att flytta." };
+  }
+  refresh(data[0].adept_id);
+  return { ok: true };
+}
+
+/** Kopierar ett styrkepass till en dag, som ett planerat pass med samma övningar. */
+export async function copyStrengthSession(
+  id: string,
+  date: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await requireSessionUser();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+    return { ok: false, error: "Välj ett datum." };
+  const supabase = await createClient();
+  const { data: original } = await supabase
+    .from("strength_sessions")
+    .select("adept_id, title, exercises, note")
+    .eq("id", id)
+    .maybeSingle();
+  if (!original) return { ok: false, error: "Passet hittades inte." };
+  const { error } = await supabase.from("strength_sessions").insert({
+    adept_id: original.adept_id,
+    performed_on: date,
+    status: "planerad",
+    title: original.title,
+    exercises: original.exercises,
+    note: original.note,
+    created_by: user.id,
+  });
+  if (error)
+    return { ok: false, error: `Kunde inte kopiera: ${error.message}` };
+  refresh(original.adept_id);
+  return { ok: true };
 }
 
 export async function deleteStrengthSession(
@@ -89,7 +156,6 @@ export async function deleteStrengthSession(
   if (!data || data.length === 0) {
     return { ok: false, error: "Passet hittades inte." };
   }
-  revalidatePath(routes.strength);
-  revalidatePath(`${routes.adepts}/${data[0].adept_id}`, "layout");
+  refresh(data[0].adept_id);
   return { ok: true };
 }

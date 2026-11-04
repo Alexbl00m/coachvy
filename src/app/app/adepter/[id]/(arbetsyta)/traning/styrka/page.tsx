@@ -12,15 +12,25 @@ export default async function AdeptStrengthPage({
 }: PageProps<"/app/adepter/[id]/traning/styrka">) {
   const { adept, asAdept } = await loadWorkspace(params);
   const query = await searchParams;
+  const value = (key: string) =>
+    typeof query[key] === "string" ? (query[key] as string) : null;
   if (asAdept) {
-    const andra = typeof query.andra === "string" ? query.andra : null;
-    redirect(`${routes.strength}${andra ? `?andra=${andra}` : ""}`);
+    // Ändra, logga och planera följer med till adeptens egen styrkesida.
+    const forward = new URLSearchParams();
+    for (const key of ["andra", "logga", "planera"]) {
+      const v = value(key);
+      if (v) forward.set(key, v);
+    }
+    const search = forward.toString();
+    redirect(`${routes.strength}${search ? `?${search}` : ""}`);
   }
   return (
     <StrengthSection
       adeptId={adept.id}
       basePath={adeptHref(adept.id, "styrka")}
-      editingId={typeof query.andra === "string" ? query.andra : null}
+      editingId={value("andra")}
+      loggingId={value("logga")}
+      planDate={value("planera")}
     />
   );
 }

@@ -51,7 +51,9 @@ export function StrengthProgress({
     <div className="space-y-5">
       <div>
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-[0.8125rem] font-medium text-text">Pass per vecka</p>
+          <p className="text-[0.8125rem] font-medium text-text">
+            Pass per vecka
+          </p>
           <p className="text-[0.75rem] text-text-subtle tabular-nums">
             {total} på åtta veckor · {sv(total / 8, 1)} per vecka
           </p>

@@ -30,21 +30,32 @@ const dateText = (iso: string) => {
   return `${WEEKDAYS[weekday]} ${d} ${MONTHS[m - 1]}`;
 };
 
-/** De loggade passen, nyast först, med ändra och ta bort. */
+/**
+ * De loggade passen, nyast först, med ändra och ta bort. Med `planned` är
+ * det de planerade passen, i datumordning, med en knapp som loggar passet.
+ */
 export function StrengthHistory({
   sessions,
   basePath,
+  planned = false,
+  today = null,
 }: {
   sessions: StrengthSession[];
   /** Sidan loggen ligger på; "Ändra" öppnar passet i formuläret där. */
   basePath: string;
+  /** Planerade pass i stället för loggade. */
+  planned?: boolean;
+  /** Dagens datum, för att märka planerade pass vars dag har passerat. */
+  today?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
 
   if (sessions.length === 0) {
     return (
-      <p className="text-[0.8125rem] text-text-subtle">Inga pass loggade ännu.</p>
+      <p className="text-[0.8125rem] text-text-subtle">
+        {planned ? "Inga planerade pass." : "Inga pass loggade ännu."}
+      </p>
     );
   }
 
@@ -57,6 +68,7 @@ export function StrengthHistory({
               {s.title || "Styrkepass"}
               <span className="ml-2 text-[0.75rem] font-normal text-text-subtle tabular-nums">
                 {dateText(s.performed_on)}
+                {planned && today && s.performed_on < today && " · inte loggat"}
                 {s.session_rpe !== null &&
                   ` · RPE ${String(s.session_rpe).replace(".", ",")}`}
               </span>
@@ -74,6 +86,14 @@ export function StrengthHistory({
             )}
           </div>
           <div className="flex shrink-0 items-start gap-1">
+            {planned && (
+              <Link
+                href={`${basePath}?logga=${s.id}`}
+                className="rounded-md px-2 py-1 text-[0.8125rem] font-medium text-accent-text hover:bg-surface-2"
+              >
+                Logga
+              </Link>
+            )}
             <Link
               href={`${basePath}?andra=${s.id}`}
               aria-label={`Ändra passet ${dateText(s.performed_on)}`}

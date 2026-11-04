@@ -45,4 +45,23 @@ describe("pass som dras i kalendern", () => {
     expect(parseDrag("https://example.com")).toBeNull();
     expect(parseDrag(JSON.stringify({ kind: "annat" }))).toBeNull();
   });
+
+  it("drar ett planerat styrkepass men inte ett loggat", () => {
+    expect(
+      dragOf({
+        id: "s1",
+        adeptId: "a",
+        title: "Styrka A",
+        strength: { status: "planerad" },
+      }),
+    ).toEqual({ kind: "styrka", id: "s1", adeptId: "a", title: "Styrka A" });
+    expect(
+      dragOf({
+        id: "s2",
+        adeptId: "a",
+        title: "Styrka A",
+        strength: { status: "genomförd" },
+      }),
+    ).toBeNull();
+  });
 });

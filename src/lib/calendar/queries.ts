@@ -10,7 +10,10 @@ import {
   sessionGoal,
   type SessionGoal,
 } from "@/lib/season/distribution";
+import { adeptHref } from "@/lib/routes";
 import { todayIso } from "@/lib/season/season";
+import { listStrengthBetween } from "@/lib/strength/queries";
+import { entryText } from "@/lib/strength/strength";
 import type { AdeptCheckinRow } from "@/lib/types/database";
 import { profileBlocks, type ProfileBlock } from "@/lib/workouts/blocks";
 import type { IntensityZone } from "@/lib/workouts/intensity";
@@ -54,6 +57,8 @@ export type CalendarWorkout = {
   fromPlan?: boolean;
   /** Passet i planen, för att flytta det: planen, passet och planveckan. */
   planRef?: { instanceId: string; sessionId: string; week: number };
+  /** Ett styrkepass: planerat av coachen eller loggat som gjort. */
+  strength?: { status: "planerad" | "genomförd" };
   /** Huvudsyftet och huvudzonen, räknade som i fördelningen (distribution.ts). */
   goal?: SessionGoal | null;
   zone?: IntensityZone | null;
@@ -96,11 +101,13 @@ export async function listScheduledWorkouts(
     .order("scheduled_for", { ascending: true });
   if (adeptId) query = query.eq("adept_id", adeptId);
 
-  const [{ data, error }, fromPlans] = await Promise.all([
+  const [{ data, error }, fromPlans, strength] = await Promise.all([
     query,
     // Passen ur planbiblioteket räknas fram ur planen och ligger med här,
     // så att kalendern och översikterna visar dem utan egen fråga.
     listPlanSessionsBetween(from, to, adeptId, todayIso()),
+    // De planerade styrkepassen står bland passen tills de är loggade.
+    listStrengthBetween(from, to, adeptId, "planerad"),
   ]);
   if (error) throw new Error(`Kunde inte hämta passen: ${error.message}`);
 
@@ -141,7 +148,39 @@ export async function listScheduledWorkouts(
       work: saved.blocks?.length ? workText(saved.blocks) : null,
     };
   });
-  return [...own, ...fromPlans].sort((a, b) => a.date.localeCompare(b.date));
+  const gym: CalendarWorkout[] = strength.map((s) => {
+    const done = s.status === "genomförd";
+    return {
+      id: s.id,
+      adeptId: s.adept_id,
+      adeptName: s.adept_name,
+      date: s.performed_on,
+      title: s.title || "Styrkepass",
+      sport: "annat",
+      duration: null,
+      summary:
+        [
+          s.exercises
+            .map((e) => {
+              const detail = entryText(e);
+              return detail === "–" ? e.name : `${e.name} ${detail}`;
+            })
+            .join(" · "),
+          done ? "genomfört" : null,
+        ]
+          .filter(Boolean)
+          .join(" · ") || null,
+      profile: [],
+      // Det planerade passet loggas, det loggade ändras.
+      href: `${adeptHref(s.adept_id, "styrka")}?${done ? "andra" : "logga"}=${s.id}`,
+      intent: s.note,
+      strength: { status: s.status },
+    };
+  });
+
+  return [...own, ...fromPlans, ...gym].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
 }
 
 export async function listSessionsBetween(

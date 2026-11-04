@@ -256,11 +256,13 @@ export type AdeptRaceRow = {
   updated_at: string;
 };
 
-/** Ett loggat styrkepass. Övningarna ligger som jsonb, se migrationen. */
+/** Ett styrkepass, planerat eller loggat. Övningarna ligger som jsonb, se migrationen. */
 export type StrengthSessionRow = {
   id: string;
   adept_id: string;
   performed_on: string;
+  /** planerad: lagt på en dag som mål; genomförd: loggat som gjort. */
+  status: "planerad" | "genomförd";
   title: string | null;
   exercises: unknown;
   note: string | null;

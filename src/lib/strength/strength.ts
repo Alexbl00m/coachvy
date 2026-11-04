@@ -32,7 +32,10 @@ export type StrengthEntry = {
 export type StrengthSession = {
   id: string;
   adept_id: string;
+  /** Dagen passet gjordes, eller är planerat. */
   performed_on: string;
+  /** planerad: coachens mål för dagen; genomförd: det som faktiskt gjordes. */
+  status: "planerad" | "genomförd";
   title: string | null;
   exercises: StrengthEntry[];
   note: string | null;

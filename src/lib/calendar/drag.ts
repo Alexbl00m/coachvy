@@ -18,6 +18,8 @@ export type DragPass =
       adeptId: string;
       title: string;
     }
+  /** Ett planerat styrkepass: får ny dag. */
+  | { kind: "styrka"; id: string; adeptId: string; title: string }
   /** Ett pass ur en plan i biblioteket: kopieras till adepten som ett eget pass. */
   | {
       kind: "mall";
@@ -32,8 +34,17 @@ export const DRAG_TYPE = "application/x-coachvy-pass";
 
 /** Passet som det dras, eller null för det som inte går att flytta. */
 export function dragOf(
-  w: Pick<CalendarWorkout, "id" | "adeptId" | "title" | "fromPlan" | "planRef">,
+  w: Pick<
+    CalendarWorkout,
+    "id" | "adeptId" | "title" | "fromPlan" | "planRef" | "strength"
+  >,
 ): DragPass | null {
+  if (w.strength) {
+    // Ett loggat styrkepass är gjort; det flyttas inte.
+    return w.strength.status === "planerad"
+      ? { kind: "styrka", id: w.id, adeptId: w.adeptId, title: w.title }
+      : null;
+  }
   if (w.planRef)
     return {
       kind: "planpass",
@@ -52,6 +63,8 @@ export function parseDrag(text: string): DragPass | null {
     if (value.kind === "pass" && typeof value.id === "string")
       return value as DragPass;
     if (value.kind === "planpass" && typeof value.instanceId === "string")
+      return value as DragPass;
+    if (value.kind === "styrka" && typeof value.id === "string")
       return value as DragPass;
     if (value.kind === "mall" && typeof value.sessionId === "string")
       return value as DragPass;

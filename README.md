@@ -1957,6 +1957,12 @@ planen (`moveSession`), så planen fortfarande vet var passet ligger.
 Dagspanelen har en knapp per pass som gör samma flytt utan att dra, för
 tangentbord och telefon (`MovePassButton`, `movePass`).
 
+Med Ctrl (Alt på Mac) nedtryckt när passet släpps kopieras det i stället:
+ett eget pass och ett styrkepass som de är (`copyWorkoutToDates`,
+`copyStrengthSession`), ett planpass som ett eget pass i nivån adepten har
+den veckan (`copyScheduledPlanSession`). Knappen i dagspanelen har samma
+val, Flytta eller Kopiera.
+
 Med en adept vald öppnar **Plan bredvid** en plan ur biblioteket bredvid
 kalendern (`?bredvid=<slug>&niva=<nivå>`, `plan-beside.tsx`), vecka för
 vecka i vald nivå. Ett pass som dras till en dag läggs in som adeptens
@@ -1965,6 +1971,19 @@ passbiblioteket (`copyPlanSession`), och följer sedan inte planen. Planen
 blir en verktygslåda: coachen hämtar tröskelpassen och ett par
 volympass, inte hela veckan. Pass utan struktur, som styrka, läggs in
 under Styrka.
+
+### Planerade styrkepass
+
+Ett styrkepass är planerat eller genomfört (`strength_sessions.status`).
+Coachen planerar ett pass på en dag under adeptens Styrka (`?planera=<dag>`,
+också från dagspanelen i kalendern), med övningar, set, repetitioner och
+vikt som mål och en instruktion. Det planerade passet står i kalendern,
+under Idag och på Läge, och går att dra till en annan dag. Adepten loggar
+det under Planerade pass (`?logga=<id>`): formuläret fylls i med målen,
+och samma rad sparas som genomförd med det som faktiskt gjordes.
+`listStrengthSessions` är bara de genomförda, så progressionen,
+veckoräkningen och AI-underlaget räknar som förut; `listPlannedStrength`
+och `listStrengthBetween` hämtar de planerade.
 
 ### Säsongen ur planen
 

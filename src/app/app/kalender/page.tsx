@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Columns2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns2, Dumbbell } from "lucide-react";
 
 import {
   groupByDay,
@@ -22,7 +22,7 @@ import {
   listScheduledWorkouts,
   listSessionsBetween,
 } from "@/lib/calendar/queries";
-import { routes } from "@/lib/routes";
+import { adeptHref, routes } from "@/lib/routes";
 import { listRacesBetween, listSeasonBlocks } from "@/lib/season/queries";
 import { listLibrary } from "@/lib/session-library/queries";
 import { listActivitiesBetween } from "@/lib/activities/queries";
@@ -307,11 +307,20 @@ export default async function KalenderPage({
               }
               action={
                 isCoach && adept ? (
-                  <AddFromLibrary
-                    sessions={library}
-                    adept={{ id: adept.id, full_name: adept.full_name }}
-                    date={selected}
-                  />
+                  <div className="space-y-3">
+                    <AddFromLibrary
+                      sessions={library}
+                      adept={{ id: adept.id, full_name: adept.full_name }}
+                      date={selected}
+                    />
+                    <Link
+                      href={`${adeptHref(adept.id, "styrka")}?planera=${selected}`}
+                      className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-accent-text hover:underline"
+                    >
+                      <Dumbbell aria-hidden className="size-4" />
+                      Planera styrkepass
+                    </Link>
+                  </div>
                 ) : null
               }
               showNames={showNames}

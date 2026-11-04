@@ -135,7 +135,9 @@ export async function AdeptToday({
 
   // Passen i dag som är coachens eller egna: de går till klockan härifrån.
   const saved = await Promise.all(
-    passToday.filter((w) => !w.fromPlan).map((w) => getWorkout(w.id)),
+    passToday
+      .filter((w) => !w.fromPlan && !w.strength)
+      .map((w) => getWorkout(w.id)),
   );
 
   // Trösklarna i grenen adepten senast testade.

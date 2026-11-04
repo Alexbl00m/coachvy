@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import type { Sport } from "@/lib/calculators/lactate";
 import { routes } from "@/lib/routes";
+import { todayIso } from "@/lib/season/season";
 import { toAdeptWorkout } from "@/lib/session-library/library";
 import { createClient } from "@/lib/supabase/server";
 import { saveWorkout } from "@/lib/workouts/actions";
@@ -12,6 +13,7 @@ import { contextForAdept } from "@/lib/workouts/generate";
 import type { WorkoutBlock } from "@/lib/workouts/schema";
 
 import { loadRunningFitness } from "./fitness";
+import { loadPlanView } from "./plan-view";
 
 export type CopyResult =
   | { ok: true; id: string; note: string | null }
@@ -120,4 +122,31 @@ export async function copyPlanSession(input: {
   revalidatePath(routes.calendar);
   revalidatePath(routes.dashboard);
   return { ok: true, id: saved.id, note: converted.note };
+}
+
+/**
+ * Kopierar ett pass i en startad plan till en dag, som ett eget pass i den
+ * nivå adepten har den veckan. Planen rörs inte.
+ */
+export async function copyScheduledPlanSession(input: {
+  instanceId: string;
+  sessionId: string;
+  week: number;
+  adeptId: string;
+  date: string;
+}): Promise<CopyResult> {
+  const view = await loadPlanView(input.instanceId, todayIso());
+  if (!view || view.instance.adept_id !== input.adeptId) {
+    return { ok: false, error: "Planen hittades inte." };
+  }
+  const scheduled = view.schedule
+    .find((w) => w.week === input.week)
+    ?.sessions.find((s) => s.session.id === input.sessionId);
+  if (!scheduled) return { ok: false, error: "Passet finns inte i planen." };
+  return copyPlanSession({
+    sessionId: input.sessionId,
+    levelId: scheduled.levelId,
+    adeptId: input.adeptId,
+    date: input.date,
+  });
 }

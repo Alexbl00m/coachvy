@@ -51,14 +51,21 @@ const emptyRow = (): Row => ({
 });
 
 /**
- * Loggar ett styrkepass. Snabbast är att skriva som i en kommentar – "FB 4x8
- * 50 kg, RM 4x8 70 kg" – och låta raden tolkas; övningarna hamnar i listan
- * och går att rätta innan passet sparas.
+ * Loggar eller planerar ett styrkepass. Snabbast är att skriva som i en
+ * kommentar – "FB 4x8 50 kg, RM 4x8 70 kg" – och låta raden tolkas;
+ * övningarna hamnar i listan och går att rätta innan passet sparas.
+ *
+ * Ett planerat pass har övningarna som mål och en instruktion i stället för
+ * RPE. När adepten loggar det fylls formuläret i med målen, och samma pass
+ * sparas som genomfört med det som faktiskt gjordes.
  */
 export function StrengthLogForm({
   adeptId,
   today,
   editing,
+  logging = null,
+  mode = "logga",
+  defaultDate = null,
   previous,
   basePath,
 }: {
@@ -68,18 +75,29 @@ export function StrengthLogForm({
   today: string;
   /** Passet som ändras, eller null för ett nytt. */
   editing: StrengthSession | null;
+  /** Det planerade pass som loggas som genomfört. */
+  logging?: StrengthSession | null;
+  /** Logga ett gjort pass eller planera ett på en dag. */
+  mode?: "logga" | "planera";
+  /** Dagen ett nytt pass förväljs på. */
+  defaultDate?: string | null;
   /** Det senaste passet, för "Som förra gången". */
   previous: StrengthSession | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [date, setDate] = useState(editing?.performed_on ?? today);
-  const [title, setTitle] = useState(editing?.title ?? "");
+  const source = editing ?? logging;
+  const planning = mode === "planera";
+  const [date, setDate] = useState(
+    source?.performed_on ?? defaultDate ?? today,
+  );
+  const [title, setTitle] = useState(source?.title ?? "");
   const [quick, setQuick] = useState("");
   const [rows, setRows] = useState<Row[]>(
-    editing ? editing.exercises.map(toRow) : [],
+    source ? source.exercises.map(toRow) : [],
   );
   const [rpe, setRpe] = useState(text(editing?.session_rpe ?? null));
+  // Den planerade instruktionen följer inte med in i loggens kommentar.
   const [note, setNote] = useState(editing?.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -116,7 +134,8 @@ export function StrengthLogForm({
         ...(parsed.length > 0 ? parsed.map(toRow) : []),
       ].filter((r) => r.name.trim());
       const result = await saveStrengthSession({
-        id: editing?.id ?? null,
+        id: source?.id ?? null,
+        status: planning ? "planerad" : "genomförd",
         adeptId,
         performedOn: date,
         title,
@@ -131,7 +150,7 @@ export function StrengthLogForm({
         sessionRpe: number(rpe),
       });
       if (!result.ok) return setError(result.error);
-      if (editing) {
+      if (source) {
         router.push(basePath);
         router.refresh();
         return;
@@ -140,7 +159,7 @@ export function StrengthLogForm({
       setQuick("");
       setNote("");
       setRpe("");
-      setDone("Sparat.");
+      setDone(planning ? "Planerat. Passet syns i kalendern." : "Sparat.");
       router.refresh();
     });
 
@@ -208,7 +227,7 @@ export function StrengthLogForm({
             </Button>
           </div>
         )}
-        {!editing && previous && rows.length === 0 && !quick && (
+        {!source && previous && rows.length === 0 && !quick && (
           <button
             type="button"
             onClick={copyPrevious}
@@ -319,26 +338,46 @@ export function StrengthLogForm({
         Lägg till övning
       </Button>
 
-      <div className="grid gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
-        <Field label="RPE för passet" htmlFor="styrka-rpe" optional>
-          <Input
-            id="styrka-rpe"
-            inputMode="decimal"
-            placeholder="0–10"
-            value={rpe}
-            onChange={(e) => setRpe(e.target.value)}
-          />
-        </Field>
-        <Field label="Kommentar" htmlFor="styrka-kommentar" optional>
-          <Input
+      {logging?.note && (
+        <p className="rounded-md bg-surface-2 px-3 py-2 text-[0.8125rem] text-text-muted">
+          <span className="font-medium text-text">Coachens instruktion:</span>{" "}
+          {logging.note}
+        </p>
+      )}
+
+      {planning ? (
+        <Field label="Instruktion" htmlFor="styrka-kommentar" optional>
+          <Textarea
             id="styrka-kommentar"
+            rows={2}
             value={note}
             maxLength={1000}
-            placeholder="Hur kändes det?"
+            placeholder="Tungt med god teknik, 2–3 minuters vila mellan seten."
             onChange={(e) => setNote(e.target.value)}
           />
         </Field>
-      </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
+          <Field label="RPE för passet" htmlFor="styrka-rpe" optional>
+            <Input
+              id="styrka-rpe"
+              inputMode="decimal"
+              placeholder="0–10"
+              value={rpe}
+              onChange={(e) => setRpe(e.target.value)}
+            />
+          </Field>
+          <Field label="Kommentar" htmlFor="styrka-kommentar" optional>
+            <Input
+              id="styrka-kommentar"
+              value={note}
+              maxLength={1000}
+              placeholder="Hur kändes det?"
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </Field>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="text-sm text-bad">
@@ -360,9 +399,17 @@ export function StrengthLogForm({
             (rows.every((r) => !r.name.trim()) && parsed.length === 0)
           }
         >
-          {pending ? "Sparar…" : editing ? "Spara ändringen" : "Spara passet"}
+          {pending
+            ? "Sparar…"
+            : editing
+              ? "Spara ändringen"
+              : logging
+                ? "Logga passet"
+                : planning
+                  ? "Planera passet"
+                  : "Spara passet"}
         </Button>
-        {editing && (
+        {source && (
           <Button
             type="button"
             variant="ghost"
