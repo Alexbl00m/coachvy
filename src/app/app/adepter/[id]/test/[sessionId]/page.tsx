@@ -11,7 +11,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { formatDate, digitsForMetric } from "@/lib/format";
 import { adeptHref } from "@/lib/routes";
-import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
+import { analyseSessionOnServer, profileVolRel } from "@/lib/tests/metabolic-profile";
 import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
@@ -117,6 +117,11 @@ export default async function SessionPage({
     session.protocol === "laktat-steg" && session.peak_intensity != null
       ? Number(session.peak_intensity)
       : null,
+    profileVolRel(
+      session.protocol,
+      session.sex ?? null,
+      session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
+    ),
   );
   // Kartan visar också adeptens tidigare tester med VO2max och VLamax.
   const mapPoints = curve
