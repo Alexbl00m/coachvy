@@ -13,7 +13,8 @@ import {
   type MetabolicPoint,
   type MetabolicThresholds,
 } from "@/lib/calculators/metabolic";
-import { analyseSessionOnServer } from "./metabolic-profile";
+import { runEngine, valueAtPower, type EngineResult } from "@/lib/metabolic";
+import { analyseSessionOnServer, profileVolRel } from "./metabolic-profile";
 import { toEfforts, type FullSession } from "./session-queries";
 import {
   fuelBand,
@@ -50,11 +51,34 @@ export function metabolicCurve(
   unit: string,
   weightKg: number | null,
   peak: number | null,
+  /** Satt för den metabola profilen: kurvan ritas då med den kalibrerade modellen. */
+  volRel: number | null = null,
 ): MetabolicCurve | null {
   if (unit !== "W" || !weightKg || !(weightKg > 0)) return null;
   const vo2max = valueOf(metrics, "VO2max");
   const vlamax = valueOf(metrics, "VLamax");
   if (vo2max === null || vlamax === null) return null;
+
+  // Varannan punkt räcker för att rita – 100 i stället för 200.
+  const thin = <T,>(rows: T[]) => rows.filter((_, i) => i % 2 === 1);
+
+  if (volRel !== null) {
+    const engine = (v: number) => runEngine({ bodyMass: weightKg, vo2max, vlamax: v, volRel });
+    const base = engine(vlamax);
+    const at = (power: number | null | undefined) => (power ? enginePoint(base, power) : null);
+    return {
+      points: thin(enginePoints(base, base.map)),
+      thresholds: {
+        anaerobicThreshold: at(base.at?.power),
+        fatMax: at(base.fatMax?.power),
+        carbMax: at(base.carbMax),
+      },
+      vo2max,
+      vlamax,
+      band: thin(fuelBand((v) => enginePoints(engine(v), base.map), vlamax)),
+      weightKg,
+    };
+  }
 
   const vo2maxPower =
     peak && peak > 0
@@ -72,8 +96,6 @@ export function metabolicCurve(
     weightKg,
   });
   if (profile.points.length === 0) return null;
-  // Varannan punkt räcker för att rita – 100 i stället för 200.
-  const thin = <T,>(rows: T[]) => rows.filter((_, i) => i % 2 === 1);
   return {
     points: thin(profile.points),
     thresholds: profile.thresholds,
@@ -83,6 +105,29 @@ export function metabolicCurve(
     weightKg,
   };
 }
+
+/** En punkt ur den kalibrerade modellen i den form diagrammen ritar. */
+function enginePoint(engine: EngineResult, power: number): MetabolicPoint {
+  const v = (key: "vlass" | "lacomb" | "net" | "choGh" | "fatGh" | "demand") =>
+    valueAtPower(engine, power, key) ?? 0;
+  const round = (n: number, d: number) => Number(n.toFixed(d));
+  return {
+    power: round(power, 2),
+    percentOfMax: round((power / engine.map) * 100, 1),
+    // Syrebehovet, så att kurvan är rak mot effekten som i den äldre modellen.
+    vo2: round(v("demand"), 2),
+    lactateProduction: round(v("vlass"), 3),
+    lactateCombustion: round(v("lacomb"), 3),
+    lactateNet: round(Math.max(v("net"), 0), 3),
+    carbsPerHour: round(Math.max(v("choGh"), 0), 1),
+    fatPerHour: round(Math.max(v("fatGh"), 0), 1),
+    heartRate: null,
+  };
+}
+
+/** 200 punkter upp till `top` watt: samma effekter oavsett VLamax, så att bandet går att lägga bredvid. */
+const enginePoints = (engine: EngineResult, top: number) =>
+  Array.from({ length: 200 }, (_, i) => enginePoint(engine, ((i + 1) * top) / 200));
 
 /** Bränslet i varje zon, vid zonens mitt. */
 export const fuelByZone = (zones: ZoneRow[], curve: MetabolicCurve) =>
@@ -137,6 +182,7 @@ export function metabolicHistory(
         s.intensity_unit,
         n(s.weight_kg),
         s.protocol === "laktat-steg" ? n(s.peak_intensity) : null,
+        profileVolRel(s.protocol, s.sex ?? null, n(s.body_fat_pct)),
       );
       return curve
         ? [

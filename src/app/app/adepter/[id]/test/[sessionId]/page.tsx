@@ -11,7 +11,14 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { planSuggestions } from "@/lib/plan-library/suggestions";
 import { formatDate, digitsForMetric } from "@/lib/format";
 import { adeptHref } from "@/lib/routes";
-import { analyseSessionOnServer } from "@/lib/tests/metabolic-profile";
+import {
+  analyseSessionOnServer,
+  metabolicProfile,
+  profileVolRel,
+} from "@/lib/tests/metabolic-profile";
+import { compareProfiles } from "@/lib/tests/since-last";
+import { FuelSlider } from "@/components/tests/fuel-slider";
+import { SinceLastTest } from "@/components/tests/since-last-test";
 import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
@@ -117,10 +124,34 @@ export default async function SessionPage({
     session.protocol === "laktat-steg" && session.peak_intensity != null
       ? Number(session.peak_intensity)
       : null,
+    profileVolRel(
+      session.protocol,
+      session.sex ?? null,
+      session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
+    ),
   );
+  const isProfile = session.protocol === "metabol-profil";
+  const fullSessions = curve || isProfile ? await listFullSessions(adept.id) : [];
+  // Den metabola profilen jämförs med adeptens förra, omräknad med samma modell.
+  const previous = isProfile
+    ? fullSessions
+        .filter((s) => s.protocol === "metabol-profil" && s.performed_on < session.performed_on)
+        .sort((a, b) => b.performed_on.localeCompare(a.performed_on))[0]
+    : undefined;
+  const changes = previous
+    ? compareProfiles(
+        recomputed.metrics,
+        metabolicProfile(
+          toEfforts(previous.test_efforts),
+          previous.weight_kg != null ? Number(previous.weight_kg) : null,
+          previous.body_fat_pct != null ? Number(previous.body_fat_pct) : null,
+          previous.sex ?? null,
+        ).metrics,
+      )
+    : [];
   // Kartan visar också adeptens tidigare tester med VO2max och VLamax.
   const mapPoints = curve
-    ? (await listFullSessions(adept.id))
+    ? fullSessions
         .filter((s) => s.sport === "cykling" && s.id !== session.id)
         .flatMap((s) => {
           const v = (key: string) =>
@@ -324,6 +355,10 @@ export default async function SessionPage({
       )}
 
       <div className="space-y-6">
+        {previous && (
+          <SinceLastTest rows={changes} previousDate={previous.performed_on} />
+        )}
+
         {suggestion && (
           <Card level="lead">
             <CardLabel aside="ur testet och huvudloppet">Planförslag</CardLabel>
@@ -432,6 +467,13 @@ export default async function SessionPage({
             map={mapPoints}
             band={curve.band}
             weightKg={curve.weightKg}
+          />
+        )}
+
+        {curve && (
+          <FuelSlider
+            points={curve.points}
+            atPower={curve.thresholds.anaerobicThreshold?.power ?? null}
           />
         )}
 

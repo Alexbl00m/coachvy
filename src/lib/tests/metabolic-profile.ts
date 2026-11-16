@@ -11,8 +11,7 @@ import "server-only";
 
 import { calculateCriticalPower, isError } from "@/lib/calculators/critical-power";
 import { calculateMetabolicProfile } from "@/lib/calculators/metabolic";
-import { predictVlamax, sprintPerFfm } from "@/lib/vlamax/model";
-import { BUILT_IN_SAMPLES } from "@/lib/vlamax/reference";
+import { analyzeRemoteTest, CP_EFFORT_RANGE, lactateDistributionVolume } from "@/lib/metabolic";
 import {
   analyseSession,
   anaerobicProfile,
@@ -230,25 +229,28 @@ function withStepTestProfile(args: AnalysisArgs, base: SessionAnalysis): Session
 
 const sv1 = (n: number, digits = 0) => n.toFixed(digits).replace(".", ",");
 
+const toModelSex = (sex: "man" | "kvinna") => (sex === "kvinna" ? "female" : "male");
+
+/**
+ * Laktatets fördelningsvolym för den metabola profilen, så att kurvan ritas
+ * med samma modell som nyckeltalen. Null för andra protokoll.
+ */
+export const profileVolRel = (
+  protocol: string,
+  sex: "man" | "kvinna" | null,
+  bodyFatPct: number | null,
+) =>
+  protocol === "metabol-profil" && sex && bodyFatPct !== null && bodyFatPct > 0
+    ? lactateDistributionVolume(toModelSex(sex), bodyFatPct)
+    : null;
+
 /**
  * En sprint och tre maxinsatser – ett batteri för metabol profilering.
  *
- * Kedjan är fyra steg, och varje steg går att pröva för sig:
- *
- * 1. CP och W′ ur 3, 6 och 12 minuter – den vanliga hyperbolen, inget nytt.
- * 2. VLamax ur sprinten per kilo fettfri massa, mot de sexton atleter i
- *    referensdatan där VLamax bestämts i en extern metabol profilering.
- * 3. VO2max ur 6-minuterseffekten med ACSM-ekvationen. Profileringens egen
- *    syreupptagskurva är ACSM-lik: den återger dess %VO2max vid tröskeln
- *    inom en procentenhet. Och dess effekt vid VO2max ligger på 6-minuten.
- * 4. Tröskel och FatMax ur Mader-modellen med de två talen ovan.
- *
- * Prövat mot tre externa profileringar: matad med deras egna VO2max och VLamax
- * gav steg 4 tröskeln 301/294/374 W mot deras 303/303/374, alltså stämmer
- * modellen. Hela kedjan från rådata, med varje atlet utelämnad ur
- * VLamax-referensdatan när hens egen VLamax skattades, gav tröskeln 6 och 17 W
- * lägre och FatMax +6 och −6 W mot profileringen på de två rena testen. Det
- * tredje hade en för lugnt körd 6-minut, och det är kontrollen längre ned till för.
+ * CP och W′ kommer ur hyperbolen genom de längre insatserna. VO2max och
+ * VLamax skattas av den kalibrerade modellen i `@/lib/metabolic`, som väger
+ * ihop sprinten, 3-minuten och CP, och tröskel och FatMax följer ur dem.
+ * Kalibrering och validering står i `src/lib/metabolic/README.md`.
  */
 export function metabolicProfile(
   efforts: Effort[],
@@ -314,142 +316,71 @@ export function metabolicProfile(
     metric("FTP", "FTP", cp.criticalPower * 0.95, "W", { method: "0,95 × CP" }),
   ];
 
-  // --- 6-minuten: effekten vid VO2max --------------------------------------
+  // --- VO2max, VLamax, tröskel och FatMax ----------------------------------
   //
-  // Den mest pacingkänsliga insatsen i batteriet. Går den för lugnt blir
-  // VO2max för lågt, och det fortplantar sig till tröskeln. Kontrollen:
-  // hyperbolen genom 3 och 12 minuter förutsäger 6-minuten, och på rena
-  // test har den faktiska legat 12–16 W över. Under är ett tecken.
-  const six = long
-    .filter((e) => Math.abs(e.durationSeconds - 360) <= 45)
-    .sort((a, b) => Math.abs(a.durationSeconds - 360) - Math.abs(b.durationSeconds - 360))[0];
-  const shortest = long[0];
-  const longest = long[long.length - 1];
-
-  let mapPower: number;
-  let mapMethod: string;
-  if (six) {
-    mapPower = six.intensity;
-    mapMethod = `${sv1(six.durationSeconds / 60, six.durationSeconds % 60 === 0 ? 0 : 1)} min`;
-
-    if (shortest !== six && longest !== six && shortest.durationSeconds < six.durationSeconds && longest.durationSeconds > six.durationSeconds) {
-      const workShort = shortest.intensity * shortest.durationSeconds;
-      const workLong = longest.intensity * longest.durationSeconds;
-      const cp2 = (workLong - workShort) / (longest.durationSeconds - shortest.durationSeconds);
-      const w2 = workShort - cp2 * shortest.durationSeconds;
-      const expected = cp2 + w2 / six.durationSeconds;
-      if (six.intensity < expected) {
-        warnings.push(
-          `6-minuten ligger ${Math.round(expected - six.intensity)} W under vad 3 och 12 minuter förutsäger (${Math.round(expected)} W). På rena test ligger den över, så den kördes troligen för lugnt. VO2max, tröskel och FatMax blir då för låga – kör om den om det går.`,
+  // Den kalibrerade modellen i `@/lib/metabolic`: sprinten, 3-minuten och CP
+  // vägs ihop till VO2max och VLamax, och flaggorna säger när testen pekar åt
+  // olika håll eller när ett av dem avviker från hyperbolen.
+  let at: number | null = null;
+  if (!(weightKg && weightKg > 0) || bodyFatPct === null || !(bodyFatPct > 0) || !sex) {
+    warnings.push(
+      "Vikt, kroppsfett och kön behövs för VO2max, VLamax, tröskel och FatMax. Laktatets fördelningsvolym räknas ur kroppsfettet.",
+    );
+  } else {
+    const sprintOk = sprint && sprint.durationSeconds >= 5 && sprint.durationSeconds <= 35;
+    if (sprint && !sprintOk) {
+      warnings.push("Sprinten används inte: den ska vara 5–35 sekunder, helst 15–20.");
+    }
+    const result = analyzeRemoteTest({
+      bodyMass: weightKg,
+      bodyFatPct,
+      sex: toModelSex(sex),
+      sprint: sprintOk ? { durationSec: sprint.durationSeconds, power: sprint.intensity } : null,
+      efforts: long
+        .filter((e) => e.durationSeconds <= CP_EFFORT_RANGE.max)
+        .map((e) => ({ durationSec: e.durationSeconds, power: e.intensity })),
+    });
+    if (!result.ok) {
+      warnings.push(...result.errors.map((f) => `${f.title}. ${f.message}`));
+    } else {
+      const { estimate, spread } = result;
+      const engine = estimate.engine;
+      at = engine.at?.power ?? null;
+      metrics.push(
+        metric("VO2max", "VO2max", estimate.vo2max, "ml/kg/min", {
+          method: `ur effekttesterna, ±${sv1(spread.vo2max, 1)}`,
+          isPrimary: true,
+          spread: spread.vo2max,
+        }),
+        metric("VLamax", "VLamax", estimate.vlamax, "mmol/l/s", {
+          method: `±${sv1(spread.vlamax, 2)}`,
+          isPrimary: true,
+          spread: spread.vlamax,
+        }),
+      );
+      if (engine.at) {
+        metrics.push(
+          metric("AT", "Anaerob tröskel", engine.at.power, "W", {
+            method: `troligen ${sv1(engine.at.power - spread.at)}–${sv1(engine.at.power + spread.at)} W`,
+            isPrimary: true,
+            spread: spread.at,
+          }),
         );
       }
-    }
-  } else {
-    // Utan en 6-minut får hyperbolen stå för den. En 5-minut direkt vore
-    // närmare till hands men ger för hög effekt: VO2max-effekten i
-    // referensprofileringarna ligger på 6-minuten, inte på den kortaste insatsen som når dit.
-    mapPower = cp.criticalPower + (cp.wPrime * 1000) / 360;
-    mapMethod = "CP + W′/360 s";
-    warnings.push(
-      `Ingen insats på 6 minuter. Effekten vid VO2max är tagen ur hyperbolen i stället (${Math.round(mapPower)} W), vilket gör VO2max och tröskeln något osäkrare.`,
-    );
-  }
-
-  let vo2max: number | null = null;
-  if (weightKg && weightKg > 0) {
-    vo2max = (10.8 * mapPower) / weightKg + 7;
-  } else {
-    warnings.push("Vikt saknas – VO2max, tröskel och FatMax kräver den.");
-  }
-
-  // --- VLamax ur sprinten -------------------------------------------------
-  let vlamax: number | null = null;
-  let vlamaxMetric: Metric | null = null;
-  if (!sprint) {
-    warnings.push(
-      "Ingen sprint under en minut. VLamax, och därmed tröskel och FatMax, kräver den.",
-    );
-  } else if (!(weightKg && weightKg > 0) || bodyFatPct === null || !(bodyFatPct > 0) || !sex) {
-    warnings.push(
-      "Kroppsfett och kön behövs för VLamax. VLamax är glykolytisk förmåga per muskelmassa, och utan fettfri massa finns ingen muskelmassa att räkna på.",
-    );
-  } else {
-    const prediction = predictVlamax(BUILT_IN_SAMPLES, {
-      sex,
-      weightKg,
-      bodyFatPct,
-      sprintSeconds: sprint.durationSeconds,
-      wattAvg: sprint.intensity,
-    });
-    if (prediction && prediction.value > 0) {
-      vlamax = prediction.value;
-      const perFfm = sprintPerFfm(sprint.intensity, weightKg, bodyFatPct);
-      vlamaxMetric = metric("VLamax", "VLamax", prediction.value, "mmol/l/s", {
-        method:
-          prediction.outOfRange.length > 0
-            ? "extrapolerad utanför referensdatan"
-            : `${sv1(perFfm, 1)} W/kg fettfri massa`,
-        isPrimary: true,
-      });
-      if (prediction.outOfRange.length > 0) {
-        warnings.push(
-          `VLamax är en extrapolation: ${prediction.outOfRange
-            .map((o) => `${o.label.toLowerCase()} ${sv1(o.value, 1)} ${o.unit} mot ${sv1(o.min, 1)}–${sv1(o.max, 1)} i referensdatan`)
-            .join(", ")}. Tröskel och FatMax vilar på den och är lika osäkra.`,
+      if (engine.fatMax) {
+        metrics.push(
+          metric("FatMax", "FatMax", engine.fatMax.power, "W", {
+            method: `troligen ${sv1(engine.fatMax.power - spread.fatMax)}–${sv1(engine.fatMax.power + spread.fatMax)} W`,
+            isPrimary: true,
+            spread: spread.fatMax,
+          }),
         );
       }
       warnings.push(
-        `VLamax skattas ur ${prediction.sampleCount} referensatleter med känd VLamax. Typiskt fel på en ny atlet: ±${sv1(prediction.rmse, 2)} mmol/l/s.`,
+        ...result.flags.map((f) => `${f.title}. ${f.message}`),
+        "VO2max, VLamax, tröskel och FatMax är modellskattningar ur effekttesterna, med ± för normala mätfel. Modellen är kalibrerad mot tre externa metabola profileringar och kontrollerad mot laktattester.",
       );
     }
-  }
-
-  // --- Tröskel och FatMax -------------------------------------------------
-  let at: number | null = null;
-  let fatMax: number | null = null;
-  if (vo2max !== null && vlamax !== null && weightKg) {
-    const profile = calculateMetabolicProfile({
-      vo2max,
-      vlamax,
-      vo2maxPower: mapPower,
-      weightKg,
-    });
-    at = profile.thresholds.anaerobicThreshold?.power ?? null;
-    fatMax = profile.thresholds.fatMax?.power ?? null;
-  }
-
-  if (vo2max !== null) {
-    metrics.push(
-      metric("VO2max", "VO2max", vo2max, "ml/kg/min", {
-        method: `ACSM på ${mapMethod}`,
-        isPrimary: true,
-      }),
-    );
-  }
-  if (vlamaxMetric) metrics.push(vlamaxMetric);
-  if (at !== null) {
-    metrics.push(
-      metric("AT", "Anaerob tröskel", at, "W", { method: "Mader", isPrimary: true }),
-    );
-  }
-  if (fatMax !== null) {
-    metrics.push(
-      metric("FatMax", "FatMax", fatMax, "W", { method: "Mader", isPrimary: true }),
-    );
-  }
-  // Två oberoende vägar till ungefär samma ställe: CP ur hyperbolen och
-  // tröskeln ur modellen. De brukar ligga inom tio procent av varandra – på de
-  // rena jämförelsetesten 2–5 %. Mycket större glapp betyder att VO2max eller
-  // VLamax är fel, och oftast är det 6-minuten.
-  if (at !== null && at < 0.88 * cp.criticalPower) {
-    warnings.push(
-      `Tröskeln hamnar på ${Math.round((at / cp.criticalPower) * 100)} % av CP. Två oberoende mått brukar ligga inom tio procent av varandra, så något i kedjan stämmer inte – oftast en för lugn 6-minut eller en sprint som inte var all-out.`,
-    );
-  }
-  if (at !== null || fatMax !== null) {
-    warnings.push(
-      "Tröskel och FatMax räknas med Mader-modellen ur VO2max och VLamax. Jämfört med tre externa metabola profileringar av samma atleter hamnade tröskeln 6–17 W lägre och FatMax inom ±6 W på rena test.",
-    );
   }
 
   metrics.push(...cpMetrics);

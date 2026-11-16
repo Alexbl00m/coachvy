@@ -74,6 +74,8 @@ export type Metric = {
   unit: string;
   method?: string;
   isPrimary: boolean;
+  /** Osäkerhet (1 SD) i samma enhet, där modellen räknar fram den. */
+  spread?: number;
 };
 
 export type SessionAnalysis = {
@@ -118,7 +120,7 @@ export const metric = (
   label: string,
   value: number,
   unit: string,
-  options: { method?: string; isPrimary?: boolean } = {},
+  options: { method?: string; isPrimary?: boolean; spread?: number } = {},
 ): Metric => ({
   key,
   label,
@@ -126,6 +128,7 @@ export const metric = (
   unit,
   method: options.method,
   isPrimary: options.isPrimary ?? false,
+  spread: options.spread,
 });
 
 /**
