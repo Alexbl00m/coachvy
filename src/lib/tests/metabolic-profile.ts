@@ -350,25 +350,29 @@ export function metabolicProfile(
         metric("VO2max", "VO2max", estimate.vo2max, "ml/kg/min", {
           method: `ur effekttesterna, ±${sv1(spread.vo2max, 1)}`,
           isPrimary: true,
+          spread: spread.vo2max,
         }),
         metric("VLamax", "VLamax", estimate.vlamax, "mmol/l/s", {
           method: `±${sv1(spread.vlamax, 2)}`,
           isPrimary: true,
+          spread: spread.vlamax,
         }),
       );
       if (engine.at) {
         metrics.push(
           metric("AT", "Anaerob tröskel", engine.at.power, "W", {
-            method: `Mader, ±${sv1(spread.at)} W`,
+            method: `troligen ${sv1(engine.at.power - spread.at)}–${sv1(engine.at.power + spread.at)} W`,
             isPrimary: true,
+            spread: spread.at,
           }),
         );
       }
       if (engine.fatMax) {
         metrics.push(
           metric("FatMax", "FatMax", engine.fatMax.power, "W", {
-            method: `Mader, ±${sv1(spread.fatMax)} W`,
+            method: `troligen ${sv1(engine.fatMax.power - spread.fatMax)}–${sv1(engine.fatMax.power + spread.fatMax)} W`,
             isPrimary: true,
+            spread: spread.fatMax,
           }),
         );
       }
