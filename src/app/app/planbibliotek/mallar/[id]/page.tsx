@@ -356,6 +356,9 @@ export default async function PlanTemplatePage({
             volumeUnit={domain.volumeUnit}
             levelId={previewLevel.id}
             disciplineName={disciplineName}
+            sportOf={(key) =>
+              disciplines.find((d) => d.key === key)?.structure_sport ?? null
+            }
           />
         </div>
       )}

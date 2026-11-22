@@ -18,8 +18,10 @@ import {
   listLibrary,
   loadPublishedBySlug,
 } from "@/lib/plan-library/queries";
+import { variantLoad } from "@/lib/plan-library/load";
 import { defaultLevel } from "@/lib/plan-library/queue";
 import { categoriesForSport } from "@/lib/plan-library/sports";
+import { tssText } from "@/lib/workouts/load";
 
 import { SportIcon } from "./calendar-items";
 import { MovePassButton } from "./move-pass-button";
@@ -185,12 +187,14 @@ export async function PlanBeside({
                           title: session.title,
                         }
                       : null;
+                  const load = variantLoad(variant, sport);
                   const meta = [
                     session.day !== null
                       ? DAY_SHORT[session.day]
                       : "Valfri dag",
                     hoursMinutes(variant.durationS),
                     variant.zone,
+                    load && `${load.kind} ${tssText(load.tss)}`,
                   ]
                     .filter(Boolean)
                     .join(" · ");

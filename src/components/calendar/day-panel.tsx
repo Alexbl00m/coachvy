@@ -24,6 +24,7 @@ import { toCheckin } from "@/lib/training/queries";
 import type { TrainingBlockRow } from "@/lib/types/database";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { dragOf } from "@/lib/calendar/drag";
+import { ifText, loadLine, tssText } from "@/lib/workouts/load";
 import { SportIcon, TestIcon, type DayItems } from "./calendar-items";
 import { MovePassButton } from "./move-pass-button";
 
@@ -152,6 +153,9 @@ export function DayContent({
                   a.distance_m !== null &&
                     `${sv(Math.round(a.distance_m / 100) / 10)} km`,
                   a.duration_s !== null && formatClock(a.duration_s),
+                  a.summary.tss !== null && `TSS ${tssText(a.summary.tss)}`,
+                  a.summary.intensityFactor !== null &&
+                    `IF ${ifText(a.summary.intensityFactor)}`,
                   a.summary.normalizedPower !== null &&
                     `NP ${Math.round(a.summary.normalizedPower)} W`,
                 ]
@@ -183,6 +187,12 @@ export function DayContent({
                     {[w.duration, w.summary].filter(Boolean).join(" · ") ||
                       "Pass"}
                   </span>
+                  {w.load && (
+                    <span className="mt-0.5 block text-[0.75rem] tabular-nums text-text-muted">
+                      {loadLine(w.load)}
+                      {w.load.partial && " · utan stegen i meter"}
+                    </span>
+                  )}
                   <WorkoutStrip blocks={w.profile} className="mt-2 h-6" />
                 </span>
               </ItemLink>
@@ -260,7 +270,7 @@ export function DayPanel({
   /** Periodens egna namn, när coachen gett den ett. */
   blockName?: string | null;
   showNames: boolean;
-  /** Det som går att göra med dagen, som att lägga in ett pass eller flytta veckan. */
+  /** Det som går att göra med dagen, som att lägga in ett pass. */
   action?: React.ReactNode;
   /** Passen går att flytta till en annan dag. */
   movable?: boolean;

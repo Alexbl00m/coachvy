@@ -5,6 +5,7 @@ import { phaseFill } from "@/components/season/phase-style";
 import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
 import { dragOf, type DragWeek } from "@/lib/calendar/drag";
+import type { WeekLoad } from "@/lib/calendar/week-load";
 import { callTime } from "@/lib/calls/time";
 import { cn } from "@/lib/cn";
 import {
@@ -14,6 +15,7 @@ import {
   weekdayName,
 } from "@/lib/season/season";
 import type { TrainingBlockRow } from "@/lib/types/database";
+import { hoursText, tssText, type LoadTotals } from "@/lib/workouts/load";
 import {
   SportIcon,
   TestIcon,
@@ -23,6 +25,21 @@ import {
 } from "./calendar-items";
 
 const WEEKDAYS = ["mån", "tis", "ons", "tor", "fre", "lör", "sön"];
+
+/** Veckans summa i kolumnen till höger: tid och TSS. */
+function WeekSum({ label, totals }: { label: string; totals: LoadTotals }) {
+  return (
+    <span className="flex flex-col">
+      <span className="text-[0.625rem] uppercase tracking-[0.08em] text-text-subtle">
+        {label}
+      </span>
+      <span className="font-medium text-text">{hoursText(totals.seconds)}</span>
+      {totals.tss > 0 && (
+        <span className="text-text-muted">TSS {tssText(totals.tss)}</span>
+      )}
+    </span>
+  );
+}
 const MAX_ROWS = 3;
 
 function describe(date: string, items: DayItems): string {
@@ -61,6 +78,7 @@ export function MonthGrid({
   hrefFor,
   movable = false,
   weekAdeptId = null,
+  weekLoads = null,
 }: {
   month: string;
   today: string;
@@ -74,7 +92,13 @@ export function MonthGrid({
   movable?: boolean;
   /** Adepten vars vecka går att dra till en annan vecka. */
   weekAdeptId?: string | null;
+  /** Veckornas summa, nyckel måndagen: en kolumn till höger med tid och TSS. */
+  weekLoads?: Map<string, WeekLoad> | null;
 }) {
+  // Rutnätet får en kolumn till för veckans summa när den finns.
+  const columns = weekLoads
+    ? "sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))_5.5rem]"
+    : "sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]";
   const weekMovable = movable && weekAdeptId !== null;
   const dates = monthDates(month);
   const weeks = Array.from({ length: dates.length / 7 }, (_, i) =>
@@ -83,7 +107,12 @@ export function MonthGrid({
 
   return (
     <div className="overflow-hidden rounded-lg border border-line">
-      <div className="grid grid-cols-7 border-b border-line bg-surface-2/60 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]">
+      <div
+        className={cn(
+          "grid grid-cols-7 border-b border-line bg-surface-2/60 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-subtle",
+          columns,
+        )}
+      >
         <span className="hidden px-2 py-2 sm:block" aria-hidden>
           v.
         </span>
@@ -92,6 +121,11 @@ export function MonthGrid({
             {d}
           </span>
         ))}
+        {weekLoads && (
+          <span className="hidden border-l border-line px-1.5 py-2 sm:block">
+            Vecka
+          </span>
+        )}
       </div>
 
       {weeks.map((week) => {
@@ -117,7 +151,8 @@ export function MonthGrid({
             key={week[0]}
             data-drop-week={weekMovable ? week[0] : undefined}
             className={cn(
-              "grid grid-cols-7 border-b border-line last:border-b-0 sm:grid-cols-[2.25rem_repeat(7,minmax(0,1fr))]",
+              "grid grid-cols-7 border-b border-line last:border-b-0",
+              columns,
               "data-[drop-over]:bg-accent/10 data-[drop-over]:ring-2 data-[drop-over]:ring-inset data-[drop-over]:ring-accent",
             )}
           >
@@ -361,9 +396,22 @@ export function MonthGrid({
                 </Link>
               );
             })}
+            {weekLoads && <WeekCell load={weekLoads.get(week[0]) ?? null} />}
           </div>
         );
       })}
     </div>
+  );
+}
+
+/** Veckans summa: planen och, när något är gjort, det genomförda. */
+function WeekCell({ load }: { load: WeekLoad | null }) {
+  const planned = load && load.planned.sessions > 0 ? load.planned : null;
+  const done = load && load.done.sessions > 0 ? load.done : null;
+  return (
+    <span className="hidden min-w-0 flex-col gap-1.5 border-l border-line bg-surface-2/30 px-1.5 py-1.5 text-[0.6875rem] leading-tight tabular-nums sm:flex">
+      {planned && <WeekSum label="Plan" totals={planned} />}
+      {done && <WeekSum label="Gjort" totals={done} />}
+    </span>
   );
 }

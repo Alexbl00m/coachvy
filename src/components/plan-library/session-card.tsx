@@ -3,17 +3,21 @@ import { cn } from "@/lib/cn";
 import { distanceText, hoursMinutes } from "@/lib/plan-library/labels";
 import { templateProfile } from "@/lib/plan-library/profile";
 import type { TemplateSession, Variant } from "@/lib/plan-library/types";
+import { tssText, type WorkoutLoad } from "@/lib/workouts/load";
 
-/** Ett pass i en vecka: namnet, tiden, zonen och profilen. */
+/** Ett pass i en vecka: namnet, tiden, zonen, TSS och profilen. */
 export function SessionCard({
   session,
   variant,
   disciplineName,
+  load = null,
   className,
 }: {
   session: TemplateSession;
   variant: Variant;
   disciplineName: string;
+  /** Passets TSS, när det har steg att räkna på. */
+  load?: WorkoutLoad | null;
   className?: string;
 }) {
   const profile = templateProfile(variant.blocks, variant.basis);
@@ -21,6 +25,7 @@ export function SessionCard({
     hoursMinutes(variant.durationS),
     distanceText(variant.distanceM),
     variant.zone,
+    load && `${load.kind} ${tssText(load.tss)}`,
   ].filter(Boolean);
   return (
     <span className={cn("block min-w-0", className)}>

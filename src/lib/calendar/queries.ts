@@ -17,6 +17,7 @@ import { entryText } from "@/lib/strength/strength";
 import type { AdeptCheckinRow } from "@/lib/types/database";
 import { profileBlocks, type ProfileBlock } from "@/lib/workouts/blocks";
 import type { IntensityZone } from "@/lib/workouts/intensity";
+import { workoutLoad, type WorkoutLoad } from "@/lib/workouts/load";
 import { workText } from "@/lib/workouts/summary";
 import {
   formatDuration,
@@ -49,6 +50,8 @@ export type CalendarWorkout = {
   sport: Sport | "annat";
   /** Passets längd ur stegen, "1:15:00". null när den inte går att räkna. */
   duration: string | null;
+  /** Samma längd i sekunder, för veckans summa. */
+  seconds?: number | null;
   summary: string | null;
   /** Stegen som block, för miniatyrprofilen. Tom när passet inte går att lösa upp. */
   profile: ProfileBlock[];
@@ -70,6 +73,8 @@ export type CalendarWorkout = {
   structure?: string | null;
   /** Arbetet i passets repetition: "3×5 min". */
   work?: string | null;
+  /** TSS, IF, NP och kJ, när passet har steg att räkna på. */
+  load?: WorkoutLoad | null;
 };
 
 export type CalendarTest = {
@@ -119,6 +124,7 @@ export async function listScheduledWorkouts(
       reference: Number(row.reference),
     };
     let duration: string | null = null;
+    let seconds: number | null = null;
     let profile: ProfileBlock[] = [];
     try {
       const resolved = resolveWorkout(toWorkout(saved), saved.reference);
@@ -126,6 +132,7 @@ export async function listScheduledWorkouts(
         resolved.totalSeconds > 0
           ? formatDuration(resolved.totalSeconds)
           : null;
+      seconds = resolved.totalSeconds > 0 ? resolved.totalSeconds : null;
       profile = profileBlocks(resolved.steps, saved.reference, saved.basis);
     } catch {
       // Ett pass som inte går att lösa upp visas ändå, utan längd och profil.
@@ -139,6 +146,7 @@ export async function listScheduledWorkouts(
       title: saved.title,
       sport: saved.sport,
       duration,
+      seconds,
       summary: saved.summary,
       profile,
       goal: sessionGoal(workout, saved.reference),
@@ -146,6 +154,7 @@ export async function listScheduledWorkouts(
       intent: saved.summary,
       structure: saved.blocks?.length ? formatStructure(saved.blocks) : null,
       work: saved.blocks?.length ? workText(saved.blocks) : null,
+      load: workoutLoad(workout, saved.reference),
     };
   });
   const gym: CalendarWorkout[] = strength.map((s) => {

@@ -89,7 +89,9 @@ export default async function LibraryPlanPage({
   // Coachen kom hit från en adept: adepten följer med i länkarna.
   const forAdept = ownAdepts.find((a) => a.id === query.adept) ?? null;
   const withAdept = (href: string) =>
-    forAdept ? `${href}${href.includes("?") ? "&" : "?"}adept=${forAdept.id}` : href;
+    forAdept
+      ? `${href}${href.includes("?") ? "&" : "?"}adept=${forAdept.id}`
+      : href;
 
   const { version, levels, phases, weeks, domain } = content;
   const peak = (levelId: string) => peakVolume(domain.volumes, levelId);
@@ -151,33 +153,36 @@ export default async function LibraryPlanPage({
                   .map((l) => ({ id: l.id, label: levelOptionLabel(l) }))}
                 initialLevelId={level?.id ?? ""}
                 defaultStart={nextMonday(todayIso())}
-                adepts={ownAdepts.map((a) => ({ id: a.id, full_name: a.full_name }))}
+                adepts={ownAdepts.map((a) => ({
+                  id: a.id,
+                  full_name: a.full_name,
+                }))}
                 queues={Object.fromEntries(queues)}
                 initialAdeptId={forAdept?.id}
               />
             )}
             {canStart ? (
-            <ButtonLink
-              href={`${routes.planLibrary}/${slug}/starta`}
-              className="font-semibold"
-            >
-              Starta planen
-              <ArrowRight aria-hidden className="size-4" />
-            </ButtonLink>
-          ) : active ? (
-            <ButtonLink href={routes.myPlan} variant="secondary">
-              Du följer {active.title}
-            </ButtonLink>
-          ) : own ? (
-            <ButtonLink
-              href={`${routes.planTemplates}/${content.template.id}`}
-              variant="secondary"
-            >
-              Ändra i planmallar
-            </ButtonLink>
-          ) : canBuildPlans(user) ? (
-            <CopyPlanButton templateId={content.template.id} />
-          ) : undefined}
+              <ButtonLink
+                href={`${routes.planLibrary}/${slug}/starta`}
+                className="font-semibold"
+              >
+                Starta planen
+                <ArrowRight aria-hidden className="size-4" />
+              </ButtonLink>
+            ) : active ? (
+              <ButtonLink href={routes.myPlan} variant="secondary">
+                Du följer {active.title}
+              </ButtonLink>
+            ) : own ? (
+              <ButtonLink
+                href={`${routes.planTemplates}/${content.template.id}`}
+                variant="secondary"
+              >
+                Ändra i planmallar
+              </ButtonLink>
+            ) : canBuildPlans(user) ? (
+              <CopyPlanButton templateId={content.template.id} />
+            ) : undefined}
           </div>
         }
       />
@@ -240,7 +245,9 @@ export default async function LibraryPlanPage({
                   items={levels.map((l) => ({
                     key: l.id,
                     label: `${l.key} · ${l.name}`,
-                    href: withAdept(`${routes.planLibrary}/${slug}?niva=${l.id}`),
+                    href: withAdept(
+                      `${routes.planLibrary}/${slug}?niva=${l.id}`,
+                    ),
                   }))}
                 />
               </div>
@@ -260,6 +267,10 @@ export default async function LibraryPlanPage({
                 levelId={level.id}
                 disciplineName={(key) =>
                   disciplines.find((d) => d.key === key)?.name ?? key
+                }
+                sportOf={(key) =>
+                  disciplines.find((d) => d.key === key)?.structure_sport ??
+                  null
                 }
               />
             </Card>

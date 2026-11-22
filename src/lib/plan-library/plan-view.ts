@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { planContext, planContextToText } from "./context";
 import { hoursMinutes } from "./labels";
 import { levelForWeek } from "./levels";
+import { variantLoad } from "./load";
 import { spansFromWeekMap, type PhaseSpan } from "./periodization";
 import { templateProfile } from "./profile";
 import { parseRounds, roundSpans, type RoundSpan } from "./rounds";
@@ -216,9 +217,12 @@ export async function listPlanSessionsBetween(
       for (const s of week.sessions) {
         if (!s.date || s.date < from || s.date > to) continue;
         if (s.state === "struken") continue;
-        const sport = view.disciplines.find(
+        const structure = view.disciplines.find(
           (d) => d.key === s.session.discipline,
         )?.structure_sport;
+        const sport: Sport | "annat" = SPORTS.includes(structure as Sport)
+          ? (structure as Sport)
+          : "annat";
         out.push({
           id: `plan-${instance.id}-${s.key}`,
           adeptId: instance.adept_id,
@@ -226,8 +230,9 @@ export async function listPlanSessionsBetween(
             adepts?.find((a) => a.id === instance.adept_id)?.full_name ?? "",
           date: s.date,
           title: s.session.title,
-          sport: SPORTS.includes(sport as Sport) ? (sport as Sport) : "annat",
+          sport,
           duration: hoursMinutes(s.variant.durationS) || null,
+          seconds: s.variant.durationS,
           summary: [
             `${view.instance.title}, vecka ${s.week}`,
             s.log?.status === "genomförd"
@@ -242,8 +247,12 @@ export async function listPlanSessionsBetween(
           // Planen pekas ut: en adept kan följa en plan per gren samtidigt.
           href: `${href}?plan=${instance.id}&vecka=${s.week}`,
           fromPlan: true,
-          planRef: { instanceId: instance.id, sessionId: s.session.id, week: s.week },
-          ...planDetail(s.session, s.variant),
+          planRef: {
+            instanceId: instance.id,
+            sessionId: s.session.id,
+            week: s.week,
+          },
+          ...planDetail(s.session, s.variant, sport),
         });
       }
     }
@@ -262,7 +271,9 @@ export async function listPlanGoalsBetween(
   today: string,
 ): Promise<PlannedGoal[]> {
   const sessions = await listPlanSessionsBetween(from, to, adeptId, today);
-  return sessions.flatMap((s) => (s.goal ? [{ date: s.date, goal: s.goal }] : []));
+  return sessions.flatMap((s) =>
+    s.goal ? [{ date: s.date, goal: s.goal }] : [],
+  );
 }
 
 const addDaysIso = (iso: string, days: number) =>
@@ -279,13 +290,16 @@ export async function planSummaryFor(
   today: string,
 ): Promise<string | null> {
   const ids = await activeInstanceIds(adeptId);
-  const texts = (await Promise.all(ids.map((id) => planSummaryOf(id, today)))).filter(
-    (t): t is string => t !== null,
-  );
+  const texts = (
+    await Promise.all(ids.map((id) => planSummaryOf(id, today)))
+  ).filter((t): t is string => t !== null);
   return texts.length ? texts.join("\n\n") : null;
 }
 
-async function planSummaryOf(id: string, today: string): Promise<string | null> {
+async function planSummaryOf(
+  id: string,
+  today: string,
+): Promise<string | null> {
   const view = await loadPlanView(id, today);
   if (!view) return null;
   const race = view.instance.race_date
@@ -343,7 +357,11 @@ export async function canEditPlan(instanceId: string): Promise<boolean> {
  * huvudsyftet. Strukturen skrivs med zonnamn (`@LO`) bara när passet räknas
  * mot maratonfart – där är zonerna definierade.
  */
-function planDetail(session: TemplateSession, variant: Variant) {
+function planDetail(
+  session: TemplateSession,
+  variant: Variant,
+  sport: Sport | "annat",
+) {
   const blocks = variant.blocks ?? [];
   const workout =
     blocks.length > 0 && variant.basis
@@ -358,5 +376,6 @@ function planDetail(session: TemplateSession, variant: Variant) {
     goal: workout ? sessionGoal(workout, 0) : null,
     zone: workout ? mainZone(workout, 0) : null,
     work: blocks.length ? workText(blocks) : null,
+    load: variantLoad(variant, sport === "annat" ? null : sport),
   };
 }

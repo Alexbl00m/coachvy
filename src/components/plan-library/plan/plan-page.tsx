@@ -28,6 +28,7 @@ import {
   sessionAmount,
   type ReferenceSpeeds,
 } from "@/lib/plan-library/paces";
+import { structureSport, variantLoad } from "@/lib/plan-library/load";
 import type { PlanView } from "@/lib/plan-library/plan-view";
 import {
   summarizeWeek,
@@ -41,6 +42,7 @@ import type { Variant } from "@/lib/plan-library/types";
 import { usedZones } from "@/lib/plan-library/zones";
 import { summarizeVolume, volumeText } from "@/lib/plan-library/volume";
 import { daysBetween, weekdayIndex } from "@/lib/season/season";
+import { tssText } from "@/lib/workouts/load";
 import { BASIS_LABEL } from "@/lib/workouts/schema";
 import { zonePaces } from "@/lib/running-planner/zones";
 
@@ -390,6 +392,22 @@ export function PlanPage({
         date: o.date!,
       }));
 
+  // Passets TSS: löpplanerna räknas mot sina farter, resten mot andelarna.
+  // Ett struket eller ersatt pass räknas inte.
+  const loadOf = (s: ScheduledSession) =>
+    s.state === "struken" || s.state === "ersatt"
+      ? null
+      : variantLoad(
+          s.variant,
+          structureSport(
+            view.disciplines.find((d) => d.key === s.session.discipline)
+              ?.structure_sport,
+          ),
+          isRunningBasis(s.variant.basis)
+            ? (refs[s.variant.basis!] ?? null)
+            : null,
+        );
+
   const sessionItem = (s: ScheduledSession) => {
     const replaced =
       s.state === "ersatt"
@@ -410,6 +428,7 @@ export function PlanPage({
             session={s.session}
             variant={s.variant}
             disciplineName={disciplineName(s.session.discipline)}
+            load={loadOf(s)}
           />
         </div>
         {s.state === "flyttad" && s.plannedDate && (
@@ -477,6 +496,7 @@ export function PlanPage({
   };
 
   const summary = summarizeWeek(week, secondsOf);
+  const weekTss = week.sessions.reduce((t, s) => t + (loadOf(s)?.tss ?? 0), 0);
   const { days, flexible } = weekByDay(week);
   const volume = volumeOf(week);
 
@@ -617,6 +637,7 @@ export function PlanPage({
               <p className="mb-4 text-[0.8125rem] text-text-subtle tabular-nums">
                 {summary.planned} pass ·{" "}
                 {hoursMinutes(summary.plannedSeconds) || "tid saknas"}
+                {weekTss > 0 && ` · TSS ${tssText(weekTss)}`}
                 {Object.keys(summary.byDiscipline).length > 1 &&
                   ` (${Object.entries(summary.byDiscipline)
                     .filter(([, s]) => s > 0)

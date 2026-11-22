@@ -11,6 +11,7 @@ import { AddFromLibrary } from "@/components/session-library/add-from-library";
 import { CalendarDnd } from "@/components/calendar/calendar-dnd";
 import { MonthGrid } from "@/components/calendar/month-grid";
 import { MoveWeekButton } from "@/components/calendar/move-week-button";
+import { WeekLoadCard } from "@/components/calendar/week-load-card";
 import { PlanBeside } from "@/components/calendar/plan-beside";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
@@ -19,6 +20,7 @@ import { EmptyState } from "@/components/ui/card";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { dragOf } from "@/lib/calendar/drag";
+import { weekLoads } from "@/lib/calendar/week-load";
 import {
   listCheckinsBetween,
   listScheduledWorkouts,
@@ -189,6 +191,19 @@ export default async function KalenderPage({
           dragOf(w) !== null,
       ).length
     : 0;
+  // Veckornas belastning, plan och genomfört: i rutnätets kolumn och i
+  // kortet för den valda veckan. Bara för en adept – en summa över alla
+  // adepter säger ingenting.
+  const loads = adeptId
+    ? weekLoads(
+        [...new Set([...dates.filter((_, i) => i % 7 === 0), selectedMonday])],
+        workouts,
+        activities,
+        adeptId,
+      )
+    : null;
+  const selectedLoad = loads?.get(selectedMonday) ?? null;
+
   const moveWeek =
     adeptId && weekCount > 0 ? (
       <MoveWeekButton
@@ -278,6 +293,7 @@ export default async function KalenderPage({
               hrefFor={(dag) => `${href({ manad: dag.slice(0, 7), dag })}#dag`}
               movable
               weekAdeptId={adeptId}
+              weekLoads={loads}
             />
 
             {phasesShown.length > 0 && (
@@ -345,15 +361,19 @@ export default async function KalenderPage({
                       <Dumbbell aria-hidden className="size-4" />
                       Planera styrkepass
                     </Link>
-                    {moveWeek && <div>{moveWeek}</div>}
                   </div>
-                ) : (
-                  moveWeek
-                )
+                ) : null
               }
               showNames={showNames}
               movable
             />
+            {selectedLoad && (
+              <WeekLoadCard
+                week={selectedLoad}
+                today={today}
+                action={moveWeek}
+              />
+            )}
             <Upcoming
               dates={soon}
               days={days}

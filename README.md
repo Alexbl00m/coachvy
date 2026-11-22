@@ -1984,6 +1984,29 @@ blir en verktygslåda: coachen hämtar tröskelpassen och ett par
 volympass, inte hela veckan. Pass utan struktur, som styrka, läggs in
 under Styrka.
 
+### TSS och veckans belastning
+
+Planerade pass får samma vedertagna mått som genomförda pass får ur filen
+(`workouts/load.ts`): TSS = timmar × IF² × 100, där en timme på tröskeln är
+100. IF normaliseras som NP (30 sekunders glidande medel, fjärde potens)
+på cykel och i löpning (rTSS), och simningen räknas som sTSS med sträckan
+genom tiden utan vilor och IF i kubik. NP och kJ räknas på cykel när passet
+har en referens i watt. Stegen sparas som andel av en referens, och
+`THRESHOLD` säger var tröskeln ligger i den: FTP och LT2 är tröskeln,
+FTP = 0,95 × CP och tröskelfarten 0,95 × CS, loppfarterna enligt
+zonmodellen, CSS för simningen. TSS beror därför bara på andelarna och
+tiden; planbibliotekets steg i meter får tid ur passets längd
+(`impliedReference`, `plan-library/load.ts`).
+
+Kalendern visar måtten per pass i dagspanelen, och med en adept vald
+veckans summa i en kolumn till höger i rutnätet och i kortet Veckan:
+planerat och genomfört (pass, tid, TSS, kJ, km per gren), hur stor del av
+planens TSS som är gjord, och planens pass efter huvudsyfte som avsnitt 19
+räknar fördelningen (`calendar/week-load.ts`). Passets sida, passbyggaren,
+planbibliotekets mallar, den startade planens veckovy och Plan bredvid
+visar TSS per pass och per vecka. Genomförda pass har TSS där filen har
+effekt.
+
 ### Planerade styrkepass
 
 Ett styrkepass är planerat eller genomfört (`strength_sessions.status`).

@@ -1,4 +1,5 @@
 import { DAY_SHORT, weekKindLabel } from "@/lib/plan-library/labels";
+import { structureSport, variantLoad } from "@/lib/plan-library/load";
 import type {
   TemplateSession,
   VolumeUnit,
@@ -6,12 +7,14 @@ import type {
   WeekVolume,
 } from "@/lib/plan-library/types";
 import { volumeFor, volumeText } from "@/lib/plan-library/volume";
+import { tssText } from "@/lib/workouts/load";
 
 import { SessionCard } from "./session-card";
 
 /**
  * Mallens veckor på en nivå, som medlemmen skulle få dem i full längd. För
- * förhandsvisningen och för mallsidan i biblioteket.
+ * förhandsvisningen och för mallsidan i biblioteket. Med `sportOf` får
+ * passen och veckorna TSS.
  */
 export function TemplateWeeks({
   phases,
@@ -19,6 +22,7 @@ export function TemplateWeeks({
   sessions,
   levelId,
   disciplineName,
+  sportOf,
   volumes = [],
   volumeUnit = "km",
 }: {
@@ -34,6 +38,8 @@ export function TemplateWeeks({
   sessions: TemplateSession[];
   levelId: string;
   disciplineName: (key: string) => string;
+  /** Grenen passen räknas i (disciplinens structure_sport), för TSS. */
+  sportOf?: (key: string) => string | null;
   volumes?: WeekVolume[];
   volumeUnit?: VolumeUnit;
 }) {
@@ -51,8 +57,22 @@ export function TemplateWeeks({
                   .filter((s) => s.weekId === week.id)
                   .flatMap((s) => {
                     const v = s.variants.find((x) => x.levelId === levelId);
-                    return v ? [{ s, v }] : [];
+                    return v
+                      ? [
+                          {
+                            s,
+                            v,
+                            load: sportOf
+                              ? variantLoad(
+                                  v,
+                                  structureSport(sportOf(s.discipline)),
+                                )
+                              : null,
+                          },
+                        ]
+                      : [];
                   });
+                const tss = own.reduce((t, o) => t + (o.load?.tss ?? 0), 0);
                 return (
                   <div
                     key={week.id}
@@ -66,6 +86,7 @@ export function TemplateWeeks({
                         ` · ${weekKindLabel(week.kind)}`}
                       {week.title && ` · ${week.title}`}
                       {volume && ` · ${volumeText(volume, volumeUnit)}`}
+                      {tss > 0 && ` · TSS ${tssText(tss)}`}
                       {week.checkpoint && " · avstämning"}
                     </p>
                     {own.length === 0 ? (
@@ -80,7 +101,7 @@ export function TemplateWeeks({
                               (a.s.day ?? 7) - (b.s.day ?? 7) ||
                               a.s.position - b.s.position,
                           )
-                          .map(({ s, v }) => (
+                          .map(({ s, v, load }) => (
                             <li
                               key={s.id}
                               className="rounded-md border border-line bg-surface-2 p-2"
@@ -94,6 +115,7 @@ export function TemplateWeeks({
                                 session={s}
                                 variant={v}
                                 disciplineName={disciplineName(s.discipline)}
+                                load={load}
                               />
                               {(v.description || s.description) && (
                                 <p className="mt-1.5 text-[0.75rem] leading-snug text-text-muted">

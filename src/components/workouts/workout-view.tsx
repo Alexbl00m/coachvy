@@ -13,6 +13,7 @@ import {
   wPrimeBalance,
   type BalanceModel,
 } from "@/lib/workouts/balance";
+import { ifText, tssText, wholeNumber, workoutLoad } from "@/lib/workouts/load";
 import {
   formatDuration,
   resolveWorkout,
@@ -54,6 +55,12 @@ export function WorkoutView({
     [resolved, model],
   );
 
+  // TSS, IF, NP och kJ – samma mått som ett genomfört pass får ur filen.
+  const load = useMemo(
+    () => workoutLoad(workout, reference),
+    [workout, reference],
+  );
+
   if (resolved.steps.length === 0) {
     return (
       <Card>
@@ -78,6 +85,28 @@ export function WorkoutView({
                   label: "Sträcka",
                   value: sv(resolved.totalMetres / 1000, 2),
                   unit: "km",
+                },
+              ]
+            : []),
+          ...(load
+            ? [
+                {
+                  label: load.kind,
+                  value: tssText(load.tss),
+                  hint: `IF ${ifText(load.intensityFactor)} · en timme på tröskeln är 100`,
+                },
+              ]
+            : []),
+          ...(load?.normalizedPower != null
+            ? [
+                {
+                  label: "NP",
+                  value: wholeNumber(load.normalizedPower),
+                  unit: "W",
+                  hint:
+                    load.kj !== null
+                      ? `${wholeNumber(load.kj)} kJ arbete`
+                      : undefined,
                 },
               ]
             : []),
