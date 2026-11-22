@@ -1963,6 +1963,18 @@ ett eget pass och ett styrkepass som de är (`copyWorkoutToDates`,
 den veckan (`copyScheduledPlanSession`). Knappen i dagspanelen har samma
 val, Flytta eller Kopiera.
 
+Med en adept vald går också en hel vecka att flytta eller kopiera.
+Veckonumret i rutnätets vänsterkant dras till en annan rad (`DragWeek`,
+raderna har `data-drop-week`), och varje pass i veckan som går att flytta
+hamnar på samma veckodag där (`moveWeek` i `calendar/week-actions.ts`, som
+tar passen ett och ett genom `movePass`). Ctrl (Alt på Mac) kopierar.
+Målveckan ligger ofta i en annan månad, som när en testvecka missas och
+läggs efter ett läger, så dagspanelen har samma flytt med en lista över
+veckorna ett halvår framåt (`MoveWeekButton`). Notisen efter en flytt har
+Visa veckan och Ångra (`undoWeekMove` flyttar tillbaka just de pass som
+flyttades). Genomförda aktiviteter, loggade styrkepass, tester och
+tävlingar ligger kvar.
+
 Med en adept vald öppnar **Plan bredvid** en plan ur biblioteket bredvid
 kalendern (`?bredvid=<slug>&niva=<nivå>`, `plan-beside.tsx`), vecka för
 vecka i vald nivå. Ett pass som dras till en dag läggs in som adeptens

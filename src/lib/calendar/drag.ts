@@ -29,6 +29,20 @@ export type DragPass =
       title: string;
     };
 
+/**
+ * En hel vecka som dras: passen i veckan som går att flytta, till samma
+ * veckodag i veckan där den släpps. `monday` är veckans måndag.
+ */
+export type DragWeek = {
+  kind: "vecka";
+  adeptId: string;
+  monday: string;
+  title: string;
+};
+
+/** Det som kan dras i kalendern: ett pass eller en vecka. */
+export type DragItem = DragPass | DragWeek;
+
 /** Datatypen i dra och släpp, så att bara Coachvys pass tas emot. */
 export const DRAG_TYPE = "application/x-coachvy-pass";
 
@@ -56,10 +70,10 @@ export function dragOf(
   return { kind: "pass", id: w.id, adeptId: w.adeptId, title: w.title };
 }
 
-/** Passet ur dra och släpp, eller null när datan inte är ett pass. */
-export function parseDrag(text: string): DragPass | null {
+/** Passet eller veckan ur dra och släpp, eller null för annan data. */
+export function parseDrag(text: string): DragItem | null {
   try {
-    const value = JSON.parse(text) as Partial<DragPass>;
+    const value = JSON.parse(text) as Partial<DragPass> | Partial<DragWeek>;
     if (value.kind === "pass" && typeof value.id === "string")
       return value as DragPass;
     if (value.kind === "planpass" && typeof value.instanceId === "string")
@@ -68,6 +82,13 @@ export function parseDrag(text: string): DragPass | null {
       return value as DragPass;
     if (value.kind === "mall" && typeof value.sessionId === "string")
       return value as DragPass;
+    if (
+      value.kind === "vecka" &&
+      typeof value.adeptId === "string" &&
+      typeof value.monday === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value.monday)
+    )
+      return value as DragWeek;
     return null;
   } catch {
     return null;

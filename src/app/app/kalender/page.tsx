@@ -10,6 +10,7 @@ import { DayPanel, Upcoming } from "@/components/calendar/day-panel";
 import { AddFromLibrary } from "@/components/session-library/add-from-library";
 import { CalendarDnd } from "@/components/calendar/calendar-dnd";
 import { MonthGrid } from "@/components/calendar/month-grid";
+import { MoveWeekButton } from "@/components/calendar/move-week-button";
 import { PlanBeside } from "@/components/calendar/plan-beside";
 import { PageHeader } from "@/components/page-header";
 import { AdeptPicker } from "@/components/progression/adept-picker";
@@ -17,6 +18,7 @@ import { PHASE_SHORT, phaseFill } from "@/components/season/phase-style";
 import { EmptyState } from "@/components/ui/card";
 import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
+import { dragOf } from "@/lib/calendar/drag";
 import {
   listCheckinsBetween,
   listScheduledWorkouts,
@@ -30,6 +32,7 @@ import { listCallsBetween } from "@/lib/calls/queries";
 import {
   addDays,
   blockOn,
+  mondayOf,
   monthDates,
   monthName,
   todayIso,
@@ -175,6 +178,27 @@ export default async function KalenderPage({
     return `${routes.calendar}?${search.toString()}`;
   };
 
+  // Veckan med den valda dagen: passen i den som går att flytta.
+  const selectedMonday = mondayOf(selected);
+  const weekCount = adeptId
+    ? workouts.filter(
+        (w) =>
+          w.adeptId === adeptId &&
+          w.date >= selectedMonday &&
+          w.date <= addDays(selectedMonday, 6) &&
+          dragOf(w) !== null,
+      ).length
+    : 0;
+  const moveWeek =
+    adeptId && weekCount > 0 ? (
+      <MoveWeekButton
+        key={selectedMonday}
+        adeptId={adeptId}
+        monday={selectedMonday}
+        count={weekCount}
+      />
+    ) : null;
+
   const phasesShown = phases
     ? TRAINING_PHASES.filter((p) => dates.some((d) => phases.get(d) === p.key))
     : [];
@@ -253,6 +277,7 @@ export default async function KalenderPage({
               // Ankaret tar telefonen ned till dagspanelen under rutnätet.
               hrefFor={(dag) => `${href({ manad: dag.slice(0, 7), dag })}#dag`}
               movable
+              weekAdeptId={adeptId}
             />
 
             {phasesShown.length > 0 && (
@@ -320,8 +345,11 @@ export default async function KalenderPage({
                       <Dumbbell aria-hidden className="size-4" />
                       Planera styrkepass
                     </Link>
+                    {moveWeek && <div>{moveWeek}</div>}
                   </div>
-                ) : null
+                ) : (
+                  moveWeek
+                )
               }
               showNames={showNames}
               movable

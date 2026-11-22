@@ -260,7 +260,7 @@ export function DayPanel({
   /** Periodens egna namn, när coachen gett den ett. */
   blockName?: string | null;
   showNames: boolean;
-  /** Det coachen kan göra med dagen, som att lägga in ett pass. */
+  /** Det som går att göra med dagen, som att lägga in ett pass eller flytta veckan. */
   action?: React.ReactNode;
   /** Passen går att flytta till en annan dag. */
   movable?: boolean;
