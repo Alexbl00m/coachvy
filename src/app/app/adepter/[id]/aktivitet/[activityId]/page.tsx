@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Flag } from "lucide-react";
 
 import { ActivityEditor } from "@/components/activities/activity-editor";
+import { ActivityTests } from "@/components/tests/test-pass-links";
 import { ActivitySummary } from "@/components/activities/activity-summary";
 import { ActivityExplorer } from "@/components/activities/activity-explorer";
 import { PageHeader } from "@/components/page-header";
@@ -28,6 +29,10 @@ import {
 import { SERIES } from "@/lib/calculators/chart-colors";
 import { adeptHref, routes } from "@/lib/routes";
 import { listRaces } from "@/lib/season/queries";
+import {
+  listActivityTests,
+  listTestsNear,
+} from "@/lib/tests/test-pass-queries";
 import { longDate } from "@/lib/season/season";
 
 export const metadata = { title: "Aktivitet" };
@@ -192,16 +197,21 @@ export default async function ActivityPage({
 }: PageProps<"/app/adepter/[id]/aktivitet/[activityId]">) {
   const user = await requireSessionUser();
   const { id, activityId } = await params;
-  const [adept, activity, races, aiSummary] = await Promise.all([
+  const [adept, activity, races, aiSummary, tests] = await Promise.all([
     getAdept(id),
     getActivity(activityId),
     listRaces(id),
     getActivitySummary(activityId),
+    listActivityTests(activityId),
   ]);
   if (!adept || !activity || activity.adept_id !== adept.id) notFound();
 
   const isCoach = user.profile?.role === "coach" && adept.coach_id === user.id;
   const canEdit = isCoach || adept.profile_id === user.id;
+  // Test två veckor runt passet, att lägga det i. Bara coachen kopplar.
+  const nearbyTests = isCoach
+    ? await listTestsNear(adept.id, activity.performed_on, activity.sport)
+    : [];
   const s = activity.summary;
   const ref = activity.reference;
   const race = races.find((r) => r.id === activity.race_id) ?? null;
@@ -579,6 +589,20 @@ export default async function ActivityPage({
               " Passet kom in i en historikimport och sparades med en glesare serie, så kartan och graferna är grövre än för ett pass som laddats upp för sig. Siffrorna ovan är räknade på hela filen."}
           </p>
         </Card>
+
+        {(isCoach || tests.length > 0) && (
+          <Card>
+            <CardTitle>Test</CardTitle>
+            <ActivityTests
+              activityId={activity.id}
+              adeptId={adept.id}
+              linked={tests}
+              nearby={nearbyTests}
+              newTestHref={`${routes.adepts}/${adept.id}/test/nytt?koppla=${activity.id}`}
+              canEdit={isCoach}
+            />
+          </Card>
+        )}
 
         {canEdit && (
           <Card>

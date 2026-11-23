@@ -22,6 +22,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { dragOf } from "@/lib/calendar/drag";
 import { weekLoads } from "@/lib/calendar/week-load";
 import { listDoneLoads } from "@/lib/activities/tss-queries";
+import { listTestProtocolsFor } from "@/lib/tests/test-pass-queries";
 import {
   dailyTss,
   PMC_WARMUP_DAYS,
@@ -161,11 +162,16 @@ export default async function KalenderPage({
       ? listDoneLoads(adeptId, addDays(from, -PMC_WARMUP_DAYS), to)
       : Promise.resolve([]),
   ]);
-  // Aktiviteterna får sin TSS – rTSS, sTSS eller hrTSS när filen saknar effekt.
+  // Aktiviteterna får sin TSS – rTSS, sTSS eller hrTSS när filen saknar
+  // effekt – och testen de ingår i.
   const doneById = new Map(doneLoads.map((d) => [d.id, d.load]));
+  const testsById = await listTestProtocolsFor(
+    fetchedActivities.map((a) => a.id),
+  );
   const activities = fetchedActivities.map((a) => ({
     ...a,
     load: doneById.get(a.id) ?? null,
+    tests: testsById.get(a.id) ?? [],
   }));
   // Biblioteket behövs bara när coachen tittar på en adept och kan lägga in.
   const library = isCoach && adept ? await listLibrary() : [];
@@ -420,6 +426,24 @@ export default async function KalenderPage({
               <WeekLoadCard
                 week={selectedLoad}
                 form={forms?.get(selectedMonday) ?? null}
+                tests={[
+                  ...workouts
+                    .filter(
+                      (w) =>
+                        w.adeptId === adeptId &&
+                        w.date >= selectedMonday &&
+                        w.date <= addDays(selectedMonday, 6),
+                    )
+                    .flatMap((w) => (w.testProtocol ? [w.testProtocol] : [])),
+                  ...activities
+                    .filter(
+                      (a) =>
+                        a.adept_id === adeptId &&
+                        a.performed_on >= selectedMonday &&
+                        a.performed_on <= addDays(selectedMonday, 6),
+                    )
+                    .flatMap((a) => a.tests),
+                ]}
                 today={today}
                 action={moveWeek}
               />

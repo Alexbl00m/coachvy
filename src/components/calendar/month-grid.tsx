@@ -9,6 +9,7 @@ import type { WeekLoad } from "@/lib/calendar/week-load";
 import type { WeekForm } from "@/lib/training/pmc";
 import { callTime } from "@/lib/calls/time";
 import { cn } from "@/lib/cn";
+import { testTag } from "@/lib/tests/test-passes";
 import {
   isoWeek,
   longDate,
@@ -338,15 +339,22 @@ export function MonthGrid({
                         );
                       }
                       if (row.kind === "activity") {
+                        // Ett pass i ett test visas med testets ikon.
+                        const tag = testTag(row.activity.tests ?? []);
                         return (
                           <span
                             key={row.key}
+                            title={tag ?? undefined}
                             className="flex min-w-0 items-center gap-1 text-[0.6875rem] leading-tight text-text"
                           >
-                            <SportIcon
-                              sport={row.activity.sport as Sport}
-                              className="size-3 shrink-0 text-text"
-                            />
+                            {tag ? (
+                              <TestIcon className="size-3 shrink-0" />
+                            ) : (
+                              <SportIcon
+                                sport={row.activity.sport as Sport}
+                                className="size-3 shrink-0 text-text"
+                              />
+                            )}
                             <span className="truncate">
                               {who(row.activity.adept_name)}
                               {row.activity.name}
@@ -362,9 +370,14 @@ export function MonthGrid({
                             draggable={drag ? true : undefined}
                             data-drag={drag ? JSON.stringify(drag) : undefined}
                             title={
-                              drag
-                                ? `${row.workout.title}: dra för att flytta, håll Ctrl (Alt på Mac) för att kopiera`
-                                : undefined
+                              [
+                                row.workout.testProtocol &&
+                                  testTag([row.workout.testProtocol]),
+                                drag &&
+                                  `${row.workout.title}: dra för att flytta, håll Ctrl (Alt på Mac) för att kopiera`,
+                              ]
+                                .filter(Boolean)
+                                .join(". ") || undefined
                             }
                             className={cn(
                               "flex min-w-0 items-center gap-1 rounded-sm text-[0.6875rem] leading-tight text-text-muted",
@@ -372,10 +385,14 @@ export function MonthGrid({
                                 "cursor-grab hover:bg-surface-3 active:cursor-grabbing",
                             )}
                           >
-                            <SportIcon
-                              sport={row.workout.sport}
-                              className="size-3 shrink-0 text-text-subtle"
-                            />
+                            {row.workout.testProtocol ? (
+                              <TestIcon className="size-3 shrink-0" />
+                            ) : (
+                              <SportIcon
+                                sport={row.workout.sport}
+                                className="size-3 shrink-0 text-text-subtle"
+                              />
+                            )}
                             <span className="truncate">
                               {who(row.workout.adeptName)}
                               {row.workout.title}

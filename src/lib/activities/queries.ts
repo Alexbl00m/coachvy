@@ -115,6 +115,8 @@ export type ActivityInRange = ActivityListItem & {
   adept_name: string;
   /** TSS räknad i kalendern: ur effekten, eller rTSS, sTSS eller hrTSS. */
   load?: ActivityTss | null;
+  /** Protokollen för testen passet ingår i. */
+  tests?: string[];
 };
 
 /** Aktiviteter mellan två datum, för kalendern. RLS avgör vilka adepter. */

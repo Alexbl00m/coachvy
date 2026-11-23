@@ -4,6 +4,7 @@ import type { WeekLoad } from "@/lib/calendar/week-load";
 import { weekLabel } from "@/lib/calendar/week";
 import { SESSION_GOALS } from "@/lib/season/distribution";
 import type { WeekForm } from "@/lib/training/pmc";
+import { testName } from "@/lib/tests/test-passes";
 import {
   distanceText,
   hoursText,
@@ -24,12 +25,15 @@ const GOAL_TEXT = { lugn: "lugnt", medel: "medel", hög: "högt" } as const;
 export function WeekLoadCard({
   week,
   form = null,
+  tests = [],
   today,
   action = null,
 }: {
   week: WeekLoad;
   /** Fitness, trötthet och form efter veckan. */
   form?: WeekForm | null;
+  /** Protokollen för testen i veckan, planerade och gjorda. */
+  tests?: string[];
   today: string;
   action?: React.ReactNode;
 }) {
@@ -84,6 +88,12 @@ export function WeekLoadCard({
           {weekLabel(week.monday, today.slice(0, 4)).replace("v.", "Vecka")}
         </p>
       </div>
+
+      {tests.length > 0 && (
+        <p className="mb-3 text-sm font-medium text-text">
+          Test i veckan: {[...new Set(tests.map(testName))].join(", ")}
+        </p>
+      )}
 
       {shown.length === 0 ? (
         <p className="text-sm text-text-subtle">Inget planerat eller gjort.</p>

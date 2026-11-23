@@ -2022,6 +2022,21 @@ efter ett läger eller inför ett lopp syns i förväg. Serien börjar 180
 dagar före det som visas. Kortet Veckan visar fitness, trötthet och form
 efter veckan och rampen mot veckan före; veckokolumnen visar formen.
 
+### Pass som del av ett test
+
+Ett test går ofta över flera dagar – sprint och tre minuter en dag, sex
+minuter en annan, tolv minuter på söndagen – och samma pass kan ingå i
+flera test (critical power och metabol profil ur samma insatser).
+`test_activities` kopplar genomförda pass till testtillfällen,
+många-till-många, med testets behörighet. På testets sida föreslås passen
+de dagar insatserna gjordes (`suggestedPasses`), och andra pass två veckor
+runt testet går att välja. På aktivitetens sida läggs passet i ett test
+två veckor runt dagen, eller i ett nytt (`/test/nytt?koppla=<aktivitet>`:
+dagen och grenen förifylls och passet kopplas när testet sparas). Ett
+planerat pass märks med testets protokoll (`workouts.test_protocol`), så
+att testveckan syns innan den är gjord. Kalendern visar testpassen med
+testets ikon och namn, och kortet Veckan säger vilka test veckan har.
+
 ### Planerade styrkepass
 
 Ett styrkepass är planerat eller genomfört (`strength_sessions.status`).

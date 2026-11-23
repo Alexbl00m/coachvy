@@ -283,6 +283,8 @@ export type SavedWorkout = {
   blocks: WorkoutBlock[];
   prompt: string | null;
   scheduled_for: string | null;
+  /** Protokollet när passet är en del av ett test (protocols.ts). */
+  test_protocol?: string | null;
   /** Vem som byggde passet – coachen, eller adepten själv som medlem. */
   created_by: string | null;
   created_at: string;

@@ -22,7 +22,11 @@ import { blockOn } from "@/lib/season/season";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
 import type { TrainingBlockRow } from "@/lib/types/database";
 import { previewOnServer } from "@/lib/tests/preview-actions";
-import { saveTestSession, updateTestSession } from "@/lib/tests/session-actions";
+import {
+  saveTestSession,
+  updateTestSession,
+} from "@/lib/tests/session-actions";
+import { linkTestPass } from "@/lib/tests/test-pass-actions";
 import { FIT_SLOTS, kindFor } from "@/lib/tests/fit-efforts";
 import type { ReportReading } from "@/lib/tests/report-read";
 import {
@@ -60,6 +64,7 @@ export function NewSessionForm({
   member = false,
   season = [],
   edit,
+  link,
 }: {
   adeptId: string;
   adeptSport: Sport;
@@ -72,6 +77,8 @@ export function NewSessionForm({
   season?: Pick<TrainingBlockRow, "phase" | "starts_on" | "ends_on">[];
   /** Ändrar ett sparat test i stället för att skapa ett nytt. */
   edit?: SessionEdit;
+  /** Ett genomfört pass som ska ingå i testet: dagen förifylls, och passet kopplas när testet sparas. */
+  link?: { activityId: string; date: string; name: string };
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -86,7 +93,7 @@ export function NewSessionForm({
   );
 
   const [performedOn, setPerformedOn] = useState(
-    edit?.performedOn ?? new Date().toISOString().slice(0, 10),
+    edit?.performedOn ?? link?.date ?? new Date().toISOString().slice(0, 10),
   );
   // Fasen följer säsongsplanen för det valda datumet tills coachen väljer
   // själv; då gäller valet, även om datumet ändras efteråt.
@@ -130,6 +137,14 @@ export function NewSessionForm({
       if (!result.ok) {
         setError(result.error);
         return;
+      }
+      // Passet testet gjordes i hör till testet från början.
+      if (link && !edit) {
+        await linkTestPass({
+          sessionId: result.sessionId,
+          activityId: link.activityId,
+          adeptId,
+        });
       }
       router.push(`${routes.adepts}/${adeptId}/test/${result.sessionId}`);
       router.refresh();
@@ -296,7 +311,9 @@ export function NewSessionForm({
         analysis={calc.analysis}
         sport={calc.sport}
         weightKg={
-          calc.weight.trim() ? Number(calc.weight.replace(",", ".")) || null : null
+          calc.weight.trim()
+            ? Number(calc.weight.replace(",", ".")) || null
+            : null
         }
       />
 
@@ -308,7 +325,11 @@ export function NewSessionForm({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={save} disabled={!canSave}>
-          {pending ? "Sparar …" : edit ? "Spara ändringarna" : "Spara testtillfället"}
+          {pending
+            ? "Sparar …"
+            : edit
+              ? "Spara ändringarna"
+              : "Spara testtillfället"}
         </Button>
         <span className="text-[0.8125rem] text-text-subtle">
           {calc.pending && calc.filled.length > 0
