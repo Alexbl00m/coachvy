@@ -916,10 +916,14 @@ två sekunder snabbare. Vila vid väggen skrivs `20 s vila`, utan mål
 Ett tillägg i sekunder är inte samma andel av farten för alla simmare, så
 raden räknas om mot adeptens egen CSS när passet läggs på adepten
 (`toAdeptWorkout`). I biblioteket och förhandsvisningen räknas den mot en
-nominell CSS på 1:45. Tävlingsfarten står på adeptens profil
+nominell CSS på 1:45. Tävlingsfarten är den som står på adeptens profil
 (`adept_profiles.swim_im_pace`, `swim_703_pace`,
-`20261124090000_swim_race_paces.sql`); ett pass med `@IM` går inte att lägga
-på en adept utan den.
+`20261124090000_swim_race_paces.sql`). Står ingen där används prognosen ur
+det senaste simtestet, simmarens egen kurva till 1 900 och 3 800 m
+(`swimRacePaces`, `src/lib/adepts/swim-paces.ts`), så farten följer med när
+ett nytt test läggs in. Profilformuläret visar testets fart vid fälten. Ett
+pass med `@IM` går inte att lägga på en adept utan någon av dem. Pass som
+redan ligger i kalendern behåller farten de fick när de lades in.
 
 ### Simpassen i passbiblioteket
 

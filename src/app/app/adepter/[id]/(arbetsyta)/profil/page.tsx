@@ -4,6 +4,7 @@ import { InviteCard } from "@/components/adepts/invite-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getAdeptProfile } from "@/lib/adepts/profile";
 import { getHealthConsent } from "@/lib/adepts/queries";
+import { swimRaceDetail } from "@/lib/adepts/swim-paces";
 import { loadWorkspace } from "@/lib/adepts/workspace";
 import { isEmailConfigured } from "@/lib/email/send";
 import { formatLastActive } from "@/lib/format";
@@ -15,11 +16,12 @@ export default async function AdeptProfilePage({
   params,
 }: PageProps<"/app/adepter/[id]/profil">) {
   const { user, adept, isCoach, canEdit } = await loadWorkspace(params);
-  const [profile, consent] = await Promise.all([
+  const [profile, consent, swim] = await Promise.all([
     getAdeptProfile(adept.id),
     isCoach && adept.profile_id
       ? getHealthConsent(adept.profile_id)
       : Promise.resolve(undefined),
+    swimRaceDetail(adept.id),
   ]);
 
   return (
@@ -52,7 +54,11 @@ export default async function AdeptProfilePage({
         </div>
       </div>
 
-      <AdeptProfileForm adeptId={adept.id} profile={profile} />
+      <AdeptProfileForm
+        adeptId={adept.id}
+        profile={profile}
+        swimFromTest={swim.fromTest}
+      />
     </div>
   );
 }

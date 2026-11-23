@@ -92,7 +92,7 @@ const FUEL_HARD =
   "Kom till bassängen med fyllda depåer: ett lätt mål två till tre timmar före. Vatten eller sportdryck vid kanten, och mat inom en timme efteråt.";
 
 const RACE_NOTE =
-  " Huvudserien står i Ironmanfart (@IM); mot 70.3 byts @IM mot @703. Adepten behöver tävlingsfarten inskriven på profilen.";
+  " Huvudserien står i Ironmanfart (@IM); mot 70.3 byts @IM mot @703. Farten är den inskrivna på adeptens profil, annars prognosen ur det senaste simtestet.";
 
 // ---------------------------------------------------------------------------
 // 01 Smooth Criminal – teknik och aerob kontroll

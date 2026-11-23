@@ -889,7 +889,7 @@ Farten anges som CSS plus eller minus sekunder per 100 m, inte i procent. En sim
 
 Fartområdena är startvärden. RPE och tekniken går före farten: kan simmaren inte hålla vattenläge och grepp i en fart är farten fel, oavsett vad testet säger.
 
-**Tävlingsfart.** Tävlingsfarten för Ironman och för 70.3 är egna värden per adept, bedömda ur CSS, simvana, öppet vatten-erfarenhet och tävlingsmålet. Den räknas inte fram som en fast skillnad från CSS, och Ironman- och 70.3-fart är inte samma fart.
+**Tävlingsfart.** Tävlingsfarten för Ironman och för 70.3 är egna värden per adept, bedömda ur CSS, simvana, öppet vatten-erfarenhet och tävlingsmålet. Den räknas inte fram som en fast skillnad från CSS, och Ironman- och 70.3-fart är inte samma fart. Utgångspunkten är prognosen ur det senaste simtestet – simmarens egen kurva till 1 900 och 3 800 m – och den följer med när ett nytt test läggs in. Säger öppet vatten, våtdräkt eller målet något annat skriver coachen in en egen fart, och då gäller den.
 
 ### Fyra nivåer
 

@@ -133,6 +133,25 @@ export function swimPredictions(
 }
 
 /**
+ * Tävlingsfarten ur testet, i sekunder per 100 m: simmarens egen kurva till
+ * 1 900 m (70.3) och 3 800 m (Ironman), samma prognos som testsidan visar.
+ * En bassängtid som utgångspunkt – coachen skriver in en egen fart på
+ * profilen när öppet vatten, våtdräkt och målet säger något annat
+ * (träningsfilosofin, avsnitt 27).
+ */
+export function swimRacePaces(points: SwimPoint[]): {
+  im: number | null;
+  half: number | null;
+} {
+  const rows = swimPredictions(points, null, null);
+  const pace = (metres: number) => {
+    const row = rows.find((r) => r.metres === metres);
+    return row && row.own > 0 ? (row.own / metres) * 100 : null;
+  };
+  return { im: pace(3800), half: pace(1900) };
+}
+
+/**
  * Red Mist-cyklerna: tiden per 50 m i CSS-tempo, avrundad till hel sekund,
  * och sedan en sekund i taget uppåt – cykel 0 till 10, som i originalet.
  */

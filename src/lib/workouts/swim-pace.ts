@@ -13,8 +13,8 @@
  * biblioteket och i förhandsvisningar – räknas den mot en nominell CSS.
  *
  * `@IM` och `@703` är tävlingsfarten för Ironman och 70.3. De är egna värden
- * per adept, inte en skillnad från CSS, och ett pass med dem kräver att
- * adepten har farten inskriven. Ett tillägg går att skriva efter dem:
+ * per adept, inte en skillnad från CSS: den inskrivna på profilen, annars
+ * prognosen ur det senaste simtestet (adepts/swim-paces.ts). Ett tillägg går att skriva efter dem:
  * `@IM-2` är två sekunder snabbare än Ironmanfarten.
  *
  * Modulen är ren.
@@ -99,8 +99,8 @@ export function parseSwimTarget(
     const base = key === "IM" ? paces.im : paces.half;
     if (base === null || !(base > 0)) {
       return key === "IM"
-        ? "Adepten saknar tävlingsfart i simning för Ironman. Skriv in den på profilen."
-        : "Adepten saknar tävlingsfart i simning för 70.3. Skriv in den på profilen.";
+        ? "Adepten saknar tävlingsfart i simning för Ironman. Lägg in ett simtest eller skriv in farten på profilen."
+        : "Adepten saknar tävlingsfart i simning för 70.3. Lägg in ett simtest eller skriv in farten på profilen.";
     }
     const offset = race[2] ? signed(race[2]) : 0;
     const value = fraction(paces.css, base + offset);

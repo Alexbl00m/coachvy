@@ -126,3 +126,22 @@ describe("simfart i passraden", () => {
     expect(swimPaceText(112)).toBe("1:52");
   });
 });
+
+describe("tävlingsfarten ur simtestet", () => {
+  it("räknar farten till 1 900 och 3 800 m ur simmarens egen kurva", async () => {
+    const { swimRacePaces, swimPredictions } = await import("@/lib/tests/swim");
+    const points = [
+      { metres: 200, seconds: 150 },
+      { metres: 400, seconds: 320 },
+    ];
+    const paces = swimRacePaces(points);
+    const rows = swimPredictions(points, null, null);
+    const im = rows.find((r) => r.metres === 3800)!;
+    expect(paces.im).toBeCloseTo((im.own / 3800) * 100);
+    // Längre lopp, långsammare fart.
+    expect(paces.im!).toBeGreaterThan(paces.half!);
+    // CSS är 85 s/100 m; Ironmanfarten är långsammare än CSS.
+    expect(paces.im!).toBeGreaterThan(85);
+    expect(swimRacePaces([])).toEqual({ im: null, half: null });
+  });
+});

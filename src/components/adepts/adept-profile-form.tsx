@@ -34,9 +34,16 @@ const digits = (value: number | null | undefined) =>
 export function AdeptProfileForm({
   adeptId,
   profile,
+  swimFromTest = null,
 }: {
   adeptId: string;
   profile: AdeptProfileRow | null;
+  /** Tävlingsfarten ur det senaste simtestet, s/100 m. */
+  swimFromTest?: {
+    im: number | null;
+    half: number | null;
+    testedOn: string;
+  } | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -57,6 +64,11 @@ export function AdeptProfileForm({
   const [weaknesses, setWeaknesses] = useState(text(profile?.weaknesses));
   const [goal, setGoal] = useState(text(profile?.goal));
   const [goalDate, setGoalDate] = useState(text(profile?.goal_date));
+  /** Vad ett tomt fält betyder: testets fart, om det finns ett simtest. */
+  const raceHint = (token: string, tested: number | null) =>
+    tested && swimFromTest
+      ? `Per 100 m, för ${token} i simpassen. Tomt följer simtestet ${swimFromTest.testedOn}: ${swimPaceText(tested)}.`
+      : `Per 100 m, för ${token} i simpassen. Tomt följer simtestet när det finns ett.`;
   const pace = (v: number | string | null | undefined) =>
     v === null || v === undefined ? "" : swimPaceText(Number(v));
   const [swimIm, setSwimIm] = useState(pace(profile?.swim_im_pace));
@@ -194,13 +206,15 @@ export function AdeptProfileForm({
           <Field
             label="Tävlingsfart i simning, Ironman"
             htmlFor="swim_im_pace"
-            hint="per 100 m, för @IM i simpassen"
+            hint={raceHint("@IM", swimFromTest?.im ?? null)}
             optional
           >
             <Input
               id="swim_im_pace"
               inputMode="numeric"
-              placeholder="1:52"
+              placeholder={
+                swimFromTest?.im ? swimPaceText(swimFromTest.im) : "1:52"
+              }
               value={swimIm}
               onChange={(e) => setSwimIm(e.target.value)}
             />
@@ -208,13 +222,15 @@ export function AdeptProfileForm({
           <Field
             label="Tävlingsfart i simning, 70.3"
             htmlFor="swim_703_pace"
-            hint="per 100 m, för @703 i simpassen"
+            hint={raceHint("@703", swimFromTest?.half ?? null)}
             optional
           >
             <Input
               id="swim_703_pace"
               inputMode="numeric"
-              placeholder="1:48"
+              placeholder={
+                swimFromTest?.half ? swimPaceText(swimFromTest.half) : "1:48"
+              }
               value={swimHalf}
               onChange={(e) => setSwimHalf(e.target.value)}
             />
