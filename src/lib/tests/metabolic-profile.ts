@@ -11,7 +11,12 @@ import "server-only";
 
 import { calculateCriticalPower, isError } from "@/lib/calculators/critical-power";
 import { calculateMetabolicProfile } from "@/lib/calculators/metabolic";
-import { analyzeRemoteTest, CP_EFFORT_RANGE, lactateDistributionVolume } from "@/lib/metabolic";
+import {
+  analyzeRemoteTest,
+  CP_EFFORT_RANGE,
+  fitVlamaxToStepTest,
+  lactateDistributionVolume,
+} from "@/lib/metabolic";
 import {
   analyseSession,
   anaerobicProfile,
@@ -127,6 +132,101 @@ function estimateVo2max(
  * coachens val av tröskel och det som används här, 0,18. Ett test räcker inte
  * för att säga vilket ankare som stämmer bäst, och därför visas båda.
  */
+/**
+ * VLamax ur ett stegtest på cykel: den VLamax som får den kalibrerade
+ * modellens laktatkurva att stämma med stegtestets laktat upp till 4,5 mmol/l.
+ *
+ * Hela kurvan i stället för en tröskelpunkt. Att låsa modellens tröskel på
+ * ModDmax gjorde VLamax mycket känslig för var ModDmax hamnade: med 40 W-steg
+ * gav ett test 0,84 mot 0,55–0,59 ur extern profilering, sprintlaktat och
+ * distanstestet. Kurvan gav 0,61, och 0,42 mot 0,43 på ett andra test.
+ *
+ * Tröskel och FatMax ur kurvan är robusta (±5 W när VO2max varieras ±10 %),
+ * men VLamax följer VO2max: samma kurva med 10 % högre VO2max kräver en
+ * klart högre VLamax. Spannet visas därför alltid.
+ */
+function withCyclingCurveFit(
+  args: AnalysisArgs,
+  base: SessionAnalysis,
+  {
+    vo2max,
+    measured,
+    weightKg,
+    volRel,
+    modDmax,
+  }: { vo2max: number; measured: number | null; weightKg: number; volRel: number; modDmax: number },
+): SessionAnalysis {
+  const points = args.efforts.flatMap((e) =>
+    e.intensity !== null && e.intensity > 0 && e.lactate !== null
+      ? [{ power: e.intensity, lactate: e.lactate }]
+      : [],
+  );
+  const fitAt = (vo2: number) =>
+    fitVlamaxToStepTest(points, { bodyMass: weightKg, vo2max: vo2, volRel });
+  const fit = fitAt(vo2max);
+  if (!fit) {
+    return {
+      ...base,
+      warnings: [
+        ...base.warnings,
+        "VLamax ur testet kräver minst tre steg med laktat upp till 4,5 mmol/l.",
+      ],
+    };
+  }
+
+  // Känslighet: VO2max varieras ±3 % när det är uppmätt, ±10 % när det är skattat.
+  const vo2Spread = measured ? 0.03 : 0.1;
+  const range = [fitAt(vo2max * (1 - vo2Spread)), fitAt(vo2max * (1 + vo2Spread))].filter(
+    (f) => f !== null,
+  );
+  const vlas = [fit.vlamax, ...range.map((f) => f.vlamax)];
+  const ats = [fit, ...range].flatMap((f) => (f.engine.at ? [f.engine.at.power] : []));
+  const { at, fatMax, carbMax } = fit.engine;
+
+  const metrics: Metric[] = [
+    ...base.metrics.filter((m) => !(m.key === "VO2max" && measured === null)),
+    metric("VLamax", "VLamax", fit.vlamax, "mmol/l/s", {
+      method: `ur laktatkurvan, ${sv(Math.min(...vlas), 2)}–${sv(Math.max(...vlas), 2)}`,
+      isPrimary: true,
+    }),
+  ];
+  if (fatMax) {
+    metrics.push(
+      metric("FatMax", "FatMax", fatMax.power, args.unit, { method: "Mader", isPrimary: true }),
+      metric("Fat_g_h", "Fett vid FatMax", fatMax.fatGh, "g/h"),
+    );
+  }
+  if (carbMax) {
+    metrics.push(metric("CarbMax", "CarbMax 90 g/h", carbMax, args.unit, { method: "Mader" }));
+  }
+  if (at) {
+    metrics.push(metric("CHO_at_LT2", "Kolhydrat vid tröskeln", at.choGh, "g/h"));
+  }
+  if (measured === null) {
+    metrics.push(
+      metric("VO2max", "VO2max (skattad)", vo2max, "ml/kg/min", {
+        method: `Hawley & Noakes på ${peakLabel(args.unit)}`,
+      }),
+    );
+  }
+
+  const warnings = [
+    ...base.warnings,
+    `VLamax är den som får modellens laktatkurva att stämma med stegtestets laktat upp till 4,5 mmol/l (avvikelse ${sv(fit.rmsLactate, 2)} mmol/l). Spann ${sv(Math.min(...vlas), 2)}–${sv(Math.max(...vlas), 2)} när ${measured ? "det uppmätta VO2max varieras ±3 %" : "det skattade VO2max varieras ±10 %"}.${at ? ` Modellens tröskel hamnar på ${sv(at.power, 0)} W (${sv(Math.min(...ats), 0)}–${sv(Math.max(...ats), 0)} W), ModDmax på ${sv(modDmax, 0)} W.` : ""}`,
+  ];
+  if (args.bodyFatPct == null || !args.sex) {
+    warnings.push(
+      "Stegtestet sparas utan kroppsfett och kön, så laktatets fördelningsvolym räknas för en man med 15 % kroppsfett. Det påverkar VLamax och bränslet i g/h något, inte tröskeln.",
+    );
+  }
+  if (measured === null) {
+    warnings.push(
+      `VO2max är skattat ur ${peakLabel(args.unit)} (${sv(vo2max, 1)} ml/kg/min). Tröskel och FatMax ur kurvan påverkas bara några watt av det, men VLamax följer VO2max. Ett uppmätt VO2max – ett VO2max-test som slut på testet – gör VLamax säker.`,
+    );
+  }
+  return { ...base, metrics, warnings };
+}
+
 function withStepTestProfile(args: AnalysisArgs, base: SessionAnalysis): SessionAnalysis {
   const peak = args.finish?.peakIntensity ?? null;
   const weightKg = args.weightKg;
@@ -153,6 +253,11 @@ function withStepTestProfile(args: AnalysisArgs, base: SessionAnalysis): Session
   const measured = args.finish?.vo2max ?? null;
   const vo2max = measured ?? estimateVo2max(peak, args.unit, weightKg);
   if (vo2max === null || !(vo2max > 0)) return base;
+
+  const volRel = profileVolRel(args.protocol, args.unit, args.sex ?? null, args.bodyFatPct ?? null);
+  if (volRel !== null) {
+    return withCyclingCurveFit(args, base, { vo2max, measured, weightKg, volRel, modDmax });
+  }
 
   const vlamax = solveVlamax(modDmax, vo2max, peak, weightKg);
   if (vlamax === null) {
@@ -232,17 +337,28 @@ const sv1 = (n: number, digits = 0) => n.toFixed(digits).replace(".", ",");
 const toModelSex = (sex: "man" | "kvinna") => (sex === "kvinna" ? "female" : "male");
 
 /**
- * Laktatets fördelningsvolym för den metabola profilen, så att kurvan ritas
- * med samma modell som nyckeltalen. Null för andra protokoll.
+ * Laktatets fördelningsvolym för de cykeltester som räknas med den kalibrerade
+ * modellen, så att kurvan ritas med samma modell som nyckeltalen. Stegtestet
+ * sparas utan kroppsfett och kön och räknas då som en man med 15 %. Null för
+ * löpning och för andra protokoll, som ritas med den äldre kurvan.
  */
-export const profileVolRel = (
+export function profileVolRel(
   protocol: string,
+  unit: string,
   sex: "man" | "kvinna" | null,
   bodyFatPct: number | null,
-) =>
-  protocol === "metabol-profil" && sex && bodyFatPct !== null && bodyFatPct > 0
-    ? lactateDistributionVolume(toModelSex(sex), bodyFatPct)
-    : null;
+): number | null {
+  const known = sex !== null && bodyFatPct !== null && bodyFatPct > 0;
+  if (protocol === "metabol-profil") {
+    return known ? lactateDistributionVolume(toModelSex(sex), bodyFatPct) : null;
+  }
+  if (protocol === "laktat-steg" && unit === "W") {
+    return known
+      ? lactateDistributionVolume(toModelSex(sex), bodyFatPct)
+      : lactateDistributionVolume("male", 15);
+  }
+  return null;
+}
 
 /**
  * En sprint och tre maxinsatser – ett batteri för metabol profilering.

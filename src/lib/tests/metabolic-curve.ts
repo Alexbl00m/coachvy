@@ -182,7 +182,7 @@ export function metabolicHistory(
         s.intensity_unit,
         n(s.weight_kg),
         s.protocol === "laktat-steg" ? n(s.peak_intensity) : null,
-        profileVolRel(s.protocol, s.sex ?? null, n(s.body_fat_pct)),
+        profileVolRel(s.protocol, s.intensity_unit, s.sex ?? null, n(s.body_fat_pct)),
       );
       return curve
         ? [

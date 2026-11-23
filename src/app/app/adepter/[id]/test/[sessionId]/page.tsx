@@ -126,6 +126,7 @@ export default async function SessionPage({
       : null,
     profileVolRel(
       session.protocol,
+      session.intensity_unit,
       session.sex ?? null,
       session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
     ),
