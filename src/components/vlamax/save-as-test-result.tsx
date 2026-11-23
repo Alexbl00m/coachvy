@@ -13,9 +13,12 @@ import type { Adept } from "@/lib/types/database";
 export function SaveAsTestResult({
   adepts,
   value,
+  comment,
 }: {
   adepts: Adept[];
   value: number;
+  /** Hur värdet togs fram, sparas med raden. Utan den märks raden som beräknad. */
+  comment?: string;
 }) {
   const [state, formAction, pending] = useActionState(
     saveVlamaxAsTestResult,
@@ -39,6 +42,7 @@ export function SaveAsTestResult({
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="value" value={value.toFixed(3)} />
+        {comment && <input type="hidden" name="comment" value={comment} />}
 
         <FormMessage error={state.error} notice={state.notice} />
 
