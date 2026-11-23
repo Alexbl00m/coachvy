@@ -12,12 +12,7 @@ import type {
 import type { TargetBasis, WorkoutBlock } from "@/lib/workouts/schema";
 import type { MultisportSummary } from "@/lib/activities/multisport";
 import type { BikeFitAnalysis } from "@/lib/bikefit/fit";
-import type {
-  Body,
-  Findings,
-  Intake,
-  Screening,
-} from "@/lib/bikefit/protocol";
+import type { Body, Findings, Intake, Screening } from "@/lib/bikefit/protocol";
 import type { Bands, Discipline } from "@/lib/bikefit/templates";
 import type {
   PlanLibraryFunctions,
@@ -206,9 +201,19 @@ export type WorkoutRow = {
   blocks: WorkoutBlock[];
   prompt: string | null;
   scheduled_for: string | null;
+  /** Protokollet passet är en del av när det är ett test, annars null. */
+  test_protocol: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Ett genomfört pass som hör till ett testtillfälle (många-till-många). */
+export type TestActivityRow = {
+  session_id: string;
+  activity_id: string;
+  created_by: string | null;
+  created_at: string;
 };
 
 /** Adeptens bakgrund. Egen tabell så att adepts förblir coachens register. */
@@ -285,7 +290,11 @@ export type BikeFitRow = {
     Record<"knee" | "trunk" | "elbow" | "shoulder" | "hip", number | null>
   >;
   bands: Bands;
-  legs: { thighMm?: number | null; shankMm?: number | null; source?: "video" | "coach" };
+  legs: {
+    thighMm?: number | null;
+    shankMm?: number | null;
+    source?: "video" | "coach";
+  };
   /** Cykelns mått efter fiten. */
   measures: Record<string, string | number | null>;
   /** Cykelns mått när adepten kom. */
@@ -402,7 +411,12 @@ export type AdeptCheckinRow = {
 };
 
 /** Ett meddelande i tråden mellan coach och adept. */
-export type CommunityChannel = "allmant" | "lopning" | "cykling" | "simning" | "triathlon";
+export type CommunityChannel =
+  | "allmant"
+  | "lopning"
+  | "cykling"
+  | "simning"
+  | "triathlon";
 
 /** Ett delat pass eller testresultat, som en ögonblicksbild. */
 export type CommunityAttachment = {
@@ -607,6 +621,13 @@ export type Database = {
         Update: Partial<TestMetricRow>;
         Relationships: [];
       };
+      test_activities: {
+        Row: TestActivityRow;
+        Insert: Pick<TestActivityRow, "session_id" | "activity_id"> &
+          Partial<TestActivityRow>;
+        Update: Partial<TestActivityRow>;
+        Relationships: [];
+      };
       workouts: {
         Row: WorkoutRow;
         Insert: Pick<
@@ -688,7 +709,12 @@ export type Database = {
         Row: ActivityRow;
         Insert: Pick<
           ActivityRow,
-          "adept_id" | "name" | "sport" | "started_at" | "performed_on" | "streams"
+          | "adept_id"
+          | "name"
+          | "sport"
+          | "started_at"
+          | "performed_on"
+          | "streams"
         > &
           Partial<ActivityRow>;
         Update: Partial<ActivityRow>;
@@ -702,7 +728,8 @@ export type Database = {
       };
       community_posts: {
         Row: CommunityPostRow;
-        Insert: Pick<CommunityPostRow, "author_id" | "body"> & Partial<CommunityPostRow>;
+        Insert: Pick<CommunityPostRow, "author_id" | "body"> &
+          Partial<CommunityPostRow>;
         Update: Partial<CommunityPostRow>;
         Relationships: [];
       };
@@ -715,7 +742,8 @@ export type Database = {
       };
       community_likes: {
         Row: CommunityLikeRow;
-        Insert: Pick<CommunityLikeRow, "post_id" | "profile_id"> & Partial<CommunityLikeRow>;
+        Insert: Pick<CommunityLikeRow, "post_id" | "profile_id"> &
+          Partial<CommunityLikeRow>;
         Update: Partial<CommunityLikeRow>;
         Relationships: [];
       };
@@ -767,14 +795,23 @@ export type Database = {
       };
       my_coach_invitations: {
         Args: Record<string, never>;
-        Returns: { id: string; coach_name: string; company_name: string | null; created_at: string }[];
+        Returns: {
+          id: string;
+          coach_name: string;
+          company_name: string | null;
+          created_at: string;
+        }[];
       };
       accept_coach_invitation: {
         Args: { invitation: string };
         Returns: string;
       };
       community_feed: {
-        Args: { p_channel?: CommunityChannel | null; p_before?: string | null; p_limit?: number };
+        Args: {
+          p_channel?: CommunityChannel | null;
+          p_before?: string | null;
+          p_limit?: number;
+        };
         Returns: CommunityFeedItem[];
       };
       community_post_comments: {

@@ -311,6 +311,13 @@ export function hoursText(seconds: number): string {
 }
 
 export const tssText = (tss: number) => wholeNumber(tss);
+
+/** "+4", "−13", "0" – med riktigt minustecken. */
+export function signedText(value: number, digits = 0): string {
+  const rounded = Number(value.toFixed(digits));
+  const body = Math.abs(rounded).toFixed(digits).replace(".", ",");
+  return rounded > 0 ? `+${body}` : rounded < 0 ? `\u2212${body}` : body;
+}
 export const ifText = (value: number) => comma(value, 2);
 
 /** "12,4 km", "2 400 m" för simning. */

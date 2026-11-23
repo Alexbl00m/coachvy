@@ -7,6 +7,8 @@ import { buttonClass } from "@/components/ui/button";
 import { PrintButton } from "@/components/workouts/print-button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { ScheduleWorkout } from "@/components/workouts/schedule-workout";
+import { WorkoutTestSelect } from "@/components/tests/test-pass-links";
+import { testName } from "@/lib/tests/test-passes";
 import { WorkoutView } from "@/components/workouts/workout-view";
 import { getAdept } from "@/lib/adepts/queries";
 import { isMember } from "@/lib/auth/membership";
@@ -32,7 +34,10 @@ export default async function WorkoutPage({
   const user = await requireSessionUser();
   const { id, workoutId } = await params;
 
-  const [adept, saved] = await Promise.all([getAdept(id), getWorkout(workoutId)]);
+  const [adept, saved] = await Promise.all([
+    getAdept(id),
+    getWorkout(workoutId),
+  ]);
   if (!adept || !saved || saved.adept_id !== adept.id) notFound();
 
   // Coachen flyttar sina adepters pass; en medlemsadept de pass hen byggt.
@@ -81,13 +86,27 @@ export default async function WorkoutPage({
         }
       />
 
-      <div className="mb-5">
+      <div className="mb-5 space-y-4">
         <ScheduleWorkout
           workoutId={saved.id}
           adeptId={adept.id}
           scheduledFor={saved.scheduled_for}
           canEdit={canSchedule}
         />
+        {canSchedule ? (
+          <WorkoutTestSelect
+            workoutId={saved.id}
+            adeptId={adept.id}
+            sport={saved.sport}
+            protocol={saved.test_protocol ?? null}
+          />
+        ) : (
+          saved.test_protocol && (
+            <p className="text-sm text-text-muted">
+              Del av ett test: {testName(saved.test_protocol)}
+            </p>
+          )
+        )}
       </div>
 
       <WorkoutView

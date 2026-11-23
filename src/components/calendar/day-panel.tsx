@@ -25,6 +25,7 @@ import type { TrainingBlockRow } from "@/lib/types/database";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { dragOf } from "@/lib/calendar/drag";
 import { ifText, loadLine, tssText } from "@/lib/workouts/load";
+import { testTag } from "@/lib/tests/test-passes";
 import { SportIcon, TestIcon, type DayItems } from "./calendar-items";
 import { MovePassButton } from "./move-pass-button";
 
@@ -50,6 +51,10 @@ function ItemLink({
     </Link>
   );
 }
+
+/** IF ur den räknade TSS:en, annars ur filen. */
+const ifOf = (a: DayItems["activities"][number]) =>
+  a.load?.intensityFactor ?? a.summary.intensityFactor ?? null;
 
 /** Det som finns en dag, med länkar vidare. */
 export function DayContent({
@@ -139,23 +144,33 @@ export function DayContent({
       {items.activities.map((a) => (
         <li key={a.id}>
           <ItemLink href={`${routes.adepts}/${a.adept_id}/aktivitet/${a.id}`}>
-            <SportIcon
-              sport={a.sport as Sport}
-              className="mt-0.5 size-4 shrink-0 text-text"
-            />
+            {testTag(a.tests ?? []) ? (
+              <TestIcon className="mt-0.5 size-4 shrink-0" />
+            ) : (
+              <SportIcon
+                sport={a.sport as Sport}
+                className="mt-0.5 size-4 shrink-0 text-text"
+              />
+            )}
             <span className="min-w-0">
               <span className="block text-sm font-medium text-text">
                 {a.name}
               </span>
+              {testTag(a.tests ?? []) && (
+                <span className="block text-[0.75rem] font-medium text-text-muted">
+                  {testTag(a.tests ?? [])}
+                </span>
+              )}
               <span className="block text-[0.75rem] text-text-subtle">
                 {who(a.adept_name)}
                 {[
                   a.distance_m !== null &&
                     `${sv(Math.round(a.distance_m / 100) / 10)} km`,
                   a.duration_s !== null && formatClock(a.duration_s),
-                  a.summary.tss !== null && `TSS ${tssText(a.summary.tss)}`,
-                  a.summary.intensityFactor !== null &&
-                    `IF ${ifText(a.summary.intensityFactor)}`,
+                  a.load
+                    ? `${a.load.kind} ${tssText(a.load.tss)}`
+                    : a.summary.tss !== null && `TSS ${tssText(a.summary.tss)}`,
+                  ifOf(a) !== null && `IF ${ifText(ifOf(a) as number)}`,
                   a.summary.normalizedPower !== null &&
                     `NP ${Math.round(a.summary.normalizedPower)} W`,
                 ]
@@ -174,14 +189,23 @@ export function DayContent({
               <ItemLink
                 href={w.href ?? `${routes.adepts}/${w.adeptId}/pass/${w.id}`}
               >
-                <SportIcon
-                  sport={w.sport}
-                  className="mt-0.5 size-4 shrink-0 text-text-subtle"
-                />
+                {w.testProtocol ? (
+                  <TestIcon className="mt-0.5 size-4 shrink-0" />
+                ) : (
+                  <SportIcon
+                    sport={w.sport}
+                    className="mt-0.5 size-4 shrink-0 text-text-subtle"
+                  />
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-text">
                     {w.title}
                   </span>
+                  {w.testProtocol && (
+                    <span className="block text-[0.75rem] font-medium text-text-muted">
+                      {testTag([w.testProtocol])}
+                    </span>
+                  )}
                   <span className="block text-[0.75rem] text-text-subtle">
                     {who(w.adeptName)}
                     {[w.duration, w.summary].filter(Boolean).join(" · ") ||

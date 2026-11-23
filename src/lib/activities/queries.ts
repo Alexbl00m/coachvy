@@ -2,6 +2,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { ActivityRow } from "@/lib/types/database";
 import type { BestEffort, Curve, ZoneTime } from "./analysis";
+import type { ActivityTss } from "./tss";
 
 /** Allt utom serien – listor behöver inte kartan. */
 const LIST_COLUMNS =
@@ -110,7 +111,13 @@ export async function listMultisportLegs(
     .sort((a, b) => a.leg - b.leg);
 }
 
-export type ActivityInRange = ActivityListItem & { adept_name: string };
+export type ActivityInRange = ActivityListItem & {
+  adept_name: string;
+  /** TSS räknad i kalendern: ur effekten, eller rTSS, sTSS eller hrTSS. */
+  load?: ActivityTss | null;
+  /** Protokollen för testen passet ingår i. */
+  tests?: string[];
+};
 
 /** Aktiviteter mellan två datum, för kalendern. RLS avgör vilka adepter. */
 export async function listActivitiesBetween(

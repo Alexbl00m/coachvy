@@ -5,13 +5,13 @@
  * räknar intensitetsfördelningen.
  *
  * Det planerade är adeptens egna pass, planpassen och de planerade
- * styrkepassen. Det genomförda är aktiviteterna ur filerna; TSS finns där
- * passet hade effekt att räkna på.
+ * styrkepassen. Det genomförda är aktiviteterna ur filerna, med TSS ur
+ * effekten eller rTSS, sTSS och hrTSS ur fart och puls (activities/tss.ts).
  *
  * Modulen är ren, utan anrop.
  */
 
-import type { ActivityInRange } from "@/lib/activities/queries";
+import type { DoneLoad } from "@/lib/activities/tss-queries";
 import { distribution, type Distribution } from "@/lib/season/distribution";
 import { addDays } from "@/lib/season/season";
 import { addLoad, emptyTotals, type LoadTotals } from "@/lib/workouts/load";
@@ -28,14 +28,15 @@ export type WeekLoad = {
 };
 
 type Done = Pick<
-  ActivityInRange,
+  DoneLoad,
   | "adept_id"
   | "performed_on"
   | "sport"
   | "moving_s"
   | "duration_s"
   | "distance_m"
-  | "summary"
+  | "work_kj"
+  | "load"
 >;
 
 /** Veckans summor för en adept. */
@@ -73,8 +74,8 @@ export function weekLoad(
         addLoad(t, {
           sport: a.sport,
           seconds: a.moving_s ?? a.duration_s,
-          tss: a.summary?.tss ?? null,
-          kj: a.summary?.workKj ?? null,
+          tss: a.load?.tss ?? null,
+          kj: a.work_kj,
           metres: a.distance_m,
         }),
       emptyTotals(),

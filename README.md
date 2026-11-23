@@ -2004,8 +2004,38 @@ planerat och genomfört (pass, tid, TSS, kJ, km per gren), hur stor del av
 planens TSS som är gjord, och planens pass efter huvudsyfte som avsnitt 19
 räknar fördelningen (`calendar/week-load.ts`). Passets sida, passbyggaren,
 planbibliotekets mallar, den startade planens veckovy och Plan bredvid
-visar TSS per pass och per vecka. Genomförda pass har TSS där filen har
-effekt.
+visar TSS per pass och per vecka.
+
+Genomförda pass får TSS också utan effekt (`activities/tss.ts`), räknat
+ur det som sparades vid uppladdningen mot trösklarna som gällde dagen:
+rTSS i löpning ur normaliserad fart (nya pass; äldre ur snittfarten i
+rörelse) genom tröskelfarten (LT2 ur ett laktattest, annars 0,95 × CS),
+sTSS i simning ur sträckan genom tiden mot CSS, och hrTSS ur tiden i
+Friels pulszoner mot tröskelpulsen, med zonens motsvarande IF i kvadrat
+per timme. Effekt går före fart, fart före puls. `listDoneLoads` hämtar
+bara de fält som behövs, utan serier.
+
+Fitness, trötthet och form (`training/pmc.ts`) räknas ur TSS per dag som
+Banisters modell i Coggans Performance Manager: CTL med 42 dagar, ATL med
+7, TSB = CTL − ATL. Bakåt det genomförda, från i dag planen, så att formen
+efter ett läger eller inför ett lopp syns i förväg. Serien börjar 180
+dagar före det som visas. Kortet Veckan visar fitness, trötthet och form
+efter veckan och rampen mot veckan före; veckokolumnen visar formen.
+
+### Pass som del av ett test
+
+Ett test går ofta över flera dagar – sprint och tre minuter en dag, sex
+minuter en annan, tolv minuter på söndagen – och samma pass kan ingå i
+flera test (critical power och metabol profil ur samma insatser).
+`test_activities` kopplar genomförda pass till testtillfällen,
+många-till-många, med testets behörighet. På testets sida föreslås passen
+de dagar insatserna gjordes (`suggestedPasses`), och andra pass två veckor
+runt testet går att välja. På aktivitetens sida läggs passet i ett test
+två veckor runt dagen, eller i ett nytt (`/test/nytt?koppla=<aktivitet>`:
+dagen och grenen förifylls och passet kopplas när testet sparas). Ett
+planerat pass märks med testets protokoll (`workouts.test_protocol`), så
+att testveckan syns innan den är gjord. Kalendern visar testpassen med
+testets ikon och namn, och kortet Veckan säger vilka test veckan har.
 
 ### Planerade styrkepass
 

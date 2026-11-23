@@ -13,6 +13,7 @@ import type { Sport } from "@/lib/calculators/lactate";
 import { adeptHref, routes } from "@/lib/routes";
 import { listSeasonBlocks } from "@/lib/season/queries";
 import { listSessions } from "@/lib/tests/session-queries";
+import { getActivity } from "@/lib/activities/queries";
 
 export const metadata = { title: "Nytt testtillfälle" };
 
@@ -26,16 +27,26 @@ function sportOf(raw: string | null): Sport {
 
 export default async function NewSessionPage({
   params,
+  searchParams,
 }: PageProps<"/app/adepter/[id]/test/nytt">) {
   const user = await requireSessionUser();
   const { id } = await params;
+  const query = await searchParams;
+  // Testet skapas ur ett genomfört pass: dagen och grenen följer passet.
+  const koppla = typeof query.koppla === "string" ? query.koppla : null;
+  const linked = koppla ? await getActivity(koppla) : null;
+  const link =
+    linked && linked.adept_id === id
+      ? { activityId: linked.id, date: linked.performed_on, name: linked.name }
+      : undefined;
 
   // Coachen registrerar på sina adepter; en adept som är medlem på sig själv.
   const selfService = user.profile?.role === "adept";
   if (selfService && !(isMember(user) && user.adept?.id === id)) {
     redirect(adeptHref(id, "tester"));
   }
-  if (!selfService && user.profile?.role !== "coach") redirect(routes.dashboard);
+  if (!selfService && user.profile?.role !== "coach")
+    redirect(routes.dashboard);
 
   const [adept, profile, sessions, season] = await Promise.all([
     getAdept(id),
@@ -47,8 +58,10 @@ export default async function NewSessionPage({
 
   // Förifyllt ur det senaste test som hade värdet, så att coachen bara
   // behöver ändra det som faktiskt ändrats sedan dess.
-  const lastWeight = sessions.find((s) => s.weight_kg != null)?.weight_kg ?? null;
-  const lastBodyFat = sessions.find((s) => s.body_fat_pct != null)?.body_fat_pct ?? null;
+  const lastWeight =
+    sessions.find((s) => s.weight_kg != null)?.weight_kg ?? null;
+  const lastBodyFat =
+    sessions.find((s) => s.body_fat_pct != null)?.body_fat_pct ?? null;
   const sex =
     profile?.sex === "man" || profile?.sex === "kvinna"
       ? profile.sex
@@ -66,17 +79,20 @@ export default async function NewSessionPage({
 
       <PageHeader
         title="Nytt testtillfälle"
-        description="Välj protokoll och fyll i rådatan. Värdena räknas ut medan du skriver. Det som sparas är stegen och det de gav."
+        description={`Välj protokoll och fyll i rådatan. Värdena räknas ut medan du skriver. Det som sparas är stegen och det de gav.${link ? ` ${link.name} läggs i testet när det sparas.` : ""}`}
       />
 
       <NewSessionForm
         adeptId={adept.id}
-        adeptSport={sportOf(adept.sport)}
+        adeptSport={
+          link && linked ? sportOf(linked.sport) : sportOf(adept.sport)
+        }
         adeptWeight={lastWeight === null ? null : Number(lastWeight)}
         adeptBodyFat={lastBodyFat === null ? null : Number(lastBodyFat)}
         adeptSex={sex}
         member={isMember(user)}
         season={season}
+        link={link}
       />
     </>
   );

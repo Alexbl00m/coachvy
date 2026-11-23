@@ -3,9 +3,12 @@ import { Card } from "@/components/ui/card";
 import type { WeekLoad } from "@/lib/calendar/week-load";
 import { weekLabel } from "@/lib/calendar/week";
 import { SESSION_GOALS } from "@/lib/season/distribution";
+import type { WeekForm } from "@/lib/training/pmc";
+import { testName } from "@/lib/tests/test-passes";
 import {
   distanceText,
   hoursText,
+  signedText,
   tssText,
   wholeNumber,
   type LoadTotals,
@@ -21,10 +24,16 @@ const GOAL_TEXT = { lugn: "lugnt", medel: "medel", hög: "högt" } as const;
  */
 export function WeekLoadCard({
   week,
+  form = null,
+  tests = [],
   today,
   action = null,
 }: {
   week: WeekLoad;
+  /** Fitness, trötthet och form efter veckan. */
+  form?: WeekForm | null;
+  /** Protokollen för testen i veckan, planerade och gjorda. */
+  tests?: string[];
   today: string;
   action?: React.ReactNode;
 }) {
@@ -80,6 +89,12 @@ export function WeekLoadCard({
         </p>
       </div>
 
+      {tests.length > 0 && (
+        <p className="mb-3 text-sm font-medium text-text">
+          Test i veckan: {[...new Set(tests.map(testName))].join(", ")}
+        </p>
+      )}
+
       {shown.length === 0 ? (
         <p className="text-sm text-text-subtle">Inget planerat eller gjort.</p>
       ) : (
@@ -122,7 +137,7 @@ export function WeekLoadCard({
         <p className="mt-2 text-[0.75rem] text-text-muted">
           {share !== null && `Gjort ${share} % av planens TSS. `}
           {missing.length > 0 &&
-            `Utan TSS: ${missing.join(", ")} (styrka, eller pass utan effekt eller steg att räkna på).`}
+            `Utan TSS: ${missing.join(", ")} (styrka, eller pass utan effekt, fart, puls eller steg att räkna på).`}
         </p>
       )}
 
@@ -140,9 +155,41 @@ export function WeekLoadCard({
         </div>
       )}
 
+      {form && (
+        <div className="mt-4">
+          <p className="text-[0.75rem] font-medium text-text-subtle">
+            Efter veckan{form.projected ? ", med planen" : ""}
+          </p>
+          <dl className="mt-1.5 grid grid-cols-3 gap-2">
+            {[
+              { label: "Fitness", sub: "CTL", value: Math.round(form.ctl) },
+              { label: "Trötthet", sub: "ATL", value: Math.round(form.atl) },
+              { label: "Form", sub: "TSB", value: signedText(form.tsb) },
+            ].map((x) => (
+              <div key={x.sub} className="rounded-md bg-surface-2 px-2 py-1.5">
+                <dt className="text-[0.6875rem] text-text-subtle">
+                  {x.label} <span className="sr-only">(</span>
+                  {x.sub}
+                  <span className="sr-only">)</span>
+                </dt>
+                <dd className="text-base font-semibold text-text tabular-nums">
+                  {x.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {form.ramp !== null && (
+            <p className="mt-1.5 text-[0.75rem] text-text-muted">
+              Fitness {signedText(form.ramp, 1)} mot veckan före.
+            </p>
+          )}
+        </div>
+      )}
+
       <p className="mt-4 text-[0.6875rem] text-text-subtle">
         TSS: en timme på tröskeln är 100. Löpning räknas som rTSS, simning som
-        sTSS.
+        sTSS och pass med bara puls som hrTSS. Fitness och trötthet är TSS per
+        dag i snitt över 42 och 7 dagar, och formen är skillnaden mellan dem.
       </p>
 
       {action && <div className="mt-4 border-t border-line pt-4">{action}</div>}

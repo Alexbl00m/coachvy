@@ -23,7 +23,10 @@ import { racePredictions, toMetresPerSecond } from "@/lib/tests/analysis";
 import { timeFromVdot } from "@/lib/calculators/daniels";
 import { STANDARD_DISTANCES } from "@/lib/calculators/race-prediction";
 import { RacePredictionsCard } from "@/components/tests/race-predictions";
-import { RedMistCard, SwimPredictionsCard } from "@/components/tests/swim-cards";
+import {
+  RedMistCard,
+  SwimPredictionsCard,
+} from "@/components/tests/swim-cards";
 import { MetabolicSection } from "@/components/tests/metabolic-section";
 import { PowerDurationChart } from "@/components/tests/power-duration-chart";
 import {
@@ -41,6 +44,12 @@ import { displayValue } from "@/lib/tests/pace";
 import { formatDuration } from "@/lib/calculators/time";
 import { assessLsct, lsctResult } from "@/lib/tests/lsct";
 import { protocolByKey } from "@/lib/tests/protocols";
+import { TestPasses } from "@/components/tests/test-pass-links";
+import {
+  listPassesNear,
+  listTestActivities,
+} from "@/lib/tests/test-pass-queries";
+import { suggestedPasses } from "@/lib/tests/test-passes";
 import {
   getSession,
   listFullSessions,
@@ -59,7 +68,10 @@ export default async function SessionPage({
   const user = await requireSessionUser();
   const { id, sessionId } = await params;
 
-  const [adept, session] = await Promise.all([getAdept(id), getSession(sessionId)]);
+  const [adept, session] = await Promise.all([
+    getAdept(id),
+    getSession(sessionId),
+  ]);
   if (!adept || !session || session.adept_id !== adept.id) notFound();
 
   const spec = protocolByKey(session.protocol);
@@ -67,25 +79,36 @@ export default async function SessionPage({
 
   // Zonerna räknas om ur rådatan i stället för att lagras: förbättras modellen
   // får ett gammalt test bättre zoner utan att någon rör databasen.
-  const recomputed = analyseSessionOnServer({
-    protocol: session.protocol,
-    sport: session.sport,
-    unit: session.intensity_unit,
-    efforts: toEfforts(session.test_efforts),
-    weightKg: session.weight_kg,
-    bodyFatPct: session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
-    sex: session.sex ?? null,
-    finish: {
-      peakIntensity: session.peak_intensity != null ? Number(session.peak_intensity) : null,
-      vo2max: session.vo2max != null ? Number(session.vo2max) : null,
-      peakLactate: session.peak_lactate != null ? Number(session.peak_lactate) : null,
-      peakHeartRate: session.peak_heart_rate != null ? Number(session.peak_heart_rate) : null,
+  const recomputed = analyseSessionOnServer(
+    {
+      protocol: session.protocol,
+      sport: session.sport,
+      unit: session.intensity_unit,
+      efforts: toEfforts(session.test_efforts),
+      weightKg: session.weight_kg,
+      bodyFatPct:
+        session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
+      sex: session.sex ?? null,
+      finish: {
+        peakIntensity:
+          session.peak_intensity != null
+            ? Number(session.peak_intensity)
+            : null,
+        vo2max: session.vo2max != null ? Number(session.vo2max) : null,
+        peakLactate:
+          session.peak_lactate != null ? Number(session.peak_lactate) : null,
+        peakHeartRate:
+          session.peak_heart_rate != null
+            ? Number(session.peak_heart_rate)
+            : null,
+      },
     },
-  }, {
-    // Medlemsdelarna räknas om när testet sparades med dem – det är vad som
-    // betalades för då, oavsett vem som tittar nu.
-    members: session.test_metrics.some((m) => m.key === "VLamax"),
-  });
+    {
+      // Medlemsdelarna räknas om när testet sparades med dem – det är vad som
+      // betalades för då, oavsett vem som tittar nu.
+      members: session.test_metrics.some((m) => m.key === "VLamax"),
+    },
+  );
 
   /**
    * Storheten med ord i stället för sin databasnyckel.
@@ -102,17 +125,22 @@ export default async function SessionPage({
     session.protocol === "lsct"
       ? await (async () => {
           const history = (await listFullSessions(adept.id))
-            .filter((s) => s.protocol === "lsct" && s.performed_on <= session.performed_on)
+            .filter(
+              (s) =>
+                s.protocol === "lsct" && s.performed_on <= session.performed_on,
+            )
             .map(lsctResult)
             .sort((a, b) => b.performedOn.localeCompare(a.performedOn));
           const current =
-            history.find((h) => h.sessionId === session.id) ?? lsctResult(session);
+            history.find((h) => h.sessionId === session.id) ??
+            lsctResult(session);
           return { history, assessment: assessLsct(current, history) };
         })()
       : null;
 
   // --- Metabola diagram, puls och bränsle per zon ---------------------------
-  const weightKg = session.weight_kg === null ? null : Number(session.weight_kg);
+  const weightKg =
+    session.weight_kg === null ? null : Number(session.weight_kg);
   const recomputedValue = (key: string) => {
     const m = recomputed.metrics.find((x) => x.key === key);
     return m && m.value > 0 ? m.value : null;
@@ -132,11 +160,16 @@ export default async function SessionPage({
     ),
   );
   const isProfile = session.protocol === "metabol-profil";
-  const fullSessions = curve || isProfile ? await listFullSessions(adept.id) : [];
+  const fullSessions =
+    curve || isProfile ? await listFullSessions(adept.id) : [];
   // Den metabola profilen jämförs med adeptens förra, omräknad med samma modell.
   const previous = isProfile
     ? fullSessions
-        .filter((s) => s.protocol === "metabol-profil" && s.performed_on < session.performed_on)
+        .filter(
+          (s) =>
+            s.protocol === "metabol-profil" &&
+            s.performed_on < session.performed_on,
+        )
         .sort((a, b) => b.performed_on.localeCompare(a.performed_on))[0]
     : undefined;
   const changes = previous
@@ -158,7 +191,13 @@ export default async function SessionPage({
           const v = (key: string) =>
             Number(s.test_metrics.find((m) => m.key === key)?.value ?? 0);
           return v("VO2max") > 0 && v("VLamax") > 0
-            ? [{ vo2max: v("VO2max"), vlamax: v("VLamax"), date: s.performed_on }]
+            ? [
+                {
+                  vo2max: v("VO2max"),
+                  vlamax: v("VLamax"),
+                  date: s.performed_on,
+                },
+              ]
             : [];
         })
         .concat({
@@ -236,7 +275,6 @@ export default async function SessionPage({
   const labelFor = (key: string) =>
     labels.get(key) ?? key.split(":")[0].replace("_prime", "′");
 
-
   // Insatser från flera dagar, och maxpuls ur cykeldatorns fil, visas bara
   // när testet har dem.
   const hasDates = session.test_efforts.some((e) => e.performed_on !== null);
@@ -307,6 +345,22 @@ export default async function SessionPage({
         return (await planSuggestions(adept.id))[0] ?? null;
       })()
     : null;
+
+  // Passen testet bygger på, och de som troligen hör dit: samma gren, de
+  // dagar insatserna gjordes.
+  const [testPasses, nearbyPasses] = await Promise.all([
+    listTestActivities(session.id),
+    isCoach ? listPassesNear(adept.id, session.performed_on) : [],
+  ]);
+  const suggested = suggestedPasses(
+    {
+      sport: session.sport,
+      performed_on: session.performed_on,
+      effortDates: session.test_efforts.map((e) => e.performed_on),
+    },
+    nearbyPasses,
+    new Set(testPasses.map((p) => p.id)),
+  );
 
   const primary = session.test_metrics.filter((m) => m.is_primary);
   const secondary = session.test_metrics.filter((m) => !m.is_primary);
@@ -383,7 +437,23 @@ export default async function SessionPage({
         {session.notes && (
           <Card>
             <CardTitle>Anteckning</CardTitle>
-            <p className="text-sm leading-relaxed text-text-muted">{session.notes}</p>
+            <p className="text-sm leading-relaxed text-text-muted">
+              {session.notes}
+            </p>
+          </Card>
+        )}
+
+        {(isCoach || testPasses.length > 0) && (
+          <Card>
+            <CardTitle>Passen i testet</CardTitle>
+            <TestPasses
+              sessionId={session.id}
+              adeptId={adept.id}
+              linked={testPasses}
+              suggested={suggested}
+              nearby={nearbyPasses}
+              canEdit={isCoach}
+            />
           </Card>
         )}
 
@@ -511,7 +581,8 @@ export default async function SessionPage({
             wPrime={wPrimeKj * 1000}
             efforts={session.test_efforts
               .filter(
-                (e) => Number(e.duration_seconds) > 0 && Number(e.intensity) > 0,
+                (e) =>
+                  Number(e.duration_seconds) > 0 && Number(e.intensity) > 0,
               )
               .map((e) => ({
                 seconds: Number(e.duration_seconds),

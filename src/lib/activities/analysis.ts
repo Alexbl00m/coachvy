@@ -96,6 +96,11 @@ export type Summary = {
   ascentM: number | null;
   /** km/h, rörlig tid. */
   avgSpeed: number | null;
+  /**
+   * Löpning: farten normaliserad som NP (30 s glidande medel, fjärde
+   * potens), km/h, för rTSS. Saknas i äldre pass.
+   */
+  normalizedSpeed?: number | null;
   maxSpeed: number | null;
   avgPower: number | null;
   maxPower: number | null;
@@ -777,6 +782,10 @@ export function analyse(
     avgPower,
     maxPower: hasPower ? Math.max(...power) : null,
     normalizedPower: np,
+    normalizedSpeed:
+      sport === "löpning" && moving.some((s) => (s.speed ?? 0) > 0)
+        ? (normalizedPower(moving.map((s) => s.speed ?? 0)) ?? 0) * 3.6 || null
+        : null,
     workKj: hasPower ? power.reduce((s, p) => s + p, 0) / 1000 : null,
     variabilityIndex: np !== null && avgPower ? np / avgPower : null,
     intensityFactor: ifactor,

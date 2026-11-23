@@ -75,6 +75,8 @@ export type CalendarWorkout = {
   work?: string | null;
   /** TSS, IF, NP och kJ, när passet har steg att räkna på. */
   load?: WorkoutLoad | null;
+  /** Protokollet när passet är en del av ett test. */
+  testProtocol?: string | null;
 };
 
 export type CalendarTest = {
@@ -88,7 +90,7 @@ export type CalendarTest = {
 };
 
 const WORKOUT_COLUMNS =
-  "id, adept_id, title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt, scheduled_for, created_by, created_at";
+  "id, adept_id, title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt, scheduled_for, test_protocol, created_by, created_at";
 
 export async function listScheduledWorkouts(
   from: string,
@@ -155,6 +157,7 @@ export async function listScheduledWorkouts(
       structure: saved.blocks?.length ? formatStructure(saved.blocks) : null,
       work: saved.blocks?.length ? workText(saved.blocks) : null,
       load: workoutLoad(workout, saved.reference),
+      testProtocol: saved.test_protocol ?? null,
     };
   });
   const gym: CalendarWorkout[] = strength.map((s) => {
