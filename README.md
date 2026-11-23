@@ -936,6 +936,11 @@ Ett pass i biblioteket har nu inga, tre eller fyra nivåer
 (`20261124100000_session_library_four_levels.sql`). Race-passen står i
 Ironmanfart, `@IM`; mot 70.3 skrivs samma rad med `@703`.
 
+De färdiga passen läses in under Admin → Färdiga pass
+(`src/lib/session-library/atlas/import-actions.ts`), med admin som ägare och
+delade med alla coacher. Ett pass med samma namn och gren hoppas över, så
+inläsningen går att köra igen när atlasen växer.
+
 ## Löptester och fartprofil
 
 Tre löptester som registreras varv för varv – en rad per kilometer eller
