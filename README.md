@@ -2004,8 +2004,23 @@ planerat och genomfört (pass, tid, TSS, kJ, km per gren), hur stor del av
 planens TSS som är gjord, och planens pass efter huvudsyfte som avsnitt 19
 räknar fördelningen (`calendar/week-load.ts`). Passets sida, passbyggaren,
 planbibliotekets mallar, den startade planens veckovy och Plan bredvid
-visar TSS per pass och per vecka. Genomförda pass har TSS där filen har
-effekt.
+visar TSS per pass och per vecka.
+
+Genomförda pass får TSS också utan effekt (`activities/tss.ts`), räknat
+ur det som sparades vid uppladdningen mot trösklarna som gällde dagen:
+rTSS i löpning ur normaliserad fart (nya pass; äldre ur snittfarten i
+rörelse) genom tröskelfarten (LT2 ur ett laktattest, annars 0,95 × CS),
+sTSS i simning ur sträckan genom tiden mot CSS, och hrTSS ur tiden i
+Friels pulszoner mot tröskelpulsen, med zonens motsvarande IF i kvadrat
+per timme. Effekt går före fart, fart före puls. `listDoneLoads` hämtar
+bara de fält som behövs, utan serier.
+
+Fitness, trötthet och form (`training/pmc.ts`) räknas ur TSS per dag som
+Banisters modell i Coggans Performance Manager: CTL med 42 dagar, ATL med
+7, TSB = CTL − ATL. Bakåt det genomförda, från i dag planen, så att formen
+efter ett läger eller inför ett lopp syns i förväg. Serien börjar 180
+dagar före det som visas. Kortet Veckan visar fitness, trötthet och form
+efter veckan och rampen mot veckan före; veckokolumnen visar formen.
 
 ### Planerade styrkepass
 

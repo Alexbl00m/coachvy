@@ -21,6 +21,13 @@ import { getMyAdeptRow, listAdepts } from "@/lib/adepts/queries";
 import { requireSessionUser } from "@/lib/auth/session";
 import { dragOf } from "@/lib/calendar/drag";
 import { weekLoads } from "@/lib/calendar/week-load";
+import { listDoneLoads } from "@/lib/activities/tss-queries";
+import {
+  dailyTss,
+  PMC_WARMUP_DAYS,
+  pmcSeries,
+  weekForm,
+} from "@/lib/training/pmc";
 import {
   listCheckinsBetween,
   listScheduledWorkouts,
@@ -126,21 +133,40 @@ export default async function KalenderPage({
   const to =
     dates[dates.length - 1] > lastSoon ? dates[dates.length - 1] : lastSoon;
 
-  const [workouts, tests, races, blocks, checkins, activities, calls] =
-    await Promise.all([
-      listScheduledWorkouts(from, to, adeptId),
-      listSessionsBetween(from, to, adeptId),
-      listRacesBetween(from, to),
-      adeptId ? listSeasonBlocks(adeptId) : Promise.resolve([]),
-      adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
-      listActivitiesBetween(from, to, adeptId),
-      // Samtalen räknas i svensk tid; en dags marginal åt båda hållen.
-      listCallsBetween(
-        `${addDays(from, -1)}T00:00:00Z`,
-        `${addDays(to, 1)}T23:59:59Z`,
-        adeptId,
-      ),
-    ]);
+  const [
+    workouts,
+    tests,
+    races,
+    blocks,
+    checkins,
+    fetchedActivities,
+    calls,
+    doneLoads,
+  ] = await Promise.all([
+    listScheduledWorkouts(from, to, adeptId),
+    listSessionsBetween(from, to, adeptId),
+    listRacesBetween(from, to),
+    adeptId ? listSeasonBlocks(adeptId) : Promise.resolve([]),
+    adeptId ? listCheckinsBetween(adeptId, from, to) : Promise.resolve([]),
+    listActivitiesBetween(from, to, adeptId),
+    // Samtalen räknas i svensk tid; en dags marginal åt båda hållen.
+    listCallsBetween(
+      `${addDays(from, -1)}T00:00:00Z`,
+      `${addDays(to, 1)}T23:59:59Z`,
+      adeptId,
+    ),
+    // TSS för de genomförda passen, flera månader bakåt för fitness och
+    // form. Bara för en adept.
+    adeptId
+      ? listDoneLoads(adeptId, addDays(from, -PMC_WARMUP_DAYS), to)
+      : Promise.resolve([]),
+  ]);
+  // Aktiviteterna får sin TSS – rTSS, sTSS eller hrTSS när filen saknar effekt.
+  const doneById = new Map(doneLoads.map((d) => [d.id, d.load]));
+  const activities = fetchedActivities.map((a) => ({
+    ...a,
+    load: doneById.get(a.id) ?? null,
+  }));
   // Biblioteket behövs bara när coachen tittar på en adept och kan lägga in.
   const library = isCoach && adept ? await listLibrary() : [];
 
@@ -198,11 +224,33 @@ export default async function KalenderPage({
     ? weekLoads(
         [...new Set([...dates.filter((_, i) => i % 7 === 0), selectedMonday])],
         workouts,
-        activities,
+        doneLoads,
         adeptId,
       )
     : null;
   const selectedLoad = loads?.get(selectedMonday) ?? null;
+
+  // Fitness, trötthet och form: genomfört bakåt, planen från i dag.
+  const pmc = adeptId
+    ? pmcSeries({
+        from: addDays(from, -PMC_WARMUP_DAYS),
+        to,
+        today,
+        done: dailyTss(
+          doneLoads.map((d) => ({ date: d.performed_on, tss: d.load?.tss })),
+        ),
+        planned: dailyTss(
+          workouts
+            .filter((w) => w.adeptId === adeptId)
+            .map((w) => ({ date: w.date, tss: w.load?.tss })),
+        ),
+      })
+    : null;
+  const forms = pmc
+    ? new Map(
+        [...(loads?.keys() ?? [])].map((m) => [m, weekForm(pmc, m)] as const),
+      )
+    : null;
 
   const moveWeek =
     adeptId && weekCount > 0 ? (
@@ -294,6 +342,7 @@ export default async function KalenderPage({
               movable
               weekAdeptId={adeptId}
               weekLoads={loads}
+              weekForms={forms}
             />
 
             {phasesShown.length > 0 && (
@@ -370,6 +419,7 @@ export default async function KalenderPage({
             {selectedLoad && (
               <WeekLoadCard
                 week={selectedLoad}
+                form={forms?.get(selectedMonday) ?? null}
                 today={today}
                 action={moveWeek}
               />

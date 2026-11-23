@@ -6,6 +6,7 @@ import { SERIES } from "@/lib/calculators/chart-colors";
 import type { Sport } from "@/lib/calculators/lactate";
 import { dragOf, type DragWeek } from "@/lib/calendar/drag";
 import type { WeekLoad } from "@/lib/calendar/week-load";
+import type { WeekForm } from "@/lib/training/pmc";
 import { callTime } from "@/lib/calls/time";
 import { cn } from "@/lib/cn";
 import {
@@ -15,7 +16,12 @@ import {
   weekdayName,
 } from "@/lib/season/season";
 import type { TrainingBlockRow } from "@/lib/types/database";
-import { hoursText, tssText, type LoadTotals } from "@/lib/workouts/load";
+import {
+  hoursText,
+  signedText,
+  tssText,
+  type LoadTotals,
+} from "@/lib/workouts/load";
 import {
   SportIcon,
   TestIcon,
@@ -79,6 +85,7 @@ export function MonthGrid({
   movable = false,
   weekAdeptId = null,
   weekLoads = null,
+  weekForms = null,
 }: {
   month: string;
   today: string;
@@ -94,6 +101,8 @@ export function MonthGrid({
   weekAdeptId?: string | null;
   /** Veckornas summa, nyckel måndagen: en kolumn till höger med tid och TSS. */
   weekLoads?: Map<string, WeekLoad> | null;
+  /** Formen (TSB) efter varje vecka, nyckel måndagen. */
+  weekForms?: Map<string, WeekForm | null> | null;
 }) {
   // Rutnätet får en kolumn till för veckans summa när den finns.
   const columns = weekLoads
@@ -396,7 +405,12 @@ export function MonthGrid({
                 </Link>
               );
             })}
-            {weekLoads && <WeekCell load={weekLoads.get(week[0]) ?? null} />}
+            {weekLoads && (
+              <WeekCell
+                load={weekLoads.get(week[0]) ?? null}
+                form={weekForms?.get(week[0]) ?? null}
+              />
+            )}
           </div>
         );
       })}
@@ -405,13 +419,27 @@ export function MonthGrid({
 }
 
 /** Veckans summa: planen och, när något är gjort, det genomförda. */
-function WeekCell({ load }: { load: WeekLoad | null }) {
+function WeekCell({
+  load,
+  form,
+}: {
+  load: WeekLoad | null;
+  form: WeekForm | null;
+}) {
   const planned = load && load.planned.sessions > 0 ? load.planned : null;
   const done = load && load.done.sessions > 0 ? load.done : null;
   return (
     <span className="hidden min-w-0 flex-col gap-1.5 border-l border-line bg-surface-2/30 px-1.5 py-1.5 text-[0.6875rem] leading-tight tabular-nums sm:flex">
       {planned && <WeekSum label="Plan" totals={planned} />}
       {done && <WeekSum label="Gjort" totals={done} />}
+      {form && (planned || done) && (
+        <span
+          className="text-text-subtle"
+          title={`Formen (TSB) efter veckan${form.projected ? ", med planen" : ""}`}
+        >
+          Form {signedText(form.tsb)}
+        </span>
+      )}
     </span>
   );
 }

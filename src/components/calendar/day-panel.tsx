@@ -51,6 +51,10 @@ function ItemLink({
   );
 }
 
+/** IF ur den räknade TSS:en, annars ur filen. */
+const ifOf = (a: DayItems["activities"][number]) =>
+  a.load?.intensityFactor ?? a.summary.intensityFactor ?? null;
+
 /** Det som finns en dag, med länkar vidare. */
 export function DayContent({
   items,
@@ -153,9 +157,10 @@ export function DayContent({
                   a.distance_m !== null &&
                     `${sv(Math.round(a.distance_m / 100) / 10)} km`,
                   a.duration_s !== null && formatClock(a.duration_s),
-                  a.summary.tss !== null && `TSS ${tssText(a.summary.tss)}`,
-                  a.summary.intensityFactor !== null &&
-                    `IF ${ifText(a.summary.intensityFactor)}`,
+                  a.load
+                    ? `${a.load.kind} ${tssText(a.load.tss)}`
+                    : a.summary.tss !== null && `TSS ${tssText(a.summary.tss)}`,
+                  ifOf(a) !== null && `IF ${ifText(ifOf(a) as number)}`,
                   a.summary.normalizedPower !== null &&
                     `NP ${Math.round(a.summary.normalizedPower)} W`,
                 ]
