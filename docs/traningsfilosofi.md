@@ -1,6 +1,6 @@
 # Alexanders träningsfilosofi
 
-Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak. Tilläggen efter avsnitt 18 är senare ställningstaganden som preciserar den: intensitet per fas, styrketräning, LSCT, hur effekt, puls och upplevd ansträngning läses mot varandra, livet som ram för belastningen, värme, kvalitetsformat att välja bland och underlaget bakom.
+Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy. Texten nedan är Alexanders sparade beskrivning av sin metodik, oförändrad i sak. Tilläggen efter avsnitt 18 är senare ställningstaganden som preciserar den: intensitet per fas, styrketräning, LSCT, hur effekt, puls och upplevd ansträngning läses mot varandra, livet som ram för belastningen, värme, kvalitetsformat att välja bland, underlaget bakom och simningen.
 
 ## Så används den i arbetet
 
@@ -12,6 +12,7 @@ Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy
 - Ett utvecklingsblock bygger på ett eller två återkommande kvalitetsformat under tre till fyra veckor. Progressionen ändrar en variabel i taget.
 - Tester placeras där de påverkar beslut, till exempel inför den tävlingsspecifika delen för att kalibrera intensiteterna.
 - Planen är en hypotes. Responsen (genomförande, RPE, återhämtning, tester, lopp) avgör om den fortsätter, justeras eller byts.
+- Simningen doseras i fyra nivåer och mäts mot CSS i sekunder per 100 m. Ett block har ett tröskelformat, och tekniken går före farten (avsnitt 27).
 - AI och modeller stöder analysen men är underställda tränarens omdöme.
 
 ---
@@ -863,4 +864,96 @@ Urvalet nedan är det som filosofin främst vilar på. Studierna anges så att d
 - **Låg kadens.** Paton m.fl. (2009) och Kristoffersen m.fl. (2014) kom till olika slutsatser om lågkadensintervaller; underlaget räcker inte för att de ska ersätta vanlig kadens eller styrketräning.
 - **Värme.** Périard, Racinais & Sawka (2015) och Racinais m.fl. (2015) beskriver anpassningen och hur den byggs. Lorenzo m.fl. (2010) såg förbättring även i svalt väder. Zurawlew m.fl. (2016) och Scoon m.fl. (2007) prövade varmt bad och bastu efter träning. Rønnestad m.fl. (2021) såg större hemoglobinmassa efter fem veckors värmeträning. Daanen, Racinais & Périard (2018) beskriver hur anpassningen avtar och kommer tillbaka.
 - **Sola och Lorang.** Avsnitt 22–25 tog delvis intryck av en jämförande genomgång av hur Javier Sola och Dan Lorang beskrivs arbeta: tre signaler och två skikt av RPE, livet först och belastning som går att upprepa, värme, korta intervaller och vridmoment. Uppgifter om hur enskilda tränare och idrottare tränar är andrahandsuppgifter och används som inspiration, inte som belägg; det är studierna ovan som bär påståendena.
+- **Simning.** Wakayoshi m.fl. (1992) beskrev kritisk simfart och dess samband med prestation hos simmare, och Ginn (1993) gjorde den till CSS och träningsfarter för tränare. Avsnitt 27 bygger på Alexanders eget simsystem – åtta passfamiljer, fyra nivåer och en säsong på 38 veckor mot Ironman – granskat mot resten av filosofin.
 - **Översikt.** Wilkins & Bell, *Cycling Physiology & Training Science* (2021), sammanfattar mycket av ovanstående för cykling. Boken saknar triathlon, löpning och simning; där står avsnitt 10 på egna ben.
+
+## 27. Simning
+
+Avsnitt 10 säger att simningen planeras efter adeptens begränsningar och att tekniken styr vad en given fart kostar. Det här avsnittet gör det konkret: hur simträningen byggs, doseras och läses för triathleter mot Ironman och 70.3. Grunden är samma som för cykel och löpning – få återkommande format, en variabel i taget, lugnt ska vara lugnt – men simningen har tre egenheter. Tekniken sätter taket tidigare än i de andra grenarna, farten mäts mot CSS i sekunder per 100 m, och simpassen delar återhämtning med cykel och löpning.
+
+### CSS och fartområden
+
+CSS (critical swim speed) är referensfarten och motsvarar ungefär tröskeln. Den mäts med ett 400 + 200 m-test, båda maximalt och jämnt disponerade, med 5–8 minuters vila emellan:
+
+> CSS (s/100 m) = (tid 400 m − tid 200 m) / 2, med tiderna i sekunder.
+
+Farten anges som CSS plus eller minus sekunder per 100 m, inte i procent. En simmare på 1:30 och en på 2:10 tappar inte lika stor andel av farten för samma tillägg, och sekunderna är det simmaren ser på klockan. "CSS + 8" betyder åtta sekunder långsammare per 100 m.
+
+| Område | Fart | RPE | Domän (avsnitt 19) | Används till |
+| --- | --- | --- | --- | --- |
+| Återhämtning | CSS + 15–25 s | 1–2 | lugnt | återhämtning, nedvarvning |
+| Aerob | CSS + 8–15 s | 3–4 | lugnt | grund, teknik under rörelse, långpass |
+| Steady | CSS + 4–8 s | 5–6 | medel | uthållighet, simstyrka |
+| Tröskel | CSS − 1 till CSS + 3 s | 7–8 | medel | CSS-arbete |
+| Snabbt | snabbare än CSS | 8–9 | högt | korta fartinslag |
+
+Fartområdena är startvärden. RPE och tekniken går före farten: kan simmaren inte hålla vattenläge och grepp i en fart är farten fel, oavsett vad testet säger.
+
+**Tävlingsfart.** Tävlingsfarten för Ironman och för 70.3 är egna värden per adept, bedömda ur CSS, simvana, öppet vatten-erfarenhet och tävlingsmålet. Den räknas inte fram som en fast skillnad från CSS, och Ironman- och 70.3-fart är inte samma fart.
+
+### Fyra nivåer
+
+Simmaren tränar på en nivå. Nivån styr frekvens, volym och hur mycket kvalitet veckan tål; passens idé är densamma på alla nivåer. Volymerna är riktvärden för en vanlig vecka.
+
+| Nivå | Pass/vecka | Vanlig vecka | Avlastningsvecka | Kvalitetspass/vecka |
+| --- | --- | --- | --- | --- |
+| 1 | 2 | 5–7 km | 3,8–4,5 km | 0–1 |
+| 2 | 3 | 8–9 km | 6–7 km | 1 |
+| 3 | 3 | 9,5–10,5 km | 7,2–8,2 km | 1–2 |
+| 4 | 4 | 11,5–13 km | 8,8–10 km | 1–2 |
+
+Nivå 4 simmar inte hårdare än nivå 3, bara oftare. Det fjärde passet sprider belastningen och ger mer teknik och aerob simning, inte ett hårt pass till. Ett andra kvalitetspass på nivå 3 och 4 avgörs av cykel- och löpbelastningen den veckan. Nivån byts när simmaren tål belastningen i praktiken – genomförande, RPE och teknik i slutet av passen – inte när kalendern säger det.
+
+### Åtta passfamiljer i tre faser
+
+Passen har en gemensam ram: 400 m uppvärmning (200 m lugnt och 4 × 50 m stegrande), 200 m teknik, 200 m förberedelse, huvudserien och 200 m nedvarvning. Smooth Criminal har 6 × 50 m teknik och därmed 1 100 m utanför huvudserien; övriga har 1 000 m. Varje familj finns i en Base-, en Build- och en Race-variant, och varje variant i fyra nivåer.
+
+| Familj | Roll | Domän | Base → Build → Race |
+| --- | --- | --- | --- |
+| Smooth Criminal | teknik och aerob kontroll | lugnt | 200:or aerobt → mindre vila, CSS + 5–10 → tävlingsfart |
+| Aerobic Builder | aerob uthållighet | lugnt | 400:or jämnt → negativ split → tävlingsfart med kontrollerad avslutning |
+| Long Distance | veckans långpass | lugnt | 500:or → 600:or med starkare slut → långa block i tävlingsfart |
+| CSS Climber | CSS och fartkontroll | medel | 100:or på CSS + 3–6 → CSS + 2–4 ned mot CSS → tävlingsfart med 25 m ökningar |
+| Threshold Tango | längre tröskelarbete | medel | 200:or → 300:or → växla tävlingsfart och CSS |
+| Red Mist | tätt arbete nära tröskeln med kort vila | medel | 300:or → block om 4 × 100 med 10 s vila → upprepade ökningar och åter till tävlingsfart |
+| Power Flow | grepp och simstyrka, pull buoy | medel | 100:or → 150:or → grepp under trötthet i tävlingsfart |
+| Open Water Groove | orientering, fartväxling, start | lugnt i Base, medel i Build och Race | orientering och korta ökningar → 75 + 25 m → starter, positioner och drafting |
+
+Fördelningen räknas per pass efter huvudsyfte, som i avsnitt 19. Ingen av familjerna har sitt huvudsyfte över tröskeln: triathlonsimning på Ironman- och 70.3-distans avgörs av hur ekonomiskt simmaren håller en fart strax under CSS, och snabba inslag är korta och få. I grunden är omkring 80–90 % av simpassen lugna, i uppbyggnaden 70–80 % och i den specifika perioden 75–85 %, med tävlingsfarten som medel.
+
+Två rättelser mot det ursprungliga materialet gäller:
+
+- **CSS Climber Build kräver aldrig fart snabbare än CSS.** Första delen simmas på CSS + 2–4 s, sista delen på CSS till CSS + 2 s, och bara så länge tekniken håller. Med 16–24 × 100 m och kort vila blir CSS − 1 för hårt.
+- **Red Mist och Threshold Tango skiljs åt.** Threshold Tango är längre intervaller med jämn belastning nära tröskeln; Red Mist är kortare repetitioner med kort vila där belastningen ackumuleras. De tränar närliggande egenskaper och är alternativ till varandra.
+
+### Blocket: ett tröskelformat, några återkommande pass
+
+Ett block är fyra veckor: tre med stigande belastning och en avlastningsvecka med 75–80 % av volymen och kvar teknik och fartkänsla. Det är en ram, inte en lag (avsnitt 16 C).
+
+- **Ett tröskelformat per block.** CSS Climber, Threshold Tango och Red Mist är tre vägar till samma egenskap. Blocket väljer en av dem och kör den varje vecka, så att progressionen går att följa (avsnitt 4.2). De läggs aldrig som två eller tre hårda pass i samma vecka.
+- **Övriga pass återkommer.** Smooth Criminal, Aerobic Builder och Long Distance bär veckorna. Power Flow och Open Water Groove är komplement, högst ett av dem per vecka, och Open Water Groove främst från uppbyggnaden och framåt.
+- **En variabel i taget.** Först fler repetitioner eller meter i huvudserien, sedan längre intervaller, sedan kortare vila, sist farten. Fasbytet från Base till Build är i sig ett steg och kombineras inte med fler repetitioner samma vecka.
+- **Veckan ska hamna i nivåns volymram.** Räcker passen inte till, eller blir det för mycket, byts ett pass mot ett annat ur samma roll eller ändras huvudserien – nivåns ram justeras inte för att få ihop veckan.
+
+### Tester
+
+CSS-testet görs före första blocket och i avlastningsveckan i slutet av uppbyggnaden, och därefter vid fasbyten eller när farterna inte längre stämmer med RPE. Testet ersätter veckans kvalitetspass och läggs inte dagen efter ett hårt cykel- eller löppass. Mitt i ett block räcker en kontroll av fart och jämnhet i veckans tröskelformat. Appen räknar CSS, D′ och simprofilen ur testet och sTSS ur adeptens egen CSS; inga fasta TSS-tal sätts på simpassen i förväg.
+
+### Ironman och 70.3
+
+Samma bibliotek, annan betoning. Mot Ironman ligger tyngden på ekonomisk simning, långa sammanhängande block i tävlingsfart och drafting. Mot 70.3 ligger mer tid nära CSS, fler fartväxlingar och mer arbete med starter och positionsbyten. Ingen av dem simmar långsamt eller sprintar; skillnaden är hur den specifika belastningen fördelas i Race-fasen.
+
+### Öppet vatten
+
+Bassängen är grunden. Från juni, när vatten och väder tillåter, ersätter öppet vatten delar av bassängvolymen – det läggs inte ovanpå. Long Distance blir lång sammanhängande simning, Open Water Groove blir orientering, drafting, bojrundning och gruppstarter, och CSS-arbetet stannar i bassängen där farten går att kontrollera. Säkerhet, temperatur och sikt avgör alltid, och ingen simmar ensam.
+
+### Simningen i triathlonveckan
+
+- **Kvalitetspasset tidigt i veckan,** långpasset i helgen och de aeroba passen där det passar. Ett hårt simpass läggs inte direkt före ett viktigt löppass.
+- **Simningen ger efter när cykeln eller löpningen tar mer.** Ett hårt cykelblock kan betyda en lättare simvecka trots att simplanen säger progression (avsnitt 23).
+- **Tekniken styr intervallängden.** En simmare som tappar tekniken efter 300 m simmar 600 m som 2 × 300 m med kort vila; distansen blir densamma och kvaliteten bättre.
+- **Utrustning.** Pull buoy ingår i Power Flow. Paddlar är ett tillval för vana simmare med god teknik och väljs bort vid axelbesvär.
+
+### Toppning
+
+Säsongen mot ett Ironman kan läggas som en lång grund i fyraveckorsblock, omkring tio veckors uppbyggnad och fyra veckor mot loppet. De fyra sista är specifik period och toppning: de två första med den sista större tävlingsspecifika belastningen, de två sista med sjunkande volym och kvar frekvens, tävlingsfart och simkänsla (avsnitt 13). Ett tolvveckorsblock som inte slutar med ett lopp avslutas med en övergångsvecka i stället för toppning.
