@@ -24,11 +24,21 @@
 
 import { ZONE_KEYS, zoneByKey, zoneLabel, type Zone } from "./zones";
 import {
+  NOMINAL_SWIM,
+  parseSwimTarget,
+  type SwimPaces,
+} from "@/lib/workouts/swim-pace";
+import {
   STEP_KINDS,
   type StepKind,
   type WorkoutBlock,
   type WorkoutStep,
 } from "@/lib/workouts/schema";
+
+export type StructureOptions = {
+  /** Simfarterna CSS-tilläggen räknas mot; utan dem de nominella. */
+  swim?: SwimPaces;
+};
 
 export type StructureResult =
   | { ok: true; blocks: WorkoutBlock[] }
@@ -40,6 +50,9 @@ export type StructureResult =
  */
 const MAX_STEPS = 240;
 
+const SWIM_SIGN =
+  /(?:CSS|@\s*(?:IM|703))\s*(?:[+\-−]\s*\d+(?:[.,]\d+)?\s*(?:\.\.|[-–])\s*)?$/i;
+
 /** Delar på avskiljare som inte står inom parentes. */
 function splitTop(text: string): string[] {
   const parts: string[] = [];
@@ -48,7 +61,10 @@ function splitTop(text: string): string[] {
   for (const ch of text) {
     if (ch === "(") depth += 1;
     if (ch === ")") depth -= 1;
-    if (depth === 0 && (ch === ";" || ch === "+" || ch === "\n")) {
+    // Plustecknet i CSS+8 och @IM+2 hör till målet, inte till raden.
+    // "@IM + 20 s vila" delar däremot, med mellanslag före plustecknet.
+    const sign = ch === "+" && !/\s$/.test(current) && SWIM_SIGN.test(current);
+    if (depth === 0 && (ch === ";" || (ch === "+" && !sign) || ch === "\n")) {
       parts.push(current);
       current = "";
     } else {
@@ -65,9 +81,11 @@ type RawStep = Omit<WorkoutStep, "kind"> & {
   kind: StepKind | null;
   /** Zonen steget angavs som, för att gissa typen. */
   zone?: Zone;
+  /** Ett simmål nära CSS eller snabbare, för att gissa typen. */
+  hard?: boolean;
 };
 
-function parseStep(raw: string): RawStep | string {
+function parseStep(raw: string, swim: SwimPaces): RawStep | string {
   const text = raw.trim().replace(/\s+/g, " ");
   // Längden: 1:30 / 1:30:00, eller tal och enhet.
   const clock = text.match(/^(\d+):(\d{2})(?::(\d{2}))?\b/);
@@ -96,6 +114,34 @@ function parseStep(raw: string): RawStep | string {
   if (distanceM !== null) distanceM = Math.round(distanceM);
   if (!(durationSeconds ?? distanceM ?? 0)) {
     return `"${raw.trim()}" har ingen längd.`;
+  }
+
+  // Vila vid väggen: "20 s vila", utan mål.
+  if (durationSeconds !== null && /^\s*vila\s*$/i.test(rest)) {
+    return {
+      kind: "vila",
+      label: "",
+      durationSeconds,
+      distanceM,
+      low: 0.5,
+      high: 0.5,
+    };
+  }
+
+  const swimTarget = parseSwimTarget(rest, swim);
+  if (typeof swimTarget === "string") return `"${raw.trim()}": ${swimTarget}`;
+  if (swimTarget) {
+    const label = rest.slice(swimTarget.length).trim();
+    const kind = STEP_KINDS.find((k) => k === label.toLowerCase()) ?? null;
+    return {
+      kind,
+      label: kind ? "" : label.slice(0, 60),
+      durationSeconds,
+      distanceM,
+      low: swimTarget.low,
+      high: swimTarget.high,
+      hard: swimTarget.fastestOffset <= 3,
+    };
   }
 
   const zoneMatch = rest.match(
@@ -145,7 +191,11 @@ function parseStep(raw: string): RawStep | string {
   };
 }
 
-export function parseStructure(text: string): StructureResult {
+export function parseStructure(
+  text: string,
+  options: StructureOptions = {},
+): StructureResult {
+  const swim = options.swim ?? NOMINAL_SWIM;
   const items = splitTop(text);
   if (items.length === 0) return { ok: false, error: "Strukturen är tom." };
 
@@ -164,7 +214,7 @@ export function parseStructure(text: string): StructureResult {
       }
       const steps: RawStep[] = [];
       for (const part of splitTop(repeat[2])) {
-        const step = parseStep(part);
+        const step = parseStep(part, swim);
         if (typeof step === "string") return { ok: false, error: step };
         steps.push(step);
       }
@@ -188,7 +238,7 @@ export function parseStructure(text: string): StructureResult {
           error: `"${item}" – en repetition skrivs som 5x(4 min 105% + 2 min 60%).`,
         };
       }
-      const step = parseStep(item);
+      const step = parseStep(item, swim);
       if (typeof step === "string") return { ok: false, error: step };
       count += 1;
       raw.push({ type: "steg", step });
@@ -216,12 +266,16 @@ function inferKinds(
         type: "repetition",
         times: block.times,
         steps: block.steps.map((s) => {
-          const { zone: _zone, ...step } = s;
+          const { zone: _zone, hard: _hard, ...step } = s;
           void _zone;
+          void _hard;
           return {
             ...step,
+            // Simmade sträckor i en serie är arbete, också den lugnare
+            // delen; vilan vid väggen skrivs ut som vila.
             kind:
               s.kind ??
+              (s.hard !== undefined ? "intervall" : null) ??
               (s.high === hardest && block.steps.length > 1
                 ? "intervall"
                 : block.steps.length === 1
@@ -238,11 +292,12 @@ function inferKinds(
         ? "uppvärmning"
         : raw.length > 1 && index === last
           ? "nedvarvning"
-          : (s.zone ? s.zone.hard : s.high >= 0.9)
+          : (s.hard ?? (s.zone ? s.zone.hard : s.high >= 0.9))
             ? "intervall"
             : "distans");
-    const { zone: _zone, ...step } = s;
+    const { zone: _zone, hard: _hard, ...step } = s;
     void _zone;
+    void _hard;
     return { type: "steg", step: { ...step, kind } };
   });
 }

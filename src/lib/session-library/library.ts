@@ -25,6 +25,11 @@ import type { ReferenceSpeeds } from "@/lib/plan-library/paces";
 import { formatStructure, parseStructure } from "@/lib/plan-library/structure";
 import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
 import {
+  basisMismatch,
+  hasSwimTargets,
+  type SwimPaces,
+} from "@/lib/workouts/swim-pace";
+import {
   BASIS_LABEL,
   type TargetBasis,
   type Workout,
@@ -164,13 +169,8 @@ export function validateLibraryInput(
         error: `${name[0].toUpperCase()}${name.slice(1)} är för lång.`,
       };
     }
-    if (structure.includes("@") && input.basis !== "MP") {
-      return {
-        ok: false as const,
-        error:
-          "Zoner som @LO och @HM står mot maratonfart – välj Maratonfart som bas, eller skriv procent.",
-      };
-    }
+    const mismatch = basisMismatch(structure, input.basis);
+    if (mismatch) return { ok: false as const, error: mismatch };
     const parsed = parseStructure(structure);
     if (!parsed.ok) {
       return {
@@ -344,6 +344,8 @@ export type AdeptTarget = {
   basis: TargetBasis | null;
   /** I W eller m/s. */
   reference: number | null;
+  /** Tävlingsfarten i simning, s/100 m, för `@IM` och `@703`. */
+  swimRace?: Pick<SwimPaces, "im" | "half">;
 };
 
 const round3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -441,7 +443,21 @@ export function toAdeptWorkout(
   }
 
   const chosen = pass.levels.some((l) => l.key === level) ? level : null;
-  const { blocks } = levelOf(pass, chosen);
+  const picked = levelOf(pass, chosen);
+  let blocks = picked.blocks;
+  // Simfarten står som tillägg till CSS i sekunder; räknas om mot adeptens
+  // egen CSS och tävlingsfart (swim-pace.ts).
+  if (target.basis === "CSS" && hasSwimTargets(picked.structure)) {
+    const parsed = parseStructure(picked.structure, {
+      swim: {
+        css: 100 / target.reference,
+        im: target.swimRace?.im ?? null,
+        half: target.swimRace?.half ?? null,
+      },
+    });
+    if (!parsed.ok) return { ok: false, error: parsed.error };
+    blocks = parsed.blocks;
+  }
   const summary = [
     pass.kind,
     pass.intensity,

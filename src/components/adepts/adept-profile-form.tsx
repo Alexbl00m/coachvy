@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { saveAdeptProfile } from "@/lib/adepts/profile-actions";
+import { swimPaceText } from "@/lib/workouts/swim-pace";
 import type { AdeptProfileRow } from "@/lib/types/database";
 
 /**
@@ -43,15 +44,23 @@ export function AdeptProfileForm({
   const [birthYear, setBirthYear] = useState(digits(profile?.birth_year));
   const [sex, setSex] = useState(text(profile?.sex));
   const [heightCm, setHeightCm] = useState(digits(profile?.height_cm));
-  const [trainingYears, setTrainingYears] = useState(digits(profile?.training_years));
+  const [trainingYears, setTrainingYears] = useState(
+    digits(profile?.training_years),
+  );
   const [weeklyHours, setWeeklyHours] = useState(digits(profile?.weekly_hours));
-  const [weeklySessions, setWeeklySessions] = useState(digits(profile?.weekly_sessions));
+  const [weeklySessions, setWeeklySessions] = useState(
+    digits(profile?.weekly_sessions),
+  );
   const [injuries, setInjuries] = useState(text(profile?.injuries));
   const [medical, setMedical] = useState(text(profile?.medical));
   const [strengths, setStrengths] = useState(text(profile?.strengths));
   const [weaknesses, setWeaknesses] = useState(text(profile?.weaknesses));
   const [goal, setGoal] = useState(text(profile?.goal));
   const [goalDate, setGoalDate] = useState(text(profile?.goal_date));
+  const pace = (v: number | string | null | undefined) =>
+    v === null || v === undefined ? "" : swimPaceText(Number(v));
+  const [swimIm, setSwimIm] = useState(pace(profile?.swim_im_pace));
+  const [swimHalf, setSwimHalf] = useState(pace(profile?.swim_703_pace));
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -75,6 +84,8 @@ export function AdeptProfileForm({
         weaknesses,
         goal,
         goalDate: goalDate || null,
+        swimImPace: swimIm,
+        swimHalfPace: swimHalf,
       });
 
       if (!result.ok) {
@@ -101,7 +112,11 @@ export function AdeptProfileForm({
           </Field>
 
           <Field label="Kön" htmlFor="sex" optional>
-            <Select id="sex" value={sex} onChange={(e) => setSex(e.target.value)}>
+            <Select
+              id="sex"
+              value={sex}
+              onChange={(e) => setSex(e.target.value)}
+            >
               <option value="">–</option>
               <option value="man">Man</option>
               <option value="kvinna">Kvinna</option>
@@ -118,7 +133,12 @@ export function AdeptProfileForm({
             />
           </Field>
 
-          <Field label="Tränat strukturerat" htmlFor="training_years" hint="år" optional>
+          <Field
+            label="Tränat strukturerat"
+            htmlFor="training_years"
+            hint="år"
+            optional
+          >
             <Input
               id="training_years"
               inputMode="decimal"
@@ -127,7 +147,12 @@ export function AdeptProfileForm({
             />
           </Field>
 
-          <Field label="Veckovolym" htmlFor="weekly_hours" hint="timmar" optional>
+          <Field
+            label="Veckovolym"
+            htmlFor="weekly_hours"
+            hint="timmar"
+            optional
+          >
             <Input
               id="weekly_hours"
               inputMode="decimal"
@@ -167,6 +192,37 @@ export function AdeptProfileForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
+            label="Tävlingsfart i simning, Ironman"
+            htmlFor="swim_im_pace"
+            hint="per 100 m, för @IM i simpassen"
+            optional
+          >
+            <Input
+              id="swim_im_pace"
+              inputMode="numeric"
+              placeholder="1:52"
+              value={swimIm}
+              onChange={(e) => setSwimIm(e.target.value)}
+            />
+          </Field>
+          <Field
+            label="Tävlingsfart i simning, 70.3"
+            htmlFor="swim_703_pace"
+            hint="per 100 m, för @703 i simpassen"
+            optional
+          >
+            <Input
+              id="swim_703_pace"
+              inputMode="numeric"
+              placeholder="1:48"
+              value={swimHalf}
+              onChange={(e) => setSwimHalf(e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
             label="Skador och begränsningar"
             htmlFor="injuries"
             hint="går med till passbyggaren"
@@ -180,7 +236,11 @@ export function AdeptProfileForm({
             />
           </Field>
 
-          <Field label="Medicinskt att ta hänsyn till" htmlFor="medical" optional>
+          <Field
+            label="Medicinskt att ta hänsyn till"
+            htmlFor="medical"
+            optional
+          >
             <Textarea
               id="medical"
               rows={3}

@@ -1,9 +1,10 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import type { AdeptProfileRow } from "@/lib/types/database";
+import { swimPaceText } from "@/lib/workouts/swim-pace";
 
 const COLUMNS =
-  "adept_id, birth_year, sex, height_cm, training_years, weekly_hours, weekly_sessions, injuries, medical, strengths, weaknesses, goal, goal_date, created_at, updated_at";
+  "adept_id, birth_year, sex, height_cm, training_years, weekly_hours, weekly_sessions, injuries, medical, strengths, weaknesses, goal, goal_date, swim_im_pace, swim_703_pace, created_at, updated_at";
 
 export async function getAdeptProfile(
   adeptId: string,
@@ -17,7 +18,8 @@ export async function getAdeptProfile(
     .eq("adept_id", adeptId)
     .maybeSingle();
 
-  if (error) throw new Error(`Kunde inte hämta adeptprofilen: ${error.message}`);
+  if (error)
+    throw new Error(`Kunde inte hämta adeptprofilen: ${error.message}`);
   return (data ?? null) as AdeptProfileRow | null;
 }
 
@@ -49,13 +51,31 @@ export function profileToPrompt(
   }
   add("Kön", profile.sex);
   add("Längd", profile.height_cm ? `${profile.height_cm} cm` : null);
-  add("Tränat strukturerat", profile.training_years ? `${profile.training_years} år` : null);
-  add("Normal veckovolym", profile.weekly_hours ? `${profile.weekly_hours} h` : null);
+  add(
+    "Tränat strukturerat",
+    profile.training_years ? `${profile.training_years} år` : null,
+  );
+  add(
+    "Normal veckovolym",
+    profile.weekly_hours ? `${profile.weekly_hours} h` : null,
+  );
   add("Pass per vecka", profile.weekly_sessions);
   add("Skador och begränsningar", profile.injuries);
   add("Medicinskt att ta hänsyn till", profile.medical);
   add("Styrkor", profile.strengths);
   add("Att förbättra", profile.weaknesses);
+  add(
+    "Tävlingsfart i simning, Ironman (@IM)",
+    profile.swim_im_pace
+      ? `${swimPaceText(Number(profile.swim_im_pace))} /100 m`
+      : null,
+  );
+  add(
+    "Tävlingsfart i simning, 70.3 (@703)",
+    profile.swim_703_pace
+      ? `${swimPaceText(Number(profile.swim_703_pace))} /100 m`
+      : null,
+  );
 
   if (profile.goal) {
     const days = profile.goal_date

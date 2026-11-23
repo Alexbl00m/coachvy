@@ -7,6 +7,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { MembersOnly } from "@/components/members-only";
 import { redirect } from "next/navigation";
 import { routes } from "@/lib/routes";
+import { adeptSwimRace } from "@/lib/adepts/swim-paces";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { getWorkout } from "@/lib/workouts/queries";
@@ -112,6 +113,10 @@ export default async function PassPage({
           sport: context.sport,
           basis: context.basis,
           reference: context.reference,
+          swimRace:
+            libraryPass.sport === "simning"
+              ? await adeptSwimRace(adeptId)
+              : undefined,
         },
         speeds,
         libraryLevel,

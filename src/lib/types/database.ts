@@ -231,6 +231,9 @@ export type AdeptProfileRow = {
   weaknesses: string | null;
   goal: string | null;
   goal_date: string | null;
+  /** Tävlingsfart i simning, sekunder per 100 m. */
+  swim_im_pace: number | null;
+  swim_703_pace: number | null;
   created_at: string;
   updated_at: string;
 };

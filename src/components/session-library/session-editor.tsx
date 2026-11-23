@@ -6,6 +6,7 @@ import { useAction } from "@/components/plan-library/use-action";
 import { WorkoutStrip } from "@/components/workouts/workout-strip";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { basisMismatch } from "@/lib/workouts/swim-pace";
 import { cn } from "@/lib/cn";
 import type { Sport } from "@/lib/calculators/lactate";
 import { templateProfile } from "@/lib/plan-library/profile";
@@ -78,7 +79,7 @@ export const inputOf = (s: LibrarySession): LibraryInput => ({
 const PLACEHOLDER: Partial<Record<TargetBasis, string>> = {
   MP: "3 km @LO; 4x(2 km @HM-10K + 2 min @RK); 2 km @LO",
   FTP: "15 min 65%; 4x(8 min 95% + 3 min 55%); 10 min 60%",
-  CSS: "400 m 75%; 8x(100 m 105% + 15 s 0%); 200 m 70%",
+  CSS: "400 m CSS+15; 8x(200 m CSS+8-15 + 20 s vila); 200 m CSS+20",
 };
 
 /**
@@ -440,7 +441,6 @@ export function SessionEditor({
               })}
             </div>
           </fieldset>
-
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
@@ -478,7 +478,7 @@ function StructureInput({
     () => (value.trim() ? parseStructure(value) : null),
     [value],
   );
-  const zonesWithoutMp = value.includes("@") && basis !== "MP";
+  const mismatch = basisMismatch(value, basis);
   const profile =
     parsed && parsed.ok ? templateProfile(parsed.blocks, basis) : [];
   return (
@@ -502,13 +502,8 @@ function StructureInput({
       />
       <div className="mt-1.5 min-h-5 text-[0.75rem]">
         {parsed && !parsed.ok && <p className="text-warn">{parsed.error}</p>}
-        {zonesWithoutMp && (
-          <p className="text-warn">
-            Zoner som @LO och @HM står mot maratonfart – välj Maratonfart som
-            bas, eller skriv procent.
-          </p>
-        )}
-        {parsed && parsed.ok && !zonesWithoutMp && (
+        {mismatch && <p className="text-warn">{mismatch}</p>}
+        {parsed && parsed.ok && !mismatch && (
           <div className="flex items-center gap-3">
             <WorkoutStrip blocks={profile} className="h-6 flex-1" />
             <span className="shrink-0 tabular-nums text-text-muted">

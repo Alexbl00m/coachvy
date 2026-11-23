@@ -36,6 +36,7 @@ Passraden:
 - Steg skiljs med semikolon. En repetition skrivs 4x(5 min 90% + 3 min 53%). Inga repetitioner inuti repetitioner: serier skrivs som flera block, 13x(30 s 120% + 15 s 50%); 3 min 50%; 13x(30 s 120% + 15 s 50%).
 - Längd i s, min, h, m eller km, ett tal per steg: 210 min eller 3,5 h, inte 3 h 30 min. Målet i procent av basen, ett tal eller ett spann: 62-73%.
 - På cykel är basen FTP. I löpning står zonerna @LO, @MT, @HM, @10K och @5K mot maratonfart och kräver basen MP; annars procent.
+- I simning är basen CSS och farten skrivs som tillägg i sekunder per 100 m, aldrig i procent: CSS+8-15 är 8–15 s långsammare än CSS, CSS-1-+3 från en sekund snabbare till tre långsammare. @IM och @703 är adeptens tävlingsfart för Ironman och 70.3, och @IM-2 två sekunder snabbare. Vila vid väggen skrivs 20 s vila. Simpass: 400 m CSS+15; 4x(50 m CSS+10 + 15 s vila); 8x(200 m CSS+8-15 + 20 s vila); 200 m CSS+20. Simningen följer avsnitt 27: ett tröskelformat per block, nivåns volymram.
 - Exempel: 20 min 56-75%; 4x(8 min 110-112% + 3 min 50%); 15 min 55%
 - Kadens, position och känsla skrivs i note, inte i passraden.
 

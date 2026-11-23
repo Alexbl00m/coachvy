@@ -7,6 +7,7 @@ import { MAX_DATES } from "@/lib/calendar/recurrence";
 import { routes } from "@/lib/routes";
 import { saveWorkout } from "@/lib/workouts/actions";
 import { requireWorkoutAuthor } from "@/lib/workouts/access";
+import { adeptSwimRace } from "@/lib/adepts/swim-paces";
 import { contextForAdept } from "@/lib/workouts/generate";
 
 import { LIBRARY_LEVELS, toAdeptWorkout } from "./library";
@@ -78,6 +79,10 @@ export async function scheduleLibrarySession(
       sport: context.sport,
       basis: context.basis,
       reference: context.reference,
+      swimRace:
+        pass.sport === "simning"
+          ? await adeptSwimRace(input.adeptId)
+          : undefined,
     },
     speeds,
     level,

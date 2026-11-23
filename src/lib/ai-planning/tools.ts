@@ -1,5 +1,8 @@
 import "server-only";
 
+import { adeptSwimPaces } from "@/lib/adepts/swim-paces";
+import type { SwimPaces } from "@/lib/workouts/swim-pace";
+
 import type Anthropic from "@anthropic-ai/sdk";
 
 import {
@@ -228,6 +231,8 @@ export type ToolContext = {
   cache: {
     library?: LibrarySession[];
     speeds?: Partial<Record<TargetBasis, number>>;
+    /** Adeptens CSS och tävlingsfart i simning; null utan CSS. */
+    swim?: SwimPaces | null;
   };
 };
 
@@ -250,13 +255,20 @@ async function library(ctx: ToolContext) {
 /** Referenserna stegen i meter får sin tid ur: FTP i W, farterna i m/s. */
 async function speeds(ctx: ToolContext) {
   if (!ctx.cache.speeds) {
-    const [cycling, running] = await Promise.all([
+    const [cycling, running, swimming] = await Promise.all([
       contextForAdept(ctx.adeptId, "cykling"),
       loadRunningFitness(ctx.adeptId),
+      contextForAdept(ctx.adeptId, "simning"),
     ]);
     const out: Partial<Record<TargetBasis, number>> = { ...running.refs };
     if (cycling?.basis && cycling.reference)
       out[cycling.basis] = cycling.reference;
+    const css =
+      swimming?.basis === "CSS" && swimming.reference
+        ? swimming.reference
+        : null;
+    if (css) out.CSS = css;
+    ctx.cache.swim = await adeptSwimPaces(ctx.adeptId, css);
     ctx.cache.speeds = out;
   }
   return ctx.cache.speeds;
@@ -270,7 +282,12 @@ const toRef = (s: LibrarySession): LibraryRef => ({
   intensity: s.intensity,
   basis: s.basis,
   blocks: s.blocks,
-  levels: s.levels.map((l) => ({ key: l.key, blocks: l.blocks })),
+  structure: s.structure,
+  levels: s.levels.map((l) => ({
+    key: l.key,
+    blocks: l.blocks,
+    structure: l.structure,
+  })),
 });
 
 async function searchLibrary(input: Record<string, unknown>, ctx: ToolContext) {
@@ -370,6 +387,7 @@ export async function checkForAdept(
     today,
     library: new Map(lib.map((s) => [s.id, toRef(s)])),
     speeds: await speeds(ctx),
+    swim: ctx.cache.swim ?? undefined,
   };
   return checkDraft(draft, checkCtx);
 }

@@ -196,11 +196,17 @@ export async function applyPlanDraft(input: {
     const context = contexts.get(session.sport);
     if (!pass || !context) continue;
     const converted = toAdeptWorkout(
-      { ...pass, blocks: session.blocks, levels: [] },
+      {
+        ...pass,
+        structure: session.structure,
+        blocks: session.blocks,
+        levels: [],
+      },
       {
         sport: context.sport,
         basis: context.basis,
         reference: context.reference,
+        swimRace: ctx.cache.swim ?? undefined,
       },
       speeds,
       null,

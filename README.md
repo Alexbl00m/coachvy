@@ -904,6 +904,23 @@ som simmats – samma simmare fick 1,05 med 200 + 400 m och 1,10 med 200 +
 procent berodde på samma sätt på distanserna; fart-tapp per dubblad distans
 gör det inte.
 
+### Simfart i passraden
+
+Simpass skrivs som tillägg till CSS i sekunder per 100 m, inte i procent
+(träningsfilosofin, avsnitt 27): `400 m CSS+15; 8x(200 m CSS+8-15 + 20 s vila);
+200 m CSS+20`. `CSS-1-+3` går från en sekund snabbare till tre långsammare.
+`@IM` och `@703` är adeptens tävlingsfart för Ironman och 70.3, och `@IM-2`
+två sekunder snabbare. Vila vid väggen skrivs `20 s vila`, utan mål
+(`src/lib/workouts/swim-pace.ts`).
+
+Ett tillägg i sekunder är inte samma andel av farten för alla simmare, så
+raden räknas om mot adeptens egen CSS när passet läggs på adepten
+(`toAdeptWorkout`). I biblioteket och förhandsvisningen räknas den mot en
+nominell CSS på 1:45. Tävlingsfarten står på adeptens profil
+(`adept_profiles.swim_im_pace`, `swim_703_pace`,
+`20261124090000_swim_race_paces.sql`); ett pass med `@IM` går inte att lägga
+på en adept utan den.
+
 ## Löptester och fartprofil
 
 Tre löptester som registreras varv för varv – en rad per kilometer eller

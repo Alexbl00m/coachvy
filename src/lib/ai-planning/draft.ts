@@ -47,6 +47,11 @@ import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
 import { protocolByKey } from "@/lib/tests/protocols";
 import { workoutLoad, type WorkoutLoad } from "@/lib/workouts/load";
 import {
+  basisMismatch,
+  hasSwimTargets,
+  type SwimPaces,
+} from "@/lib/workouts/swim-pace";
+import {
   flattenWorkout,
   TARGET_BASES,
   type TargetBasis,
@@ -250,7 +255,13 @@ export type LibraryRef = {
   intensity: string;
   basis: TargetBasis;
   blocks: WorkoutBlock[];
-  levels: { key: LibraryLevelKey; blocks: WorkoutBlock[] }[];
+  levels: {
+    key: LibraryLevelKey;
+    blocks: WorkoutBlock[];
+    structure?: string;
+  }[];
+  /** Passraden, för simpass som räknas om mot adeptens CSS. */
+  structure?: string;
 };
 
 export type ResolvedSession = {
@@ -293,6 +304,8 @@ export type CheckContext = {
   library: Map<string, LibraryRef>;
   /** Referensen per bas, för steg i meter: FTP i W, farterna i m/s. */
   speeds?: Partial<Record<TargetBasis, number>>;
+  /** Adeptens simfarter, för CSS-tillägg och tävlingsfart. */
+  swim?: SwimPaces;
 };
 
 /** Ett nytt pass som bibliotekspass, i bibliotekets form. */
@@ -355,6 +368,7 @@ export function checkDraft(draft: PlanDraft, ctx: CheckContext): DraftCheck {
       kind: string;
       basis: TargetBasis;
       blocks: WorkoutBlock[];
+      structure: string | null;
       levels: LibraryRef["levels"];
       libraryId: string | null;
       isNew: boolean;
@@ -391,6 +405,7 @@ export function checkDraft(draft: PlanDraft, ctx: CheckContext): DraftCheck {
         kind: lib.kind,
         basis: lib.basis,
         blocks: lib.blocks,
+        structure: lib.structure ?? null,
         levels: lib.levels,
         libraryId: lib.id,
         isNew: false,
@@ -410,6 +425,7 @@ export function checkDraft(draft: PlanDraft, ctx: CheckContext): DraftCheck {
         kind: valid.value.kind,
         basis: valid.value.basis,
         blocks: valid.value.blocks,
+        structure: valid.value.structure,
         levels: [],
         libraryId: null,
         isNew: true,
@@ -441,22 +457,34 @@ export function checkDraft(draft: PlanDraft, ctx: CheckContext): DraftCheck {
       continue;
     }
     let blocks = base.blocks;
+    let text: string | null = base.structure;
     if (s.structure) {
-      if (s.structure.includes("@") && base.basis !== "MP") {
-        errors.push(
-          `Passet ${s.date}: zoner som @LO står mot maratonfart, och ${s.format} räknas mot ${base.basis}. Skriv procent.`,
-        );
+      text = s.structure;
+      const mismatch = basisMismatch(s.structure, base.basis);
+      if (mismatch) {
+        errors.push(`Passet ${s.date} (${s.format}): ${mismatch}`);
         continue;
       }
-      const parsed = parseStructure(s.structure);
+      const parsed = parseStructure(s.structure, { swim: ctx.swim });
       if (!parsed.ok) {
         errors.push(`Passet ${s.date} (${s.format}): ${parsed.error}`);
         continue;
       }
       blocks = parsed.blocks;
     } else if (s.level) {
-      blocks =
-        base.levels.find((l) => l.key === s.level)?.blocks ?? base.blocks;
+      const level = base.levels.find((l) => l.key === s.level);
+      blocks = level?.blocks ?? base.blocks;
+      text = level ? (level.structure ?? null) : base.structure;
+    }
+    // Simpass räknas mot adeptens egen CSS när den finns.
+    const swimText = text && hasSwimTargets(text) ? text : null;
+    if (swimText && ctx.swim && !s.structure) {
+      const parsed = parseStructure(swimText, { swim: ctx.swim });
+      if (!parsed.ok) {
+        errors.push(`Passet ${s.date} (${s.format}): ${parsed.error}`);
+        continue;
+      }
+      blocks = parsed.blocks;
     }
     const workout: Pick<Workout, "sport" | "basis" | "blocks"> = {
       sport: base.sport,
@@ -470,7 +498,8 @@ export function checkDraft(draft: PlanDraft, ctx: CheckContext): DraftCheck {
       sport: base.sport,
       basis: base.basis,
       blocks,
-      structure: formatStructure(blocks, { zones: base.basis === "MP" }),
+      structure:
+        swimText ?? formatStructure(blocks, { zones: base.basis === "MP" }),
       kind: base.kind,
       level: s.structure ? null : s.level,
       libraryId: base.libraryId,

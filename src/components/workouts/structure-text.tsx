@@ -1,12 +1,22 @@
 import { zoneByKey } from "@/lib/plan-library/zones";
 import { zoneOf } from "@/lib/workouts/intensity";
+import { NOMINAL_SWIM, parseSwimTarget } from "@/lib/workouts/swim-pace";
 import type { TargetBasis } from "@/lib/workouts/schema";
 
 const TOKEN =
-  /(@[A-Za-z0-9]+(?:-[A-Za-z0-9]+)?|\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?%)/g;
+  /(CSS(?:[+\-−]\d+(?:[.,]\d+)?(?:(?:\.\.|[-–])[+\-−]?\d+(?:[.,]\d+)?)?)?(?![A-Za-z])|@(?:IM|703)(?:[+\-−]\d+)?(?![A-Za-z0-9])|@[A-Za-z0-9]+(?:-[A-Za-z0-9]+)?|\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?%)/g;
 
 /** Zonen för ett mål i raden: `@LO`, `@HM-10K` eller `75-80%`. */
 function zoneOfToken(token: string, basis: TargetBasis | null) {
+  // Simfart: räknad mot den nominella CSS:en, bara för färgen.
+  if (/^(CSS|@IM|@703)/i.test(token)) {
+    const target = parseSwimTarget(
+      token.startsWith("@") ? token : ` ${token}`,
+      NOMINAL_SWIM,
+    );
+    if (!target || typeof target === "string") return null;
+    return zoneOf((target.low + target.high) / 2, "CSS");
+  }
   if (token.startsWith("@")) {
     const [a, b] = token.slice(1).split("-");
     const from = zoneByKey(a);

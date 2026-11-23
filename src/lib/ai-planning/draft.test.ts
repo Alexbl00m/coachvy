@@ -362,4 +362,58 @@ describe("planförslaget mot biblioteket och filosofin", () => {
     expect(converted.workout.blocks).toEqual(session.blocks);
     expect(converted.workout.summary).toContain("Kvalitet");
   });
+
+  it("håller simpassens rad och räknar den mot adeptens CSS", () => {
+    const text = "400 m CSS+15; 12x(100 m CSS+4-6 + 20 s vila); 200 m CSS+20";
+    const swimLib = new Map([
+      [
+        "css",
+        {
+          id: "css",
+          title: "CSS Climber – Base",
+          sport: "simning" as const,
+          kind: "Kvalitet",
+          intensity: "",
+          basis: "CSS" as const,
+          blocks: blocks(text),
+          structure: text,
+          levels: [],
+        },
+      ],
+    ]);
+    const check = checkDraft(
+      {
+        ...base,
+        formats: [
+          {
+            key: "css",
+            library_id: "css",
+            new_session: null,
+            test_protocol: null,
+          },
+        ],
+        sessions: [
+          s("2026-11-24", "css"),
+          s(
+            "2026-12-01",
+            "css",
+            "400 m CSS+15; 14x(100 m CSS+4-6 + 20 s vila); 200 m CSS+20",
+          ),
+        ],
+      },
+      {
+        today: "2026-11-23",
+        library: swimLib,
+        speeds: { CSS: 1.25 },
+        swim: { css: 80, im: null, half: null },
+      },
+    );
+    expect(check.errors).toEqual([]);
+    expect(check.sessions[0].structure).toBe(text);
+    const set = check.sessions[0].blocks[1];
+    if (set.type !== "repetition") throw new Error();
+    expect(set.steps[0].high).toBeCloseTo(80 / 84);
+    expect(check.sessions[1].load?.seconds).toBeGreaterThan(0);
+    expect(check.warnings.join(" ")).not.toContain("variabler");
+  });
 });

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireSessionUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { createClient } from "@/lib/supabase/server";
+import { parseSwimPace } from "@/lib/workouts/swim-pace";
 
 export type SaveProfileInput = {
   adeptId: string;
@@ -20,6 +21,9 @@ export type SaveProfileInput = {
   weaknesses: string | null;
   goal: string | null;
   goalDate: string | null;
+  /** Tävlingsfart i simning som text, "1:52" per 100 m; tom tar bort den. */
+  swimImPace?: string;
+  swimHalfPace?: string;
 };
 
 export type SaveProfileResult = { ok: true } | { ok: false; error: string };
@@ -53,7 +57,30 @@ export async function saveAdeptProfile(
     return { ok: false, error: "Veckotimmarna ska ligga mellan 0 och 60." };
   }
   if (!bounded(input.weeklySessions, 0, 30)) {
-    return { ok: false, error: "Antal pass per vecka ska ligga mellan 0 och 30." };
+    return {
+      ok: false,
+      error: "Antal pass per vecka ska ligga mellan 0 och 30.",
+    };
+  }
+
+  const paces: { im: number | null; half: number | null } = {
+    im: null,
+    half: null,
+  };
+  for (const [key, raw, name] of [
+    ["im", input.swimImPace, "Ironman"],
+    ["half", input.swimHalfPace, "70.3"],
+  ] as const) {
+    const text = (raw ?? "").trim();
+    if (!text) continue;
+    const value = parseSwimPace(text);
+    if (value === null) {
+      return {
+        ok: false,
+        error: `Skriv tävlingsfarten för ${name} per 100 m, som 1:52.`,
+      };
+    }
+    paces[key] = value;
   }
 
   const trimmed = (value: string | null) => {
@@ -77,6 +104,8 @@ export async function saveAdeptProfile(
       weaknesses: trimmed(input.weaknesses),
       goal: trimmed(input.goal),
       goal_date: input.goalDate || null,
+      swim_im_pace: paces.im,
+      swim_703_pace: paces.half,
     },
     { onConflict: "adept_id" },
   );
@@ -87,5 +116,6 @@ export async function saveAdeptProfile(
 
   revalidatePath(`${routes.adepts}/${input.adeptId}`, "layout");
   revalidatePath(routes.workoutBuilder);
+  revalidatePath(routes.aiCoach);
   return { ok: true };
 }
