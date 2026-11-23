@@ -10,7 +10,7 @@ import { requireWorkoutAuthor } from "@/lib/workouts/access";
 import { adeptSwimRace } from "@/lib/adepts/swim-paces";
 import { contextForAdept } from "@/lib/workouts/generate";
 
-import { LIBRARY_LEVELS, toAdeptWorkout } from "./library";
+import { ALL_LIBRARY_LEVELS, toAdeptWorkout } from "./library";
 import { getLibrarySession } from "./queries";
 
 export type ScheduleLibraryInput = {
@@ -72,7 +72,7 @@ export async function scheduleLibrarySession(
     pass.sport === "löpning" && pass.basis !== context.basis
       ? (await loadRunningFitness(input.adeptId)).refs
       : {};
-  const level = LIBRARY_LEVELS.find((l) => l.key === input.level)?.key ?? null;
+  const level = ALL_LIBRARY_LEVELS.find((l) => l.key === input.level)?.key ?? null;
   const converted = toAdeptWorkout(
     pass,
     {

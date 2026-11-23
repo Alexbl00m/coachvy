@@ -38,7 +38,7 @@ import {
 } from "@/lib/season/distribution";
 import { addDays, daysBetween, isoWeek, mondayOf } from "@/lib/season/season";
 import {
-  LIBRARY_LEVELS,
+  ALL_LIBRARY_LEVELS,
   validateLibraryInput,
   type LibraryInput,
   type LibraryLevelKey,
@@ -114,7 +114,7 @@ export type PlanDraft = {
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const PHASES = TRAINING_PHASES.map((p) => p.key);
 const SPORTS: Sport[] = ["cykling", "löpning", "simning"];
-const LEVEL_KEYS = LIBRARY_LEVELS.map((l) => l.key);
+const LEVEL_KEYS = ALL_LIBRARY_LEVELS.map((l) => l.key);
 
 export const DRAFT_LIMITS = { periods: 24, formats: 30, sessions: 220 };
 

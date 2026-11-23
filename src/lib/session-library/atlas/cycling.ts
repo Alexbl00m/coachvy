@@ -18,10 +18,9 @@ import type { LibraryInput } from "../library";
 
 type Levels = { A: string; B: string; C: string };
 
-type Atlas = Omit<
-  LibraryInput,
-  "sport" | "basis" | "structure" | "levels"
-> & { levels: Levels };
+type Atlas = Omit<LibraryInput, "sport" | "basis" | "structure" | "levels"> & {
+  levels: Levels;
+};
 
 const cycling = (pass: Atlas): LibraryInput => ({
   ...pass,

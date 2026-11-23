@@ -28,7 +28,8 @@ Filosofin som regler för planen:
 
 Biblioteket och nya pass:
 
-- Ett format är ett pass ur biblioteket (library_id). Veckans dos ges med nivå (A mest, B, C minst) eller med en egen passrad i samma format.
+- Ett format är ett pass ur biblioteket (library_id). Veckans dos ges med nivå (A mest, B, C minst; pass med fyra nivåer har också D) eller med en egen passrad i samma format.
+- Simpassen har fyra nivåer, A–D, som följer simmarens nivå i avsnitt 27: A fyra pass i veckan, B och C tre, D två. Välj nivån efter adepten och håll den genom blocket; progressionen inom blocket skrivs som egen passrad med en repetition mer. Race-passen står i @IM; mot 70.3 skrivs samma rad med @703.
 - Skapa ett nytt pass (new_session) bara när inget i biblioteket har formatet. Skriv det som ett format som kan återkomma: syfte och progression ur filosofin. Det sparas i coachens bibliotek när planen läggs in, så att det finns till nästa gång.
 
 Passraden:

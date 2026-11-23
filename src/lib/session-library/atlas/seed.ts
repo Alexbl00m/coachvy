@@ -1,6 +1,6 @@
 /**
  * Passbibliotekets färdiga pass som SQL, för att läsa in dem i en databas:
- * cykelatlasen och löppassen.
+ * cykelatlasen, löppassen och simpassen.
  *
  * Passen ägs av en admin och delas med alla coacher (library_shares).
  * Inläsningen går att köra igen: ett pass med samma namn och gren hos samma
@@ -18,11 +18,13 @@ import {
 } from "../library";
 import { CYCLING_ATLAS } from "./cycling";
 import { RUNNING_ATLAS } from "./running";
+import { SWIMMING_ATLAS } from "./swimming";
 
 /** Alla färdiga pass, cykel först. */
 export const SESSION_ATLAS: LibraryInput[] = [
   ...CYCLING_ATLAS,
   ...RUNNING_ATLAS,
+  ...SWIMMING_ATLAS,
 ];
 
 /** Passen tolkade och kontrollerade. Kastar om ett pass inte går igenom. */

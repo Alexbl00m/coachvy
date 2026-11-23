@@ -38,14 +38,28 @@ import {
 } from "@/lib/workouts/schema";
 import type { Share } from "@/lib/sharing/shares";
 
-export type LibraryLevelKey = "A" | "B" | "C";
+export type LibraryLevelKey = "A" | "B" | "C" | "D";
 
-/** Nivåerna i mallarnas ordning, högst först. */
+/**
+ * Nivåerna i mallarnas ordning, högst först. Ett pass har tre (A–C) eller,
+ * som planerna och simpassen, fyra (A–D). B är passets namn och förval.
+ */
 export const LIBRARY_LEVELS: { key: LibraryLevelKey; hint: string }[] = [
   { key: "A", hint: "mest" },
   { key: "B", hint: "mellan" },
   { key: "C", hint: "minst" },
 ];
+
+export const ALL_LIBRARY_LEVELS: { key: LibraryLevelKey; hint: string }[] = [
+  { key: "A", hint: "mest" },
+  { key: "B", hint: "mer" },
+  { key: "C", hint: "mindre" },
+  { key: "D", hint: "minst" },
+];
+
+/** Nivåerna ett pass med `count` nivåer har: A–C eller A–D. */
+export const levelsFor = (count: number) =>
+  count >= 4 ? ALL_LIBRARY_LEVELS : LIBRARY_LEVELS;
 
 export type LibraryLevel = {
   key: LibraryLevelKey;
@@ -108,7 +122,7 @@ export type LibraryInput = {
   basis: TargetBasis;
   /** Utan nivåer: passets enda rad. Med nivåer läses nivå B. */
   structure: string;
-  /** Tom, eller en rad per nivå A, B och C. */
+  /** Tom, eller en rad per nivå A, B och C (och D). */
   levels: { key: LibraryLevelKey; structure: string }[];
 };
 
@@ -184,7 +198,8 @@ export function validateLibraryInput(
   let levels: LibraryLevel[] = [];
   let main: { structure: string; blocks: WorkoutBlock[] };
   if (input.levels.length > 0) {
-    for (const { key } of LIBRARY_LEVELS) {
+    const four = input.levels.some((l) => l.key === "D");
+    for (const { key } of levelsFor(four ? 4 : 3)) {
       const raw = input.levels.find((l) => l.key === key)?.structure ?? "";
       const level = check(raw, `strukturen på nivå ${key}`);
       if (!level.ok) return level;

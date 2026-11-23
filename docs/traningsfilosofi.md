@@ -12,7 +12,7 @@ Grunden för all träningsplanering, alla planmallar och all coachning i Coachvy
 - Ett utvecklingsblock bygger på ett eller två återkommande kvalitetsformat under tre till fyra veckor. Progressionen ändrar en variabel i taget.
 - Tester placeras där de påverkar beslut, till exempel inför den tävlingsspecifika delen för att kalibrera intensiteterna.
 - Planen är en hypotes. Responsen (genomförande, RPE, återhämtning, tester, lopp) avgör om den fortsätter, justeras eller byts.
-- Simningen doseras i fyra nivåer och mäts mot CSS i sekunder per 100 m. Ett block har ett tröskelformat, och tekniken går före farten (avsnitt 27).
+- Simningen doseras i fyra nivåer, A–D, och mäts mot CSS i sekunder per 100 m. Ett block har ett tröskelformat, och tekniken går före farten (avsnitt 27).
 - AI och modeller stöder analysen men är underställda tränarens omdöme.
 
 ---
@@ -893,16 +893,16 @@ Fartområdena är startvärden. RPE och tekniken går före farten: kan simmaren
 
 ### Fyra nivåer
 
-Simmaren tränar på en nivå. Nivån styr frekvens, volym och hur mycket kvalitet veckan tål; passens idé är densamma på alla nivåer. Volymerna är riktvärden för en vanlig vecka.
+Simmaren tränar på en nivå. Nivån styr frekvens, volym och hur mycket kvalitet veckan tål; passens idé är densamma på alla nivåer. Nivåerna heter A–D som i planerna, med A som mest; i simsystemets material heter de 4–1. Volymerna är riktvärden för en vanlig vecka.
 
 | Nivå | Pass/vecka | Vanlig vecka | Avlastningsvecka | Kvalitetspass/vecka |
 | --- | --- | --- | --- | --- |
-| 1 | 2 | 5–7 km | 3,8–4,5 km | 0–1 |
-| 2 | 3 | 8–9 km | 6–7 km | 1 |
-| 3 | 3 | 9,5–10,5 km | 7,2–8,2 km | 1–2 |
-| 4 | 4 | 11,5–13 km | 8,8–10 km | 1–2 |
+| A | 4 | 11,5–13 km | 8,8–10 km | 1–2 |
+| B | 3 | 9,5–10,5 km | 7,2–8,2 km | 1–2 |
+| C | 3 | 8–9 km | 6–7 km | 1 |
+| D | 2 | 5–7 km | 3,8–4,5 km | 0–1 |
 
-Nivå 4 simmar inte hårdare än nivå 3, bara oftare. Det fjärde passet sprider belastningen och ger mer teknik och aerob simning, inte ett hårt pass till. Ett andra kvalitetspass på nivå 3 och 4 avgörs av cykel- och löpbelastningen den veckan. Nivån byts när simmaren tål belastningen i praktiken – genomförande, RPE och teknik i slutet av passen – inte när kalendern säger det.
+Nivå A simmar inte hårdare än nivå B, bara oftare. Det fjärde passet sprider belastningen och ger mer teknik och aerob simning, inte ett hårt pass till. Ett andra kvalitetspass på nivå A och B avgörs av cykel- och löpbelastningen den veckan. Nivån byts när simmaren tål belastningen i praktiken – genomförande, RPE och teknik i slutet av passen – inte när kalendern säger det.
 
 ### Åtta passfamiljer i tre faser
 

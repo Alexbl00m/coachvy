@@ -13,7 +13,7 @@ import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { getWorkout } from "@/lib/workouts/queries";
 import { toWorkout, type Workout } from "@/lib/workouts/schema";
 import { loadRunningFitness } from "@/lib/plan-library/fitness";
-import { LIBRARY_LEVELS, toAdeptWorkout } from "@/lib/session-library/library";
+import { ALL_LIBRARY_LEVELS, toAdeptWorkout } from "@/lib/session-library/library";
 import { getLibrarySession } from "@/lib/session-library/queries";
 
 export const metadata = { title: "Passbyggare" };
@@ -63,7 +63,7 @@ export default async function PassPage({
       : null;
   // Nivån ur biblioteket, `&niva=A`. Utan den: passets rad, nivå B.
   const libraryLevel =
-    LIBRARY_LEVELS.find((l) => l.key === query.niva)?.key ?? null;
+    ALL_LIBRARY_LEVELS.find((l) => l.key === query.niva)?.key ?? null;
 
   const [adepts, context, saved, libraryPass] = await Promise.all([
     selfService

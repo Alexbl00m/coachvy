@@ -921,6 +921,21 @@ nominell CSS på 1:45. Tävlingsfarten står på adeptens profil
 `20261124090000_swim_race_paces.sql`); ett pass med `@IM` går inte att lägga
 på en adept utan den.
 
+### Simpassen i passbiblioteket
+
+Biblioteket har Alexanders simsystem som delade pass
+(`src/lib/session-library/atlas/swimming.ts`): åtta passfamiljer – Smooth
+Criminal, CSS Climber, Aerobic Builder, Threshold Tango, Red Mist, Power Flow,
+Long Distance och Open Water Groove – i en Base-, en Build- och en
+Race-variant, plus CSS-testet 400 + 200 m, ett återhämtningspass och två pass
+för toppningen. Varianterna har fyra nivåer, A–D som planerna, där A är fyra
+simpass i veckan och D två; i simsystemets material heter de 4–1. Testerna
+kontrollräknar varje nivås totaldistans mot simsystemets reviderade tabell.
+
+Ett pass i biblioteket har nu inga, tre eller fyra nivåer
+(`20261124100000_session_library_four_levels.sql`). Race-passen står i
+Ironmanfart, `@IM`; mot 70.3 skrivs samma rad med `@703`.
+
 ## Löptester och fartprofil
 
 Tre löptester som registreras varv för varv – en rad per kilometer eller

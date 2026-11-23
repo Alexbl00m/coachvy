@@ -1,6 +1,6 @@
 /**
- * Skriver ut SQL som läser in passbibliotekets färdiga cykelpass – atlasen
- * Z1–Z5 och kraftpasset – som delade pass ägda av en admin.
+ * Skriver ut SQL som läser in passbibliotekets färdiga pass – cykelatlasen,
+ * löppassen och simpassen – som delade pass ägda av en admin.
  *
  *   node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts > atlas.sql
  *   node --import ./scripts/alias/register.mjs scripts/session-library-atlas.ts --owner-email coach@example.com
@@ -20,5 +20,5 @@ const owner = email
   ? `(select id from auth.users where email = '${email.replace(/'/g, "''")}')`
   : FIRST_ADMIN;
 
-console.log("-- Passbibliotekets cykelpass: atlasen Z1–Z5 och kraftpasset.");
+console.log("-- Passbibliotekets färdiga pass: cykel, löpning och simning.");
 console.log(atlasStatements(owner).join("\n\n"));

@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import { blockTotals } from "../library";
 import { CYCLING_ATLAS } from "./cycling";
 import { RUNNING_ATLAS } from "./running";
+import { SWIMMING_ATLAS } from "./swimming";
 import { atlasRows, atlasStatements, SESSION_ATLAS } from "./seed";
 
 const rows = atlasRows(CYCLING_ATLAS);
 const runs = atlasRows(RUNNING_ATLAS);
+const swims = atlasRows(SWIMMING_ATLAS);
 
 /** Passets tid i sekunder; cykelpassen anges alltid i tid. */
 const seconds = (blocks: Parameters<typeof blockTotals>[0]) =>
@@ -146,12 +148,99 @@ describe("löppassen", () => {
   });
 });
 
+describe("simpassen", () => {
+  /**
+   * Totaldistanserna ur simsystemets reviderade tabell, nivå 1–4, som här
+   * heter D, C, B och A.
+   */
+  const METRES: Record<string, [number, number, number, number]> = {
+    "Smooth Criminal – Base": [2700, 3100, 3300, 3300],
+    "CSS Climber – Base": [2200, 2600, 2800, 2800],
+    "Aerobic Builder – Base": [2600, 3000, 3400, 3800],
+    "Threshold Tango – Base": [2600, 3000, 3200, 3000],
+    "Red Mist – Base": [2200, 2500, 2800, 3100],
+    "Power Flow – Base": [1800, 2000, 2200, 2400],
+    "Long Distance – Base": [2500, 3000, 3500, 4000],
+    "Open Water Groove – Base": [1800, 2000, 2200, 2400],
+    "Smooth Criminal – Build": [3100, 3500, 3500, 3900],
+    "CSS Climber – Build": [2600, 3000, 3200, 3400],
+    "Aerobic Builder – Build": [3000, 3400, 3800, 4200],
+    "Threshold Tango – Build": [2800, 3400, 3700, 4000],
+    "Red Mist – Build": [2200, 2600, 3000, 3000],
+    "Power Flow – Build": [2500, 2800, 3100, 3400],
+    "Long Distance – Build": [2800, 3400, 4000, 4600],
+    "Open Water Groove – Build": [2000, 2200, 2400, 2600],
+    "Smooth Criminal – Race": [2700, 3100, 3300, 3500],
+    "CSS Climber – Race": [2200, 2600, 2800, 3000],
+    "Aerobic Builder – Race": [2600, 3000, 3400, 3800],
+    "Threshold Tango – Race": [2200, 2600, 2800, 3000],
+    "Red Mist – Race": [2200, 2600, 3000, 3400],
+    "Power Flow – Race": [2200, 2500, 2800, 3100],
+    "Long Distance – Race": [2200, 2800, 3400, 4000],
+    "Open Water Groove – Race": [1800, 2000, 2200, 2400],
+  };
+
+  it("har de 24 varianterna, CSS-testet och passen för avlastning och toppning, mot CSS", () => {
+    expect(swims).toHaveLength(28);
+    expect(new Set(swims.map((r) => r.title)).size).toBe(28);
+    for (const row of swims) {
+      expect(row.sport).toBe("simning");
+      expect(row.basis).toBe("CSS");
+    }
+    expect(swims.filter((r) => r.kind === "Test")).toHaveLength(1);
+  });
+
+  it("har simsystemets distanser på varje nivå, A–D", () => {
+    for (const [title, [d, c, b, a]] of Object.entries(METRES)) {
+      const row = swims.find((r) => r.title === title);
+      expect(row, title).toBeDefined();
+      expect(row!.levels.map((l) => l.key)).toEqual(["A", "B", "C", "D"]);
+      expect(
+        row!.levels.map((l) => blockTotals(l.blocks).metres),
+        title,
+      ).toEqual([a, b, c, d]);
+    }
+  });
+
+  it("räknar testet, avlastningen och aktiveringen till sina längder", () => {
+    const metres = (title: string) =>
+      blockTotals(swims.find((r) => r.title === title)!.blocks).metres;
+    expect(metres("CSS-test 400 + 200 m")).toBe(1500);
+    expect(metres("Tävlingsfart – aktivering")).toBe(1800);
+    expect(metres("Teknikaktivering")).toBe(1200);
+    const recovery = swims.find(
+      (r) => r.title === "Teknik och flyt – återhämtning",
+    )!;
+    expect(recovery.levels.map((l) => blockTotals(l.blocks).metres)).toEqual([
+      2400, 2200, 2000, 1800,
+    ]);
+  });
+
+  it("kräver aldrig fart under CSS i CSS Climber Build", () => {
+    const row = swims.find((r) => r.title === "CSS Climber – Build")!;
+    for (const level of row.levels) {
+      const top = Math.max(
+        ...level.blocks.flatMap((b) =>
+          (b.type === "steg" ? [b.step] : b.steps).map((s) => s.high),
+        ),
+      );
+      expect(top, level.key).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("står Race-passen i Ironmanfart", () => {
+    for (const row of swims.filter((r) => r.title.endsWith("– Race"))) {
+      expect(row.structure, row.title).toContain("@IM");
+    }
+  });
+});
+
 describe("atlasStatements", () => {
   it("gör en insert per pass som hoppar över ett pass som redan finns", () => {
     const statements = atlasStatements(
       "'00000000-0000-0000-0000-000000000000'",
     );
-    expect(statements).toHaveLength(90);
+    expect(statements).toHaveLength(118);
     expect(statements[0]).toContain("not exists");
     // Samma namn finns i båda grenarna, så grenen ingår i jämförelsen.
     expect(statements[0]).toContain("and s.sport = 'cykling'");

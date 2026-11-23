@@ -20,7 +20,8 @@ import type { TemplateSession } from "@/lib/plan-library/types";
 import type { Sport } from "@/lib/calculators/lactate";
 import {
   educationText,
-  LIBRARY_LEVELS,
+  ALL_LIBRARY_LEVELS,
+  levelsFor,
   levelOf,
   type LibraryInput,
   type LibrarySession,
@@ -175,11 +176,10 @@ export function SessionDialog({
       description: educationText(pass).slice(0, 2000) || d.description,
       variants: d.variants.map((v, i) => {
         if (!v.included) return v;
+        const passLevels = levelsFor(pass.levels.length);
         const key =
-          LIBRARY_LEVELS.find((l) => l.key === levels[i]?.key)?.key ??
-          (levels.length === LIBRARY_LEVELS.length
-            ? LIBRARY_LEVELS[i].key
-            : null);
+          ALL_LIBRARY_LEVELS.find((l) => l.key === levels[i]?.key)?.key ??
+          (levels.length === passLevels.length ? passLevels[i].key : null);
         return {
           ...v,
           basis: pass.basis,
@@ -197,8 +197,9 @@ export function SessionDialog({
   const saveToLibrary = (v: VariantInput) => {
     if (!v.basis) return;
     const all = draft.variants;
+    // Tre eller fyra nivåer som alla har en struktur mot samma bas.
     const threeLevels =
-      all.length === LIBRARY_LEVELS.length &&
+      (all.length === 3 || all.length === 4) &&
       all.every((x) => x.included && x.structure.trim() && x.basis === v.basis);
     setSaving({
       key: `${v.levelId}-${Date.now()}`,
@@ -217,7 +218,7 @@ export function SessionDialog({
         basis: v.basis,
         structure: v.structure,
         levels: threeLevels
-          ? LIBRARY_LEVELS.map((l, i) => ({
+          ? levelsFor(all.length).map((l, i) => ({
               key: l.key,
               structure: all[i].structure,
             }))

@@ -16,7 +16,7 @@ import {
   amountText,
   BASES_FOR_SPORT,
   basisName,
-  LIBRARY_LEVELS,
+  levelsFor,
   LIBRARY_SPORTS,
   type LibraryInput,
   type LibrarySession,
@@ -113,19 +113,24 @@ export function SessionEditor({
 
   const patch = (p: Partial<LibraryInput>) => setDraft((d) => ({ ...d, ...p }));
   const withLevels = draft.levels.length > 0;
+  const shownLevels = levelsFor(draft.levels.length);
   const setLevel = (key: string, structure: string) =>
     setDraft((d) => ({
       ...d,
       levels: d.levels.map((l) => (l.key === key ? { ...l, structure } : l)),
     }));
-  const toggleLevels = (on: boolean) =>
+  /** Ingen, tre eller fyra nivåer; raderna som finns följer med. */
+  const setLevelCount = (count: 0 | 3 | 4) =>
     setDraft((d) =>
-      on
+      count > 0
         ? {
             ...d,
-            levels: LIBRARY_LEVELS.map(({ key }) => ({
+            levels: levelsFor(count).map(({ key }) => ({
               key,
-              structure: d.structure,
+              structure:
+                d.levels.find((l) => l.key === key)?.structure ??
+                d.levels.find((l) => l.key === "B")?.structure ??
+                d.structure,
             })),
           }
         : {
@@ -267,17 +272,22 @@ export function SessionEditor({
                 Struktur
               </span>
               <label className="flex items-center gap-2 text-[0.8125rem] text-text-muted">
-                <input
-                  type="checkbox"
-                  checked={withLevels}
-                  onChange={(e) => toggleLevels(e.target.checked)}
-                  className="size-4 accent-[var(--accent)]"
-                />
-                Tre nivåer, A–C
+                Nivåer
+                <Select
+                  value={String(withLevels ? shownLevels.length : 0)}
+                  onChange={(e) =>
+                    setLevelCount(Number(e.target.value) as 0 | 3 | 4)
+                  }
+                  className="h-8 w-auto py-0 text-[0.8125rem]"
+                >
+                  <option value="0">En rad</option>
+                  <option value="3">Tre, A–C</option>
+                  <option value="4">Fyra, A–D</option>
+                </Select>
               </label>
             </div>
             {withLevels ? (
-              LIBRARY_LEVELS.map(({ key, hint }) => (
+              shownLevels.map(({ key, hint }) => (
                 <StructureInput
                   key={key}
                   id={id(`struktur-${key}`)}
