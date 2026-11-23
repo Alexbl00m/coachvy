@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ResultGrid } from "@/components/calculators/result-grid";
 import { MetabolicSection } from "@/components/tests/metabolic-section";
 import { ZonesCard } from "@/components/tests/zones-card";
 import { Card, CardTitle } from "@/components/ui/card";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Select } from "@/components/ui/field";
+import { cyclingProfile } from "@/lib/calculators/metabolic-actions";
+import type { MetabolicCurve } from "@/lib/tests/metabolic-curve";
 import { cn } from "@/lib/cn";
 import {
   fuelBand,
@@ -17,7 +19,6 @@ import { ftpZones, thresholdZones } from "@/lib/tests/zones";
 import {
   CARB_MAX_GRAMS_PER_HOUR,
   MADER_DEFAULTS,
-  calculateMetabolicProfile,
   calculateRunningProfile,
   paceFromSpeed,
   runningEconomyFrom,
@@ -30,7 +31,8 @@ type Mode = "cykling" | "löpning";
 const DEFAULTS = {
   vo2max: "65",
   vlamax: "0,5",
-  vo2maxPower: "380",
+  bodyFat: "13",
+  sex: "man" as "man" | "kvinna",
   runningEconomy: "210",
   weightKg: "72",
   maxHeartRate: "190",
@@ -64,7 +66,31 @@ export function MetabolicCalculator() {
   const set = (patch: Partial<typeof values>) =>
     setValues((current) => ({ ...current, ...patch }));
 
-  const profile = useMemo(() => {
+  // Cykel räknas med den kalibrerade modellen på servern; löpningen här, med
+  // den äldre modellen och konstanterna nedan.
+  const [cycling, setCycling] = useState<MetabolicCurve | null>(null);
+  useEffect(() => {
+    if (mode !== "cykling") return;
+    let live = true;
+    const timer = setTimeout(async () => {
+      const result = await cyclingProfile({
+        vo2max: decimal(values.vo2max),
+        vlamax: decimal(values.vlamax),
+        weightKg: decimal(values.weightKg),
+        bodyFatPct: decimal(values.bodyFat),
+        sex: values.sex,
+        maxHeartRate: decimal(values.maxHeartRate) || null,
+      });
+      if (live) setCycling(result);
+    }, 250);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [mode, values]);
+
+  const running = useMemo(() => {
+    if (mode !== "löpning") return null;
     const ks1 = decimal(constants.ks1);
     const ks2 = decimal(constants.ks2);
     const volRel = decimal(constants.volRel);
@@ -84,15 +110,10 @@ export function MetabolicCalculator() {
     };
 
     const run = (vlamax: number) =>
-      mode === "cykling"
-        ? calculateMetabolicProfile(
-            { ...shared, vlamax, vo2maxPower: decimal(values.vo2maxPower) },
-            model,
-          )
-        : calculateRunningProfile(
-            { ...shared, vlamax, runningEconomy: decimal(values.runningEconomy) },
-            model,
-          );
+      calculateRunningProfile(
+        { ...shared, vlamax, runningEconomy: decimal(values.runningEconomy) },
+        model,
+      );
     const result = run(shared.vlamax);
     // Bandet runt bränslet: samma modell med VLamax ±0,04.
     const band =
@@ -101,6 +122,13 @@ export function MetabolicCalculator() {
         : undefined;
     return { ...result, band };
   }, [mode, values, constants]);
+  const profile =
+    running ??
+    cycling ?? {
+      points: [] as MetabolicPoint[],
+      thresholds: { anaerobicThreshold: null, fatMax: null, carbMax: null },
+      band: undefined,
+    };
 
   const { anaerobicThreshold: at, fatMax, carbMax } = profile.thresholds;
   // Zonerna ur tröskeln: Coggans på cykeln med tröskeln som FTP, tröskel-
@@ -112,7 +140,7 @@ export function MetabolicCalculator() {
       : thresholdZones(at.power);
   const top =
     mode === "cykling"
-      ? decimal(values.vo2maxPower)
+      ? (profile.points[profile.points.length - 1]?.power ?? 0)
       : speedAtVo2max(decimal(values.vo2max), decimal(values.runningEconomy));
   const derivedEconomy = runningEconomyFrom(decimal(measured.vo2), decimal(measured.speed));
 
@@ -162,14 +190,26 @@ export function MetabolicCalculator() {
               />
             </Field>
             {mode === "cykling" ? (
-              <Field label="Effekt vid VO2max" htmlFor="vo2maxPower" hint="W">
-                <Input
-                  id="vo2maxPower"
-                  inputMode="decimal"
-                  value={values.vo2maxPower}
-                  onChange={(e) => set({ vo2maxPower: e.target.value })}
-                />
-              </Field>
+              <>
+                <Field label="Kroppsfett" htmlFor="bodyFat" hint="% – för laktatets fördelningsvolym">
+                  <Input
+                    id="bodyFat"
+                    inputMode="decimal"
+                    value={values.bodyFat}
+                    onChange={(e) => set({ bodyFat: e.target.value })}
+                  />
+                </Field>
+                <Field label="Kön" htmlFor="sex">
+                  <Select
+                    id="sex"
+                    value={values.sex}
+                    onChange={(e) => set({ sex: e.target.value as "man" | "kvinna" })}
+                  >
+                    <option value="man">Man</option>
+                    <option value="kvinna">Kvinna</option>
+                  </Select>
+                </Field>
+              </>
             ) : (
               <Field
                 label="Löpekonomi"
@@ -242,6 +282,16 @@ export function MetabolicCalculator() {
           )}
         </Card>
 
+        {mode === "cykling" ? (
+          <Card>
+            <CardTitle>Modellen</CardTitle>
+            <p className="text-sm leading-relaxed text-text-muted">
+              Cykel räknas med Coachvys kalibrerade Mader-modell, samma som
+              testerna. Effekten vid VO2max följer av VO2max och vikten, och
+              konstanterna är fasta.
+            </p>
+          </Card>
+        ) : (
         <Card>
           <CardTitle
             action={
@@ -297,12 +347,13 @@ export function MetabolicCalculator() {
             </p>
           )}
         </Card>
+        )}
       </div>
 
       {profile.points.length === 0 ? (
         <p className="rounded-lg border border-dashed border-line-strong bg-surface-2/60 px-6 py-8 text-center text-sm text-text-muted">
           {mode === "cykling"
-            ? "Fyll i VO2max, effekt vid VO2max och kroppsvikt med tal större än noll."
+            ? "Fyll i VO2max (20–100), VLamax, kroppsvikt och kroppsfett."
             : "Fyll i VO2max, löpekonomi och kroppsvikt med tal större än noll."}
         </p>
       ) : (
