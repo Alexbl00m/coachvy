@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react";
 import { BodyFatEstimate } from "@/components/calculators/body-fat-estimate";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
+import { vlamaxFromSprintLactate } from "@/lib/vlamax/lactate";
 import { predictVlamax, sprintPerFfm, type VlamaxInput } from "@/lib/vlamax/model";
 import type { Adept, VlamaxSample } from "@/lib/types/database";
 
@@ -34,12 +35,24 @@ export function VlamaxCalculator({
   const [input, setInput] = useState<VlamaxInput>(DEFAULTS);
   // Styrt fält, så att en uppskattning ur BMI kan fyllas i.
   const [fatText, setFatText] = useState(String(DEFAULTS.bodyFatPct));
+  const [lactate, setLactate] = useState({ peak: "", rest: "" });
 
   // Modellen är liten nog att räknas om vid varje tangenttryck.
   const prediction = useMemo(
     () => predictVlamax(samples, input),
     [samples, input],
   );
+
+  // Uppmätt laktat går före watten: watten säger lite om VLamax hos atleter
+  // med mycket explosiv sprint.
+  const fromLactate = lactate.peak.trim()
+    ? vlamaxFromSprintLactate(
+        decimal(lactate.peak),
+        lactate.rest.trim() ? decimal(lactate.rest) : null,
+        input.sprintSeconds,
+      )
+    : null;
+  const lactateInvalid = lactate.peak.trim() !== "" && fromLactate === null;
 
   const set = (patch: Partial<VlamaxInput>) =>
     setInput((current) => ({ ...current, ...patch }));
@@ -119,10 +132,35 @@ export function VlamaxCalculator({
             />
           </Field>
 
+          <Field
+            label="Högsta laktat efter"
+            htmlFor="peakLactate"
+            hint="mmol/l, 3–7 minuter efter sprinten"
+            optional
+          >
+            <Input
+              id="peakLactate"
+              inputMode="decimal"
+              value={lactate.peak}
+              onChange={(e) => setLactate((l) => ({ ...l, peak: e.target.value }))}
+            />
+          </Field>
+
+          <Field label="Vilolaktat före" htmlFor="restLactate" hint="mmol/l, 1,0 om tomt" optional>
+            <Input
+              id="restLactate"
+              inputMode="decimal"
+              value={lactate.rest}
+              onChange={(e) => setLactate((l) => ({ ...l, rest: e.target.value }))}
+            />
+          </Field>
+
         </div>
 
         <p className="mt-5 border-t border-line pt-4 text-[0.8125rem] leading-relaxed text-text-muted">
-          Modellen läser sprinteffekten per kilo fettfri massa, plus kön. VLamax
+          Med laktat räknas VLamax som (högsta − vila) / (sprinttid − 3,5 s),
+          samma formel som testerna använder. Utan laktat skattas den ur watten:
+          modellen läser sprinteffekten per kilo fettfri massa, plus kön. VLamax
           är glykolytisk förmåga per muskelmassa, och det är det måttet som
           följer den – en tung atlet med stor sprint kan ha lägre VLamax än en
           lätt med mindre. Just nu:{" "}
@@ -141,7 +179,26 @@ export function VlamaxCalculator({
         <Card>
           <CardTitle>Beräknad VLamax</CardTitle>
 
-          {valid && prediction ? (
+          {fromLactate !== null ? (
+            <>
+              <p className="text-4xl font-semibold tracking-tight text-text tabular-nums">
+                {fromLactate.toFixed(2).replace(".", ",")}
+                <span className="ml-2 text-base font-normal text-text-muted">
+                  mmol/l/s
+                </span>
+              </p>
+              <p className="mt-2 text-[0.8125rem] text-text-muted">
+                Ur sprintlaktatet. Samma formel som testerna.
+              </p>
+              {valid && prediction && (
+                <p className="mt-1 text-[0.75rem] text-text-subtle">
+                  Ur watten skulle den bli {prediction.value.toFixed(2).replace(".", ",")}.
+                  {Math.abs(prediction.value - fromLactate) > 0.1 &&
+                    " Skillnaden är stor: lita på laktatet."}
+                </p>
+              )}
+            </>
+          ) : valid && prediction ? (
             <>
               <p className="text-4xl font-semibold tracking-tight text-text tabular-nums">
                 {prediction.value.toFixed(2).replace(".", ",")}
@@ -156,6 +213,18 @@ export function VlamaxCalculator({
               <p className="mt-1 text-[0.75rem] text-text-subtle">
                 Tränad på {prediction.sampleCount} uppmätta atleter.
               </p>
+              {lactateInvalid ? (
+                <p role="alert" className="mt-4 text-[0.8125rem] text-warn">
+                  Laktatet går inte att räkna på: högsta värdet ska vara 2–30 mmol/l
+                  och högre än vilan, och sprinten minst 5 s.
+                </p>
+              ) : (
+                <p className="mt-4 text-[0.8125rem] leading-relaxed text-warn">
+                  Skattad ur watten. Atleter med mycket explosiv sprint får för
+                  hög VLamax på det sättet. Mät laktat efter sprinten för ett
+                  säkert värde.
+                </p>
+              )}
 
               {prediction.outOfRange.length > 0 && (
                 <div className="mt-4 rounded-md border border-accent/40 bg-accent-soft p-3">
@@ -184,8 +253,18 @@ export function VlamaxCalculator({
           )}
         </Card>
 
-        {valid && prediction && prediction.outOfRange.length === 0 && (
-          <SaveAsTestResult adepts={adepts} value={prediction.value} />
+        {fromLactate !== null ? (
+          <SaveAsTestResult
+            adepts={adepts}
+            value={fromLactate}
+            comment="Ur sprintlaktat med VLamax-kalkylen"
+          />
+        ) : (
+          valid &&
+          prediction &&
+          prediction.outOfRange.length === 0 && (
+            <SaveAsTestResult adepts={adepts} value={prediction.value} />
+          )
         )}
       </div>
     </div>

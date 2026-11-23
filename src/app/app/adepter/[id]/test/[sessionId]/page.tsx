@@ -154,6 +154,7 @@ export default async function SessionPage({
       : null,
     profileVolRel(
       session.protocol,
+      session.intensity_unit,
       session.sex ?? null,
       session.body_fat_pct != null ? Number(session.body_fat_pct) : null,
     ),
@@ -477,7 +478,7 @@ export default async function SessionPage({
               ...(showPace
                 ? [session.sport === "simning" ? "Tempo /100 m" : "Tempo /km"]
                 : []),
-              ...(shape?.lactate ? ["Laktat"] : []),
+              ...(shape?.lactate || shape?.sprintLactate ? ["Laktat"] : []),
               ...(shape?.heartRate ? ["Puls"] : []),
               ...(shape?.rpe ? ["RPE"] : []),
               ...(hasMaxHr ? ["Maxpuls"] : []),
@@ -512,7 +513,7 @@ export default async function SessionPage({
                       : "–",
                   ]
                 : []),
-              ...(shape?.lactate
+              ...(shape?.lactate || shape?.sprintLactate
                 ? [e.lactate === null ? "–" : sv(Number(e.lactate), 2)]
                 : []),
               ...(shape?.heartRate
