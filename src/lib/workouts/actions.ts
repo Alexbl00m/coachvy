@@ -165,7 +165,8 @@ export async function copyWorkoutToDates(
   const { data: original, error: readError } = await supabase
     .from("workouts")
     .select(
-      "title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt",
+      // Ett testpass är ett testpass också som kopia.
+      "title, sport, summary, rationale, basis, reference, critical, reserve, blocks, prompt, test_protocol",
     )
     .eq("id", id)
     .eq("adept_id", adeptId)
