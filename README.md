@@ -1222,11 +1222,12 @@ egen – följdfrågor i samma tråd läser det ur cachen.
 
 ### Frågebiblioteket
 
-Under rutan finns färdiga frågor i kategorier – läget nu, mönster över
-säsonger, tävlingsförberedelse, fysiologi och fartstrategi, små vinster,
-överraska mig och långa linjer (`src/lib/ai-coach/prompt-library.ts`). En vald
-fråga läggs i rutan utan att skickas, så att den går att skärpa först. Text
-inom hakparenteser, som `[bana]`, markeras så att den skrivs över direkt.
+Under rutan finns färdiga frågor i kategorier – läget nu, planera i
+kalendern, mönster över säsonger, tävlingsförberedelse, fysiologi och
+fartstrategi, små vinster, överraska mig och långa linjer
+(`src/lib/ai-coach/prompt-library.ts`). En vald fråga läggs i rutan utan att
+skickas, så att den går att skärpa först. Text inom hakparenteser, som
+`[bana]`, markeras så att den skrivs över direkt.
 
 ### Hela historiken i underlaget
 
@@ -1274,6 +1275,47 @@ filosofi, passbyggaren den som bygger – och för en medlemsadept adeptens
 coach, som RLS redan låter adepten läsa. Utan egen text gäller
 grundfilosofin som förut. Coachens text kan inte stänga sin egen tagg i
 prompten, och den är högst 40 000 tecken.
+
+### Planera i kalendern
+
+När coachen ber AI:n planera en säsong, ett block eller en vecka arbetar den
+med fyra verktyg (`src/lib/ai-planning/tools.ts`): `kalender` läser perioder,
+pass, tävlingar och tester som redan ligger i kalendern, `bibliotek` läser
+coachens passbibliotek, `foresla_plan` lägger fram ett förslag och
+`hamta_forslag` hämtar det senaste för att ändra i det. Verktygsloopen i
+`askCoach` kör högst åtta varv och slutar efter knappt tre minuter;
+`maxDuration` på sidan är 300 sekunder.
+
+Ett förslag (`src/lib/ai-planning/draft.ts`) är perioder, format och pass.
+Ett format är ett pass ur biblioteket, eller ett nytt pass när inget i
+biblioteket passar. Varje pass i förslaget pekar på ett format och får
+veckans dos som en nivå (A, B, C) eller en egen passrad i formatets form.
+`checkDraft` prövar förslaget mot biblioteket och filosofin innan det sparas:
+
+- **Fel stoppar förslaget:** perioder som överlappar, okända format,
+  bibliotekspass som inte finns, datum före i dag, passrader som inte går
+  att tolka och löpzoner utan maratonfart som bas. Modellen får felen och
+  rättar dem.
+- **Varningar följer med:** fler än två kvalitetsformat i ett block (tre om
+  perioden är längre än sex veckor, avsnitt 4.2), ett format som ändrar mer än
+  en variabel från en vecka till nästa (avsnitt 5), en intensitetsfördelning
+  utanför fasens riktmärken räknad per pass (avsnitt 19), veckor där planerad
+  TSS ökar mer än 20 % och format som aldrig används.
+
+Förslaget sparas i `ai_plan_drafts` (`20261123090000_ai_plan_drafts.sql`) och
+visas som ett kort under tråden: idén, perioderna, veckorna med passen, tid,
+TSS och fördelning, och varningarna. Ett nytt förslag ersätter det som
+väntar. Inget hamnar i kalendern förrän coachen trycker på Lägg in i
+kalendern (`applyPlanDraft` i `src/lib/ai-planning/actions.ts`). Då prövas
+förslaget igen mot dagens datum och bibliotek, perioderna skapas, nya pass
+sparas i coachens bibliotek och varje pass räknas om mot adeptens tröskel i
+passets gren och läggs på sitt datum. Krockar perioderna med perioder som
+redan finns stannar inläggningen, om inte coachen väljer att ersätta dem.
+
+Det som skapades sparas på förslaget, så att Ångra tar bort passen och
+perioderna och lägger tillbaka de perioder som ersattes. Pass som redan har
+passerat ligger kvar, och nya pass i biblioteket ligger kvar. Styrkepass går
+inte att lägga in med verktygen än; AI:n skriver dem i svaret.
 
 ## Grafen
 

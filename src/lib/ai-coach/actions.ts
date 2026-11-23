@@ -24,15 +24,33 @@ import { listCheckins } from "@/lib/training/queries";
 import { contextForAdept } from "@/lib/workouts/generate";
 import { contextToPrompt } from "@/lib/workouts/context";
 import { listWorkouts } from "@/lib/workouts/queries";
-import { formatDuration, resolveWorkout, toWorkout } from "@/lib/workouts/schema";
+import {
+  formatDuration,
+  resolveWorkout,
+  toWorkout,
+} from "@/lib/workouts/schema";
 import { getConversation, listAiMessages } from "./queries";
 import { listStrengthSessions } from "@/lib/strength/queries";
 import { strengthToPrompt } from "@/lib/strength/strength";
 import { philosophyBlocks } from "./philosophy";
 import { coachPhilosophyFor } from "./philosophy-queries";
 import { WRITING_RULES } from "@/lib/ai-coach/language";
+import { PLANNING_PROMPT } from "@/lib/ai-planning/prompt";
+import {
+  PLANNING_TOOLS,
+  runPlanningTool,
+  type ToolContext,
+} from "@/lib/ai-planning/tools";
 
 const MODEL = "claude-opus-5-5";
+
+/** Högst så här många anrop till modellen per fråga, verktygsvarven inräknade. */
+const MAX_TURNS = 8;
+/**
+ * Inget nytt anrop startas efter så här lång tid. Funktionen får 300 s i
+ * Vercel, och ett anrop som skriver ett förslag kan ta ett par minuter.
+ */
+const TURN_DEADLINE_MS = 170_000;
 
 /**
  * Reglerna ändras aldrig mellan frågor, så de ligger bakom en cachepunkt.
@@ -55,7 +73,29 @@ Hur du svarar:
 - Föreslå inte medicinsk behandling. Ser något ut att vara en skada eller ett hälsoproblem, säg att det hör hemma hos vården.
 - Du fattar inga beslut åt coachen. Du lägger fram vad talen säger och vad alternativen kostar.
 
+${PLANNING_PROMPT}
+
 ${WRITING_RULES}`;
+
+/** Läget för trådens senaste planförslag, till modellen tillsammans med frågan. */
+async function latestDraftLine(conversationId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ai_plan_drafts")
+    .select("title, status, applied_at")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  const state =
+    data.status === "inlagd"
+      ? `inlagt i kalendern ${String(data.applied_at ?? "").slice(0, 10)}`
+      : data.status === "förslag"
+        ? "väntar på att coachen lägger in det"
+        : "ersatt eller förkastat";
+  return `(Läget i tråden: senaste planförslaget, "${data.title}", är ${state}. Hämta det med hamta_forslag för att ändra i det.)`;
+}
 
 export type AskResult =
   | { ok: true; answer: string }
@@ -97,7 +137,9 @@ async function historyToPrompt(adept: Adept): Promise<string | null> {
     for (const session of sessions.slice(0, 5)) {
       const primary = session.test_metrics
         .filter((m) => m.is_primary)
-        .map((m) => `${m.key.replace("_prime", "′")} ${Number(m.value)} ${m.unit}`)
+        .map(
+          (m) => `${m.key.replace("_prime", "′")} ${Number(m.value)} ${m.unit}`,
+        )
         .join(", ");
       const phase = phaseLabel(session.training_phase);
       lines.push(
@@ -209,6 +251,7 @@ export async function askCoach(input: {
   // Namnet skickas inte med: modellen behöver talen, inte vem de tillhör, och
   // det som inte lämnar appen behöver inte skyddas någon annanstans.
   const briefing = [
+    `I dag är ${todayIso()}.`,
     `Adepten${adept.current_level ? `, nivå: ${adept.current_level}` : ""}`,
     context ? contextToPrompt(context) : "Inga mätta värden finns ännu.",
     history,
@@ -217,70 +260,153 @@ export async function askCoach(input: {
     .join("\n\n");
 
   const client = new Anthropic();
+  const latest = await latestDraftLine(conversationId);
+
+  const messages: Anthropic.Beta.BetaMessageParam[] = [
+    // Underlaget som ett eget första turpar, så att historiken under det
+    // läser som ett samtal och inte som en lista med upprepade briefingar.
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `Underlag om adepten:\n\n${briefing}`,
+          // Historiken kan vara lång och ändras sällan mellan två frågor
+          // i samma tråd: cachad läses den om till en bråkdel av priset.
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    },
+    {
+      role: "assistant",
+      content: "Tack, jag har talen. Vad vill du veta?",
+    },
+    ...previous.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
+    {
+      role: "user",
+      content: latest
+        ? [
+            { type: "text", text: question },
+            { type: "text", text: latest },
+          ]
+        : question,
+    },
+  ];
+
+  const tools: ToolContext = {
+    adeptId: input.adeptId,
+    conversationId,
+    userId: user.id,
+    cache: {},
+  };
+  const drafts: string[] = [];
+  const started = Date.now();
+  let answer = "";
 
   try {
-    const stream = client.beta.messages.stream({
-      model: MODEL,
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      system: [
-        { type: "text", text: SYSTEM_PROMPT },
-        // Grundfilosofin är lika för alla och cachas för sig; en coachs egen
-        // filosofi får en egen cachepunkt efter den.
-        ...philosophyBlocks(philosophy),
-      ],
-      messages: [
-        // Underlaget som ett eget första turpar, så att historiken under det
-        // läser som ett samtal och inte som en lista med upprepade briefingar.
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Underlag om adepten:\n\n${briefing}`,
-              // Historiken kan vara lång och ändras sällan mellan två frågor
-              // i samma tråd: cachad läses den om till en bråkdel av priset.
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-        },
-        {
-          role: "assistant",
-          content: "Tack, jag har talen. Vad vill du veta?",
-        },
-        ...previous.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
-        { role: "user", content: question },
-      ],
-    });
+    // Verktygsloopen: modellen läser biblioteket och kalendern och lägger
+    // fram ett förslag, tills den svarar utan verktyg. Hela svaret – med
+    // tänkandet – går tillbaka oförändrat i varje varv.
+    let parseRetries = 0;
+    for (let turn = 0; turn < MAX_TURNS; turn += 1) {
+      if (turn > 0 && Date.now() - started > TURN_DEADLINE_MS) break;
+      const stream = client.beta.messages.stream({
+        model: MODEL,
+        max_tokens: 64000,
+        thinking: { type: "adaptive" },
+        output_config: { effort: "medium" },
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+        system: [
+          { type: "text", text: SYSTEM_PROMPT },
+          // Grundfilosofin är lika för alla och cachas för sig; en coachs egen
+          // filosofi får en egen cachepunkt efter den.
+          ...philosophyBlocks(philosophy),
+        ],
+        tools: PLANNING_TOOLS,
+        messages,
+      });
 
-    const message = await stream.finalMessage();
+      let message: Anthropic.Beta.BetaMessage;
+      try {
+        message = await stream.finalMessage();
+        parseRetries = 0;
+      } catch (error) {
+        // En verktygsindata som inte gick att tolka, eller en bruten
+        // anslutning: samma varv en gång till. API-fel kastas vidare.
+        if (error instanceof Anthropic.APIError || parseRetries++ >= 1) {
+          throw error;
+        }
+        continue;
+      }
 
-    if (message.stop_reason === "refusal") {
-      return {
-        ok: false,
-        error: "Frågan gick inte att besvara. Formulera om den.",
-      };
+      if (message.stop_reason === "refusal") {
+        return {
+          ok: false,
+          error: "Frågan gick inte att besvara. Formulera om den.",
+        };
+      }
+
+      const text = message.content
+        .filter((block) => block.type === "text")
+        .map((block) => block.text)
+        .join("")
+        .trim();
+      const calls = message.content.filter(
+        (block): block is Anthropic.Beta.BetaToolUseBlock =>
+          block.type === "tool_use",
+      );
+
+      if (calls.length === 0 || message.stop_reason !== "tool_use") {
+        // Ett anrop avbrutet vid max_tokens körs aldrig: indata kan vara stympad.
+        answer = text;
+        break;
+      }
+
+      messages.push({ role: "assistant", content: message.content });
+      const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+      for (const call of calls) {
+        const outcome = await runPlanningTool(call.name, call.input, tools);
+        if (outcome.draftId) drafts.push(outcome.draftId);
+        results.push({
+          type: "tool_result",
+          tool_use_id: call.id,
+          content: outcome.content,
+          is_error: outcome.isError,
+        });
+      }
+      // Alla svar i samma meddelande, så att modellen fortsätter anropa parallellt.
+      messages.push({ role: "user", content: results });
+      answer = text;
     }
 
-    const answer = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("")
-      .trim();
-
+    if (answer.length === 0 && drafts.length > 0) {
+      answer =
+        "Förslaget är sparat och visas här nedanför. Granska det och lägg in det i kalendern när det ser rätt ut.";
+    }
     if (answer.length === 0) {
       return { ok: false, error: "Svaret var tomt. Försök igen." };
     }
 
-    const { error: writeError } = await supabase.from("ai_messages").insert([
-      { conversation_id: conversationId, role: "user", content: question },
-      { conversation_id: conversationId, role: "assistant", content: answer },
-    ]);
+    const { data: written, error: writeError } = await supabase
+      .from("ai_messages")
+      .insert([
+        { conversation_id: conversationId, role: "user", content: question },
+        { conversation_id: conversationId, role: "assistant", content: answer },
+      ])
+      .select("id, role");
+
+    // Förslagen hör till svaret de kom med, så att kortet visas under det.
+    const answerId = written?.find((m) => m.role === "assistant")?.id;
+    if (answerId && drafts.length > 0) {
+      await supabase
+        .from("ai_plan_drafts")
+        .update({ message_id: answerId })
+        .in("id", drafts);
+    }
 
     if (writeError) {
       // Svaret finns och är värt att visa även om det inte gick att spara.

@@ -531,6 +531,29 @@ export type AiMessageRow = {
   created_at: string;
 };
 
+/** Ett planförslag ur AI-chatten (ai-planning/draft.ts). */
+export type AiPlanDraftRow = {
+  id: string;
+  conversation_id: string;
+  message_id: string | null;
+  adept_id: string;
+  created_by: string;
+  title: string;
+  /** PlanDraft som det kom från modellen. */
+  plan: unknown;
+  warnings: string[];
+  status: "förslag" | "inlagd" | "ersatt" | "förkastad";
+  /** Det som skapades när förslaget lades in. */
+  applied: {
+    blocks: string[];
+    workouts: string[];
+    library: string[];
+    replaced?: unknown[];
+  } | null;
+  created_at: string;
+  applied_at: string | null;
+};
+
 export type LeadStatus = "ny" | "kontaktad" | "avslutad";
 
 /** Contact request from the public site. */
@@ -619,6 +642,16 @@ export type Database = {
         Insert: Pick<TestMetricRow, "session_id" | "key" | "value" | "unit"> &
           Partial<TestMetricRow>;
         Update: Partial<TestMetricRow>;
+        Relationships: [];
+      };
+      ai_plan_drafts: {
+        Row: AiPlanDraftRow;
+        Insert: Pick<
+          AiPlanDraftRow,
+          "conversation_id" | "adept_id" | "title" | "plan"
+        > &
+          Partial<AiPlanDraftRow>;
+        Update: Partial<AiPlanDraftRow>;
         Relationships: [];
       };
       test_activities: {

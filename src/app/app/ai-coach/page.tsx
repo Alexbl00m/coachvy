@@ -5,12 +5,17 @@ import { PageHeader } from "@/components/page-header";
 import { aiBlockedMessage } from "@/lib/adepts/consent-state";
 import { listAdepts, getAdept, getConsentState } from "@/lib/adepts/queries";
 import { getConversation, listAiMessages } from "@/lib/ai-coach/queries";
+import { listDraftViews } from "@/lib/ai-planning/queries";
 import { requireCoach } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { isAnthropicConfigured } from "@/lib/workouts/env";
 import { contextForAdept } from "@/lib/workouts/generate";
 
 export const metadata = { title: "AI Coach Assistant" };
+
+// En fråga som planerar en säsong kör flera verktygsvarv mot modellen.
+// Gäller också sidans serveråtgärder.
+export const maxDuration = 300;
 
 /**
  * Bollplank om en adept.
@@ -38,7 +43,12 @@ export default async function AiCoachPage({
         getConsentState(adept),
       ])
     : [null, null];
-  const messages = conversation ? await listAiMessages(conversation.id) : [];
+  const [messages, drafts] = conversation
+    ? await Promise.all([
+        listAiMessages(conversation.id),
+        listDraftViews(conversation.id, conversation.adept_id, user.id),
+      ])
+    : [[], []];
 
   return (
     <>
@@ -69,6 +79,7 @@ export default async function AiCoachPage({
         adeptName={adept?.full_name ?? null}
         context={context}
         messages={messages}
+        drafts={drafts}
         configured={isAnthropicConfigured()}
         blocked={
           adept && consent?.kind !== "godkänt" && consent

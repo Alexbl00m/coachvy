@@ -7,6 +7,9 @@
  * Vilopuls och HRV finns inte i appen; frågor om återhämtning läser
  * incheckningarna (sömn, trötthet, ömhet, stress) i stället.
  *
+ * Frågorna under "Planera i kalendern" får AI:n att föreslå perioder och
+ * pass med verktygen; förslaget läggs in först när coachen godkänner det.
+ *
  * Text inom hakparenteser är en plats att fylla i – den markeras när frågan
  * väljs, så att den går att skriva över direkt.
  */
@@ -27,6 +30,16 @@ export const PROMPT_LIBRARY: PromptCategory[] = [
       "Vad bör vi prioritera de närmaste fyra veckorna?",
       "Hur bör veckorna fram till A-loppet se ut, med toppningen?",
       "Räcker den anaeroba kapaciteten för ett lopp med mycket backar?",
+    ],
+  },
+  {
+    id: "planera",
+    label: "Planera i kalendern",
+    prompts: [
+      "Lägg upp säsongen fram till [A-lopp]: perioderna först, sedan passen för det första blocket.",
+      "Planera nästa block på fyra veckor med ett eller två kvalitetsformat ur biblioteket och en tydlig progression.",
+      "Adepten har [arbete, resor och familj] den här månaden. Bygg de närmaste tre veckorna runt det.",
+      "Ändra i förslaget: [vad som ska ändras].",
     ],
   },
   {

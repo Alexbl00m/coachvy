@@ -7,11 +7,13 @@ import { Bot, Eraser, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Select, Textarea } from "@/components/ui/field";
+import { PlanDraftCard } from "@/components/ai-coach/plan-draft-card";
 import { PromptLibrary } from "@/components/ai-coach/prompt-library";
 import { ContextSummary } from "@/components/workouts/context-summary";
 import { cn } from "@/lib/cn";
 import { askCoach, clearConversation } from "@/lib/ai-coach/actions";
 import { placeholderRange } from "@/lib/ai-coach/prompt-library";
+import type { DraftView } from "@/lib/ai-planning/queries";
 import type { AthleteContext } from "@/lib/workouts/context";
 import type { AiMessageRow } from "@/lib/types/database";
 
@@ -31,6 +33,7 @@ export function AiCoachChat({
   adeptName,
   context,
   messages,
+  drafts = [],
   configured,
   blocked = null,
 }: {
@@ -40,6 +43,8 @@ export function AiCoachChat({
   context: AthleteContext | null;
   /** Äldst först. */
   messages: AiMessageRow[];
+  /** Trådens planförslag, äldst först. */
+  drafts?: DraftView[];
   configured: boolean;
   /** Varför frågor om adepten inte går att ställa – samtycket saknas. */
   blocked?: string | null;
@@ -64,6 +69,21 @@ export function AiCoachChat({
   }));
   if (known.adeptId !== adeptId) {
     setKnown({ adeptId, ids: new Set(messages.map((m) => m.id)) });
+  }
+
+  // Förslag som väntar visas som kort, och det senast inlagda så att det går
+  // att ångra. Äldre inlagda och förkastade nämns bara vid sitt svar.
+  const lastApplied = drafts.findLast((d) => d.status === "inlagd");
+  const cards = drafts.filter(
+    (d) => d.status === "förslag" || d === lastApplied,
+  );
+  const draftsByMessage = new Map<string, DraftView[]>();
+  for (const d of drafts) {
+    if (!d.messageId) continue;
+    draftsByMessage.set(d.messageId, [
+      ...(draftsByMessage.get(d.messageId) ?? []),
+      d,
+    ]);
   }
 
   useEffect(() => {
@@ -156,6 +176,12 @@ export function AiCoachChat({
                 historiken ur de uppladdade passen och loppen. Skriv en egen
                 fråga eller välj en i frågebiblioteket.
               </p>
+              <p className="text-sm text-text-muted">
+                Be den planera ett block eller en säsong, så föreslår den
+                perioder och pass ur ditt passbibliotek. Förslaget visas som ett
+                kort under tråden och hamnar i kalendern först när du lägger in
+                det.
+              </p>
             </div>
           ) : (
             <ul className="max-h-[32.5rem] space-y-4 overflow-y-auto pr-1">
@@ -164,6 +190,8 @@ export function AiCoachChat({
                   key={message.id}
                   role={message.role}
                   content={message.content}
+                  drafts={draftsByMessage.get(message.id)}
+                  shown={cards}
                   // Frågan har redan tonats in som den väntande bubblan.
                   fresh={
                     message.role === "assistant" && !known.ids.has(message.id)
@@ -174,7 +202,10 @@ export function AiCoachChat({
                 <>
                   <Bubble role="user" content={optimistic} fresh />
                   <li className="flex items-center gap-2 text-[0.8125rem] text-text-subtle">
-                    <Bot aria-hidden className="size-4 animate-pulse text-text-muted" />
+                    <Bot
+                      aria-hidden
+                      className="size-4 animate-pulse text-text-muted"
+                    />
                     Räknar igenom talen …
                   </li>
                 </>
@@ -189,6 +220,17 @@ export function AiCoachChat({
             <p className="text-sm text-text">{error}</p>
           </Card>
         )}
+
+        {adeptId !== null &&
+          cards.map((draft) => (
+            <div
+              key={draft.id}
+              id={`forslag-${draft.id}`}
+              className="scroll-mt-24"
+            >
+              <PlanDraftCard draft={draft} adeptId={adeptId} />
+            </div>
+          ))}
 
         <Card className="min-w-0">
           <Textarea
@@ -229,8 +271,8 @@ export function AiCoachChat({
               {blocked
                 ? blocked
                 : configured
-                ? "Ctrl + Enter skickar. Adepten ser inte den här tråden."
-                : "ANTHROPIC_API_KEY saknas – lägg in den som miljövariabel i Vercel."}
+                  ? "Ctrl + Enter skickar. Adepten ser inte den här tråden."
+                  : "ANTHROPIC_API_KEY saknas – lägg in den som miljövariabel i Vercel."}
             </span>
           </div>
         </Card>
@@ -270,15 +312,28 @@ export function AiCoachChat({
   );
 }
 
+const DRAFT_STATE: Record<DraftView["status"], string> = {
+  förslag: "väntar på dig",
+  inlagd: "inlagt",
+  ersatt: "ersatt",
+  förkastad: "lagt åt sidan",
+};
+
 function Bubble({
   role,
   content,
   fresh = false,
+  drafts,
+  shown = [],
 }: {
   role: "user" | "assistant";
   content: string;
   /** Ny i tråden: tonas in i stället för att rycka fram. */
   fresh?: boolean;
+  /** Planförslagen svaret kom med. */
+  drafts?: DraftView[];
+  /** Förslagen som står som kort under tråden. */
+  shown?: DraftView[];
 }) {
   const mine = role === "user";
   return (
@@ -301,6 +356,26 @@ function Bubble({
         <p className="whitespace-pre-line text-sm leading-relaxed text-text">
           {content}
         </p>
+        {drafts?.map((d) => (
+          <p
+            key={d.id}
+            className="mt-2 border-t border-line pt-2 text-[0.8125rem] text-text-muted"
+          >
+            Planförslag: <span className="text-text">{d.title}</span>,{" "}
+            {DRAFT_STATE[d.status]}.
+            {shown.includes(d) && (
+              <>
+                {" "}
+                <a
+                  href={`#forslag-${d.id}`}
+                  className="font-medium text-text underline decoration-line-strong underline-offset-2 hover:decoration-text"
+                >
+                  Visa förslaget
+                </a>
+              </>
+            )}
+          </p>
+        ))}
       </div>
     </li>
   );
