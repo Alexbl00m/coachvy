@@ -18,6 +18,7 @@ import { bikeThresholds } from "@/lib/calculators/bike-speed";
 import type { SessionAnalysis } from "@/lib/tests/analysis";
 import type { Protocol, ProtocolKey } from "@/lib/tests/protocols";
 import {
+  parseDuration,
   peakFromRamp,
   type EffortRow,
   type ProtocolCalculator,
@@ -200,9 +201,9 @@ export function EffortTable({
                   {spec?.columnLabels?.distance ?? "Sträcka (m)"}
                 </th>
               )}
-              {shape?.lactate && (
+              {(shape?.lactate || shape?.sprintLactate) && (
                 <th className="pb-2 pr-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-text-muted">
-                  Laktat
+                  {shape?.lactate ? "Laktat" : "Laktat efter (valfritt)"}
                 </th>
               )}
               {shape?.heartRate && (
@@ -259,14 +260,18 @@ export function EffortTable({
                     />
                   </td>
                 )}
-                {shape?.lactate && (
+                {(shape?.lactate || shape?.sprintLactate) && (
                   <td className="py-2 pr-3">
-                    <Input
-                      aria-label={`Laktat ${index + firstRow}`}
-                      inputMode="decimal"
-                      value={row.lactate}
-                      onChange={(e) => onChange(row.id, { lactate: e.target.value })}
-                    />
+                    {/* I den metabola profilen bara på sprinten: högsta laktat efteråt. */}
+                    {(shape?.lactate || (parseDuration(row.duration) ?? 60) < 60) && (
+                      <Input
+                        aria-label={`Laktat ${index + firstRow}`}
+                        inputMode="decimal"
+                        value={row.lactate}
+                        placeholder={shape?.lactate ? "" : "mmol/l"}
+                        onChange={(e) => onChange(row.id, { lactate: e.target.value })}
+                      />
+                    )}
                   </td>
                 )}
                 {shape?.heartRate && (

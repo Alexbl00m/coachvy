@@ -38,6 +38,21 @@ describe("metabol profil med den kalibrerade modellen", () => {
     expect(value(short.metrics, "AT")).toBeGreaterThan(315);
   });
 
+  it("räknar VLamax ur sprintlaktatet när det finns", () => {
+    const sprint = { ...effort(995, 20), lactate: 8.8 } as Effort;
+    const withLactate = metabolicProfile([sprint, ...efforts.slice(1)], 81.5, 12, "man");
+    const vlamax = withLactate.metrics.find((m) => m.key === "VLamax")!;
+    expect(vlamax.method).toContain("sprintlaktat");
+    // (8,8 − 1,0) / (20 − 3,5) = 0,47 mot 0,69 ur watten, och då stämmer sprinten med CP
+    expect(Math.abs(vlamax.value - 7.8 / 16.5)).toBeLessThan(0.02);
+    expect(value(withLactate.metrics, "AT")).toBeGreaterThan(315);
+    expect(withLactate.warnings.some((w) => w.startsWith("Sprinten och de längre testerna"))).toBe(false);
+    // Ett orimligt laktat stoppar beräkningen i stället för att ge fel tal
+    const wrong = metabolicProfile([{ ...sprint, lactate: 45 } as Effort, ...efforts.slice(1)], 81.5, 12, "man");
+    expect(value(wrong.metrics, "AT")).toBeNull();
+    expect(wrong.warnings.some((w) => w.startsWith("Orimligt sprintlaktat"))).toBe(true);
+  });
+
   it("stoppar när tolv minuter är starkare än sex", () => {
     const wrong = metabolicProfile([effort(667, 20), effort(293, 180), effort(217, 360), effort(234, 720)], 84, 18, "man");
     expect(value(wrong.metrics, "AT")).toBeNull();

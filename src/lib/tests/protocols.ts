@@ -35,6 +35,8 @@ export type EffortShape = {
   heartRate: boolean;
   /** RPE vid stegets slut, 1–10. */
   rpe?: boolean;
+  /** Högsta laktat efter sprinten, bara på insatser under en minut. */
+  sprintLactate?: boolean;
 };
 
 export type ZoneScheme = "tröskel" | "critical-speed" | "ftp";
@@ -155,13 +157,13 @@ export const PROTOCOLS: Protocol[] = [
     purpose:
       "En sprint och tre maxinsatser. Ger critical power ur de tre längre, VLamax ur sprinten, och tröskel och FatMax ur båda.",
     howTo:
-      "Först en 20 sekunders sprint, utvilad och all-out. Sedan maximala insatser på 3, 6 och 12 minuter med full återhämtning emellan – helst fördelat på två dagar. Vikt och kroppsfett krävs för VLamax.",
+      "Först en 20 sekunders sprint, utvilad och all-out. Sedan maximala insatser på 3, 6 och 12 minuter med full återhämtning emellan – helst fördelat på två dagar. Vikt och kroppsfett krävs för VLamax. Med en laktatmätare: skriv in högsta laktat 3–7 minuter efter sprinten, så räknas VLamax ur laktatet i stället för ur watten.",
     remote: true,
     // Sprint plus två längre räcker för att räkna; tre längre ger en
     // anpassningsgrad och en kontroll av 6-minuten.
     minEfforts: 3,
     maxEfforts: 5,
-    shape: EFFORT_SHAPE,
+    shape: { ...EFFORT_SHAPE, sprintLactate: true },
     produces: ["CP", "W′", "VLamax", "VO2max", "Tröskel", "FatMax", "Zoner"],
     zoneScheme: "ftp",
     needsBodyComposition: true,

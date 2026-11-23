@@ -336,6 +336,7 @@ export function metabolicProfile(
       bodyFatPct,
       sex: toModelSex(sex),
       sprint: sprintOk ? { durationSec: sprint.durationSeconds, power: sprint.intensity } : null,
+      sprintLactate: sprintOk && sprint.lactate ? { peak: sprint.lactate } : null,
       efforts: long
         .filter((e) => e.durationSeconds <= CP_EFFORT_RANGE.max)
         .map((e) => ({ durationSec: e.durationSeconds, power: e.intensity })),
@@ -353,7 +354,7 @@ export function metabolicProfile(
           spread: spread.vo2max,
         }),
         metric("VLamax", "VLamax", estimate.vlamax, "mmol/l/s", {
-          method: `±${sv1(spread.vlamax, 2)}`,
+          method: `${sprintOk && sprint.lactate ? "ur sprintlaktat, " : ""}±${sv1(spread.vlamax, 2)}`,
           isPrimary: true,
           spread: spread.vlamax,
         }),
