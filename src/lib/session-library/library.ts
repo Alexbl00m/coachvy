@@ -27,6 +27,7 @@ import { TRAINING_PHASES, type TrainingPhase } from "@/lib/tests/phases";
 import {
   basisMismatch,
   hasSwimTargets,
+  NOMINAL_SWIM,
   type SwimPaces,
 } from "@/lib/workouts/swim-pace";
 import {
@@ -494,6 +495,25 @@ export function toAdeptWorkout(
       blocks: scaleBlocks(blocks, factor),
     },
   };
+}
+
+/**
+ * Passet som det står i biblioteket, på en nivå, utan att räknas om mot
+ * någon adept: målen är kvar som procent av passets egen bas. För
+ * nedladdning och passbyggaren när ingen adept är vald.
+ */
+export function libraryWorkout(
+  pass: Parameters<typeof toAdeptWorkout>[0],
+  level: LibraryLevelKey | null = null,
+): Workout | null {
+  const result = toAdeptWorkout(
+    pass,
+    // Samma bas: inget räknas om. Referensen behövs bara för simfart.
+    { sport: pass.sport, basis: pass.basis, reference: 100 / NOMINAL_SWIM.css },
+    {},
+    level,
+  );
+  return result.ok ? result.workout : null;
 }
 
 /** Faserna i ord: "Grundperiod, Uppbyggnad". */

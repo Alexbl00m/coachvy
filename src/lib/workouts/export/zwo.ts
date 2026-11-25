@@ -39,10 +39,14 @@ function element(step: WorkoutStep): string {
   return `<SteadyState Duration="${duration}" Power="${mid(step)}"/>`;
 }
 
-/** Bara cykelpass, och bara steg angivna i tid – annat returnerar null. */
+/**
+ * Bara cykelpass, och bara steg angivna i tid – annat returnerar null. Utan
+ * referens – ett pass ur biblioteket som inte räknats mot någon adept – står
+ * procenten mot FTP i appen.
+ */
 export function workoutToZwo(
   workout: Workout,
-  reference: number,
+  reference: number | null,
 ): string | null {
   if (workout.sport !== "cykling") return null;
 
@@ -70,12 +74,18 @@ export function workoutToZwo(
     }
   }
 
+  // Passets förklaring följer med, så att den som kör passet ser varför.
   const description = [
     workout.summary,
-    `Procenten räknas mot ${workout.basis} ${Math.round(reference)} W. Sätt FTP i appen till ${Math.round(reference)} W för samma watt som i Coachvy.`,
+    workout.rationale && `Därför det här passet\n\n${workout.rationale}`,
+    reference
+      ? `Procenten räknas mot ${workout.basis} ${Math.round(reference)} W. Sätt FTP i appen till ${Math.round(reference)} W för samma watt som i Coachvy.`
+      : workout.basis === "FTP"
+        ? "Procenten räknas mot din FTP i appen."
+        : `Procenten står mot ${workout.basis}. Sätt FTP i appen till din ${workout.basis} för samma watt.`,
   ]
     .filter(Boolean)
-    .join(" ");
+    .join("\n\n");
 
   return [
     "<workout_file>",

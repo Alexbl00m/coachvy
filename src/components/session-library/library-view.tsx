@@ -1,11 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarPlus, Copy, Pencil, Plus, Share2, Trash2 } from "lucide-react";
+import {
+  CalendarPlus,
+  Copy,
+  Download,
+  Pencil,
+  Plus,
+  Share2,
+  Trash2,
+  Wrench,
+} from "lucide-react";
 
 import { useAction } from "@/components/plan-library/use-action";
 import { ShareDialog } from "@/components/sharing/share-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { download } from "@/components/workouts/export-workout";
 import { EmptyState } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/field";
 import {
@@ -13,18 +23,62 @@ import {
   deleteLibrarySession,
 } from "@/lib/session-library/actions";
 import {
+  libraryWorkout,
   LIBRARY_SPORTS,
   type LibraryInput,
   type LibraryLevelKey,
   type LibrarySession,
 } from "@/lib/session-library/library";
+import { routes } from "@/lib/routes";
 import { TRAINING_PHASES } from "@/lib/tests/phases";
+import { workoutFileName } from "@/lib/workouts/export/file-name";
+import { workoutToZwo } from "@/lib/workouts/export/zwo";
 
 import { LibraryCard } from "./library-card";
 import { ScheduleDialog } from "./schedule-dialog";
 import { emptyLibraryInput, inputOf, SessionEditor } from "./session-editor";
 
 type Owner = "alla" | "mina" | "andras";
+
+/** Passet som .zwo, på den nivå som visas; null när det inte går. */
+const zwoOf = (s: LibrarySession, level: LibraryLevelKey | null) => {
+  const workout = libraryWorkout(s, level);
+  return workout ? workoutToZwo(workout, null) : null;
+};
+
+/**
+ * Cykelpasset som .zwo direkt ur biblioteket, på nivån som visas. Procenten
+ * står mot FTP, så filen behöver ingen adept.
+ */
+function ZwoButton({
+  session,
+  level,
+}: {
+  session: LibrarySession;
+  level: LibraryLevelKey | null;
+}) {
+  const zwo = zwoOf(session, level);
+  if (!zwo) return null;
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      onClick={() =>
+        download(
+          workoutFileName(
+            level ? `${session.title} ${level}` : session.title,
+            "zwo",
+          ),
+          zwo,
+          "application/xml",
+        )
+      }
+    >
+      <Download aria-hidden className="size-3.5" />
+      .zwo
+    </Button>
+  );
+}
 
 const matches = (s: LibrarySession, q: string) =>
   !q ||
@@ -257,6 +311,17 @@ export function LibraryView({
                           ? `Nivå ${level} i min kalender`
                           : "Lägg i min kalender"}
                       </Button>
+                    )}
+                    <ZwoButton session={s} level={level ?? null} />
+                    {coach && (
+                      <ButtonLink
+                        size="sm"
+                        variant="secondary"
+                        href={`${routes.workoutBuilder}?bibliotek=${s.id}${level ? `&niva=${level}` : ""}`}
+                      >
+                        <Wrench aria-hidden className="size-3.5" />
+                        Passbyggaren
+                      </ButtonLink>
                     )}
                     {s.own && (
                       <Button

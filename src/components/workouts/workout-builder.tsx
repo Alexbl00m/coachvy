@@ -95,7 +95,10 @@ export function WorkoutBuilder({
   const [pending, startGeneration] = useTransition();
   const [saving, startSave] = useTransition();
 
-  const [manualSport, setManualSport] = useState<Sport>("cykling");
+  // Ett pass ur biblioteket utan adept öppnas i sin egen gren.
+  const [manualSport, setManualSport] = useState<Sport>(
+    initialWorkout?.sport ?? "cykling",
+  );
   const [prompt, setPrompt] = useState("");
   const [reference, setReference] = useState("");
   const [critical, setCritical] = useState("");
@@ -160,7 +163,15 @@ export function WorkoutBuilder({
       setWorkout(null);
       setUsedContext(null);
       setSaved(null);
-      router.push(next ? `?adept=${next}` : "?");
+      // Ett pass ur biblioteket följer med till adepten och räknas om.
+      const params = new URLSearchParams(window.location.search);
+      const keep = new URLSearchParams();
+      if (next) keep.set("adept", next);
+      for (const key of ["bibliotek", "niva"]) {
+        const value = params.get(key);
+        if (value) keep.set(key, value);
+      }
+      router.push(`?${keep.toString()}`);
     });
 
   const build = () =>
